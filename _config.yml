@@ -1,0 +1,22 @@
+title: เทคโนโลยีดิจิทัลสำหรับวิศวกรรม (Digital Technology for Engineering)
+description: >-
+  แผนการจัดการเรียนรู้รายสัปดาห์และเอกสารประกอบรายวิชา เทคโนโลยีดิจิทัลสำหรับวิศวกรรม
+  หลักสูตรวิศวกรรมเครื่องกล — เน้นอินเทอร์เน็ตของสรรพสิ่ง (IoT)
+lang: th
+
+url: "https://alfaxphoori.github.io"
+baseurl: "/TechEngineering"
+repository: alfaXphoori/TechEngineering
+
+# ใช้ layout ที่ออกแบบเอง (ไม่ใช้ธีมสำเร็จรูป)
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+
+# ไม่นำไฟล์เหล่านี้ไปสร้างเป็นหน้าเว็บ
+exclude:
+  - .DS_Store
+  - "**/.DS_Store"
+  - README.md

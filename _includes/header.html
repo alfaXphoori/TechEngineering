@@ -1,0 +1,16 @@
+<header class="site-header">
+  <div class="container nav">
+    <a class="nav__brand" href="{{ '/' | relative_url }}">
+      <span class="nav__logo">📡</span>
+      <span>เทคโนโลยีดิจิทัลสำหรับวิศวกรรม</span>
+    </a>
+    <button class="nav__toggle" aria-label="เมนู" onclick="document.getElementById('navlinks').classList.toggle('open')">☰</button>
+    <nav class="nav__links" id="navlinks">
+      <a href="{{ '/#schedule' | relative_url }}">แผนการสอน</a>
+      <a href="{{ '/#clo' | relative_url }}">ผลลัพธ์การเรียนรู้</a>
+      <a href="{{ '/#tools' | relative_url }}">เครื่องมือ</a>
+      <a href="{{ '/weekly-lesson-plan.html' | relative_url }}">แผนฉบับเต็ม</a>
+      <a class="cta" href="https://github.com/{{ site.repository }}" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>

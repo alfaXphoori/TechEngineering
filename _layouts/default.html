@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="th">
+{% include head.html %}
+<body>
+  {% include header.html %}
+  <main>
+    <article class="prose">
+      {{ content }}
+    </article>
+    <a class="back-link" href="{{ '/' | relative_url }}">← กลับหน้าแรก</a>
+  </main>
+  {% include footer.html %}
+</body>
+</html>

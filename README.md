@@ -21,7 +21,7 @@
 | **9** | **โพรโทคอลการสื่อสาร HTTP/REST** | Client/Server, HTTP Methods, REST API, รูปแบบข้อมูล JSON | [Protocols](chapters/ch07-protocols/) |
 | **10** | **โพรโทคอล MQTT** | Publish/Subscribe, Broker, Topic, QoS, การส่งข้อมูลเซนเซอร์ผ่าน MQTT | [Protocols](chapters/ch07-protocols/) |
 | **11** | **เทคโนโลยีคลาวด์และแพลตฟอร์ม IoT** | บริการคลาวด์ (IaaS/PaaS/SaaS), แพลตฟอร์ม IoT, การเชื่อมต่ออุปกรณ์กับคลาวด์ | [Cloud](chapters/ch08-cloud/) |
-| **12** | **การประยุกต์ใช้คลาวด์และการจัดเก็บข้อมูล** | การส่งข้อมูลขึ้น ThingSpeak, ฐานข้อมูลและ API, การตั้งการแจ้งเตือน | [Cloud](chapters/ch08-cloud/) |
+| **12** | **การประยุกต์ใช้คลาวด์และการจัดเก็บข้อมูล** | การส่งข้อมูลขึ้น Blynk Cloud, ฐานข้อมูลและ API, การตั้งการแจ้งเตือน | [Cloud](chapters/ch08-cloud/) |
 | **13** | **เทคนิคการแสดงผลข้อมูล (Data Visualization)** | หลักการนำเสนอข้อมูล, ชนิดกราฟ, แดชบอร์ดเรียลไทม์ด้วย Node-RED | [Data Visualization](chapters/ch09-data-visualization/) |
 | **14** | **การเชื่อมต่อกับโปรแกรมของผู้ใช้ (User Interface)** | การออกแบบ UI, แดชบอร์ดและโมบายแอป, การควบคุมอุปกรณ์ผ่าน Blynk | [Data Visualization](chapters/ch09-data-visualization/) |
 | **15** | **พื้นฐานการเรียนรู้ของเครื่อง (Machine Learning) สำหรับ IoT** | แนวคิด ML, ประเภทการเรียนรู้, การจำแนกข้อมูลเซนเซอร์, TinyML/Edge AI | [Machine Learning](chapters/ch10-machine-learning/) |
@@ -48,9 +48,8 @@
 |:---|:---|:---|
 | **Wokwi Simulator** | [wokwi.com](https://wokwi.com/) | จำลอง ESP32/Arduino พร้อมเซนเซอร์ — Lab หลักของวิชา |
 | **Arduino IDE** | [arduino.cc/software](https://www.arduino.cc/en/software) | เขียน/อัปโหลดโปรแกรมลงบอร์ดจริง (ESP32 Core) |
-| **ThingSpeak** | [thingspeak.com](https://thingspeak.com/) | แพลตฟอร์มคลาวด์ IoT รับ-แสดงข้อมูลเซนเซอร์ (Lab 11–12) |
-| **Node-RED** | [nodered.org](https://nodered.org/) | สร้างแดชบอร์ดและโฟลว์ข้อมูลแบบลาก-วาง (Lab 13–14) |
-| **Blynk** | [blynk.io](https://blynk.io/) | สร้างโมบายแอป/แดชบอร์ดควบคุมอุปกรณ์ (Lab 14) |
+| **Blynk Cloud** | [blynk.io](https://blynk.io/) | แพลตฟอร์มคลาวด์ IoT + โมบายแอป/แดชบอร์ดควบคุมอุปกรณ์ (Lab 11–12, 14) |
+| **Node-RED** | [nodered.org](https://nodered.org/) | สร้างแดชบอร์ดและโฟลว์ข้อมูลแบบลาก-วาง (Lab 13) |
 | **Google Colab** | [colab.research.google.com](https://colab.research.google.com/) | ฝึก Machine Learning เบื้องต้นด้วย Python (Lab 15) |
 
 ---

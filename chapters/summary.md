@@ -16,7 +16,7 @@
 - **โพรโทคอลการสื่อสาร:** HTTP/REST (พร้อม JSON) และ MQTT (Publish/Subscribe, Broker, Topic, QoS)
 
 ### 1.3 คลาวด์และการประยุกต์ (Cloud & Application)
-- **เทคโนโลยีคลาวด์:** รูปแบบบริการ IaaS/PaaS/SaaS และแพลตฟอร์ม IoT (ThingSpeak, Blynk)
+- **เทคโนโลยีคลาวด์:** รูปแบบบริการ IaaS/PaaS/SaaS และแพลตฟอร์ม IoT (Blynk, AWS IoT, Azure IoT)
 - **การจัดเก็บและใช้งานข้อมูล:** ฐานข้อมูลเวลา (time-series), REST API, การแจ้งเตือน/ทริกเกอร์
 - **การแสดงผลและโปรแกรมผู้ใช้:** ชนิดกราฟ, แดชบอร์ดเรียลไทม์ (Node-RED), UI/โมบายแอป (Blynk)
 
@@ -32,7 +32,7 @@
 |:---|:---|:---|
 | **Perception / Device** | รับรู้และกระทำกับโลกจริง | เซนเซอร์, ตัวกระทำ, ESP32 |
 | **Network / Connectivity** | ส่งข้อมูลระหว่างอุปกรณ์กับคลาวด์ | Wi-Fi, BLE, LoRa, MQTT, HTTP |
-| **Processing / Cloud** | จัดเก็บ ประมวลผล วิเคราะห์ข้อมูล | ThingSpeak, ฐานข้อมูล, ML |
+| **Processing / Cloud** | จัดเก็บ ประมวลผล วิเคราะห์ข้อมูล | Blynk Cloud, ฐานข้อมูล, ML |
 | **Application** | แสดงผลและโต้ตอบกับผู้ใช้ | แดชบอร์ด, โมบายแอป, การแจ้งเตือน |
 
 ---
@@ -49,9 +49,8 @@
 | **รีเลย์ / L298N** | ขับโหลดไฟฟ้า/มอเตอร์ | Actuator |
 | **เซอร์โว SG90** | ควบคุมตำแหน่งด้วย PWM | Actuator |
 | **MQTT Broker** | ตัวกลางรับ-ส่งข้อความ Pub/Sub | Protocol |
-| **ThingSpeak** | คลาวด์เก็บและแสดงข้อมูล | Cloud |
+| **Blynk Cloud** | คลาวด์เก็บ-แสดงข้อมูล + โมบายแอป/แดชบอร์ดควบคุม | Cloud / UI |
 | **Node-RED** | สร้างโฟลว์และแดชบอร์ด | Visualization |
-| **Blynk** | โมบายแอป/แดชบอร์ดควบคุม | UI |
 | **Google Colab** | สภาพแวดล้อมฝึก ML (Python) | ML |
 
 ---
@@ -60,7 +59,7 @@
 
 - **โปรแกรมจำลอง/เครื่องมือ:**
   - [Wokwi](https://wokwi.com/) (จำลอง ESP32 + เซนเซอร์)
-  - [ThingSpeak](https://thingspeak.com/) (คลาวด์ IoT)
+  - [Blynk](https://blynk.io/) (คลาวด์ IoT + แอป/แดชบอร์ด)
   - [Node-RED](https://nodered.org/) (แดชบอร์ด)
 - **หนังสือ/เอกสารแนะนำ:**
   - *Internet of Things: A Hands-On Approach* โดย Arshdeep Bahga & Vijay Madisetti

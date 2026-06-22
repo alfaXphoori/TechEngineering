@@ -356,3 +356,49 @@ table.schedule tbody tr:hover { background: #f8fafc; }
     font-size: 1.15rem;
   }
 }
+
+/* ---------- Grade bar chart (horizontal) ---------- */
+.grade-chart {
+  max-width: 760px; margin: 0 auto;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+  padding: clamp(20px, 4vw, 34px); box-shadow: var(--shadow-sm);
+}
+.grade-row {
+  display: grid; grid-template-columns: 46px 1fr 168px; align-items: center;
+  gap: 14px; margin-bottom: 12px;
+}
+.grade-row:last-of-type { margin-bottom: 0; }
+.grade-row__label {
+  font-family: "JetBrains Mono", monospace; font-weight: 800;
+  color: var(--ink); text-align: center; font-size: 1.02rem;
+}
+.grade-row__track {
+  position: relative; height: 28px; background: #f1f5f9;
+  border-radius: 8px; overflow: hidden;
+}
+.grade-row__bar {
+  position: absolute; top: 0; bottom: 0; border-radius: 7px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.18);
+  transition: filter .15s ease;
+}
+.grade-row:hover .grade-row__bar { filter: brightness(1.08); }
+.grade-row__meta { font-size: .9rem; color: var(--muted); line-height: 1.4; }
+.grade-row__meta b { color: var(--ink); font-family: "JetBrains Mono", monospace; }
+.grade-A  { background: #15803d; }
+.grade-Bp { background: #16a34a; }
+.grade-B  { background: #65a30d; }
+.grade-Cp { background: #ca8a04; }
+.grade-C  { background: #d97706; }
+.grade-Dp { background: #ea580c; }
+.grade-D  { background: #dc2626; }
+.grade-F  { background: #991b1b; }
+.grade-axis { display: grid; grid-template-columns: 46px 1fr 168px; gap: 14px; margin-top: 10px; }
+.grade-axis__scale {
+  grid-column: 2; display: flex; justify-content: space-between;
+  font-size: .72rem; color: var(--muted); font-family: "JetBrains Mono", monospace;
+}
+@media (max-width: 560px) {
+  .grade-row { grid-template-columns: 36px 1fr; }
+  .grade-row__meta { grid-column: 2; font-size: .82rem; }
+  .grade-axis { grid-template-columns: 36px 1fr; }
+}

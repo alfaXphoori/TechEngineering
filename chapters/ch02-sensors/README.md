@@ -531,59 +531,99 @@ void loop() {
     .mcu { fill: #faf5ff; stroke: #a78bfa; stroke-width: 2; rx: 8px; }
     .sensor { fill: #eff6ff; stroke: #60a5fa; stroke-width: 2; rx: 8px; }
     .wire { fill: none; stroke: #cbd5e1; stroke-width: 1.5; }
-    .wire-active { fill: none; stroke: #3b82f6; stroke-width: 2; }
     .wire-cs-low { fill: none; stroke: #ef4444; stroke-width: 2; }
     .wire-cs-high { fill: none; stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 3 3; }
     .text-main { font-size: 12px; font-weight: 700; fill: #1e293b; }
     .text-sub { font-size: 10px; fill: #64748b; }
-    .text-bus { font-size: 10px; font-weight: bold; font-family: monospace; fill: #475569; }
+    .text-bus { font-size: 9px; font-weight: bold; font-family: monospace; fill: #475569; }
     .packet-mosi { fill: #ec4899; stroke: #ffffff; stroke-width: 1; }
     .packet-miso { fill: #10b981; stroke: #ffffff; stroke-width: 1; }
     .packet-label { font-size: 8px; fill: #ffffff; font-weight: bold; font-family: monospace; }
+    
+    /* SCK Clock Animation */
+    .line-sck { fill: none; stroke: #fef08a; stroke-width: 2; }
+    .sck-pulse { fill: none; stroke: #d97706; stroke-width: 2; stroke-dasharray: 10 5; animation: sckClockPulse 1.2s linear infinite; }
+    @keyframes sckClockPulse {
+      to { stroke-dashoffset: -15; }
+    }
+    
+    /* MOSI & MISO active lines */
+    .wire-mosi-active { fill: none; stroke: #db2777; stroke-width: 2; }
+    .wire-miso-active { fill: none; stroke: #059669; stroke-width: 2; }
   </style>
   <rect x="5" y="5" width="690" height="230" class="bg"/>
-  <rect x="20" y="45" width="120" height="150" class="mcu"/>
-  <text x="80" y="110" class="text-main" text-anchor="middle">ESP32</text>
-  <text x="80" y="130" class="text-sub" text-anchor="middle">(SPI Master)</text>
-  <!-- SCK Bus Line & Branch to Sensor B -->
-  <line x1="140" y1="65" x2="520" y2="65" class="wire"/>
-  <path d="M 470 65 L 470 160 L 520 160" class="wire"/>
-  <circle cx="470" cy="65" r="3" fill="#cbd5e1"/>
-  <text x="150" y="50" class="text-bus">SCK (Clock)</text>
   
-  <!-- MOSI Bus Line & Branch to Sensor B -->
-  <line x1="140" y1="95" x2="520" y2="95" class="wire-active"/>
-  <path d="M 450 95 L 450 170 L 520 170" class="wire"/>
-  <circle cx="450" cy="95" r="3" fill="#cbd5e1"/>
-  <text x="150" y="80" class="text-bus" fill="#db2777">MOSI (Data Out)</text>
+  <!-- ESP32 Breakout Box -->
+  <rect x="20" y="35" width="120" height="170" class="mcu"/>
+  <text x="80" y="95" class="text-main" text-anchor="middle">ESP32</text>
+  <text x="80" y="115" class="text-sub" text-anchor="middle">(SPI Master)</text>
+  <text x="80" y="135" class="text-sub" fill="#7c3aed" font-weight="bold" text-anchor="middle">GPIO 5, 18, 23, 19, 4</text>
   
-  <!-- MISO Bus Line with active branch from Sensor A and inactive from Sensor B -->
-  <line x1="140" y1="125" x2="450" y2="125" class="wire-active"/>
-  <line x1="450" y1="125" x2="520" y2="125" class="wire"/>
-  <path d="M 520 105 L 450 105 L 450 125" class="wire-active"/>
-  <path d="M 520 180 L 450 180 L 450 125" class="wire"/>
-  <circle cx="450" cy="125" r="3" fill="#cbd5e1"/>
-  <text x="150" y="110" class="text-bus" fill="#059669">MISO (Data In)</text>
-  <path d="M 140 165 L 430 165 L 430 100 L 520 100" class="wire-cs-low"/>
-  <text x="150" y="150" class="text-bus" fill="#dc2626">CS A (Active LOW ➔ Enabled)</text>
+  <!-- ESP32 Pin Labels -->
+  <text x="130" y="54" class="text-bus" text-anchor="end" fill="#dc2626">CS A</text>
+  <text x="130" y="114" class="text-bus" text-anchor="end" fill="#d97706">SCK</text>
+  <text x="130" y="129" class="text-bus" text-anchor="end" fill="#db2777">MOSI</text>
+  <text x="130" y="144" class="text-bus" text-anchor="end" fill="#059669">MISO</text>
+  <text x="130" y="189" class="text-bus" text-anchor="end" fill="#94a3b8">CS B</text>
+  
+  <!-- CS A & CS B Lines -->
+  <path d="M 140 50 L 520 50" class="wire-cs-low"/>
+  <text x="150" y="45" class="text-bus" fill="#dc2626">CS A (Active LOW ➔ Enabled)</text>
+  
   <line x1="140" y1="185" x2="520" y2="185" class="wire-cs-high"/>
-  <text x="150" y="205" class="text-bus" fill="#94a3b8">CS B (Standby HIGH ➔ Disabled)</text>
-  <rect x="520" y="30" width="150" height="80" class="sensor"/>
-  <text x="595" y="65" class="text-main" text-anchor="middle">Sensor A</text>
-  <text x="595" y="85" class="text-sub" text-anchor="middle">(SPI Slave 1 - Active)</text>
-  <rect x="520" y="150" width="150" height="70" class="sensor" style="opacity: 0.5;"/>
-  <text x="595" y="185" class="text-main" text-anchor="middle" style="opacity: 0.5;">Sensor B</text>
-  <text x="595" y="200" class="text-sub" text-anchor="middle" style="opacity: 0.5;">(Disabled)</text>
-  <!-- Junction circles removed from here since they are declared inline with bus paths -->
+  <text x="150" y="197" class="text-bus" fill="#94a3b8">CS B (Standby HIGH ➔ Disabled)</text>
+  
+  <!-- SCK Bus Line (Clock) -->
+  <path d="M 140 110 L 480 110 L 480 75 L 520 75" class="line-sck"/>
+  <path d="M 140 110 L 480 110 L 480 75 L 520 75" class="sck-pulse"/>
+  <path d="M 480 110 L 480 165 L 520 165" class="wire"/>
+  <circle cx="480" cy="110" r="3" fill="#f59e0b"/>
+  <text x="150" y="103" class="text-bus" fill="#d97706">SCK (Clock)</text>
+  
+  <!-- MOSI Bus Line (Master Out Slave In) -->
+  <path d="M 140 125 L 450 125 L 450 85 L 520 85" class="wire-mosi-active"/>
+  <path d="M 450 125 L 450 175 L 520 175" class="wire"/>
+  <circle cx="450" cy="125" r="3" fill="#db2777"/>
+  <text x="150" y="121" class="text-bus" fill="#db2777">MOSI (Data Out)</text>
+  
+  <!-- MISO Bus Line (Master In Slave Out) -->
+  <path d="M 520 95 L 420 95 L 420 140 L 140 140" class="wire-miso-active"/>
+  <path d="M 520 195 L 420 195 L 420 140" class="wire"/>
+  <circle cx="420" cy="140" r="3" fill="#059669"/>
+  <text x="150" y="136" class="text-bus" fill="#059669">MISO (Data In)</text>
+  
+  <!-- Sensor A breakout (Active) -->
+  <rect x="520" y="25" width="150" height="80" class="sensor"/>
+  <text x="610" y="60" class="text-main" text-anchor="middle">Sensor A</text>
+  <text x="610" y="78" class="text-sub" text-anchor="middle">(Active)</text>
+  
+  <!-- Sensor A Pin Labels -->
+  <text x="526" y="54" class="text-bus" text-anchor="start" fill="#dc2626">CS</text>
+  <text x="526" y="79" class="text-bus" text-anchor="start" fill="#d97706">SCK</text>
+  <text x="526" y="89" class="text-bus" text-anchor="start" fill="#db2777">MOSI</text>
+  <text x="526" y="99" class="text-bus" text-anchor="start" fill="#059669">MISO</text>
+  
+  <!-- Sensor B breakout (Disabled/Standby) -->
+  <rect x="520" y="150" width="150" height="70" class="sensor" style="opacity: 0.6;"/>
+  <text x="610" y="180" class="text-main" text-anchor="middle" style="opacity: 0.6;">Sensor B</text>
+  <text x="610" y="196" class="text-sub" text-anchor="middle" style="opacity: 0.6;">(Disabled)</text>
+  
+  <!-- Sensor B Pin Labels -->
+  <text x="526" y="169" class="text-bus" text-anchor="start" style="opacity: 0.6;" fill="#94a3b8">SCK</text>
+  <text x="526" y="179" class="text-bus" text-anchor="start" style="opacity: 0.6;" fill="#94a3b8">MOSI</text>
+  <text x="526" y="189" class="text-bus" text-anchor="start" style="opacity: 0.6;" fill="#94a3b8">CS</text>
+  <text x="526" y="199" class="text-bus" text-anchor="start" style="opacity: 0.6;" fill="#94a3b8">MISO</text>
+  
+  <!-- Packet animations -->
   <g>
-    <rect x="0" y="0" width="40" height="12" rx="2" class="packet-mosi"/>
-    <text x="20" y="9" class="packet-label" text-anchor="middle">WRITE</text>
-    <animateMotion path="M 140 95 L 520 95" dur="3s" repeatCount="indefinite" />
+    <rect x="-20" y="-6" width="40" height="12" rx="2" class="packet-mosi"/>
+    <text x="0" y="3" class="packet-label" text-anchor="middle">WRITE</text>
+    <animateMotion path="M 140 125 L 450 125 L 450 85 L 520 85" dur="3s" repeatCount="indefinite" />
   </g>
   <g>
-    <rect x="0" y="0" width="40" height="12" rx="2" class="packet-miso"/>
-    <text x="20" y="9" class="packet-label" text-anchor="middle">READ</text>
-    <animateMotion path="M 520 125 L 140 125" dur="3s" repeatCount="indefinite" />
+    <rect x="-20" y="-6" width="40" height="12" rx="2" class="packet-miso"/>
+    <text x="0" y="3" class="packet-label" text-anchor="middle">READ</text>
+    <animateMotion path="M 520 95 L 420 95 L 420 140 L 140 140" dur="3s" repeatCount="indefinite" />
   </g>
   <text x="350" y="222" class="text-sub" text-anchor="middle" fill="#475569">การส่งข้อมูลแบบ Full-Duplex: ข้อมูลไหลผ่าน MOSI และ MISO พร้อมกันในรอบบัสเดียว เมื่อขา CS A ถูกดึงลงต่ำ (LOW)</text>
 </svg>

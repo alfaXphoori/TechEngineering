@@ -5,11 +5,345 @@
 
 ---
 
-## 2.1 เซนเซอร์คืออะไร และหลักการแปลงปริมาณกายภาพเป็นสัญญาณไฟฟ้า
+## 2.1 ความรู้พื้นฐานอิเล็กทรอนิกส์
+
+ก่อนเข้าสู่การอ่านค่าเซนเซอร์ด้วย ESP32 ควรเข้าใจแนวคิดพื้นฐานของวงจรไฟฟ้าเล็กน้อย เพราะเซนเซอร์จำนวนมากไม่ได้ส่ง "ตัวเลข" ออกมาโดยตรง แต่ส่งผลลัพธ์เป็นแรงดัน กระแส หรือความต้านทานที่เปลี่ยนไป จากนั้นไมโครคอนโทรลเลอร์จึงอ่านค่าและแปลงเป็นข้อมูลดิจิทัลอีกที
+
+### 2.1.1 แรงดัน กระแส และความต้านทาน (Voltage, Current, Resistance)
+
+ในวงจรไฟฟ้าพื้นฐาน เรามักพบปริมาณสำคัญ 3 ตัว ได้แก่ แรงดันไฟฟ้า กระแสไฟฟ้า และความต้านทาน
+
+*   **แรงดันไฟฟ้า ($V$ - Voltage):** คือ "แรงผลัก" ที่ทำให้ประจุไฟฟ้าเคลื่อนที่ หน่วยคือโวลต์ ($\text{V}$) เช่น ขา $3.3\text{ V}$ ของ ESP32 เป็นแหล่งจ่ายแรงดันที่ผลักให้กระแสไหลในวงจร
+*   **กระแสไฟฟ้า ($I$ - Current):** คืออัตราการไหลของประจุไฟฟ้าผ่านจุดหนึ่งในวงจร หน่วยคือแอมแปร์ ($\text{A}$) ในงานไมโครคอนโทรลเลอร์มักใช้หน่วยมิลลิแอมแปร์ ($\text{mA}$)
+*   **ความต้านทาน ($R$ - Resistance):** คือความยากง่ายที่กระแสจะไหลผ่านอุปกรณ์ หน่วยคือโอห์ม ($\Omega$) ยิ่งความต้านทานสูง กระแสยิ่งไหลได้น้อยลง
+
+วิธีนึกภาพที่ง่ายคือเปรียบวงจรไฟฟ้ากับน้ำในท่อ: **แรงดัน** เหมือนความสูงของถังน้ำที่ดันน้ำให้ไหล, **กระแส** เหมือนอัตราการไหลของน้ำ, และ **ความต้านทาน** เหมือนความแคบของท่อที่จำกัดการไหล
+
+<div style="text-align: center; margin: 20px 0;">
+<svg viewBox="0 0 760 280" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+  <title>กระแสไหลในวงจรปิดผ่านตัวต้านทานและ LED</title>
+  <style>
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1; rx: 10px; }
+    .wire { fill: none; stroke: #334155; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .current-path { fill: none; stroke: #f59e0b; stroke-width: 4; stroke-dasharray: 10 12; stroke-linecap: round; animation: currentMarch 2.6s linear infinite; }
+    .battery { fill: #ffffff; stroke: #334155; stroke-width: 2; rx: 8px; }
+    .component { fill: #ffffff; stroke: #334155; stroke-width: 2; rx: 4px; }
+    .led-body { fill: #fee2e2; stroke: #dc2626; stroke-width: 2; }
+    .led-ray { stroke: #ef4444; stroke-width: 2; stroke-linecap: round; opacity: 0.2; animation: ledGlow 1.4s ease-in-out infinite; }
+    .dot { fill: #f59e0b; stroke: #ffffff; stroke-width: 1.5; }
+    .text-main { font-size: 14px; font-weight: 700; fill: #1e293b; }
+    .text-sub { font-size: 12px; fill: #64748b; }
+    .text-code { font-size: 12px; font-weight: 700; fill: #7c3aed; font-family: monospace; }
+    .label-v { fill: #dc2626; font-weight: 700; }
+    .label-i { fill: #d97706; font-weight: 700; }
+    .label-r { fill: #2563eb; font-weight: 700; }
+    @keyframes currentMarch {
+      to { stroke-dashoffset: -44; }
+    }
+    @keyframes ledGlow {
+      0%, 100% { opacity: 0.25; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.05); }
+    }
+  </style>
+  <rect x="5" y="5" width="750" height="270" class="bg"/>
+  <path d="M 145 75 L 310 75 L 450 75 L 610 75 L 610 205 L 145 205 L 145 75" class="wire"/>
+  <path id="closedCircuitPath" d="M 145 75 L 310 75 L 450 75 L 610 75 L 610 205 L 145 205 L 145 75" class="current-path"/>
+
+  <rect x="95" y="118" width="100" height="60" class="battery"/>
+  <line x1="128" y1="132" x2="128" y2="164" stroke="#dc2626" stroke-width="4"/>
+  <line x1="158" y1="140" x2="158" y2="156" stroke="#334155" stroke-width="4"/>
+  <text x="145" y="108" class="text-main" text-anchor="middle">แหล่งจ่าย</text>
+  <text x="145" y="193" class="text-code" text-anchor="middle">3.3 V</text>
+  <text x="115" y="134" class="label-v" text-anchor="middle">+</text>
+  <text x="175" y="162" fill="#334155" font-weight="700" text-anchor="middle">-</text>
+
+  <rect x="300" y="50" width="90" height="50" class="component"/>
+  <line x1="312" y1="75" x2="328" y2="60" stroke="#2563eb" stroke-width="2"/>
+  <line x1="328" y1="60" x2="344" y2="90" stroke="#2563eb" stroke-width="2"/>
+  <line x1="344" y1="90" x2="360" y2="60" stroke="#2563eb" stroke-width="2"/>
+  <line x1="360" y1="60" x2="376" y2="75" stroke="#2563eb" stroke-width="2"/>
+  <text x="345" y="38" class="text-main" text-anchor="middle">ตัวต้านทาน</text>
+  <text x="345" y="118" class="label-r" text-anchor="middle">R จำกัดกระแส</text>
+
+  <g transform="translate(495,75)">
+    <polygon points="-20,-22 -20,22 18,0" class="led-body"/>
+    <line x1="22" y1="-24" x2="22" y2="24" stroke="#dc2626" stroke-width="3"/>
+    <line x1="-34" y1="0" x2="-20" y2="0" stroke="#334155" stroke-width="3"/>
+    <line x1="22" y1="0" x2="34" y2="0" stroke="#334155" stroke-width="3"/>
+    <line x1="35" y1="-25" x2="52" y2="-42" class="led-ray"/>
+    <line x1="45" y1="-10" x2="64" y2="-18" class="led-ray"/>
+  </g>
+  <text x="495" y="38" class="text-main" text-anchor="middle">LED</text>
+  <text x="495" y="118" fill="#dc2626" font-size="12" font-weight="700" text-anchor="middle">ใช้กระแสไม่มาก</text>
+
+  <circle r="6" class="dot">
+    <animateMotion dur="2.6s" repeatCount="indefinite">
+      <mpath href="#closedCircuitPath"/>
+    </animateMotion>
+  </circle>
+  <circle r="6" class="dot" opacity="0.75">
+    <animateMotion dur="2.6s" begin="0.85s" repeatCount="indefinite">
+      <mpath href="#closedCircuitPath"/>
+    </animateMotion>
+  </circle>
+  <circle r="6" class="dot" opacity="0.5">
+    <animateMotion dur="2.6s" begin="1.7s" repeatCount="indefinite">
+      <mpath href="#closedCircuitPath"/>
+    </animateMotion>
+  </circle>
+
+  <text x="380" y="166" class="text-main" text-anchor="middle">กระแสแบบดั้งเดิมไหลจาก + ไป - เมื่อวงจรปิด</text>
+  <text x="380" y="188" class="text-sub" text-anchor="middle">แรงดัน (V) ผลักกระแส (I) ผ่านความต้านทาน (R)</text>
+  <text x="380" y="228" class="text-code" text-anchor="middle">V = 3.3V   I = V/R   R ทำหน้าที่จำกัดกระแส</text>
+</svg>
+<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 2.1 กระแสจะไหลได้เมื่อมีแหล่งจ่ายและเส้นทางกลับครบเป็นวงจรปิด</div>
+</div>
+
+> 💡 **หลักคิดง่าย ๆ:** ถ้ามีแรงดันแต่ไม่มีวงจรปิด กระแสจะไม่ไหล และถ้าความต้านทานสูงขึ้น กระแสที่ไหลในวงจรจะลดลง
+
+### 2.1.2 กฎของโอห์ม (Ohm's Law)
+
+กฎของโอห์มเป็นสมการพื้นฐานที่เชื่อมความสัมพันธ์ระหว่างแรงดัน กระแส และความต้านทาน:
+
+$$V = IR$$
+
+จากสมการเดียวกันนี้สามารถจัดรูปเพื่อหาค่าที่ต้องการได้:
+
+$$I = \frac{V}{R}$$
+
+$$R = \frac{V}{I}$$
+
+ตัวอย่างเช่น ถ้าต้องการต่อ LED กับขา ESP32 ที่จ่ายแรงดัน $3.3\text{ V}$ และต้องการจำกัดกระแสประมาณ $10\text{ mA}$ โดยสมมติว่า LED สีแดงมีแรงดันตกคร่อมประมาณ $2.0\text{ V}$ แรงดันที่เหลือตกคร่อมตัวต้านทานคือ:
+
+$$V_R = 3.3 - 2.0 = 1.3\text{ V}$$
+
+ดังนั้นค่าตัวต้านทานที่เหมาะสมโดยประมาณคือ:
+
+$$R = \frac{V_R}{I} = \frac{1.3}{0.01} = 130\ \Omega$$
+
+ในการใช้งานจริงมักเลือกค่ามาตรฐานที่ใกล้และสูงขึ้นเล็กน้อย เช่น $150\ \Omega$ หรือ $220\ \Omega$ เพื่อให้กระแสไม่สูงเกินไปและช่วยป้องกันขา GPIO
+
+กำลังไฟฟ้า ($P$) คืออัตราการใช้พลังงานของอุปกรณ์ในวงจร คำนวณได้จาก:
+
+$$P = VI = I^2R$$
+
+ในวงจรเซนเซอร์บางชนิด เช่น Thermistor หรือ LDR หากเลือกตัวต้านทานต่ำเกินไป กระแสจะสูงขึ้นและทำให้เกิดความร้อนสะสมในตัวเซนเซอร์ ส่งผลให้ค่าที่อ่านได้คลาดเคลื่อน
+
+> 💡 **หลักคิดง่าย ๆ:** กฎของโอห์มช่วยตอบคำถามว่า "ถ้ามีแรงดันเท่านี้และความต้านทานเท่านี้ กระแสจะไหลเท่าไร" ซึ่งเป็นพื้นฐานของการเลือกตัวต้านทานและการออกแบบวงจรอ่านค่าเซนเซอร์
+
+### 2.1.3 วงจรอนุกรมและขนาน (Series & Parallel)
+
+การต่อตัวต้านทานมี 2 รูปแบบพื้นฐานที่พบได้บ่อย คืออนุกรมและขนาน ซึ่งให้พฤติกรรมของแรงดันและกระแสต่างกัน
+
+**วงจรอนุกรม (Series Circuit)** คือต่ออุปกรณ์เรียงกันเป็นเส้นทางเดียว กระแสจึงเท่ากันทุกจุด แต่แรงดันจะแบ่งตกคร่อมอุปกรณ์แต่ละตัว:
+
+$$R_{total} = R_1 + R_2 + ...$$
+
+**วงจรขนาน (Parallel Circuit)** คือต่ออุปกรณ์หลายกิ่งคร่อมแหล่งจ่ายเดียวกัน แรงดันแต่ละกิ่งจึงเท่ากัน แต่กระแสจะแบ่งไปตามแต่ละกิ่ง:
+
+$$\frac{1}{R_{total}} = \frac{1}{R_1} + \frac{1}{R_2} + ...$$
+
+<div style="text-align: center; margin: 20px 0;">
+<svg viewBox="0 0 820 330" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+  <title>เปรียบเทียบวงจรอนุกรมและวงจรขนาน</title>
+  <style>
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1; rx: 10px; }
+    .panel { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; rx: 8px; }
+    .wire { fill: none; stroke: #334155; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .series-flow { fill: none; stroke: #f59e0b; stroke-width: 3; stroke-dasharray: 8 10; animation: marchSeries 2.8s linear infinite; }
+    .parallel-flow { fill: none; stroke: #10b981; stroke-width: 3; stroke-dasharray: 8 10; animation: marchParallel 2.2s linear infinite; }
+    .resistor { fill: #eff6ff; stroke: #2563eb; stroke-width: 2; rx: 4px; }
+    .battery { fill: #fef2f2; stroke: #dc2626; stroke-width: 2; rx: 6px; }
+    .dot-s { fill: #f59e0b; stroke: #ffffff; stroke-width: 1; }
+    .dot-p { fill: #10b981; stroke: #ffffff; stroke-width: 1; }
+    .text-main { font-size: 14px; font-weight: 700; fill: #1e293b; }
+    .text-sub { font-size: 12px; fill: #64748b; }
+    .text-code { font-size: 11px; font-family: monospace; font-weight: 700; fill: #7c3aed; }
+    .voltage { fill: #dc2626; font-size: 12px; font-weight: 700; }
+    .current { fill: #059669; font-size: 12px; font-weight: 700; }
+    @keyframes marchSeries {
+      to { stroke-dashoffset: -36; }
+    }
+    @keyframes marchParallel {
+      to { stroke-dashoffset: -36; }
+    }
+    @keyframes valueBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.45; }
+    }
+    .blink { animation: valueBlink 2.2s ease-in-out infinite; }
+  </style>
+  <rect x="5" y="5" width="810" height="320" class="bg"/>
+
+  <rect x="25" y="45" width="365" height="235" class="panel"/>
+  <text x="207.5" y="28" class="text-main" text-anchor="middle">วงจรอนุกรม: กระแสเท่ากัน แรงดันแบ่งกัน</text>
+  <path d="M 80 105 L 185 105 L 280 105 L 335 105 L 335 220 L 80 220 L 80 105" class="wire"/>
+  <path id="seriesPath" d="M 80 105 L 185 105 L 280 105 L 335 105 L 335 220 L 80 220 L 80 105" class="series-flow"/>
+  <rect x="55" y="140" width="50" height="45" class="battery"/>
+  <text x="80" y="133" class="voltage" text-anchor="middle">3.3V</text>
+  <text x="64" y="158" class="voltage">+</text>
+  <text x="92" y="178" fill="#334155" font-weight="700">-</text>
+  <rect x="155" y="80" width="70" height="50" class="resistor"/>
+  <text x="190" y="101" class="text-main" text-anchor="middle">R1</text>
+  <text x="190" y="118" class="text-sub" text-anchor="middle">10 kΩ</text>
+  <rect x="260" y="80" width="70" height="50" class="resistor"/>
+  <text x="295" y="101" class="text-main" text-anchor="middle">R2</text>
+  <text x="295" y="118" class="text-sub" text-anchor="middle">10 kΩ</text>
+  <text x="190" y="62" class="voltage blink" text-anchor="middle">V1 ≈ 1.65V</text>
+  <text x="295" y="62" class="voltage blink" text-anchor="middle">V2 ≈ 1.65V</text>
+  <text x="207.5" y="250" class="text-code" text-anchor="middle">Rtotal = 10k + 10k = 20kΩ</text>
+  <text x="207.5" y="268" class="text-sub" text-anchor="middle">กระแสเส้นเดียวกันไหลผ่าน R1 และ R2 เท่ากัน</text>
+  <circle r="5" class="dot-s">
+    <animateMotion dur="2.8s" repeatCount="indefinite"><mpath href="#seriesPath"/></animateMotion>
+  </circle>
+  <circle r="5" class="dot-s" opacity="0.65">
+    <animateMotion dur="2.8s" begin="1.4s" repeatCount="indefinite"><mpath href="#seriesPath"/></animateMotion>
+  </circle>
+
+  <rect x="430" y="45" width="365" height="235" class="panel"/>
+  <text x="612.5" y="28" class="text-main" text-anchor="middle">วงจรขนาน: แรงดันเท่ากัน กระแสแบ่งกัน</text>
+  <path d="M 485 105 L 560 105 L 560 80 L 720 80 L 720 220 L 485 220 L 485 105" class="wire"/>
+  <path d="M 560 150 L 720 150" class="wire"/>
+  <path id="parallelTopPath" d="M 485 105 L 560 105 L 560 80 L 720 80 L 720 220 L 485 220 L 485 105" class="parallel-flow"/>
+  <path id="parallelMidPath" d="M 485 105 L 560 105 L 560 150 L 720 150 L 720 220 L 485 220 L 485 105" class="parallel-flow"/>
+  <rect x="460" y="140" width="50" height="45" class="battery"/>
+  <text x="485" y="133" class="voltage" text-anchor="middle">3.3V</text>
+  <text x="464" y="158" class="voltage">+</text>
+  <text x="497" y="178" fill="#334155" font-weight="700">-</text>
+  <rect x="610" y="55" width="70" height="50" class="resistor"/>
+  <text x="645" y="76" class="text-main" text-anchor="middle">R1</text>
+  <text x="645" y="93" class="text-sub" text-anchor="middle">10 kΩ</text>
+  <rect x="610" y="125" width="70" height="50" class="resistor"/>
+  <text x="645" y="146" class="text-main" text-anchor="middle">R2</text>
+  <text x="645" y="163" class="text-sub" text-anchor="middle">10 kΩ</text>
+  <text x="735" y="84" class="voltage blink">V1 = 3.3V</text>
+  <text x="735" y="154" class="voltage blink">V2 = 3.3V</text>
+  <text x="560" y="126" class="current">I แบ่งเป็น 2 กิ่ง</text>
+  <text x="612.5" y="250" class="text-code" text-anchor="middle">1/Rtotal = 1/10k + 1/10k  →  Rtotal = 5kΩ</text>
+  <text x="612.5" y="268" class="text-sub" text-anchor="middle">กระแสรวม = กระแสกิ่ง R1 + กระแสกิ่ง R2</text>
+  <circle r="5" class="dot-p">
+    <animateMotion dur="2.2s" repeatCount="indefinite"><mpath href="#parallelTopPath"/></animateMotion>
+  </circle>
+  <circle r="5" class="dot-p" opacity="0.75">
+    <animateMotion dur="2.2s" begin="0.35s" repeatCount="indefinite"><mpath href="#parallelMidPath"/></animateMotion>
+  </circle>
+</svg>
+<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 2.2 วงจรอนุกรมใช้หลักการแบ่งแรงดัน ส่วนวงจรขนานใช้หลักการแบ่งกระแส</div>
+</div>
+
+วงจรแบ่งแรงดัน (Voltage Divider) ที่จะใช้กับ LDR และ Thermistor ในหัวข้อ 2.2.2 เป็นตัวอย่างสำคัญของวงจรอนุกรม: ตัวต้านทานคงที่และตัวต้านทานของเซนเซอร์ต่อเรียงกัน ทำให้แรงดันที่จุดกึ่งกลางเปลี่ยนตามค่าความต้านทานของเซนเซอร์
+
+> 💡 **หลักคิดง่าย ๆ:** อนุกรมเหมาะกับการ "แบ่งแรงดัน" ส่วนขนานเหมาะกับการ "แบ่งกระแส" และการเข้าใจสองแบบนี้ช่วยอ่านวงจรเซนเซอร์ได้ง่ายขึ้นมาก
+
+### 2.1.4 ตัวต้านทานและตัวต้านทานพูลอัป/พูลดาวน์ (Resistor & Pull-up/Pull-down)
+
+**ตัวต้านทาน (Resistor)** ทำหน้าที่ควบคุมหรือจำกัดกระแส แบ่งแรงดัน และกำหนดสถานะเริ่มต้นของสัญญาณในวงจร ตัวต้านทานจริงมักมีแถบสีบอกค่า เช่น น้ำตาล-ดำ-ส้ม หมายถึง $10\text{ k}\Omega$ และในโมดูลเซนเซอร์สมัยใหม่มักพิมพ์ค่าเป็นรหัสบนตัวชิ้นส่วน เช่น `103` หมายถึง $10 \times 10^3 = 10\text{ k}\Omega$
+
+เมื่อขา GPIO ถูกตั้งเป็นอินพุต ขานั้นมีความต้านทานอินพุตสูงมาก หากไม่ได้ต่อกับ HIGH หรือ LOW อย่างชัดเจน ขาอาจอยู่ในสถานะ **ลอย (Floating)** ทำให้ค่าที่อ่านได้แกว่งหรือสุ่มเปลี่ยนเอง ตัวต้านทานพูลอัปและพูลดาวน์จึงใช้เพื่อกำหนดสถานะเริ่มต้นให้ขาอินพุต
+
+*   **Pull-up:** ต่อตัวต้านทานจากขาสัญญาณไปยัง $V_{DD}$ ทำให้สถานะปกติเป็น HIGH และเมื่อสวิตช์หรือเซนเซอร์ดึงลงกราวด์ สถานะจะกลายเป็น LOW
+*   **Pull-down:** ต่อตัวต้านทานจากขาสัญญาณลงกราวด์ ทำให้สถานะปกติเป็น LOW และเมื่อสวิตช์หรือเซนเซอร์ดึงขึ้น $V_{DD}$ สถานะจะกลายเป็น HIGH
+
+<div style="text-align: center; margin: 20px 0;">
+<svg viewBox="0 0 760 310" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+  <title>ตัวต้านทาน pull-up กำหนดสถานะ HIGH และการดึงลง GND ทำให้เป็น LOW</title>
+  <style>
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1; rx: 10px; }
+    .mcu { fill: #faf5ff; stroke: #7c3aed; stroke-width: 2; rx: 8px; }
+    .wire { fill: none; stroke: #334155; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .wire-high { fill: none; stroke: #16a34a; stroke-width: 4; stroke-linecap: round; animation: showHigh 6s ease-in-out infinite; }
+    .wire-low { fill: none; stroke: #dc2626; stroke-width: 4; stroke-linecap: round; animation: showLow 6s ease-in-out infinite; }
+    .pull-current { fill: none; stroke: #f59e0b; stroke-width: 3; stroke-dasharray: 7 9; animation: pullCurrent 6s linear infinite; }
+    .resistor { fill: #ffffff; stroke: #334155; stroke-width: 2; rx: 4px; }
+    .node { stroke: #ffffff; stroke-width: 2; animation: nodeState 6s ease-in-out infinite; }
+    .switch-arm { stroke: #334155; stroke-width: 4; stroke-linecap: round; transform-origin: 330px 210px; animation: switchMove 6s ease-in-out infinite; }
+    .text-main { font-size: 14px; font-weight: 700; fill: #1e293b; }
+    .text-sub { font-size: 12px; fill: #64748b; }
+    .text-code { font-size: 12px; font-family: monospace; font-weight: 700; fill: #7c3aed; }
+    .state-high { animation: showHigh 6s ease-in-out infinite; }
+    .state-low { animation: showLow 6s ease-in-out infinite; }
+    @keyframes showHigh {
+      0%, 42%, 100% { opacity: 1; }
+      50%, 92% { opacity: 0; }
+    }
+    @keyframes showLow {
+      0%, 42%, 100% { opacity: 0; }
+      50%, 92% { opacity: 1; }
+    }
+    @keyframes nodeState {
+      0%, 42%, 100% { fill: #16a34a; }
+      50%, 92% { fill: #dc2626; }
+    }
+    @keyframes switchMove {
+      0%, 42%, 100% { transform: rotate(-32deg); }
+      50%, 92% { transform: rotate(0deg); }
+    }
+    @keyframes pullCurrent {
+      0%, 42%, 100% { opacity: 0; stroke-dashoffset: 0; }
+      50%, 92% { opacity: 1; stroke-dashoffset: -96; }
+    }
+  </style>
+  <rect x="5" y="5" width="750" height="300" class="bg"/>
+
+  <text x="380" y="32" class="text-main" text-anchor="middle">Pull-up: ปกติ HIGH, เมื่อสวิตช์/เซนเซอร์ดึงลง GND จะเป็น LOW</text>
+  <line x1="210" y1="65" x2="210" y2="110" class="wire"/>
+  <text x="210" y="55" fill="#dc2626" font-size="13" font-weight="700" text-anchor="middle">VDD 3.3V</text>
+  <rect x="190" y="110" width="40" height="70" class="resistor"/>
+  <line x1="196" y1="122" x2="224" y2="122" stroke="#fbbf24" stroke-width="3"/>
+  <line x1="196" y1="140" x2="224" y2="140" stroke="#a78bfa" stroke-width="3"/>
+  <line x1="196" y1="158" x2="224" y2="158" stroke="#dc2626" stroke-width="3"/>
+  <text x="250" y="138" class="text-main">Pull-up</text>
+  <text x="250" y="156" class="text-code">4.7kΩ - 10kΩ</text>
+
+  <line x1="210" y1="180" x2="210" y2="210" class="wire"/>
+  <line x1="210" y1="210" x2="505" y2="210" class="wire"/>
+  <path d="M 210 180 L 210 210 L 505 210" class="wire-high"/>
+  <path d="M 210 210 L 330 210 L 360 248" class="wire-low"/>
+  <path d="M 210 65 L 210 110 M 210 180 L 210 210 L 330 210 L 360 248" class="pull-current"/>
+  <circle cx="210" cy="210" r="8" class="node"/>
+  <text x="210" y="235" class="text-sub" text-anchor="middle">จุดสัญญาณ</text>
+
+  <rect x="505" y="170" width="170" height="80" class="mcu"/>
+  <text x="590" y="198" class="text-main" text-anchor="middle">ESP32 GPIO</text>
+  <text x="590" y="218" class="text-sub" text-anchor="middle">ตั้งเป็น INPUT</text>
+  <text x="590" y="238" class="text-code state-high" text-anchor="middle">digitalRead() = HIGH</text>
+  <text x="590" y="238" class="text-code state-low" text-anchor="middle" fill="#dc2626">digitalRead() = LOW</text>
+
+  <line x1="360" y1="248" x2="360" y2="262" class="wire"/>
+  <line x1="338" y1="262" x2="382" y2="262" class="wire"/>
+  <line x1="346" y1="268" x2="374" y2="268" class="wire"/>
+  <line x1="354" y1="274" x2="366" y2="274" class="wire"/>
+  <text x="360" y="294" class="text-sub" text-anchor="middle">GND</text>
+  <line x1="330" y1="210" x2="360" y2="248" class="switch-arm"/>
+  <circle cx="330" cy="210" r="4" fill="#334155"/>
+  <circle cx="360" cy="248" r="4" fill="#334155"/>
+  <text x="360" y="188" class="text-sub" text-anchor="middle">สวิตช์/เซนเซอร์</text>
+
+  <g class="state-high">
+    <rect x="60" y="65" width="115" height="60" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+    <text x="117.5" y="91" class="text-main" fill="#047857" text-anchor="middle">ปล่อยไว้</text>
+    <text x="117.5" y="110" class="text-sub" fill="#047857" text-anchor="middle">ขาถูกดึงเป็น HIGH</text>
+  </g>
+  <g class="state-low">
+    <rect x="60" y="65" width="115" height="60" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+    <text x="117.5" y="91" class="text-main" fill="#dc2626" text-anchor="middle">ถูกกด/ทริกเกอร์</text>
+    <text x="117.5" y="110" class="text-sub" fill="#dc2626" text-anchor="middle">สัญญาณลง LOW</text>
+  </g>
+</svg>
+<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 2.3 ตัวต้านทาน pull-up ทำให้ขาอินพุตมีสถานะชัดเจน ไม่ลอย และยอมให้อุปกรณ์ดึงสายลง LOW ได้</div>
+</div>
+
+แนวคิดนี้สำคัญมากกับ GPIO, I2C และ One-Wire เพราะบัสเหล่านี้มักต้องมีสถานะว่างเป็น HIGH แล้วให้อุปกรณ์บนบัสดึงสายลง LOW เมื่อจะส่งสัญญาณ ในหัวข้อ 2.5 และตัวอย่างเซนเซอร์หัวข้อ 2.6 จะเห็นการใช้ pull-up ค่า $4.7\text{ k}\Omega$ ถึง $10\text{ k}\Omega$ กับสาย I2C และ One-Wire อยู่บ่อยครั้ง
+
+> 💡 **หลักคิดง่าย ๆ:** Pull-up และ pull-down ไม่ได้มีไว้เพิ่มความซับซ้อน แต่มีไว้ทำให้ GPIO มีคำตอบชัดเจนว่าเป็น HIGH หรือ LOW เมื่อไม่มีใครขับสัญญาณอยู่
+
+---
+
+## 2.2 เซนเซอร์คืออะไร และหลักการแปลงปริมาณกายภาพเป็นสัญญาณไฟฟ้า
 
 **เซนเซอร์ (Sensor)** คืออุปกรณ์ที่ตรวจจับปริมาณทางกายภาพ (Physical Quantity) แล้วแปลงให้เป็นสัญญาณไฟฟ้า (Electrical Signal) ที่ไมโครคอนโทรลเลอร์สามารถอ่านค่าได้
 
-### 2.1.1 ทรานสดิวเซอร์ (Transducer)
+### 2.2.1 ทรานสดิวเซอร์ (Transducer)
 
 คำว่า **ทรานสดิวเซอร์** หมายถึงอุปกรณ์ที่แปลงพลังงานรูปหนึ่งไปเป็นอีกรูปหนึ่ง เซนเซอร์จึงเป็นทรานสดิวเซอร์ประเภทหนึ่งที่แปลง *พลังงานทางกายภาพ → พลังงานไฟฟ้า*
 
@@ -24,54 +358,54 @@
     .analog-flow { fill: none; stroke: #2563eb; stroke-width: 2; stroke-dasharray: 8 4; animation: march 2s linear infinite; }
     .electrical-flow { fill: none; stroke: #d97706; stroke-width: 2; stroke-dasharray: 8 4; animation: march 2s linear infinite; }
     .digital-flow { fill: none; stroke: #8b5cf6; stroke-width: 2; stroke-dasharray: 2 6; stroke-linecap: round; stroke-width: 4; animation: march 1s linear infinite; }
-    
+
     @keyframes march {
       to {
         stroke-dashoffset: -20;
       }
     }
   </style>
-  
+
   <!-- Box 1: ปริมาณกายภาพ -->
   <rect x="15" y="25" width="135" height="90" rx="12" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
   <text x="82.5" y="53" fill="#166534" font-size="13" font-weight="700" text-anchor="middle">ปริมาณกายภาพ</text>
   <text x="82.5" y="71" fill="#15803d" font-size="11" text-anchor="middle">(Physical Quantity)</text>
   <text x="82.5" y="91" fill="#22c55e" font-size="10" text-anchor="middle">ความร้อน, แสง, ความสั่น</text>
-  
+
   <!-- Arrow 1: Physical flow (wavy/dashed) -->
   <path d="M 150 70 C 158 60, 163 80, 171 70 C 176 64, 180 70, 185 70" class="physical-flow"/>
   <polygon points="185,70 178,66 178,74" fill="#16a34a"/>
-  
+
   <!-- Box 2: เซนเซอร์/ทรานสดิวเซอร์ -->
   <rect x="185" y="25" width="135" height="90" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
   <text x="252.5" y="50" fill="#1e40af" font-size="13" font-weight="700" text-anchor="middle">เซนเซอร์ /</text>
   <text x="252.5" y="68" fill="#1e40af" font-size="13" font-weight="700" text-anchor="middle">ทรานสดิวเซอร์</text>
   <text x="252.5" y="90" fill="#3b82f6" font-size="10" text-anchor="middle">LDR, Thermistor, RTD</text>
-  
+
   <!-- Arrow 2: Analog signal flow (voltage wave) -->
   <path d="M 320 70 C 328 55, 335 85, 343 70 C 349 58, 352 70, 355 70" class="analog-flow"/>
   <polygon points="355,70 348,66 348,74" fill="#2563eb"/>
-  
+
   <!-- Box 3: สัญญาณไฟฟ้า -->
   <rect x="355" y="25" width="135" height="90" rx="12" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
   <text x="422.5" y="53" fill="#92400e" font-size="13" font-weight="700" text-anchor="middle">สัญญาณไฟฟ้า</text>
   <text x="422.5" y="71" fill="#b45309" font-size="11" text-anchor="middle">(Electrical Signal)</text>
   <text x="422.5" y="91" fill="#d97706" font-size="10" text-anchor="middle">แรงดัน (V), ความต้านทาน (Ω)</text>
-  
+
   <!-- Arrow 3: Electrical signal flow -->
   <path d="M 490 70 C 498 55, 505 85, 513 70 C 519 58, 522 70, 525 70" class="electrical-flow"/>
   <polygon points="525,70 518,66 518,74" fill="#d97706"/>
-  
+
   <!-- Box 4: ADC ใน ESP32 -->
   <rect x="525" y="25" width="135" height="90" rx="12" fill="#faf5ff" stroke="#7c3aed" stroke-width="1.5"/>
   <text x="592.5" y="53" fill="#5b21b6" font-size="13" font-weight="700" text-anchor="middle">ADC ใน ESP32</text>
   <text x="592.5" y="71" fill="#6d28d9" font-size="11" text-anchor="middle">(Analog-to-Digital)</text>
   <text x="592.5" y="91" fill="#8b5cf6" font-size="10" text-anchor="middle">ทำการสุ่มวัด &amp; กำหนดระดับ</text>
-  
+
   <!-- Arrow 4: Digital discrete pulse flow -->
   <line x1="660" y1="70" x2="695" y2="70" class="digital-flow"/>
   <polygon points="695,70 688,66 688,74" fill="#7c3aed"/>
-  
+
   <!-- Box 5: ค่าดิจิทัล -->
   <rect x="695" y="25" width="135" height="90" rx="12" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
   <text x="762.5" y="53" fill="#065f46" font-size="13" font-weight="700" text-anchor="middle">ค่าดิจิทัล</text>
@@ -84,7 +418,7 @@
 
 > 💡 **หลักคิดง่าย ๆ:** เซนเซอร์ทุกตัวทำหน้าที่เหมือน "นักแปล" ที่แปลงภาษาของธรรมชาติ (ความร้อน แสง เสียง) ให้เป็นภาษาของไฟฟ้า (แรงดัน กระแส ความต้านทาน) ที่ไมโครคอนโทรลเลอร์เข้าใจ
 
-### 2.1.2 หลักการทางฟิสิกส์และแบบจำลองทางคณิตศาสตร์ของเซนเซอร์แบบความต้านทาน (Resistive Sensors)
+### 2.2.2 หลักการทางฟิสิกส์และแบบจำลองทางคณิตศาสตร์ของเซนเซอร์แบบความต้านทาน (Resistive Sensors)
 
 ในงานวิศวกรรม เซนเซอร์ที่พบบ่อยที่สุดประเภทหนึ่งคือ **เซนเซอร์แบบแปรผันตามความต้านทาน (Resistive Sensors)** เช่น LDR, Thermistor และ RTD อุปกรณ์เหล่านี้จะเปลี่ยนคุณสมบัติทางกายภาพเป็นความต้านทานไฟฟ้า เพื่อนำไปประมวลผลต่อ
 
@@ -112,13 +446,13 @@
     .ldr-outline { fill: #fef08a; stroke: #2563eb; stroke-width: 2; }
     .ldr-arrow { fill: none; stroke: #2563eb; stroke-width: 1.5; }
     .arrow-head { fill: #2563eb; }
-    
+
     .light-ray { stroke: #facc15; stroke-width: 3; stroke-dasharray: 4 2; opacity: 0.1; animation: lightPulse 8s ease-in-out infinite; }
     .voltmeter-dial { fill: #faf5ff; stroke: #7c3aed; stroke-width: 2; }
     .voltmeter-pointer { fill: none; stroke: #ef4444; stroke-width: 3; stroke-linecap: round; transform-origin: 520px 140px; animation: needleMove 8s ease-in-out infinite; }
     .status-text { font-size: 13px; font-weight: bold; fill: #1e293b; }
     .formula-text { font-size: 11px; fill: #64748b; font-family: monospace; }
-    
+
     @keyframes currentFlow {
       0% { stroke-dashoffset: 100; }
       100% { stroke-dashoffset: 0; }
@@ -131,11 +465,11 @@
       0%, 100% { transform: rotate(0deg); }   /* Vout = 1.65V (Dark) */
       40%, 60% { transform: rotate(-74deg); }  /* Vout = 0.3V (Bright) */
     }
-    
+
     /* Variable text display sync */
     .txt-dark { animation: showDark 8s infinite; }
     .txt-light { animation: showLight 8s infinite; }
-    
+
     @keyframes showDark {
       0%, 25%, 75%, 100% { opacity: 1; }
       35%, 65% { opacity: 0; }
@@ -145,26 +479,26 @@
       35%, 65% { opacity: 1; }
     }
   </style>
-  
+
   <!-- Outer container -->
   <rect x="5" y="5" width="740" height="240" class="schematic-bg"/>
-  
+
   <!-- Left Side: Schematic -->
   <!-- V_in Connection -->
   <line x1="120" y1="25" x2="120" y2="55" class="wire"/>
   <text x="120" y="20" font-size="12" font-weight="bold" fill="#dc2626" text-anchor="middle">V_in (3.3V)</text>
-  
+
   <!-- R_fixed -->
   <rect x="105" y="55" width="30" height="50" class="resistor-box"/>
   <text x="95" y="83" font-size="12" font-weight="bold" fill="#1e293b" text-anchor="end">R_fixed</text>
   <text x="95" y="98" font-size="10" fill="#64748b" text-anchor="end">10 kΩ</text>
-  
+
   <!-- Middle connection to V_out -->
   <line x1="120" y1="105" x2="120" y2="135" class="wire"/>
   <line x1="120" y1="120" x2="220" y2="120" class="wire"/>
   <text x="225" y="115" font-size="12" font-weight="bold" fill="#7c3aed">V_out</text>
   <text x="225" y="130" font-size="10" fill="#6d28d9">(ไปยังขา ADC ESP32)</text>
-  
+
   <!-- R_sensor (LDR) -->
   <circle cx="120" cy="160" r="28" class="ldr-outline"/>
   <!-- Resistor zigzag or simple box inside circle -->
@@ -175,17 +509,17 @@
   <line x1="80" y1="130" x2="102" y2="142" class="ldr-arrow"/>
   <polygon points="102,142 95,137 99,144" class="arrow-head"/>
   <text x="160" y="165" font-size="12" font-weight="bold" fill="#2563eb">R_sensor (LDR)</text>
-  
+
   <!-- Ground Connection -->
   <line x1="120" y1="188" x2="120" y2="210" class="wire"/>
   <line x1="100" y1="210" x2="140" y2="210" class="wire"/>
   <line x1="108" y1="216" x2="132" y2="216" class="wire"/>
   <line x1="115" y1="222" x2="125" y2="222" class="wire"/>
   <text x="120" y="235" font-size="11" fill="#64748b" text-anchor="middle">GND (0V)</text>
-  
+
   <!-- Current Flow Animation on Schematic Wire -->
   <path d="M 120 25 L 120 120 L 220 120 M 120 120 L 120 210" class="wire-current"/>
-  
+
   <!-- Right Side: Graphic explanation of light sensor voltage division -->
   <!-- Sun representing Light Source -->
   <circle cx="340" cy="50" r="18" fill="#fef08a" stroke="#ca8a04" stroke-width="2"/>
@@ -198,28 +532,28 @@
   <line x1="358" y1="68" x2="368" y2="78" stroke="#ca8a04" stroke-width="2"/>
   <line x1="322" y1="68" x2="312" y2="78" stroke="#ca8a04" stroke-width="2"/>
   <line x1="358" y1="32" x2="368" y2="22" stroke="#ca8a04" stroke-width="2"/>
-  
+
   <!-- Glowing Light Beams -->
   <path d="M 340 70 L 150 150" class="light-ray"/>
   <path d="M 320 60 L 140 140" class="light-ray"/>
-  
+
   <!-- Voltmeter Instrument representation -->
   <path d="M 450 140 A 70 70 0 0 1 590 140" fill="none" stroke="#e2e8f0" stroke-width="15" stroke-linecap="round"/>
   <!-- Voltages scale lines -->
   <line x1="450" y1="140" x2="440" y2="140" stroke="#475569" stroke-width="2"/>
   <text x="430" y="144" font-size="10" fill="#475569" text-anchor="end">0V</text>
-  
+
   <line x1="520" y1="70" x2="520" y2="60" stroke="#475569" stroke-width="2"/>
   <text x="520" y="52" font-size="10" fill="#475569" text-anchor="middle">1.65V</text>
-  
+
   <line x1="590" y1="140" x2="600" y2="140" stroke="#475569" stroke-width="2"/>
   <text x="610" y="144" font-size="10" fill="#475569" text-anchor="start">3.3V</text>
-  
+
   <!-- Dial pointer needle -->
   <line x1="520" y1="140" x2="520" y2="80" class="voltmeter-pointer"/>
   <circle cx="520" cy="140" r="6" fill="#475569"/>
   <text x="520" y="165" font-size="12" font-weight="bold" fill="#7c3aed" text-anchor="middle">V_out Meter</text>
-  
+
   <!-- Animated Text Blocks -->
   <!-- Case 1: Dark -->
   <g class="txt-dark" transform="translate(340, 190)">
@@ -227,7 +561,7 @@
     <text x="0" y="18" class="formula-text" fill="#475569">R_sensor ≈ 10 kΩ (สูงมาก)</text>
     <text x="0" y="34" class="formula-text" fill="#2563eb">V_out = 3.3V * (10k / (10k + 10k)) ≈ 1.65 V</text>
   </g>
-  
+
   <!-- Case 2: Bright -->
   <g class="txt-light" transform="translate(340, 190)">
     <text x="0" y="0" class="status-text" fill="#ca8a04">สภาวะ สว่าง (Bright)</text>
@@ -290,11 +624,11 @@ $$T = \frac{R_{RTD} - R_0}{R_0 \cdot \alpha} = \frac{R_{RTD} - 100}{100 \cdot 0.
 
 ---
 
-## 2.2 การจำแนกประเภทเซนเซอร์
+## 2.3 การจำแนกประเภทเซนเซอร์
 
 เซนเซอร์สามารถจำแนกได้ 2 แนวทางหลัก
 
-### 2.2.1 จำแนกตามปริมาณที่วัด (Measured Quantity)
+### 2.3.1 จำแนกตามปริมาณที่วัด (Measured Quantity)
 
 | ปริมาณที่วัด | ตัวอย่างเซนเซอร์ | การประยุกต์ใช้ |
 |---|---|---|
@@ -307,14 +641,14 @@ $$T = \frac{R_{RTD} - R_0}{R_0 \cdot \alpha} = \frac{R_{RTD} - 100}{100 \cdot 0.
 | ความดัน (Pressure) | BMP280, BMP180 | สถานีตรวจอากาศ วัดความสูง |
 | ความเร่ง (Acceleration) | MPU6050, ADXL345 | ตรวจจับการสั่นสะเทือนเครื่องจักร |
 
-### 2.2.2 จำแนกตามชนิดสัญญาณ (Signal Type)
+### 2.3.2 จำแนกตามชนิดสัญญาณ (Signal Type)
 
 - **เซนเซอร์แอนะล็อก (Analog Sensor):** ให้สัญญาณแรงดันต่อเนื่อง เช่น LM35 ให้แรงดัน 0–1 V ตามอุณหภูมิ 0–100 °C ต้องใช้ขา ADC ของ ESP32 อ่านค่า
 - **เซนเซอร์ดิจิทัล (Digital Sensor):** ให้สัญญาณเป็น HIGH/LOW หรือส่งข้อมูลผ่านโปรโตคอล เช่น DHT22 ส่งข้อมูลผ่าน One-Wire, BMP280 ส่งผ่าน I2C
 
 ---
 
-## 2.3 คุณลักษณะของเซนเซอร์ (Sensor Characteristics)
+## 2.4 คุณลักษณะของเซนเซอร์ (Sensor Characteristics)
 
 เมื่อเลือกเซนเซอร์มาใช้งาน ต้องพิจารณาคุณลักษณะต่อไปนี้:
 
@@ -332,9 +666,9 @@ $$T = \frac{R_{RTD} - R_0}{R_0 \cdot \alpha} = \frac{R_{RTD} - 100}{100 \cdot 0.
 
 ---
 
-## 2.4 สัญญาณดิจิทัลกับแอนะล็อก และการเชื่อมต่อกับไมโครคอนโทรลเลอร์
+## 2.5 สัญญาณดิจิทัลกับแอนะล็อก และการเชื่อมต่อกับไมโครคอนโทรลเลอร์
 
-### 2.4.1 สัญญาณแอนะล็อก (Analog Signal)
+### 2.5.1 สัญญาณแอนะล็อก (Analog Signal)
 
 - มีค่าต่อเนื่อง (Continuous) เช่น 0.00 V, 1.25 V, 2.73 V
 - ESP32 มี ADC (Analog-to-Digital Converter) ขนาด 12 บิต แปลงแรงดัน 0–3.3 V เป็นค่าดิจิทัล 0–4095
@@ -397,7 +731,7 @@ void loop() {
 }
 ```
 
-### 2.4.2 สัญญาณดิจิทัล (Digital Signal)
+### 2.5.2 สัญญาณดิจิทัล (Digital Signal)
 
 สัญญาณดิจิทัลไม่มีความต่อเนื่องเหมือนสัญญาณแอนะล็อก แต่จะมีสถานะที่จำกัดและชัดเจน โดยทั่วไปในระดับลอจิก (Logic Levels) ของไมโครคอนโทรลเลอร์จะแบ่งออกเป็น 2 สถานะหลัก:
 
@@ -499,7 +833,7 @@ void loop() {
   <text x="595" y="138" class="text-sub" text-anchor="middle">Address: 0x68 (Sensor 2)</text>
   <circle cx="450" cy="105" r="3" fill="#10b981"/>
   <circle cx="480" cy="75" r="3" fill="#f59e0b"/>
-  
+
   <!-- Packet animations addressing both sensors in sequence -->
   <!-- Sensor 1 (BMP280 @ 0x76) Cycle -->
   <g>
@@ -514,7 +848,7 @@ void loop() {
     <animateMotion path="M 520 45 L 450 45 L 450 105 L 140 105" dur="8s" repeatCount="indefinite"/>
     <animate attributeName="opacity" values="0; 0; 1; 1; 0; 0" keyTimes="0; 0.24; 0.25; 0.5; 0.51; 1" dur="8s" repeatCount="indefinite" />
   </g>
-  
+
   <!-- Sensor 2 (MPU6050 @ 0x68) Cycle -->
   <g>
     <rect x="-22.5" y="-7" width="45" height="14" rx="3" class="sda-packet"/>
@@ -528,7 +862,7 @@ void loop() {
     <animateMotion path="M 520 135 L 480 135 L 480 105 L 140 105" dur="8s" repeatCount="indefinite"/>
     <animate attributeName="opacity" values="0; 0; 1; 1" keyTimes="0; 0.74; 0.75; 1" dur="8s" repeatCount="indefinite" />
   </g>
-  
+
   <text x="350" y="182" class="text-sub" text-anchor="middle" fill="#475569">SDA ส่งที่อยู่เพื่อเรียกเซนเซอร์ (ADDR) และเซนเซอร์จะตอบรับและส่งข้อมูล (DATA) กลับมาในสายสัญญาณเส้นเดิม</text>
 </svg>
 </div>
@@ -559,81 +893,81 @@ void loop() {
     .packet-mosi { fill: #ec4899; stroke: #ffffff; stroke-width: 1; }
     .packet-miso { fill: #10b981; stroke: #ffffff; stroke-width: 1; }
     .packet-label { font-size: 8px; fill: #ffffff; font-weight: bold; font-family: monospace; }
-    
+
     /* SCK Clock Animation */
     .line-sck { fill: none; stroke: #fef08a; stroke-width: 2; }
     .sck-pulse { fill: none; stroke: #d97706; stroke-width: 2; stroke-dasharray: 10 5; animation: sckClockPulse 1.2s linear infinite; }
     @keyframes sckClockPulse {
       to { stroke-dashoffset: -15; }
     }
-    
+
     /* MOSI & MISO active lines */
     .wire-mosi-active { fill: none; stroke: #db2777; stroke-width: 2; }
     .wire-miso-active { fill: none; stroke: #059669; stroke-width: 2; }
   </style>
   <rect x="5" y="5" width="690" height="250" class="bg"/>
-  
+
   <!-- ESP32 Breakout Box -->
   <rect x="20" y="35" width="120" height="170" class="mcu"/>
   <text x="80" y="95" class="text-main" text-anchor="middle">ESP32</text>
   <text x="80" y="115" class="text-sub" text-anchor="middle">(SPI Master)</text>
   <text x="80" y="135" class="text-sub" fill="#7c3aed" font-weight="bold" text-anchor="middle">GPIO 5, 18, 23, 19, 4</text>
-  
+
   <!-- ESP32 Pin Labels -->
   <text x="130" y="54" class="text-bus" text-anchor="end" fill="#dc2626">CS A</text>
   <text x="130" y="114" class="text-bus" text-anchor="end" fill="#d97706">SCK</text>
   <text x="130" y="129" class="text-bus" text-anchor="end" fill="#db2777">MOSI</text>
   <text x="130" y="144" class="text-bus" text-anchor="end" fill="#059669">MISO</text>
   <text x="130" y="189" class="text-bus" text-anchor="end" fill="#94a3b8">CS B</text>
-  
+
   <!-- CS A & CS B Lines -->
   <path d="M 140 50 L 520 50" class="wire-cs-low"/>
   <text x="150" y="45" class="text-bus" fill="#dc2626">CS A (Active LOW ➔ Enabled)</text>
-  
+
   <line x1="140" y1="185" x2="520" y2="185" class="wire-cs-high"/>
   <text x="150" y="197" class="text-bus" fill="#94a3b8">CS B (Standby HIGH ➔ Disabled)</text>
-  
+
   <!-- SCK Bus Line (Clock) -->
   <path d="M 140 110 L 480 110 L 480 75 L 520 75" class="line-sck"/>
   <path d="M 140 110 L 480 110 L 480 75 L 520 75" class="sck-pulse"/>
   <path d="M 480 110 L 480 165 L 520 165" class="wire"/>
   <circle cx="480" cy="110" r="3" fill="#f59e0b"/>
   <text x="150" y="103" class="text-bus" fill="#d97706">SCK (Clock)</text>
-  
+
   <!-- MOSI Bus Line (Master Out Slave In) -->
   <path d="M 140 125 L 450 125 L 450 85 L 520 85" class="wire-mosi-active"/>
   <path d="M 450 125 L 450 175 L 520 175" class="wire"/>
   <circle cx="450" cy="125" r="3" fill="#db2777"/>
   <text x="150" y="121" class="text-bus" fill="#db2777">MOSI (Data Out)</text>
-  
+
   <!-- MISO Bus Line (Master In Slave Out) -->
   <path d="M 520 95 L 420 95 L 420 140 L 140 140" class="wire-miso-active"/>
   <path d="M 520 195 L 420 195 L 420 140" class="wire"/>
   <circle cx="420" cy="140" r="3" fill="#059669"/>
   <text x="150" y="136" class="text-bus" fill="#059669">MISO (Data In)</text>
-  
+
   <!-- Sensor A breakout (Active) -->
   <rect x="520" y="25" width="150" height="80" class="sensor"/>
   <text x="610" y="60" class="text-main" text-anchor="middle">Sensor A</text>
   <text x="610" y="78" class="text-sub" text-anchor="middle">(Active)</text>
-  
+
   <!-- Sensor A Pin Labels -->
   <text x="526" y="54" class="text-bus" text-anchor="start" fill="#dc2626">CS</text>
   <text x="526" y="79" class="text-bus" text-anchor="start" fill="#d97706">SCK</text>
   <text x="526" y="89" class="text-bus" text-anchor="start" fill="#db2777">MOSI</text>
   <text x="526" y="99" class="text-bus" text-anchor="start" fill="#059669">MISO</text>
-  
+
   <!-- Sensor B breakout (Disabled/Standby) -->
   <rect x="520" y="150" width="150" height="70" class="sensor" style="opacity: 0.6;"/>
   <text x="610" y="180" class="text-main" text-anchor="middle" style="opacity: 0.6;">Sensor B</text>
   <text x="610" y="196" class="text-sub" text-anchor="middle" style="opacity: 0.6;">(Disabled)</text>
-  
+
   <!-- Sensor B Pin Labels -->
   <text x="526" y="169" class="text-bus" text-anchor="start" style="opacity: 0.6;" fill="#94a3b8">SCK</text>
   <text x="526" y="179" class="text-bus" text-anchor="start" style="opacity: 0.6;" fill="#94a3b8">MOSI</text>
   <text x="526" y="189" class="text-bus" text-anchor="start" style="opacity: 0.6;" fill="#94a3b8">CS</text>
   <text x="526" y="199" class="text-bus" text-anchor="start" style="opacity: 0.6;" fill="#94a3b8">MISO</text>
-  
+
   <!-- Packet animations -->
   <g>
     <rect x="-20" y="-6" width="40" height="12" rx="2" class="packet-mosi"/>
@@ -698,7 +1032,7 @@ void loop() {
   <line x1="520" y1="130" x2="470" y2="130" stroke="#cbd5e1" stroke-width="1.5"/>
   <line x1="470" y1="130" x2="470" y2="90" stroke="#cbd5e1" stroke-width="1.5"/>
   <circle cx="470" cy="90" r="3" fill="#2563eb"/>
-  
+
   <!-- Packet animations addressing both sensors sequentially -->
   <!-- DS18B20 #1 (ID: ...12A) Cycle -->
   <g>
@@ -713,7 +1047,7 @@ void loop() {
     <animateMotion path="M 520 50 L 400 50 L 400 90 L 140 90" dur="8s" repeatCount="indefinite" />
     <animate attributeName="opacity" values="0; 0; 1; 1; 0; 0" keyTimes="0; 0.24; 0.25; 0.5; 0.51; 1" dur="8s" repeatCount="indefinite" />
   </g>
-  
+
   <!-- DS18B20 #2 (ID: ...98B) Cycle -->
   <g>
     <rect x="-27.5" y="-6" width="55" height="12" rx="2" class="packet-cmd"/>
@@ -727,12 +1061,12 @@ void loop() {
     <animateMotion path="M 520 130 L 470 130 L 470 90 L 140 90" dur="8s" repeatCount="indefinite" />
     <animate attributeName="opacity" values="0; 0; 1; 1" keyTimes="0; 0.74; 0.75; 1" dur="8s" repeatCount="indefinite" />
   </g>
-  
+
   <text x="350" y="202" class="text-sub" text-anchor="middle" fill="#475569">การสื่อสารแบบ Half-Duplex: ใช้สายส่งข้อมูล 1 เส้นร่วมกัน โดย Master ส่งรหัสเรียกเซนเซอร์ แล้วเซนเซอร์ส่งข้อมูลกลับในสายเดิม</text>
 </svg>
 </div>
 
-### 2.4.3 เปรียบเทียบการเชื่อมต่อ
+### 2.5.3 เปรียบเทียบการเชื่อมต่อ
 
 | หัวข้อ | แอนะล็อก | ดิจิทัล (GPIO) | ดิจิทัล (I2C/SPI) |
 |---|---|---|---|
@@ -744,9 +1078,9 @@ void loop() {
 
 ---
 
-## 2.5 ตัวอย่างเซนเซอร์ยอดนิยมใน IoT
+## 2.6 ตัวอย่างเซนเซอร์ยอดนิยมใน IoT
 
-### 2.5.1 DHT22 — วัดอุณหภูมิและความชื้น
+### 2.6.1 DHT22 — วัดอุณหภูมิและความชื้น
 
 - ช่วงวัดอุณหภูมิ: −40 ถึง +80 °C (ความแม่นยำ ±0.5 °C)
 - ช่วงวัดความชื้น: 0–100 %RH (ความแม่นยำ ±2%)
@@ -769,7 +1103,7 @@ void loop() {
 }
 ```
 
-### 2.5.2 LM35 — วัดอุณหภูมิ (แอนะล็อก)
+### 2.6.2 LM35 — วัดอุณหภูมิ (แอนะล็อก)
 
 - ช่วงวัด: −55 ถึง +150 °C
 - ให้เอาต์พุต 10 mV/°C (เช่น 25 °C = 250 mV)
@@ -789,7 +1123,7 @@ void loop() {
 }
 ```
 
-### 2.5.3 LDR — วัดแสง (Light Dependent Resistor)
+### 2.6.3 LDR — วัดแสง (Light Dependent Resistor)
 
 - ความต้านทานเปลี่ยนตามแสง: แสงมาก → ต้านทานต่ำ, แสงน้อย → ต้านทานสูง
 - ต้องต่อวงจรแบ่งแรงดัน (Voltage Divider) ร่วมกับตัวต้านทานคงที่ (แนะนำ $10\text{ k}\Omega$)
@@ -808,23 +1142,23 @@ void setup() {
 void loop() {
   int rawValue = analogRead(ldrPin);
   float voltage = rawValue * (3.3 / 4095.0);
-  
+
   Serial.print("ADC Raw: ");
   Serial.print(rawValue);
   Serial.print(" | Voltage: ");
   Serial.print(voltage, 2);
-  
+
   if (rawValue < threshold) {
     Serial.println(" -> สภาพแวดล้อม: มืด (Dark)");
   } else {
     Serial.println(" -> สภาพแวดล้อม: สว่าง (Bright)");
   }
-  
+
   delay(1000);
 }
 ```
 
-### 2.5.4 HC-SR04 — วัดระยะทางด้วยคลื่นอัลตราโซนิก
+### 2.6.4 HC-SR04 — วัดระยะทางด้วยคลื่นอัลตราโซนิก
 
 - ช่วงวัด: 2–400 cm
 - ใช้หลักการส่งคลื่นอัลตราโซนิกความถี่ $40\text{ kHz}$ ออกไป แล้วจับเวลารอสะท้อนกลับ
@@ -847,16 +1181,16 @@ void loop() {
   // 1. เคลียร์สัญญาณส่งคลื่นให้ชัวร์ว่าเป็น LOW
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
-  
+
   // 2. ส่งพัลส์ HIGH เป็นเวลา 10 ไมโครวินาทีเพื่อกระตุ้นเซนเซอร์ให้เริ่มยิงคลื่น
   digitalWrite(trigPin, HIGH);
   delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
-  
+
   // 3. วัดช่วงเวลาที่ขา Echo มีสถานะเป็น HIGH (หน่วยไมโครวินาที)
   // กำหนด timeout 30 ms (ประมาณ 5 เมตร) เพื่อไม่ให้บอร์ดค้างถ้าวัดไม่ได้
-  long duration = pulseIn(echoPin, HIGH, 30000); 
-  
+  long duration = pulseIn(echoPin, HIGH, 30000);
+
   if (duration == 0) {
     Serial.println("Error: Out of range or sensor disconnected.");
   } else {
@@ -866,12 +1200,12 @@ void loop() {
     Serial.print(distanceCm, 1);
     Serial.println(" cm");
   }
-  
+
   delay(1000);
 }
 ```
 
-### 2.5.5 PIR (HC-SR501) — ตรวจจับการเคลื่อนไหว
+### 2.6.5 PIR (HC-SR501) — ตรวจจับการเคลื่อนไหว
 
 - ตรวจจับรังสีอินฟราเรดจากร่างกายสิ่งมีชีวิตที่มีความร้อนเคลื่อนที่ผ่านเซนเซอร์
 - เอาต์พุต: สัญญาณดิจิทัลเอาต์พุต (HIGH เมื่อตรวจพบการเคลื่อนไหว, LOW เมื่อนิ่ง)
@@ -904,13 +1238,13 @@ void loop() {
 }
 ```
 
-### 2.5.6 MQ-2 — ตรวจจับแก๊สและควัน
+### 2.6.6 MQ-2 — ตรวจจับแก๊สและควัน
 
 - หลักการทำงาน: ตัวเซนเซอร์ทำจากสารกึ่งตัวนำ SnO2 (Tin dioxide) เมื่อมีแก๊สไวไฟเข้ามาทำปฏิกิริยาเคมีกับออกซิเจนที่ผิวตัวนำ จะส่งผลให้ความต้านทานลดลงอย่างรวดเร็ว
 - ตรวจจับได้หลากหลาย: แก๊สหุงต้ม (LPG), ควันไฟ, แอลกอฮอล์, โพรเพน, มีเทน, ไฮโดรเจน
 - เอาต์พุตมีทั้งช่องสัญญาณแอนะล็อก (A0) เพื่ออ่านระดับความเข้มข้น และดิจิทัล (D0) ที่สามารถปรับความไวในการทริกเกอร์เอาต์พุตได้โดยตรงบนโมดูลผ่านตัวต้านทานปรับค่าได้ (Potentiometer)
 
-### 2.5.7 BMP280 — วัดความดันบรรยากาศและอุณหภูมิ
+### 2.6.7 BMP280 — วัดความดันบรรยากาศและอุณหภูมิ
 
 - ช่วงวัดความดัน: 300–1100 hPa (ความแม่นยำสูงถึง ±1.0 hPa)
 - อินเทอร์เฟซสื่อสาร: I2C (สาย SDA, SCL) หรือ SPI
@@ -933,7 +1267,7 @@ void setup() {
 
   // กำหนดแอดเดรสของชิปส่วนใหญ่จะเป็น 0x76 หรือ 0x77
   // โค้ดจะเช็คสถานะการเริ่มสื่อสาร หากไม่พบบอร์ดโปรแกรมจะตัดการทำงาน
-  unsigned status = bmp.begin(0x76); 
+  unsigned status = bmp.begin(0x76);
   if (!status) {
     Serial.println(F("Error: Could not find a valid BMP280 sensor, check wiring!"));
     Serial.print("SensorID was: 0x");
@@ -957,7 +1291,7 @@ void loop() {
   float pressurePa = bmp.readPressure();
   float pressureHpa = pressurePa / 100.0F;
   // คำนวณความสูงอ้างอิงระดับแรงดันน้ำทะเลสากล 1013.25 hPa
-  float altitude = bmp.readAltitude(1013.25); 
+  float altitude = bmp.readAltitude(1013.25);
 
   // ป้องกันค่าขยะ (Not a Number - NaN) ในกรณียังอ่านค่าไม่สมบูรณ์
   if (isnan(temperature) || isnan(pressurePa)) {
@@ -981,7 +1315,7 @@ void loop() {
 }
 ```
 
-### 2.5.8 การกรองสัญญาณรบกวนด้วยซอฟต์แวร์ (Software Signal Filtering)
+### 2.6.8 การกรองสัญญาณรบกวนด้วยซอฟต์แวร์ (Software Signal Filtering)
 
 สัญญาณที่ได้จากเซนเซอร์ชนิดแอนะล็อกมักจะมี **สัญญาณรบกวนทางไฟฟ้า (Electrical Noise)** หรือคลื่นความถี่สูงปนเข้ามา ส่งผลให้ค่าดิจิทัลที่อ่านได้จาก ADC มีความไม่นิ่งแกว่งไปแกว่งมา วิธีการแก้ปัญหาที่ประหยัดและยืดหยุ่นที่สุดคือการใช้ตัวกรองทางดิจิทัลด้วยโปรแกรม (Software Digital Filter)
 
@@ -1008,7 +1342,7 @@ int average = 0;                // ผลลัพธ์ค่าเฉลี่
 void setup() {
   Serial.begin(115200);
   pinMode(sensorPin, INPUT);
-  
+
   // กำหนดค่าเริ่มต้นให้อาร์เรย์เป็น 0 ทั้งหมด
   for (int thisReading = 0; thisReading < WINDOW_SIZE; thisReading++) {
     readings[thisReading] = 0;
@@ -1018,13 +1352,13 @@ void setup() {
 void loop() {
   // 1. หักค่าข้อมูลตัวเก่าที่สุดที่จะถูกเขียนทับออกจากผลรวมย่อย
   total = total - readings[readIndex];
-  
+
   // 2. อ่านค่าเซนเซอร์ตัวใหม่เข้ามาใส่แทนที่ตำแหน่งดัชนี
   readings[readIndex] = analogRead(sensorPin);
-  
+
   // 3. บวกค่าข้อมูลตัวใหม่เข้าไปในผลรวมทั้งหมด
   total = total + readings[readIndex];
-  
+
   // 4. เลื่อนดัชนีไปยังตำแหน่งถัดไป
   readIndex = readIndex + 1;
 
@@ -1049,7 +1383,7 @@ void loop() {
 ```
 *💡 **เทคนิค:** สามารถคัดลอกรหัสนี้ไปทดสอบในโปรแกรม Wokwi และเปิด **Serial Plotter** เพื่อสังเกตความแตกต่างของการตอบสนองของเส้นสีระหว่างเส้นสีดิบที่แกว่งและเส้นที่ได้รับการกรองผ่าน Moving Average*
 
-### 2.5.9 ตารางสรุปเซนเซอร์ยอดนิยม
+### 2.6.9 ตารางสรุปเซนเซอร์ยอดนิยม
 
 | เซนเซอร์ | วัดปริมาณ | ชนิดสัญญาณ | อินเทอร์เฟซ | ช่วงวัด | ใช้งานกับ Wokwi |
 |---|---|---|---|---|---|

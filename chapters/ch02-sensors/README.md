@@ -492,9 +492,8 @@ void loop() {
   <rect x="520" y="20" width="150" height="60" class="sensor"/>
   <text x="595" y="42" class="text-main" text-anchor="middle">BMP280</text>
   <text x="595" y="58" class="text-sub" text-anchor="middle">Address: 0x76 (Sensor 1)</text>
-  <line x1="520" y1="75" x2="480" y2="75" stroke="#cbd5e1" stroke-width="1.5"/>
-  <line x1="520" y1="45" x2="450" y2="45" stroke="#cbd5e1" stroke-width="1.5"/>
-  <line x1="450" y1="45" x2="450" y2="105" stroke="#cbd5e1" stroke-width="1.5"/>
+  <path d="M 480 75 L 480 135 L 520 135" stroke="#cbd5e1" stroke-width="1.5" fill="none"/>
+  <path d="M 450 105 L 450 45 L 520 45" stroke="#cbd5e1" stroke-width="1.5" fill="none"/>
   <rect x="520" y="100" width="150" height="60" class="sensor"/>
   <text x="595" y="122" class="text-main" text-anchor="middle">MPU6050</text>
   <text x="595" y="138" class="text-sub" text-anchor="middle">Address: 0x68 (Sensor 2)</text>
@@ -546,11 +545,24 @@ void loop() {
   <rect x="20" y="45" width="120" height="150" class="mcu"/>
   <text x="80" y="110" class="text-main" text-anchor="middle">ESP32</text>
   <text x="80" y="130" class="text-sub" text-anchor="middle">(SPI Master)</text>
+  <!-- SCK Bus Line & Branch to Sensor B -->
   <line x1="140" y1="65" x2="520" y2="65" class="wire"/>
+  <path d="M 470 65 L 470 160 L 520 160" class="wire"/>
+  <circle cx="470" cy="65" r="3" fill="#cbd5e1"/>
   <text x="150" y="50" class="text-bus">SCK (Clock)</text>
+  
+  <!-- MOSI Bus Line & Branch to Sensor B -->
   <line x1="140" y1="95" x2="520" y2="95" class="wire-active"/>
+  <path d="M 450 95 L 450 170 L 520 170" class="wire"/>
+  <circle cx="450" cy="95" r="3" fill="#cbd5e1"/>
   <text x="150" y="80" class="text-bus" fill="#db2777">MOSI (Data Out)</text>
-  <line x1="140" y1="125" x2="520" y2="125" class="wire-active"/>
+  
+  <!-- MISO Bus Line with active branch from Sensor A and inactive from Sensor B -->
+  <line x1="140" y1="125" x2="450" y2="125" class="wire-active"/>
+  <line x1="450" y1="125" x2="520" y2="125" class="wire"/>
+  <path d="M 520 105 L 450 105 L 450 125" class="wire-active"/>
+  <path d="M 520 180 L 450 180 L 450 125" class="wire"/>
+  <circle cx="450" cy="125" r="3" fill="#cbd5e1"/>
   <text x="150" y="110" class="text-bus" fill="#059669">MISO (Data In)</text>
   <path d="M 140 165 L 430 165 L 430 100 L 520 100" class="wire-cs-low"/>
   <text x="150" y="150" class="text-bus" fill="#dc2626">CS A (Active LOW ➔ Enabled)</text>
@@ -562,8 +574,7 @@ void loop() {
   <rect x="520" y="150" width="150" height="70" class="sensor" style="opacity: 0.5;"/>
   <text x="595" y="185" class="text-main" text-anchor="middle" style="opacity: 0.5;">Sensor B</text>
   <text x="595" y="200" class="text-sub" text-anchor="middle" style="opacity: 0.5;">(Disabled)</text>
-  <circle cx="450" cy="95" r="3" fill="#cbd5e1"/>
-  <circle cx="450" cy="125" r="3" fill="#cbd5e1"/>
+  <!-- Junction circles removed from here since they are declared inline with bus paths -->
   <g>
     <rect x="0" y="0" width="40" height="12" rx="2" class="packet-mosi"/>
     <text x="20" y="9" class="packet-label" text-anchor="middle">WRITE</text>

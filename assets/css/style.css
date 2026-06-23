@@ -142,7 +142,7 @@ a:hover { text-decoration: underline; }
 .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); background: #fff; }
 table.schedule { width: 100%; border-collapse: collapse; min-width: 720px; }
 table.schedule th, table.schedule td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
-table.schedule thead th { background: #f1f5f9; color: var(--ink); font-weight: 700; font-size: .9rem; position: sticky; top: 64px; }
+table.schedule thead th { background: #f1f5f9; color: var(--ink); font-weight: 700; font-size: .9rem; }
 table.schedule tbody tr:hover { background: #f8fafc; }
 .wk { font-family: "JetBrains Mono", monospace; font-weight: 700; color: var(--indigo); font-size: 1.05rem; text-align: center; width: 64px; }
 .topic { font-weight: 600; color: var(--ink); }

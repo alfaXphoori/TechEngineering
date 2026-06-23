@@ -16,54 +16,67 @@
 **กระบวนการทำงาน:**
 
 <div style="text-align: center; margin: 24px 0;">
-<svg viewBox="0 0 850 120" width="100%" height="auto" role="img" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', 'Segoe UI', sans-serif">
+<svg viewBox="0 0 850 140" width="100%" height="auto" role="img" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', 'Segoe UI', sans-serif">
   <title>กระบวนการแปลงปริมาณกายภาพเป็นข้อมูลดิจิทัล</title>
+  <style>
+    .flow-arrow { fill: none; stroke: #94a3b8; stroke-width: 1.5; }
+    .physical-flow { fill: none; stroke: #16a34a; stroke-width: 2; stroke-dasharray: 6 4; animation: march 1.5s linear infinite; }
+    .analog-flow { fill: none; stroke: #2563eb; stroke-width: 2; stroke-dasharray: 8 4; animation: march 2s linear infinite; }
+    .electrical-flow { fill: none; stroke: #d97706; stroke-width: 2; stroke-dasharray: 8 4; animation: march 2s linear infinite; }
+    .digital-flow { fill: none; stroke: #8b5cf6; stroke-width: 2; stroke-dasharray: 2 6; stroke-linecap: round; stroke-width: 4; animation: march 1s linear infinite; }
+    
+    @keyframes march {
+      to {
+        stroke-dashoffset: -20;
+      }
+    }
+  </style>
   
   <!-- Box 1: ปริมาณกายภาพ -->
-  <rect x="15" y="15" width="135" height="90" rx="12" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
-  <text x="82.5" y="43" fill="#166534" font-size="13" font-weight="700" text-anchor="middle">ปริมาณกายภาพ</text>
-  <text x="82.5" y="61" fill="#15803d" font-size="11" text-anchor="middle">(Physical Quantity)</text>
-  <text x="82.5" y="81" fill="#22c55e" font-size="10" text-anchor="middle">ความร้อน, แสง, ความสั่น</text>
+  <rect x="15" y="25" width="135" height="90" rx="12" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="82.5" y="53" fill="#166534" font-size="13" font-weight="700" text-anchor="middle">ปริมาณกายภาพ</text>
+  <text x="82.5" y="71" fill="#15803d" font-size="11" text-anchor="middle">(Physical Quantity)</text>
+  <text x="82.5" y="91" fill="#22c55e" font-size="10" text-anchor="middle">ความร้อน, แสง, ความสั่น</text>
   
-  <!-- Arrow 1 -->
-  <line x1="156" y1="60" x2="178" y2="60" stroke="#94a3b8" stroke-width="2"/>
-  <polygon points="184,60 176,56 176,64" fill="#94a3b8"/>
+  <!-- Arrow 1: Physical flow (wavy/dashed) -->
+  <path d="M 150 70 C 158 60, 163 80, 171 70 C 176 64, 180 70, 185 70" class="physical-flow"/>
+  <polygon points="185,70 178,66 178,74" fill="#16a34a"/>
   
   <!-- Box 2: เซนเซอร์/ทรานสดิวเซอร์ -->
-  <rect x="185" y="15" width="135" height="90" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
-  <text x="252.5" y="40" fill="#1e40af" font-size="13" font-weight="700" text-anchor="middle">เซนเซอร์ /</text>
-  <text x="252.5" y="58" fill="#1e40af" font-size="13" font-weight="700" text-anchor="middle">ทรานสดิวเซอร์</text>
-  <text x="252.5" y="80" fill="#3b82f6" font-size="10" text-anchor="middle">LDR, Thermistor, RTD</text>
+  <rect x="185" y="25" width="135" height="90" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="252.5" y="50" fill="#1e40af" font-size="13" font-weight="700" text-anchor="middle">เซนเซอร์ /</text>
+  <text x="252.5" y="68" fill="#1e40af" font-size="13" font-weight="700" text-anchor="middle">ทรานสดิวเซอร์</text>
+  <text x="252.5" y="90" fill="#3b82f6" font-size="10" text-anchor="middle">LDR, Thermistor, RTD</text>
   
-  <!-- Arrow 2 -->
-  <line x1="326" y1="60" x2="348" y2="60" stroke="#94a3b8" stroke-width="2"/>
-  <polygon points="354,60 346,56 346,64" fill="#94a3b8"/>
+  <!-- Arrow 2: Analog signal flow (voltage wave) -->
+  <path d="M 320 70 C 328 55, 335 85, 343 70 C 349 58, 352 70, 355 70" class="analog-flow"/>
+  <polygon points="355,70 348,66 348,74" fill="#2563eb"/>
   
   <!-- Box 3: สัญญาณไฟฟ้า -->
-  <rect x="355" y="15" width="135" height="90" rx="12" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
-  <text x="422.5" y="43" fill="#92400e" font-size="13" font-weight="700" text-anchor="middle">สัญญาณไฟฟ้า</text>
-  <text x="422.5" y="61" fill="#b45309" font-size="11" text-anchor="middle">(Electrical Signal)</text>
-  <text x="422.5" y="81" fill="#d97706" font-size="10" text-anchor="middle">แรงดัน (V), ความต้านทาน (Ω)</text>
+  <rect x="355" y="25" width="135" height="90" rx="12" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+  <text x="422.5" y="53" fill="#92400e" font-size="13" font-weight="700" text-anchor="middle">สัญญาณไฟฟ้า</text>
+  <text x="422.5" y="71" fill="#b45309" font-size="11" text-anchor="middle">(Electrical Signal)</text>
+  <text x="422.5" y="91" fill="#d97706" font-size="10" text-anchor="middle">แรงดัน (V), ความต้านทาน (Ω)</text>
   
-  <!-- Arrow 3 -->
-  <line x1="496" y1="60" x2="518" y2="60" stroke="#94a3b8" stroke-width="2"/>
-  <polygon points="524,60 516,56 516,64" fill="#94a3b8"/>
+  <!-- Arrow 3: Electrical signal flow -->
+  <path d="M 490 70 C 498 55, 505 85, 513 70 C 519 58, 522 70, 525 70" class="electrical-flow"/>
+  <polygon points="525,70 518,66 518,74" fill="#d97706"/>
   
   <!-- Box 4: ADC ใน ESP32 -->
-  <rect x="525" y="15" width="135" height="90" rx="12" fill="#faf5ff" stroke="#7c3aed" stroke-width="1.5"/>
-  <text x="592.5" y="43" fill="#5b21b6" font-size="13" font-weight="700" text-anchor="middle">ADC ใน ESP32</text>
-  <text x="592.5" y="61" fill="#6d28d9" font-size="11" text-anchor="middle">(Analog-to-Digital)</text>
-  <text x="592.5" y="81" fill="#8b5cf6" font-size="10" text-anchor="middle">ทำการสุ่มวัด &amp; กำหนดระดับ</text>
+  <rect x="525" y="25" width="135" height="90" rx="12" fill="#faf5ff" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="592.5" y="53" fill="#5b21b6" font-size="13" font-weight="700" text-anchor="middle">ADC ใน ESP32</text>
+  <text x="592.5" y="71" fill="#6d28d9" font-size="11" text-anchor="middle">(Analog-to-Digital)</text>
+  <text x="592.5" y="91" fill="#8b5cf6" font-size="10" text-anchor="middle">ทำการสุ่มวัด &amp; กำหนดระดับ</text>
   
-  <!-- Arrow 4 -->
-  <line x1="666" y1="60" x2="688" y2="60" stroke="#94a3b8" stroke-width="2"/>
-  <polygon points="694,60 686,56 686,64" fill="#94a3b8"/>
+  <!-- Arrow 4: Digital discrete pulse flow -->
+  <line x1="660" y1="70" x2="695" y2="70" class="digital-flow"/>
+  <polygon points="695,70 688,66 688,74" fill="#7c3aed"/>
   
   <!-- Box 5: ค่าดิจิทัล -->
-  <rect x="695" y="15" width="135" height="90" rx="12" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
-  <text x="762.5" y="43" fill="#065f46" font-size="13" font-weight="700" text-anchor="middle">ค่าดิจิทัล</text>
-  <text x="762.5" y="61" fill="#047857" font-size="11" text-anchor="middle">(Digital Value)</text>
-  <text x="762.5" y="81" fill="#10b981" font-size="10" text-anchor="middle">ตัวเลข 0 – 4095 (12-bit)</text>
+  <rect x="695" y="25" width="135" height="90" rx="12" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
+  <text x="762.5" y="53" fill="#065f46" font-size="13" font-weight="700" text-anchor="middle">ค่าดิจิทัล</text>
+  <text x="762.5" y="71" fill="#047857" font-size="11" text-anchor="middle">(Digital Value)</text>
+  <text x="762.5" y="91" fill="#10b981" font-size="10" text-anchor="middle">ตัวเลข 0 – 4095 (12-bit)</text>
 </svg>
 </div>
 
@@ -89,19 +102,140 @@
 
 เนื่องจากไมโครคอนโทรลเลอร์อย่าง ESP32 ไม่สามารถวัดค่าความต้านทานไฟฟ้า ($R$) ได้โดยตรง (อ่านค่าได้เฉพาะแรงดันไฟฟ้า $V$) เราจึงต้องใช้วงจรแบ่งแรงดันเพื่อแปลงการเปลี่ยนแปลงของค่า $R$ เป็นแรงดันไฟฟ้า $V_{out}$
 
-```
-       V_in (3.3V)
-          │
-         ┌┴┐
-         │ │ R_fixed (ตัวต้านทานคงที่ เช่น 10 kΩ)
-         └┬┘
-          ├─────── V_out (เชื่อมต่อเข้ากับขา ADC ของ ESP32)
-         ┌┴┐
-         │ │ R_sensor (เซนเซอร์ เช่น LDR หรือ Thermistor)
-         └┬┘
-          │
-         ─┴─ Ground (0V)
-```
+<div style="text-align: center; margin: 24px 0;">
+<svg viewBox="0 0 750 250" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+  <style>
+    .schematic-bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1; rx: 12px; }
+    .wire { fill: none; stroke: #334155; stroke-width: 2.5; stroke-linecap: round; }
+    .wire-current { fill: none; stroke: #fbbf24; stroke-width: 3; stroke-dasharray: 8 8; animation: currentFlow 4s linear infinite; }
+    .resistor-box { fill: #ffffff; stroke: #334155; stroke-width: 2.5; rx: 2px; }
+    .ldr-outline { fill: #fef08a; stroke: #2563eb; stroke-width: 2; }
+    .ldr-arrow { fill: none; stroke: #2563eb; stroke-width: 1.5; }
+    .arrow-head { fill: #2563eb; }
+    
+    .light-ray { stroke: #facc15; stroke-width: 3; stroke-dasharray: 4 2; opacity: 0.1; animation: lightPulse 8s ease-in-out infinite; }
+    .voltmeter-dial { fill: #faf5ff; stroke: #7c3aed; stroke-width: 2; }
+    .voltmeter-pointer { fill: none; stroke: #ef4444; stroke-width: 3; stroke-linecap: round; transform-origin: 520px 140px; animation: needleMove 8s ease-in-out infinite; }
+    .status-text { font-size: 13px; font-weight: bold; fill: #1e293b; }
+    .formula-text { font-size: 11px; fill: #64748b; font-family: monospace; }
+    
+    @keyframes currentFlow {
+      0% { stroke-dashoffset: 100; }
+      100% { stroke-dashoffset: 0; }
+    }
+    @keyframes lightPulse {
+      0%, 100% { opacity: 0.1; }
+      40%, 60% { opacity: 1.0; }
+    }
+    @keyframes needleMove {
+      0%, 100% { transform: rotate(-45deg); } /* Vout = 1.65V (Dark) */
+      40%, 60% { transform: rotate(45deg); }  /* Vout = 0.3V (Bright) */
+    }
+    
+    /* Variable text display sync */
+    .txt-dark { animation: showDark 8s infinite; }
+    .txt-light { animation: showLight 8s infinite; }
+    
+    @keyframes showDark {
+      0%, 25%, 75%, 100% { opacity: 1; }
+      35%, 65% { opacity: 0.05; }
+    }
+    @keyframes showLight {
+      0%, 25%, 75%, 100% { opacity: 0.05; }
+      35%, 65% { opacity: 1; }
+    }
+  </style>
+  
+  <!-- Outer container -->
+  <rect x="5" y="5" width="740" height="240" class="schematic-bg"/>
+  
+  <!-- Left Side: Schematic -->
+  <!-- V_in Connection -->
+  <line x1="120" y1="25" x2="120" y2="55" class="wire"/>
+  <text x="120" y="20" font-size="12" font-weight="bold" fill="#dc2626" text-anchor="middle">V_in (3.3V)</text>
+  
+  <!-- R_fixed -->
+  <rect x="105" y="55" width="30" height="50" class="resistor-box"/>
+  <text x="95" y="83" font-size="12" font-weight="bold" fill="#1e293b" text-anchor="end">R_fixed</text>
+  <text x="95" y="98" font-size="10" fill="#64748b" text-anchor="end">10 kΩ</text>
+  
+  <!-- Middle connection to V_out -->
+  <line x1="120" y1="105" x2="120" y2="135" class="wire"/>
+  <line x1="120" y1="120" x2="220" y2="120" class="wire"/>
+  <text x="225" y="115" font-size="12" font-weight="bold" fill="#7c3aed">V_out</text>
+  <text x="225" y="130" font-size="10" fill="#6d28d9">(ไปยังขา ADC ESP32)</text>
+  
+  <!-- R_sensor (LDR) -->
+  <circle cx="120" cy="160" r="28" class="ldr-outline"/>
+  <!-- Resistor zigzag or simple box inside circle -->
+  <rect x="110" y="145" width="20" height="30" fill="#ffffff" stroke="#334155" stroke-width="1.5"/>
+  <!-- LDR Arrows -->
+  <line x1="72" y1="140" x2="94" y2="152" class="ldr-arrow"/>
+  <polygon points="94,152 87,147 91,154" class="arrow-head"/>
+  <line x1="80" y1="130" x2="102" y2="142" class="ldr-arrow"/>
+  <polygon points="102,142 95,137 99,144" class="arrow-head"/>
+  <text x="160" y="165" font-size="12" font-weight="bold" fill="#2563eb">R_sensor (LDR)</text>
+  
+  <!-- Ground Connection -->
+  <line x1="120" y1="188" x2="120" y2="210" class="wire"/>
+  <line x1="100" y1="210" x2="140" y2="210" class="wire"/>
+  <line x1="108" y1="216" x2="132" y2="216" class="wire"/>
+  <line x1="115" y1="222" x2="125" y2="222" class="wire"/>
+  <text x="120" y="235" font-size="11" fill="#64748b" text-anchor="middle">GND (0V)</text>
+  
+  <!-- Current Flow Animation on Schematic Wire -->
+  <path d="M 120 25 L 120 120 L 220 120 M 120 120 L 120 210" class="wire-current"/>
+  
+  <!-- Right Side: Graphic explanation of light sensor voltage division -->
+  <!-- Sun representing Light Source -->
+  <circle cx="340" cy="50" r="18" fill="#fef08a" stroke="#ca8a04" stroke-width="2"/>
+  <!-- Sun rays -->
+  <line x1="340" y1="25" x2="340" y2="12" stroke="#ca8a04" stroke-width="2"/>
+  <line x1="340" y1="75" x2="340" y2="88" stroke="#ca8a04" stroke-width="2"/>
+  <line x1="315" y1="50" x2="302" y2="50" stroke="#ca8a04" stroke-width="2"/>
+  <line x1="365" y1="50" x2="378" y2="50" stroke="#ca8a04" stroke-width="2"/>
+  <line x1="322" y1="32" x2="312" y2="22" stroke="#ca8a04" stroke-width="2"/>
+  <line x1="358" y1="68" x2="368" y2="78" stroke="#ca8a04" stroke-width="2"/>
+  <line x1="322" y1="68" x2="312" y2="78" stroke="#ca8a04" stroke-width="2"/>
+  <line x1="358" y1="32" x2="368" y2="22" stroke="#ca8a04" stroke-width="2"/>
+  
+  <!-- Glowing Light Beams -->
+  <path d="M 340 70 L 150 150" class="light-ray"/>
+  <path d="M 320 60 L 140 140" class="light-ray"/>
+  
+  <!-- Voltmeter Instrument representation -->
+  <path d="M 450 140 A 70 70 0 0 1 590 140" fill="none" stroke="#e2e8f0" stroke-width="15" stroke-linecap="round"/>
+  <!-- Voltages scale lines -->
+  <line x1="450" y1="140" x2="440" y2="140" stroke="#475569" stroke-width="2"/>
+  <text x="430" y="144" font-size="10" fill="#475569" text-anchor="end">0V</text>
+  
+  <line x1="520" y1="70" x2="520" y2="60" stroke="#475569" stroke-width="2"/>
+  <text x="520" y="52" font-size="10" fill="#475569" text-anchor="middle">1.65V</text>
+  
+  <line x1="590" y1="140" x2="600" y2="140" stroke="#475569" stroke-width="2"/>
+  <text x="610" y="144" font-size="10" fill="#475569" text-anchor="start">3.3V</text>
+  
+  <!-- Dial pointer needle -->
+  <line x1="520" y1="140" x2="520" y2="80" class="voltmeter-pointer"/>
+  <circle cx="520" cy="140" r="6" fill="#475569"/>
+  <text x="520" y="165" font-size="12" font-weight="bold" fill="#7c3aed" text-anchor="middle">V_out Meter</text>
+  
+  <!-- Animated Text Blocks -->
+  <!-- Case 1: Dark -->
+  <g class="txt-dark" transform="translate(340, 190)">
+    <text x="0" y="0" class="status-text" fill="#1e293b">สภาวะ มืด (Dark)</text>
+    <text x="0" y="18" class="formula-text" fill="#475569">R_sensor ≈ 10 kΩ (สูงมาก)</text>
+    <text x="0" y="34" class="formula-text" fill="#2563eb">V_out = 3.3V * (10k / (10k + 10k)) ≈ 1.65 V</text>
+  </g>
+  
+  <!-- Case 2: Bright -->
+  <g class="txt-light" transform="translate(340, 190)">
+    <text x="0" y="0" class="status-text" fill="#ca8a04">สภาวะ สว่าง (Bright)</text>
+    <text x="0" y="18" class="formula-text" fill="#475569">R_sensor ≈ 1 kΩ (ต่ำลง)</text>
+    <text x="0" y="34" class="formula-text" fill="#2563eb">V_out = 3.3V * (1k / (10k + 1k)) ≈ 0.30 V</text>
+  </g>
+</svg>
+</div>
 
 ตามกฎของโอห์ม (Ohm's Law) แรงดันเอาต์พุต ($V_{out}$) ที่ตกคร่อมเซนเซอร์หาได้จากสมการ:
 $$V_{out} = V_{in} \cdot \left( \frac{R_{sensor}}{R_{fixed} + R_{sensor}} \right)$$
@@ -870,11 +1004,145 @@ void loop() {
 
 ในการทำงานของมอเตอร์ไฟฟ้าแรงดันสูง ปั๊มน้ำดิบอุตสาหกรรม หรือกังหันไอน้ำ จุดที่เกิดความเค้นและความร้อนสะสมสูงสุดคือ **ตลับลูกปืน (Bearing)** หากแบริ่งขาดสารหล่อลื่นหรือชำรุด อุณหภูมิจะสูงขึ้นอย่างรวดเร็วและทำให้เครื่องจักรพังเสียหายรุนแรง การวัดอุณหภูมิที่แม่นยำจึงใช้ **RTD PT100** ติดตั้งแนบกับเสื้อแบริ่ง
 
-```
-   [เซนเซอร์ PT100]                  [ทรานสมิตเตอร์ 4-20mA]                [บอร์ดรับสัญญาณ / ADC]
-  วัดอุณหภูมิแบริ่ง ────(แอมพลิจูด R)────► แปลง R เป็นกระแส 4-20mA ──(สายส่งยาว)──► วัดแรงดันคร่อม R_shunt (250Ω)
- (ช่วง 0 ถึง 150 °C)                                                          (ได้แรงดัน 1.0 ถึง 5.0 V)
-```
+<div style="text-align: center; margin: 24px 0;">
+<svg viewBox="0 0 800 230" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+  <style>
+    .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1; rx: 8px; }
+    .box-outer { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; rx: 8px; }
+    .bearing-outer { fill: #cbd5e1; stroke: #475569; stroke-width: 2; }
+    .bearing-inner { fill: #f1f5f9; stroke: #475569; stroke-width: 2; }
+    .bearing-ball { fill: #94a3b8; stroke: #475569; stroke-width: 1.5; }
+    
+    .bearing-glow { fill: #ef4444; opacity: 0; animation: heatPulse 8s ease-in-out infinite; }
+    .wire-loop { fill: none; stroke: #475569; stroke-width: 2; }
+    .current-flow { fill: none; stroke: #3b82f6; stroke-width: 3; stroke-dasharray: 8 12; animation: currentSpeed 8s ease-in-out infinite; }
+    
+    @keyframes heatPulse {
+      0%, 100% { opacity: 0.05; }
+      40%, 60% { opacity: 0.8; }
+    }
+    @keyframes currentSpeed {
+      0%, 100% { stroke-dashoffset: 100; stroke-width: 2; stroke: #3b82f6; } /* 4mA (Slow) */
+      40%, 60% { stroke-dashoffset: -300; stroke-width: 3.5; stroke: #ef4444; } /* 20mA (Fast) */
+    }
+    
+    /* Voltmeter needle rotation */
+    .meter-needle { fill: none; stroke: #dc2626; stroke-width: 2.5; stroke-linecap: round; transform-origin: 730px 130px; animation: voltageMove 8s ease-in-out infinite; }
+    @keyframes voltageMove {
+      0%, 100% { transform: rotate(-50deg); } /* 1.0V */
+      40%, 60% { transform: rotate(50deg); }  /* 5.0V */
+    }
+    
+    /* Value texts syncing */
+    .val-cold { animation: showCold 8s infinite; }
+    .val-hot { animation: showHot 8s infinite; }
+    @keyframes showCold {
+      0%, 25%, 75%, 100% { opacity: 1; }
+      35%, 65% { opacity: 0.05; }
+    }
+    @keyframes showHot {
+      0%, 25%, 75%, 100% { opacity: 0.05; }
+      35%, 65% { opacity: 1; }
+    }
+  </style>
+  
+  <rect x="5" y="5" width="790" height="220" class="bg"/>
+  
+  <!-- Part 1: Bearing & PT100 -->
+  <g transform="translate(10, 10)">
+    <rect x="10" y="10" width="160" height="180" class="box-outer"/>
+    <text x="90" y="32" font-size="12" font-weight="bold" fill="#1e293b" text-anchor="middle">ตลับลูกปืน (Bearing)</text>
+    
+    <!-- Bearing drawings -->
+    <circle cx="90" cy="90" r="35" class="bearing-outer"/>
+    <circle cx="90" cy="90" r="22" class="bearing-inner"/>
+    <circle cx="90" cy="90" r="35" class="bearing-glow"/>
+    <circle cx="90" cy="90" r="22" class="bearing-inner"/>
+    <!-- Balls -->
+    <circle cx="90" cy="61" r="6" class="bearing-ball"/>
+    <circle cx="90" cy="119" r="6" class="bearing-ball"/>
+    <circle cx="61" cy="90" r="6" class="bearing-ball"/>
+    <circle cx="119" cy="90" r="6" class="bearing-ball"/>
+    <circle cx="70" cy="70" r="6" class="bearing-ball"/>
+    <circle cx="110" cy="110" r="6" class="bearing-ball"/>
+    <circle cx="70" cy="110" r="6" class="bearing-ball"/>
+    <circle cx="110" cy="70" r="6" class="bearing-ball"/>
+    
+    <!-- Probe -->
+    <rect x="110" y="85" width="55" height="10" rx="2" fill="#94a3b8" stroke="#475569" stroke-width="1"/>
+    <text x="138" y="112" font-size="10" font-weight="bold" fill="#3b4b5e">PT100 RTD</text>
+  </g>
+  
+  <!-- Connection: RTD Resistance to Transmitter -->
+  <line x1="180" y1="105" x2="220" y2="105" stroke="#475569" stroke-width="1.5"/>
+  <text x="200" y="98" font-size="9" fill="#475569" font-weight="bold" text-anchor="middle">R (Ω)</text>
+  
+  <!-- Part 2: Transmitter -->
+  <g transform="translate(220, 45)">
+    <rect x="0" y="0" width="130" height="110" rx="6" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="65" y="25" font-size="11" font-weight="bold" fill="#1e40af" text-anchor="middle">ทรานสมิตเตอร์</text>
+    <text x="65" y="42" font-size="11" font-weight="bold" fill="#1e40af" text-anchor="middle">(Transmitter)</text>
+    <text x="65" y="65" font-size="10" fill="#2563eb" text-anchor="middle">แปลงต้านทาน ➔ กระแส</text>
+    
+    <g class="val-cold">
+      <text x="65" y="90" font-size="10" font-family="monospace" fill="#047857" font-weight="bold" text-anchor="middle">R ≈ 100 Ω</text>
+    </g>
+    <g class="val-hot">
+      <text x="65" y="90" font-size="10" font-family="monospace" fill="#dc2626" font-weight="bold" text-anchor="middle">R ≈ 157.3 Ω</text>
+    </g>
+  </g>
+  
+  <!-- Wire Current Loop -->
+  <!-- Top Wire (Forward) -->
+  <path d="M 350 85 L 590 85" class="wire-loop"/>
+  <!-- Bottom Wire (Return) -->
+  <path d="M 590 115 L 350 115" class="wire-loop"/>
+  
+  <!-- Animated Current Flow -->
+  <path d="M 350 85 L 590 85 M 590 115 L 350 115" class="current-flow"/>
+  
+  <text x="470" y="75" font-size="10" font-weight="bold" fill="#2563eb" text-anchor="middle">กระแสในลูป (Loop Current)</text>
+  
+  <g class="val-cold">
+    <text x="470" y="132" font-size="11" font-weight="bold" fill="#047857" text-anchor="middle">4.0 mA (ที่ 0 °C)</text>
+  </g>
+  <g class="val-hot">
+    <text x="470" y="132" font-size="11" font-weight="bold" fill="#dc2626" text-anchor="middle">20.0 mA (ที่ 150 °C)</text>
+  </g>
+  
+  <!-- Part 3: Receiver Shunt Resistor and ADC -->
+  <g transform="translate(590, 10)">
+    <rect x="0" y="10" width="190" height="180" class="box-outer"/>
+    <text x="95" y="32" font-size="12" font-weight="bold" fill="#1e293b" text-anchor="middle">ฝั่งรับสัญญาณ (Receiver)</text>
+    
+    <!-- Shunt Resistor -->
+    <line x1="20" y1="75" x2="20" y2="90" stroke="#475569" stroke-width="1.5"/>
+    <rect x="10" y="90" width="20" height="30" fill="#ffffff" stroke="#475569" stroke-width="1.5"/>
+    <text x="35" y="102" font-size="10" font-weight="bold" fill="#475569">R_shunt</text>
+    <text x="35" y="115" font-size="9" fill="#64748b">250 Ω</text>
+    <line x1="20" y1="120" x2="20" y2="135" stroke="#475569" stroke-width="1.5"/>
+    <line x1="10" y1="135" x2="30" y2="135" stroke="#475569" stroke-width="1.5"/>
+    
+    <!-- Voltage tap connection to meter -->
+    <line x1="20" y1="75" x2="100" y2="75" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="3 3"/>
+    
+    <!-- Voltmeter -->
+    <circle cx="140" cy="130" r="28" fill="#faf5ff" stroke="#7c3aed" stroke-width="2"/>
+    <line x1="140" y1="130" x2="140" y2="110" class="meter-needle"/>
+    <circle cx="140" cy="130" r="3" fill="#475569"/>
+    
+    <text x="140" y="172" font-size="10" font-weight="bold" fill="#7c3aed" text-anchor="middle">วัดแรงดันคร่อม Shunt</text>
+    
+    <!-- Voltage displaying -->
+    <g class="val-cold">
+      <text x="95" y="60" font-size="11" font-weight="bold" fill="#047857" text-anchor="middle">V_out = 1.0 V</text>
+    </g>
+    <g class="val-hot">
+      <text x="95" y="60" font-size="11" font-weight="bold" fill="#dc2626" text-anchor="middle">V_out = 5.0 V</text>
+    </g>
+  </g>
+</svg>
+</div>
 
 #### 1. ทำไมต้องใช้สัญญาณกระแสลูป 4-20 mA?
 ในสภาพแวดล้อมโรงงานที่มีสายเคเบิลยาวหลายร้อยเมตรและมีคลื่นแม่เหล็กไฟฟ้ารบกวนสูงจากมอเตอร์ไฟฟ้า:
@@ -902,16 +1170,125 @@ $$T = \left( \frac{12 - 4}{16} \right) \cdot 150 = \frac{8}{16} \cdot 150 = 75\ 
 
 เครื่องจักรรอบหมุน เช่น เครื่องปั๊มน้ำหล่อเย็นในระบบผลิตไฟฟ้า มักเกิดปัญหาแกนเพลาเยื้องศูนย์ (Shaft Misalignment) หรือการเสียสมดุลของใบพัด (Unbalance) ปัญหาเหล่านี้ทำให้เครื่องจักรเกิดความสั่นสะเทือนสูง ซึ่งสามารถตรวจจับได้ด้วยตัววัดความเร่ง **(Accelerometer)**
 
-```
-   [ตัวตรวจจับ IEPE] ──(วัดความสั่น 3 แกน)──► [ADC ความถี่สูง] ──(60 KB/s)──► [MCU / Gateway]
-                                                                                │
-                                                                           (วิเคราะห์ FFT)
-                                                                                │
-                                                                   ส่งเฉพาะค่าดัชนีวิเคราะห์หลัก
-                                                                      (เช่น RMS, Peak Hz)
-                                                                                ▼
-                                                                        [ระบบ ThingsBoard]
-```
+<div style="text-align: center; margin: 24px 0;">
+<svg viewBox="0 0 850 250" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+  <style>
+    .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1; rx: 8px; }
+    .box-outer { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; rx: 8px; }
+    .cloud-box { fill: #f0fdfa; stroke: #0d9488; stroke-width: 1.5; rx: 8px; }
+    
+    /* Vibration shake effect on pump */
+    .pump-body { transform-origin: 90px 125px; animation: pumpShake 0.15s ease-in-out infinite; }
+    @keyframes pumpShake {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      25% { transform: translate(1px, -1px) rotate(-0.5deg); }
+      50% { transform: translate(-1px, 1px) rotate(0.5deg); }
+      75% { transform: translate(1.5px, 1px) rotate(-0.2deg); }
+    }
+    
+    /* Raw signal wave (noisy) */
+    .vibe-wave { fill: none; stroke: #ef4444; stroke-width: 1.5; stroke-dasharray: 400; stroke-dashoffset: 400; animation: waveFlow 3s linear infinite; }
+    @keyframes waveFlow {
+      to { stroke-dashoffset: 0; }
+    }
+    
+    /* FFT Bar animation */
+    .fft-bar { fill: #0284c7; width: 8px; transform-origin: bottom; rx: 1px; }
+    .fft-b1 { animation: fftBouncing1 1.2s ease-in-out infinite alternate; }
+    .fft-b2 { animation: fftBouncing2 0.8s ease-in-out infinite alternate; }
+    .fft-b3 { animation: fftBouncing3 1.5s ease-in-out infinite alternate; }
+    .fft-b4 { animation: fftBouncing4 1.0s ease-in-out infinite alternate; }
+    .fft-b5 { animation: fftBouncing5 1.3s ease-in-out infinite alternate; }
+    
+    @keyframes fftBouncing1 { 0% { height: 10px; } 100% { height: 45px; } }
+    @keyframes fftBouncing2 { 0% { height: 25px; } 100% { height: 15px; } }
+    @keyframes fftBouncing3 { 0% { height: 5px; } 100% { height: 55px; } }
+    @keyframes fftBouncing4 { 0% { height: 40px; } 100% { height: 10px; } }
+    @keyframes fftBouncing5 { 0% { height: 15px; } 100% { height: 30px; } }
+    
+    /* Slow network packets */
+    .cloud-packet { fill: #0d9488; }
+  </style>
+  
+  <rect x="5" y="5" width="840" height="240" class="bg"/>
+  
+  <!-- Part 1: Centrifugal Pump (Vibrating) -->
+  <g class="pump-body">
+    <rect x="20" y="25" width="140" height="190" class="box-outer"/>
+    <text x="90" y="47" font-size="11" font-weight="bold" fill="#1e293b" text-anchor="middle">ปั๊มหอยโข่ง (Pump)</text>
+    
+    <!-- Pump Drawing -->
+    <!-- Casing -->
+    <circle cx="90" cy="120" r="30" fill="#e2e8f0" stroke="#475569" stroke-width="2"/>
+    <rect x="80" y="65" width="20" height="25" fill="#e2e8f0" stroke="#475569" stroke-width="2"/>
+    <circle cx="90" cy="120" r="10" fill="#cbd5e1" stroke="#475569" stroke-width="2"/>
+    <line x1="60" y1="120" x2="120" y2="120" stroke="#475569" stroke-width="1.5"/>
+    <line x1="90" y1="90" x2="90" y2="150" stroke="#475569" stroke-width="1.5"/>
+    
+    <!-- Accelerometer Sensor -->
+    <rect x="110" y="95" width="18" height="15" rx="1" fill="#ef4444" stroke="#b91c1c" stroke-width="1"/>
+    <text x="119" y="106" font-size="7" fill="#ffffff" font-weight="bold" text-anchor="middle">IEPE</text>
+  </g>
+  
+  <!-- Connection: High Frequency Raw Data (Noisy Signal) -->
+  <path d="M 160 120 L 175 110 L 190 130 L 205 105 L 220 135 L 235 110 L 250 125 L 265 110 L 280 130 L 295 105 L 310 135 L 325 110 L 340 120" class="vibe-wave"/>
+  <path d="M 160 120 L 175 110 L 190 130 L 205 105 L 220 135 L 235 110 L 250 125 L 265 110 L 280 130 L 295 105 L 310 135 L 325 110 L 340 120" class="vibe-wave" style="animation-delay: -1.5s; stroke: #f87171;"/>
+  
+  <text x="250" y="80" font-size="10" font-weight="bold" fill="#ef4444" text-anchor="middle">ข้อมูลสั่นสะเทือนดิบ (Raw Data)</text>
+  <text x="250" y="94" font-size="9" fill="#94a3b8" text-anchor="middle">10 kHz, 3 แกน (60 KB/s)</text>
+  
+  <!-- Part 2: Edge Gateway (FreeRTOS / FFT) -->
+  <g transform="translate(340, 25)">
+    <rect x="0" y="0" width="180" height="190" class="box-outer" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="90" y="22" font-size="11" font-weight="bold" fill="#0369a1" text-anchor="middle">เกตเวย์หน้างาน (Edge Gateway)</text>
+    <text x="90" y="37" font-size="9" fill="#0284c7" text-anchor="middle">ประมวลผลการวิเคราะห์ FFT</text>
+    
+    <!-- FFT Plot representation -->
+    <rect x="25" y="55" width="130" height="85" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+    
+    <!-- Grid lines -->
+    <line x1="25" y1="76" x2="155" y2="76" stroke="#f1f5f9" stroke-width="1"/>
+    <line x1="25" y1="97" x2="155" y2="97" stroke="#f1f5f9" stroke-width="1"/>
+    <line x1="25" y1="118" x2="155" y2="118" stroke="#f1f5f9" stroke-width="1"/>
+    
+    <!-- Bouncing Bars -->
+    <rect x="35" y="140" class="fft-bar fft-b1" y="-45"/>
+    <rect x="55" y="140" class="fft-bar fft-b2" y="-15"/>
+    <rect x="75" y="140" class="fft-bar fft-b3" y="-55"/>
+    <rect x="95" y="140" class="fft-bar fft-b4" y="-10"/>
+    <rect x="115" y="140" class="fft-bar fft-b5" y="-30"/>
+    
+    <!-- Axes labels -->
+    <line x1="25" y1="140" x2="155" y2="140" stroke="#475569" stroke-width="1"/>
+    <text x="28" y="152" font-size="7" fill="#64748b">0 Hz</text>
+    <text x="152" y="152" font-size="7" fill="#64748b" text-anchor="end">500 Hz</text>
+    
+    <text x="90" y="172" font-size="10" font-weight="bold" fill="#0369a1" text-anchor="middle">แปลง Domain: เวลา ➔ ความถี่</text>
+  </g>
+  
+  <!-- Connection: Edge to Cloud (Reduced Data) -->
+  <line x1="520" y1="120" x2="660" y2="120" stroke="#0d9488" stroke-width="1.5"/>
+  <circle r="4" class="cloud-packet">
+    <animateMotion dur="4s" repeatCount="indefinite" path="M 520 120 L 660 120" />
+  </circle>
+  
+  <text x="590" y="80" font-size="10" font-weight="bold" fill="#0d9488" text-anchor="middle">ส่งเฉพาะผลสรุป (RMS / Peak)</text>
+  <text x="590" y="94" font-size="9" fill="#0d9488" text-anchor="middle">~60 Bytes/min</text>
+  <text x="590" y="145" font-size="10" font-weight="bold" fill="#059669" text-anchor="middle">ประหยัดแบนด์วิดท์มากกว่า 99.9%</text>
+  
+  <!-- Part 3: ThingsBoard Cloud -->
+  <g transform="translate(660, 25)">
+    <rect x="0" y="0" width="170" height="190" class="cloud-box"/>
+    <text x="85" y="25" font-size="12" font-weight="bold" fill="#0f766e" text-anchor="middle">ThingsBoard Cloud</text>
+    
+    <!-- Cloud Drawing -->
+    <path d="M 60 90 A 20 20 0 0 1 100 90 A 25 25 0 0 1 130 100 A 20 20 0 0 1 110 130 L 60 130 A 15 15 0 0 1 45 115 A 18 18 0 0 1 60 90 Z" fill="#ffffff" stroke="#0f766e" stroke-width="1.5"/>
+    
+    <text x="85" y="155" font-size="10" fill="#0f766e" font-weight="bold" text-anchor="middle">แดชบอร์ดติดตามสุขภาพปั๊ม</text>
+    <text x="85" y="170" font-size="9" fill="#0d9488" text-anchor="middle">แจ้งเตือนหากสั่นสะสมวิกฤต</text>
+  </g>
+</svg>
+</div>
 
 #### 1. เซนเซอร์ความเร่งแบบ IEPE คืออะไร?
 **IEPE (Integrated Electronics Piezo-Electric)** คือเซนเซอร์ความเร่งมาตรฐานอุตสาหกรรม ภายในบรรจุแผ่นคริสตัลเพียโซอิเล็กทริกที่สร้างประจุไฟฟ้าเมื่อมีแรงกดหรือสั่นสะเทือน และมีวงจรขยายสัญญาณและแปลงหน่วยอิมพีแดนซ์ฝังในตัว ข้อดีคือทนต่อสัญญาณรบกวนทางไฟฟ้าได้ดีมากและเดินสายสัญญาณยาวได้ไกล

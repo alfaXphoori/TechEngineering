@@ -462,7 +462,7 @@ void loop() {
 *   **ความเร็วระดับมาตรฐาน:** $100\text{ kbps}$ (Standard Mode) และ $400\text{ kbps}$ (Fast Mode)
 
 <div style="text-align: center; margin: 20px 0;">
-<svg viewBox="0 0 700 180" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+<svg viewBox="0 0 700 200" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
   <style>
     .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1; rx: 8px; }
     .mcu { fill: #faf5ff; stroke: #a78bfa; stroke-width: 2; rx: 8px; }
@@ -479,7 +479,7 @@ void loop() {
       to { stroke-dashoffset: -15; }
     }
   </style>
-  <rect x="5" y="5" width="690" height="170" class="bg"/>
+  <rect x="5" y="5" width="690" height="190" class="bg"/>
   <rect x="20" y="45" width="120" height="90" class="mcu"/>
   <text x="80" y="75" class="text-main" text-anchor="middle">ESP32</text>
   <text x="80" y="95" class="text-sub" text-anchor="middle">(I2C Master)</text>
@@ -499,17 +499,37 @@ void loop() {
   <text x="595" y="138" class="text-sub" text-anchor="middle">Address: 0x68 (Sensor 2)</text>
   <circle cx="450" cy="105" r="3" fill="#10b981"/>
   <circle cx="480" cy="75" r="3" fill="#f59e0b"/>
+  
+  <!-- Packet animations addressing both sensors in sequence -->
+  <!-- Sensor 1 (BMP280 @ 0x76) Cycle -->
   <g>
-    <rect x="0" y="0" width="45" height="14" rx="3" class="sda-packet"/>
-    <text x="22.5" y="10" class="packet-label" text-anchor="middle">ADDR 0x76</text>
-    <animateMotion path="M 140 105 L 450 105 L 450 45 L 520 45" dur="4s" repeatCount="indefinite" />
+    <rect x="-22.5" y="-7" width="45" height="14" rx="3" class="sda-packet"/>
+    <text x="0" y="3" class="packet-label" text-anchor="middle">ADDR 0x76</text>
+    <animateMotion path="M 140 105 L 450 105 L 450 45 L 520 45" dur="8s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="1; 1; 0; 0" keyTimes="0; 0.25; 0.26; 1" dur="8s" repeatCount="indefinite" />
   </g>
   <g>
-    <rect x="0" y="0" width="45" height="14" rx="3" fill="#3b82f6" stroke="#ffffff" stroke-width="1"/>
-    <text x="22.5" y="10" class="packet-label" text-anchor="middle">DATA: 25C</text>
-    <animateMotion path="M 520 45 L 450 45 L 450 105 L 140 105" dur="4s" begin="2s" repeatCount="indefinite" />
+    <rect x="-22.5" y="-7" width="45" height="14" rx="3" fill="#3b82f6" stroke="#ffffff" stroke-width="1"/>
+    <text x="0" y="3" class="packet-label" text-anchor="middle">DATA: 25C</text>
+    <animateMotion path="M 520 45 L 450 45 L 450 105 L 140 105" dur="8s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0; 0; 1; 1; 0; 0" keyTimes="0; 0.24; 0.25; 0.5; 0.51; 1" dur="8s" repeatCount="indefinite" />
   </g>
-  <text x="340" y="160" class="text-sub" text-anchor="middle" fill="#475569">SDA ส่งที่อยู่เพื่อเรียกเซนเซอร์ (ADDR) และเซนเซอร์จะตอบรับและส่งข้อมูล (DATA) กลับมาในสายสัญญาณเส้นเดิม</text>
+  
+  <!-- Sensor 2 (MPU6050 @ 0x68) Cycle -->
+  <g>
+    <rect x="-22.5" y="-7" width="45" height="14" rx="3" class="sda-packet"/>
+    <text x="0" y="3" class="packet-label" text-anchor="middle">ADDR 0x68</text>
+    <animateMotion path="M 140 105 L 480 105 L 480 135 L 520 135" dur="8s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0; 0; 1; 1; 0; 0" keyTimes="0; 0.49; 0.5; 0.75; 0.76; 1" dur="8s" repeatCount="indefinite" />
+  </g>
+  <g>
+    <rect x="-22.5" y="-7" width="45" height="14" rx="3" fill="#3b82f6" stroke="#ffffff" stroke-width="1"/>
+    <text x="0" y="3" class="packet-label" text-anchor="middle">DATA: ±2g</text>
+    <animateMotion path="M 520 135 L 480 135 L 480 105 L 140 105" dur="8s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0; 0; 1; 1" keyTimes="0; 0.74; 0.75; 1" dur="8s" repeatCount="indefinite" />
+  </g>
+  
+  <text x="350" y="182" class="text-sub" text-anchor="middle" fill="#475569">SDA ส่งที่อยู่เพื่อเรียกเซนเซอร์ (ADDR) และเซนเซอร์จะตอบรับและส่งข้อมูล (DATA) กลับมาในสายสัญญาณเส้นเดิม</text>
 </svg>
 </div>
 
@@ -525,7 +545,7 @@ void loop() {
 *   **ข้อจำกัด:** เมื่อจำนวนเซนเซอร์เพิ่มขึ้น จะต้องเปลืองขา GPIO ของ ESP32 เพิ่มตามจำนวนเซนเซอร์เพื่อนำไปทำเป็นขา CS ของเซนเซอร์แต่ละตัว
 
 <div style="text-align: center; margin: 20px 0;">
-<svg viewBox="0 0 700 240" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+<svg viewBox="0 0 700 260" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
   <style>
     .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1; rx: 8px; }
     .mcu { fill: #faf5ff; stroke: #a78bfa; stroke-width: 2; rx: 8px; }
@@ -551,7 +571,7 @@ void loop() {
     .wire-mosi-active { fill: none; stroke: #db2777; stroke-width: 2; }
     .wire-miso-active { fill: none; stroke: #059669; stroke-width: 2; }
   </style>
-  <rect x="5" y="5" width="690" height="230" class="bg"/>
+  <rect x="5" y="5" width="690" height="250" class="bg"/>
   
   <!-- ESP32 Breakout Box -->
   <rect x="20" y="35" width="120" height="170" class="mcu"/>
@@ -625,7 +645,7 @@ void loop() {
     <text x="0" y="3" class="packet-label" text-anchor="middle">READ</text>
     <animateMotion path="M 520 95 L 420 95 L 420 140 L 140 140" dur="3s" repeatCount="indefinite" />
   </g>
-  <text x="350" y="222" class="text-sub" text-anchor="middle" fill="#475569">การส่งข้อมูลแบบ Full-Duplex: ข้อมูลไหลผ่าน MOSI และ MISO พร้อมกันในรอบบัสเดียว เมื่อขา CS A ถูกดึงลงต่ำ (LOW)</text>
+  <text x="350" y="242" class="text-sub" text-anchor="middle" fill="#475569">การส่งข้อมูลแบบ Full-Duplex: ข้อมูลไหลผ่าน MOSI และ MISO พร้อมกันในรอบบัสเดียว เมื่อขา CS A ถูกดึงลงต่ำ (LOW)</text>
 </svg>
 </div>
 
@@ -637,7 +657,7 @@ void loop() {
 *   **ตัวอย่างการประยุกต์ใช้:** เซนเซอร์ DHT22 (วัดอุณหภูมิและความชื้น) และ DS18B20 (วัดอุณหภูมิความละเอียดสูงชนิดกันน้ำ)
 
 <div style="text-align: center; margin: 20px 0;">
-<svg viewBox="0 0 700 200" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+<svg viewBox="0 0 700 220" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
   <style>
     .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1; rx: 8px; }
     .mcu { fill: #faf5ff; stroke: #a78bfa; stroke-width: 2; rx: 8px; }
@@ -652,7 +672,7 @@ void loop() {
     .packet-reply { fill: #f59e0b; stroke: #ffffff; stroke-width: 1; }
     .packet-label { font-size: 7px; fill: #ffffff; font-weight: bold; font-family: monospace; }
   </style>
-  <rect x="5" y="5" width="690" height="190" class="bg"/>
+  <rect x="5" y="5" width="690" height="210" class="bg"/>
   <rect x="20" y="50" width="120" height="80" class="mcu"/>
   <text x="80" y="85" class="text-main" text-anchor="middle">ESP32</text>
   <text x="80" y="105" class="text-sub" text-anchor="middle">(One-Wire Master)</text>
@@ -678,17 +698,37 @@ void loop() {
   <line x1="520" y1="130" x2="470" y2="130" stroke="#cbd5e1" stroke-width="1.5"/>
   <line x1="470" y1="130" x2="470" y2="90" stroke="#cbd5e1" stroke-width="1.5"/>
   <circle cx="470" cy="90" r="3" fill="#2563eb"/>
+  
+  <!-- Packet animations addressing both sensors sequentially -->
+  <!-- DS18B20 #1 (ID: ...12A) Cycle -->
   <g>
-    <rect x="0" y="0" width="55" height="12" rx="2" class="packet-cmd"/>
-    <text x="27.5" y="9" class="packet-label" text-anchor="middle">REQ #98B</text>
-    <animateMotion path="M 140 90 L 520 90" dur="4s" repeatCount="indefinite" />
+    <rect x="-27.5" y="-6" width="55" height="12" rx="2" class="packet-cmd"/>
+    <text x="0" y="3" class="packet-label" text-anchor="middle">REQ #12A</text>
+    <animateMotion path="M 140 90 L 400 90 L 400 50 L 520 50" dur="8s" repeatCount="indefinite" />
+    <animate attributeName="opacity" values="1; 1; 0; 0" keyTimes="0; 0.25; 0.26; 1" dur="8s" repeatCount="indefinite" />
   </g>
   <g>
-    <rect x="0" y="0" width="55" height="12" rx="2" class="packet-reply"/>
-    <text x="27.5" y="9" class="packet-label" text-anchor="middle">TEMP: 26.8C</text>
-    <animateMotion path="M 520 90 L 140 90" dur="4s" begin="2s" repeatCount="indefinite" />
+    <rect x="-27.5" y="-6" width="55" height="12" rx="2" class="packet-reply"/>
+    <text x="0" y="3" class="packet-label" text-anchor="middle">TEMP: 25.4C</text>
+    <animateMotion path="M 520 50 L 400 50 L 400 90 L 140 90" dur="8s" repeatCount="indefinite" />
+    <animate attributeName="opacity" values="0; 0; 1; 1; 0; 0" keyTimes="0; 0.24; 0.25; 0.5; 0.51; 1" dur="8s" repeatCount="indefinite" />
   </g>
-  <text x="350" y="178" class="text-sub" text-anchor="middle" fill="#475569">การสื่อสารแบบ Half-Duplex: ใช้สายส่งข้อมูล 1 เส้นร่วมกัน โดย Master ส่งรหัสเรียกเซนเซอร์ แล้วเซนเซอร์ส่งข้อมูลกลับในสายเดิม</text>
+  
+  <!-- DS18B20 #2 (ID: ...98B) Cycle -->
+  <g>
+    <rect x="-27.5" y="-6" width="55" height="12" rx="2" class="packet-cmd"/>
+    <text x="0" y="3" class="packet-label" text-anchor="middle">REQ #98B</text>
+    <animateMotion path="M 140 90 L 470 90 L 470 130 L 520 130" dur="8s" repeatCount="indefinite" />
+    <animate attributeName="opacity" values="0; 0; 1; 1; 0; 0" keyTimes="0; 0.49; 0.5; 0.75; 0.76; 1" dur="8s" repeatCount="indefinite" />
+  </g>
+  <g>
+    <rect x="-27.5" y="-6" width="55" height="12" rx="2" class="packet-reply"/>
+    <text x="0" y="3" class="packet-label" text-anchor="middle">TEMP: 26.8C</text>
+    <animateMotion path="M 520 130 L 470 130 L 470 90 L 140 90" dur="8s" repeatCount="indefinite" />
+    <animate attributeName="opacity" values="0; 0; 1; 1" keyTimes="0; 0.74; 0.75; 1" dur="8s" repeatCount="indefinite" />
+  </g>
+  
+  <text x="350" y="202" class="text-sub" text-anchor="middle" fill="#475569">การสื่อสารแบบ Half-Duplex: ใช้สายส่งข้อมูล 1 เส้นร่วมกัน โดย Master ส่งรหัสเรียกเซนเซอร์ แล้วเซนเซอร์ส่งข้อมูลกลับในสายเดิม</text>
 </svg>
 </div>
 

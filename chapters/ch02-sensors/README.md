@@ -15,9 +15,57 @@
 
 **กระบวนการทำงาน:**
 
-```
-ปริมาณกายภาพ → [เซนเซอร์/ทรานสดิวเซอร์] → สัญญาณไฟฟ้า → [ADC ใน ESP32] → ค่าดิจิทัล
-```
+<div style="text-align: center; margin: 24px 0;">
+<svg viewBox="0 0 850 120" width="100%" height="auto" role="img" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', 'Segoe UI', sans-serif">
+  <title>กระบวนการแปลงปริมาณกายภาพเป็นข้อมูลดิจิทัล</title>
+  
+  <!-- Box 1: ปริมาณกายภาพ -->
+  <rect x="15" y="15" width="135" height="90" rx="12" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="82.5" y="43" fill="#166534" font-size="13" font-weight="700" text-anchor="middle">ปริมาณกายภาพ</text>
+  <text x="82.5" y="61" fill="#15803d" font-size="11" text-anchor="middle">(Physical Quantity)</text>
+  <text x="82.5" y="81" fill="#22c55e" font-size="10" text-anchor="middle">ความร้อน, แสง, ความสั่น</text>
+  
+  <!-- Arrow 1 -->
+  <line x1="156" y1="60" x2="178" y2="60" stroke="#94a3b8" stroke-width="2"/>
+  <polygon points="184,60 176,56 176,64" fill="#94a3b8"/>
+  
+  <!-- Box 2: เซนเซอร์/ทรานสดิวเซอร์ -->
+  <rect x="185" y="15" width="135" height="90" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="252.5" y="40" fill="#1e40af" font-size="13" font-weight="700" text-anchor="middle">เซนเซอร์ /</text>
+  <text x="252.5" y="58" fill="#1e40af" font-size="13" font-weight="700" text-anchor="middle">ทรานสดิวเซอร์</text>
+  <text x="252.5" y="80" fill="#3b82f6" font-size="10" text-anchor="middle">LDR, Thermistor, RTD</text>
+  
+  <!-- Arrow 2 -->
+  <line x1="326" y1="60" x2="348" y2="60" stroke="#94a3b8" stroke-width="2"/>
+  <polygon points="354,60 346,56 346,64" fill="#94a3b8"/>
+  
+  <!-- Box 3: สัญญาณไฟฟ้า -->
+  <rect x="355" y="15" width="135" height="90" rx="12" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+  <text x="422.5" y="43" fill="#92400e" font-size="13" font-weight="700" text-anchor="middle">สัญญาณไฟฟ้า</text>
+  <text x="422.5" y="61" fill="#b45309" font-size="11" text-anchor="middle">(Electrical Signal)</text>
+  <text x="422.5" y="81" fill="#d97706" font-size="10" text-anchor="middle">แรงดัน (V), ความต้านทาน (Ω)</text>
+  
+  <!-- Arrow 3 -->
+  <line x1="496" y1="60" x2="518" y2="60" stroke="#94a3b8" stroke-width="2"/>
+  <polygon points="524,60 516,56 516,64" fill="#94a3b8"/>
+  
+  <!-- Box 4: ADC ใน ESP32 -->
+  <rect x="525" y="15" width="135" height="90" rx="12" fill="#faf5ff" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="592.5" y="43" fill="#5b21b6" font-size="13" font-weight="700" text-anchor="middle">ADC ใน ESP32</text>
+  <text x="592.5" y="61" fill="#6d28d9" font-size="11" text-anchor="middle">(Analog-to-Digital)</text>
+  <text x="592.5" y="81" fill="#8b5cf6" font-size="10" text-anchor="middle">ทำการสุ่มวัด &amp; กำหนดระดับ</text>
+  
+  <!-- Arrow 4 -->
+  <line x1="666" y1="60" x2="688" y2="60" stroke="#94a3b8" stroke-width="2"/>
+  <polygon points="694,60 686,56 686,64" fill="#94a3b8"/>
+  
+  <!-- Box 5: ค่าดิจิทัล -->
+  <rect x="695" y="15" width="135" height="90" rx="12" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
+  <text x="762.5" y="43" fill="#065f46" font-size="13" font-weight="700" text-anchor="middle">ค่าดิจิทัล</text>
+  <text x="762.5" y="61" fill="#047857" font-size="11" text-anchor="middle">(Digital Value)</text>
+  <text x="762.5" y="81" fill="#10b981" font-size="10" text-anchor="middle">ตัวเลข 0 – 4095 (12-bit)</text>
+</svg>
+</div>
 
 **ตัวอย่าง:** เทอร์มิสเตอร์ (Thermistor) เปลี่ยนอุณหภูมิเป็นค่าความต้านทานไฟฟ้าที่เปลี่ยนแปลง → ESP32 อ่านค่าแรงดันที่เปลี่ยนไปตามความต้านทาน → คำนวณกลับเป็นองศาเซลเซียส
 

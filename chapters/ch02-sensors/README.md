@@ -502,12 +502,12 @@ void loop() {
   <g>
     <rect x="0" y="0" width="45" height="14" rx="3" class="sda-packet"/>
     <text x="22.5" y="10" class="packet-label" text-anchor="middle">ADDR 0x76</text>
-    <animateMotion path="M 140 105 L 520 105" dur="4s" repeatCount="indefinite" />
+    <animateMotion path="M 140 105 L 450 105 L 450 45 L 520 45" dur="4s" repeatCount="indefinite" />
   </g>
   <g>
     <rect x="0" y="0" width="45" height="14" rx="3" fill="#3b82f6" stroke="#ffffff" stroke-width="1"/>
     <text x="22.5" y="10" class="packet-label" text-anchor="middle">DATA: 25C</text>
-    <animateMotion path="M 520 105 L 140 105" dur="4s" begin="2s" repeatCount="indefinite" />
+    <animateMotion path="M 520 45 L 450 45 L 450 105 L 140 105" dur="4s" begin="2s" repeatCount="indefinite" />
   </g>
   <text x="340" y="160" class="text-sub" text-anchor="middle" fill="#475569">SDA ส่งที่อยู่เพื่อเรียกเซนเซอร์ (ADDR) และเซนเซอร์จะตอบรับและส่งข้อมูล (DATA) กลับมาในสายสัญญาณเส้นเดิม</text>
 </svg>

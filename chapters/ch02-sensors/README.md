@@ -260,6 +260,9 @@ $$\frac{1}{R_{total}} = \frac{1}{R_1} + \frac{1}{R_2} + ...$$
     .text-main { font-size: 14px; font-weight: 700; fill: #1e293b; }
     .text-sub { font-size: 12px; fill: #64748b; }
     .text-code { font-size: 12px; font-family: monospace; font-weight: 700; fill: #7c3aed; }
+    .text-green { fill: #16a34a; }
+    .text-red { fill: #dc2626; }
+    .text-muted { fill: #64748b; }
     .state-high { animation: showHigh 6s ease-in-out infinite; }
     .state-low { animation: showLow 6s ease-in-out infinite; }
     @keyframes showHigh {
@@ -336,6 +339,251 @@ $$\frac{1}{R_{total}} = \frac{1}{R_1} + \frac{1}{R_2} + ...$$
 แนวคิดนี้สำคัญมากกับ GPIO, I2C และ One-Wire เพราะบัสเหล่านี้มักต้องมีสถานะว่างเป็น HIGH แล้วให้อุปกรณ์บนบัสดึงสายลง LOW เมื่อจะส่งสัญญาณ ในหัวข้อ 2.5 และตัวอย่างเซนเซอร์หัวข้อ 2.6 จะเห็นการใช้ pull-up ค่า $4.7\text{ k}\Omega$ ถึง $10\text{ k}\Omega$ กับสาย I2C และ One-Wire อยู่บ่อยครั้ง
 
 > 💡 **หลักคิดง่าย ๆ:** Pull-up และ pull-down ไม่ได้มีไว้เพิ่มความซับซ้อน แต่มีไว้ทำให้ GPIO มีคำตอบชัดเจนว่าเป็น HIGH หรือ LOW เมื่อไม่มีใครขับสัญญาณอยู่
+
+### 2.1.5 ตัวเก็บประจุ (Capacitor)
+
+**ตัวเก็บประจุ (Capacitor)** คืออุปกรณ์ที่เก็บประจุไฟฟ้าและพลังงานไว้ในรูปของสนามไฟฟ้าระหว่างแผ่นตัวนำ 2 แผ่นที่มีฉนวนคั่นกลาง เมื่อต่อกับแหล่งจ่าย แผ่นหนึ่งจะสะสมประจุบวก อีกแผ่นหนึ่งจะสะสมประจุลบ และเมื่อตัดแหล่งจ่ายหรือมีทางให้กระแสไหลกลับ ตัวเก็บประจุจะคายประจุออกมา
+
+ถ้าเปรียบกับน้ำในท่อ ตัวเก็บประจุคล้าย **ถังเก็บน้ำขนาดเล็ก** ที่รับน้ำเข้าได้เมื่อมีแรงดัน และปล่อยน้ำออกได้เมื่อแรงดันรอบข้างลดลง ถังใหญ่กว่าจะเก็บน้ำได้มากกว่า เช่นเดียวกับตัวเก็บประจุที่มีค่าความจุสูงกว่าจะเก็บประจุได้มากกว่าเมื่อแรงดันเท่ากัน
+
+ค่าความจุไฟฟ้าใช้หน่วย **ฟารัด ($\text{F}$)** แต่ในการใช้งานจริงกับวงจรไมโครคอนโทรลเลอร์มักใช้หน่วยย่อย ได้แก่ ไมโครฟารัด ($\mu\text{F}$), นาโนฟารัด ($\text{nF}$) และพิโกฟารัด ($\text{pF}$) เช่น $0.1\ \mu\text{F}$, $1\ \mu\text{F}$ หรือ $10\ \mu\text{F}$
+
+ปริมาณประจุที่ตัวเก็บประจุเก็บได้สัมพันธ์กับค่าความจุและแรงดันตามสมการ:
+
+$$Q = CV$$
+
+โดยที่ $Q$ คือประจุไฟฟ้าในหน่วยคูลอมบ์ ($\text{C}$), $C$ คือค่าความจุในหน่วยฟารัด ($\text{F}$) และ $V$ คือแรงดันคร่อมตัวเก็บประจุในหน่วยโวลต์ ($\text{V}$)
+
+เมื่อตัวเก็บประจุต่อร่วมกับตัวต้านทานจะได้ **วงจร RC** ซึ่งมีพฤติกรรมสำคัญคือแรงดันคร่อมตัวเก็บประจุจะไม่เปลี่ยนทันที แต่จะชาร์จหรือคายประจุแบบโค้ง exponential ค่าที่บอกความเร็วของการเปลี่ยนแปลงนี้เรียกว่า **ค่าคงที่เวลา (Time Constant)**:
+
+$$\tau = RC$$
+
+โดยที่ $\tau$ มีหน่วยเป็นวินาที เมื่อเวลาผ่านไป $1\tau$ ระหว่างการชาร์จ แรงดันคร่อมตัวเก็บประจุจะขึ้นได้ประมาณ $63\%$ ของค่าสุดท้าย และหลังผ่านไปหลายเท่าของ $\tau$ แรงดันจะเข้าใกล้ค่าสุดท้ายมากขึ้นเรื่อย ๆ ในทางกลับกัน เมื่อคายประจุ แรงดันจะลดลงแบบ exponential เข้าหา $0\text{ V}$
+
+<div style="text-align: center; margin: 20px 0;">
+<svg viewBox="0 0 820 360" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+  <title>วงจร RC แสดงการชาร์จและคายประจุของตัวเก็บประจุพร้อมกราฟแรงดันแบบ exponential</title>
+  <style>
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1; rx: 10px; }
+    .panel { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; rx: 8px; }
+    .wire { fill: none; stroke: #334155; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .wire-charge { fill: none; stroke: #16a34a; stroke-width: 4; stroke-linecap: round; animation: chargeWire 8s ease-in-out infinite; }
+    .wire-discharge { fill: none; stroke: #dc2626; stroke-width: 4; stroke-linecap: round; animation: dischargeWire 8s ease-in-out infinite; }
+    .current-charge { fill: none; stroke: #f59e0b; stroke-width: 3; stroke-dasharray: 8 10; animation: chargeCurrent 8s linear infinite; }
+    .current-discharge { fill: none; stroke: #ef4444; stroke-width: 3; stroke-dasharray: 8 10; animation: dischargeCurrent 8s linear infinite; }
+    .battery { fill: #fef2f2; stroke: #dc2626; stroke-width: 2; rx: 6px; }
+    .resistor { fill: #eff6ff; stroke: #2563eb; stroke-width: 2; rx: 4px; }
+    .cap-plate { stroke: #334155; stroke-width: 5; stroke-linecap: round; }
+    .cap-charge { fill: #16a34a; font-size: 18px; font-weight: 800; animation: chargeMarks 8s ease-in-out infinite; }
+    .cap-empty { fill: #94a3b8; font-size: 18px; font-weight: 800; animation: emptyMarks 8s ease-in-out infinite; }
+    .dot-c { fill: #f59e0b; stroke: #ffffff; stroke-width: 1.5; animation: dotChargeFade 8s ease-in-out infinite; }
+    .dot-d { fill: #ef4444; stroke: #ffffff; stroke-width: 1.5; animation: dotDischargeFade 8s ease-in-out infinite; }
+    .axis { stroke: #64748b; stroke-width: 1.5; stroke-linecap: round; }
+    .grid { stroke: #e2e8f0; stroke-width: 1; }
+    .target { stroke: #16a34a; stroke-width: 1.5; stroke-dasharray: 5 5; }
+    .curve-base { fill: none; stroke: #cbd5e1; stroke-width: 3; stroke-linecap: round; }
+    .curve-charge { fill: none; stroke: #16a34a; stroke-width: 4; stroke-linecap: round; stroke-dasharray: 250; animation: drawChargeCurve 8s ease-in-out infinite; }
+    .curve-discharge { fill: none; stroke: #dc2626; stroke-width: 4; stroke-linecap: round; stroke-dasharray: 250; animation: drawDischargeCurve 8s ease-in-out infinite; }
+    .tau-line { stroke: #7c3aed; stroke-width: 1.5; stroke-dasharray: 4 4; animation: tauPulse 8s ease-in-out infinite; }
+    .text-main { font-size: 14px; font-weight: 700; fill: #1e293b; }
+    .text-sub { font-size: 12px; fill: #64748b; }
+    .text-code { font-size: 12px; font-family: monospace; font-weight: 700; fill: #7c3aed; }
+    .state-charge { animation: showCharge 8s ease-in-out infinite; }
+    .state-full { animation: showFull 8s ease-in-out infinite; }
+    .state-discharge { animation: showDischarge 8s ease-in-out infinite; }
+    .state-empty { animation: showEmpty 8s ease-in-out infinite; }
+    @keyframes showCharge {
+      0%, 45% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+    @keyframes showFull {
+      0%, 43%, 56%, 100% { opacity: 0; }
+      46%, 54% { opacity: 1; }
+    }
+    @keyframes showDischarge {
+      0%, 54%, 92%, 100% { opacity: 0; }
+      58%, 88% { opacity: 1; }
+    }
+    @keyframes showEmpty {
+      0%, 90% { opacity: 0; }
+      94%, 100% { opacity: 1; }
+    }
+    @keyframes chargeWire {
+      0%, 45% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+    @keyframes dischargeWire {
+      0%, 54%, 100% { opacity: 0; }
+      58%, 90% { opacity: 1; }
+    }
+    @keyframes chargeCurrent {
+      0% { opacity: 1; stroke-dashoffset: 0; }
+      28% { opacity: 0.65; stroke-dashoffset: -70; }
+      45% { opacity: 0; stroke-dashoffset: -110; }
+      46%, 100% { opacity: 0; stroke-dashoffset: -110; }
+    }
+    @keyframes dischargeCurrent {
+      0%, 54% { opacity: 0; stroke-dashoffset: 0; }
+      58% { opacity: 1; stroke-dashoffset: 0; }
+      75% { opacity: 0.65; stroke-dashoffset: 70; }
+      90%, 100% { opacity: 0; stroke-dashoffset: 110; }
+    }
+    @keyframes dotChargeFade {
+      0%, 22% { opacity: 1; }
+      38% { opacity: 0.25; }
+      45%, 100% { opacity: 0; }
+    }
+    @keyframes dotDischargeFade {
+      0%, 56% { opacity: 0; }
+      60%, 74% { opacity: 1; }
+      88%, 100% { opacity: 0; }
+    }
+    @keyframes chargeMarks {
+      0% { opacity: 0.1; }
+      20% { opacity: 0.55; }
+      45%, 56% { opacity: 1; }
+      75% { opacity: 0.4; }
+      92%, 100% { opacity: 0.1; }
+    }
+    @keyframes emptyMarks {
+      0%, 18% { opacity: 0.8; }
+      35%, 82% { opacity: 0; }
+      94%, 100% { opacity: 0.8; }
+    }
+    @keyframes drawChargeCurve {
+      0% { opacity: 1; stroke-dashoffset: 250; }
+      45% { opacity: 1; stroke-dashoffset: 0; }
+      52% { opacity: 1; stroke-dashoffset: 0; }
+      58%, 100% { opacity: 0; stroke-dashoffset: 0; }
+    }
+    @keyframes drawDischargeCurve {
+      0%, 54% { opacity: 0; stroke-dashoffset: 250; }
+      58% { opacity: 1; stroke-dashoffset: 250; }
+      90% { opacity: 1; stroke-dashoffset: 0; }
+      100% { opacity: 0; stroke-dashoffset: 0; }
+    }
+    @keyframes tauPulse {
+      0%, 8%, 45%, 100% { opacity: 0.25; }
+      16%, 35% { opacity: 1; }
+      62%, 82% { opacity: 1; }
+    }
+  </style>
+  <rect x="5" y="5" width="810" height="350" class="bg"/>
+
+  <rect x="25" y="45" width="365" height="265" class="panel"/>
+  <text x="207.5" y="28" class="text-main" text-anchor="middle">วงจร RC: ตัวเก็บประจุชาร์จและคายผ่านตัวต้านทาน</text>
+
+  <path d="M 85 125 L 160 125 L 255 125 L 330 125 L 330 235 L 85 235 L 85 125" class="wire"/>
+  <path d="M 85 125 L 160 125 L 255 125 L 330 125 L 330 235" class="wire-charge"/>
+  <path d="M 330 235 L 255 235 L 255 125 L 160 125 L 85 125" class="wire-discharge"/>
+  <path id="chargePath" d="M 85 125 L 160 125 L 255 125 L 330 125 L 330 180" class="current-charge"/>
+  <path id="dischargePath" d="M 330 180 L 330 235 L 255 235 L 255 125 L 160 125 L 85 125" class="current-discharge"/>
+
+  <rect x="60" y="155" width="50" height="55" class="battery"/>
+  <line x1="76" y1="166" x2="76" y2="198" stroke="#dc2626" stroke-width="4"/>
+  <line x1="94" y1="174" x2="94" y2="190" stroke="#334155" stroke-width="4"/>
+  <text x="85" y="146" fill="#dc2626" font-size="12" font-weight="700" text-anchor="middle">3.3V</text>
+  <text x="66" y="168" fill="#dc2626" font-weight="700">+</text>
+  <text x="98" y="200" fill="#334155" font-weight="700">-</text>
+
+  <rect x="145" y="100" width="70" height="50" class="resistor"/>
+  <text x="180" y="121" class="text-main" text-anchor="middle">R</text>
+  <text x="180" y="138" class="text-sub" text-anchor="middle">10 kΩ</text>
+
+  <line x1="315" y1="155" x2="315" y2="205" class="cap-plate"/>
+  <line x1="345" y1="155" x2="345" y2="205" class="cap-plate"/>
+  <line x1="330" y1="125" x2="330" y2="155" class="wire"/>
+  <line x1="330" y1="205" x2="330" y2="235" class="wire"/>
+  <text x="330" y="146" class="text-main" text-anchor="middle">C</text>
+  <text x="330" y="222" class="text-sub" text-anchor="middle">0.1 μF</text>
+  <text x="303" y="175" class="cap-charge" text-anchor="middle">+</text>
+  <text x="303" y="195" class="cap-charge" text-anchor="middle">+</text>
+  <text x="357" y="175" class="cap-charge" text-anchor="middle">-</text>
+  <text x="357" y="195" class="cap-charge" text-anchor="middle">-</text>
+  <text x="303" y="187" class="cap-empty" text-anchor="middle">±</text>
+  <text x="357" y="187" class="cap-empty" text-anchor="middle">±</text>
+
+  <circle r="5" class="dot-c">
+    <animateMotion dur="8s" repeatCount="indefinite">
+      <mpath href="#chargePath"/>
+    </animateMotion>
+  </circle>
+  <circle r="5" class="dot-c" opacity="0.75">
+    <animateMotion dur="8s" begin="0.75s" repeatCount="indefinite">
+      <mpath href="#chargePath"/>
+    </animateMotion>
+  </circle>
+  <circle r="5" class="dot-d">
+    <animateMotion dur="8s" repeatCount="indefinite">
+      <mpath href="#dischargePath"/>
+    </animateMotion>
+  </circle>
+  <circle r="5" class="dot-d" opacity="0.75">
+    <animateMotion dur="8s" begin="0.75s" repeatCount="indefinite">
+      <mpath href="#dischargePath"/>
+    </animateMotion>
+  </circle>
+
+  <g class="state-charge">
+    <rect x="55" y="250" width="305" height="40" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+    <text x="207.5" y="275" class="text-main" fill="#047857" text-anchor="middle">กำลังชาร์จ: กระแสไหลมากตอนเริ่ม แล้วค่อย ๆ ลดลง</text>
+  </g>
+  <g class="state-full">
+    <rect x="55" y="250" width="305" height="40" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="207.5" y="275" class="text-main" fill="#166534" text-anchor="middle">ชาร์จเต็มโดยประมาณ: กระแส DC หยุดไหล</text>
+  </g>
+  <g class="state-discharge">
+    <rect x="55" y="250" width="305" height="40" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.5"/>
+    <text x="207.5" y="275" class="text-main" fill="#dc2626" text-anchor="middle">กำลังคายประจุ: แรงดันลดลงเข้าหา 0V</text>
+  </g>
+  <g class="state-empty">
+    <rect x="55" y="250" width="305" height="40" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+    <text x="207.5" y="275" class="text-main" fill="#475569" text-anchor="middle">คายประจุแล้ว: พร้อมเริ่มรอบใหม่</text>
+  </g>
+
+  <rect x="430" y="45" width="365" height="265" class="panel"/>
+  <text x="612.5" y="28" class="text-main" text-anchor="middle">กราฟแรงดันคร่อมตัวเก็บประจุ</text>
+  <line x1="470" y1="235" x2="725" y2="235" class="axis"/>
+  <line x1="470" y1="235" x2="470" y2="65" class="axis"/>
+  <line x1="470" y1="78" x2="725" y2="78" class="target"/>
+  <line x1="535" y1="235" x2="535" y2="115" class="tau-line"/>
+  <line x1="470" y1="137" x2="535" y2="137" class="tau-line"/>
+  <line x1="470" y1="115" x2="725" y2="115" class="grid"/>
+  <line x1="470" y1="175" x2="725" y2="175" class="grid"/>
+  <text x="458" y="82" class="text-sub" text-anchor="end">Vfinal</text>
+  <text x="458" y="140" class="text-sub" text-anchor="end">63%</text>
+  <text x="535" y="252" class="text-code" text-anchor="middle">τ = RC</text>
+  <text x="726" y="252" class="text-sub" text-anchor="end">เวลา</text>
+  <text x="452" y="70" class="text-sub" text-anchor="middle" transform="rotate(-90 452 70)">Vc</text>
+
+  <path d="M 470 215 C 500 145, 545 105, 610 88 C 650 80, 685 78, 710 78" class="curve-base"/>
+  <path d="M 470 78 C 505 135, 550 180, 610 202 C 650 214, 685 216, 710 216" class="curve-base"/>
+  <path d="M 470 215 C 500 145, 545 105, 610 88 C 650 80, 685 78, 710 78" class="curve-charge"/>
+  <path d="M 470 78 C 505 135, 550 180, 610 202 C 650 214, 685 216, 710 216" class="curve-discharge"/>
+
+  <g class="state-charge">
+    <text x="612.5" y="286" class="text-code text-green" text-anchor="middle">Charging: Vc เพิ่มเร็วตอนแรก แล้วค่อย ๆ เข้าใกล้ 3.3V</text>
+  </g>
+  <g class="state-discharge">
+    <text x="612.5" y="286" class="text-code text-red" text-anchor="middle">Discharging: Vc ลดเร็วตอนแรก แล้วค่อย ๆ เข้าใกล้ 0V</text>
+  </g>
+  <g class="state-full">
+    <text x="612.5" y="286" class="text-code text-green" text-anchor="middle">เมื่อ Vc เกือบเท่าแหล่งจ่าย กระแสชาร์จ ≈ 0</text>
+  </g>
+  <g class="state-empty">
+    <text x="612.5" y="286" class="text-code text-muted" text-anchor="middle">แรงดันเหลือใกล้ 0V ก่อนเริ่มชาร์จรอบถัดไป</text>
+  </g>
+</svg>
+<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 2.4 วงจร RC ชาร์จและคายประจุแบบ exponential โดยกระแสจะมากตอนเริ่มและลดลงเมื่อแรงดันคร่อมตัวเก็บประจุเข้าใกล้ค่าสุดท้าย</div>
+</div>
+
+ในงาน IoT และเซนเซอร์ ตัวเก็บประจุไม่ได้มีไว้เก็บพลังงานอย่างเดียว แต่ช่วยให้สัญญาณและไฟเลี้ยงนิ่งขึ้นด้วย ตัวอย่างที่พบบ่อย ได้แก่
+
+*   **ตัวเก็บประจุดีคัปปลิ้ง/บายพาส (Decoupling/Bypass Capacitor):** ใช้ลดสัญญาณรบกวนบนสายไฟเลี้ยง โดยมักต่อ $0.1\ \mu\text{F}$ คร่อมระหว่าง VCC กับ GND ใกล้ชิปเซนเซอร์หรือ ESP32 ให้มากที่สุด เพื่อให้ชิปมีแหล่งจ่ายประจุเล็ก ๆ อยู่ใกล้ตัวเมื่อต้องการกระแสชั่วขณะ
+*   **การกรองสัญญาณรบกวน (Filtering):** เมื่อต่อร่วมกับตัวต้านทานจะสร้างตัวกรองความถี่ต่ำอย่างง่าย ช่วยลดการแกว่งเร็ว ๆ ของแรงดันก่อนส่งเข้า ADC ทำให้ค่าที่อ่านได้จากเซนเซอร์แอนะล็อกนิ่งขึ้น
+*   **การลดการกระเด้งของปุ่มกด (Debounce):** ใช้ร่วมกับตัวต้านทานเพื่อทำให้แรงดันที่ขาอินพุตเปลี่ยนช้าลงเล็กน้อย ลดพัลส์สั้น ๆ ที่เกิดจากหน้าสัมผัสปุ่มกดกระเด้ง
+
+> 💡 **หลักคิดง่าย ๆ:** ตัวเก็บประจุทำหน้าที่เหมือนถังพักประจุ ช่วยรับหรือจ่ายประจุชั่วคราว ทำให้แรงดันไม่เปลี่ยนแบบกระชาก และช่วยให้วงจรเซนเซอร์อ่านค่าได้นิ่งขึ้น
 
 ---
 

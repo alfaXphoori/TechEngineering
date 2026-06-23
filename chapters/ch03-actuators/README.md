@@ -23,7 +23,7 @@
     .wire { fill: none; stroke: #334155; stroke-width: 3; stroke-linecap: round; }
     .signal-flow { fill: none; stroke: #a78bfa; stroke-width: 4; stroke-dasharray: 8 10; stroke-linecap: round; animation: flow 2s linear infinite; }
     .output-flow { fill: none; stroke: #f97316; stroke-width: 4; stroke-dasharray: 8 10; stroke-linecap: round; animation: flow 1.5s linear infinite; }
-    .propeller { fill: #475569; transform-origin: 410px 95px; animation: spin 1s linear infinite; }
+    .act-fan { fill: #475569; transform-box: view-box; transform-origin: 410px 95px; animation: spin 1s linear infinite; }
     .led-glow { fill: #22c55e; animation: blink 1s ease-in-out infinite alternate; }
     .wind-line { fill: none; stroke: #ea580c; stroke-width: 2; stroke-linecap: round; animation: wind 1.5s linear infinite; }
     .text-title { font-size: 14px; font-weight: 700; fill: #1e293b; }
@@ -73,10 +73,10 @@
   <circle cx="410" cy="95" r="14" fill="#cbd5e1" stroke="#334155" stroke-width="2"/>
   <circle cx="410" cy="95" r="4" fill="#334155"/>
   <!-- Propeller -->
-  <path d="M 410 95 L 390 85 C 385 82, 385 75, 390 75 C 395 75, 405 85, 410 95 Z" class="propeller"/>
-  <path d="M 410 95 L 430 105 C 435 108, 435 115, 430 115 C 425 115, 415 105, 410 95 Z" class="propeller"/>
-  <path d="M 410 95 L 420 75 C 423 70, 430 70, 430 75 C 430 80, 420 90, 410 95 Z" class="propeller"/>
-  <path d="M 410 95 L 400 115 C 397 120, 390 120, 390 115 C 390 110, 400 100, 410 95 Z" class="propeller"/>
+  <path d="M 410 95 L 390 85 C 385 82, 385 75, 390 75 C 395 75, 405 85, 410 95 Z" class="act-fan"/>
+  <path d="M 410 95 L 430 105 C 435 108, 435 115, 430 115 C 425 115, 415 105, 410 95 Z" class="act-fan"/>
+  <path d="M 410 95 L 420 75 C 423 70, 430 70, 430 75 C 430 80, 420 90, 410 95 Z" class="act-fan"/>
+  <path d="M 410 95 L 400 115 C 397 120, 390 120, 390 115 C 390 110, 400 100, 410 95 Z" class="act-fan"/>
 
   <!-- Real World Box -->
   <rect x="585" y="50" width="130" height="110" class="world-box"/>

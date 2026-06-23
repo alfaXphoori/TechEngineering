@@ -138,10 +138,10 @@
     
     @keyframes showDark {
       0%, 25%, 75%, 100% { opacity: 1; }
-      35%, 65% { opacity: 0.05; }
+      35%, 65% { opacity: 0; }
     }
     @keyframes showLight {
-      0%, 25%, 75%, 100% { opacity: 0.05; }
+      0%, 25%, 75%, 100% { opacity: 0; }
       35%, 65% { opacity: 1; }
     }
   </style>
@@ -501,22 +501,14 @@ void loop() {
   <circle cx="450" cy="105" r="3" fill="#10b981"/>
   <circle cx="480" cy="75" r="3" fill="#f59e0b"/>
   <g>
-    <rect x="0" y="0" width="45" height="14" rx="3" class="sda-packet">
-      <animateMotion path="M 140 105 L 520 105" dur="4s" repeatCount="indefinite" />
-    </rect>
-    <text x="0" y="0" class="packet-label" text-anchor="middle" transform="translate(22, 10)">
-      ADDR 0x76
-      <animateMotion path="M 140 105 L 520 105" dur="4s" repeatCount="indefinite" />
-    </text>
+    <rect x="0" y="0" width="45" height="14" rx="3" class="sda-packet"/>
+    <text x="22.5" y="10" class="packet-label" text-anchor="middle">ADDR 0x76</text>
+    <animateMotion path="M 140 105 L 520 105" dur="4s" repeatCount="indefinite" />
   </g>
   <g>
-    <rect x="0" y="0" width="45" height="14" rx="3" fill="#3b82f6" stroke="#ffffff" stroke-width="1">
-      <animateMotion path="M 520 105 L 140 105" dur="4s" begin="2s" repeatCount="indefinite" />
-    </rect>
-    <text x="0" y="0" class="packet-label" text-anchor="middle" transform="translate(22, 10)">
-      DATA: 25C
-      <animateMotion path="M 520 105 L 140 105" dur="4s" begin="2s" repeatCount="indefinite" />
-    </text>
+    <rect x="0" y="0" width="45" height="14" rx="3" fill="#3b82f6" stroke="#ffffff" stroke-width="1"/>
+    <text x="22.5" y="10" class="packet-label" text-anchor="middle">DATA: 25C</text>
+    <animateMotion path="M 520 105 L 140 105" dur="4s" begin="2s" repeatCount="indefinite" />
   </g>
   <text x="340" y="160" class="text-sub" text-anchor="middle" fill="#475569">SDA ส่งที่อยู่เพื่อเรียกเซนเซอร์ (ADDR) และเซนเซอร์จะตอบรับและส่งข้อมูล (DATA) กลับมาในสายสัญญาณเส้นเดิม</text>
 </svg>
@@ -573,22 +565,14 @@ void loop() {
   <circle cx="450" cy="95" r="3" fill="#cbd5e1"/>
   <circle cx="450" cy="125" r="3" fill="#cbd5e1"/>
   <g>
-    <rect x="0" y="0" width="40" height="12" rx="2" class="packet-mosi">
-      <animateMotion path="M 140 95 L 520 95" dur="3s" repeatCount="indefinite" />
-    </rect>
-    <text x="0" y="0" class="packet-label" text-anchor="middle" transform="translate(20, 9)">
-      WRITE
-      <animateMotion path="M 140 95 L 520 95" dur="3s" repeatCount="indefinite" />
-    </text>
+    <rect x="0" y="0" width="40" height="12" rx="2" class="packet-mosi"/>
+    <text x="20" y="9" class="packet-label" text-anchor="middle">WRITE</text>
+    <animateMotion path="M 140 95 L 520 95" dur="3s" repeatCount="indefinite" />
   </g>
   <g>
-    <rect x="0" y="0" width="40" height="12" rx="2" class="packet-miso">
-      <animateMotion path="M 520 125 L 140 125" dur="3s" repeatCount="indefinite" />
-    </rect>
-    <text x="0" y="0" class="packet-label" text-anchor="middle" transform="translate(20, 9)">
-      READ
-      <animateMotion path="M 520 125 L 140 125" dur="3s" repeatCount="indefinite" />
-    </text>
+    <rect x="0" y="0" width="40" height="12" rx="2" class="packet-miso"/>
+    <text x="20" y="9" class="packet-label" text-anchor="middle">READ</text>
+    <animateMotion path="M 520 125 L 140 125" dur="3s" repeatCount="indefinite" />
   </g>
   <text x="350" y="222" class="text-sub" text-anchor="middle" fill="#475569">การส่งข้อมูลแบบ Full-Duplex: ข้อมูลไหลผ่าน MOSI และ MISO พร้อมกันในรอบบัสเดียว เมื่อขา CS A ถูกดึงลงต่ำ (LOW)</text>
 </svg>
@@ -644,22 +628,14 @@ void loop() {
   <line x1="470" y1="130" x2="470" y2="90" stroke="#cbd5e1" stroke-width="1.5"/>
   <circle cx="470" cy="90" r="3" fill="#2563eb"/>
   <g>
-    <rect x="0" y="0" width="55" height="12" rx="2" class="packet-cmd">
-      <animateMotion path="M 140 90 L 520 90" dur="4s" repeatCount="indefinite" />
-    </rect>
-    <text x="0" y="0" class="packet-label" text-anchor="middle" transform="translate(27, 9)">
-      REQ #98B
-      <animateMotion path="M 140 90 L 520 90" dur="4s" repeatCount="indefinite" />
-    </text>
+    <rect x="0" y="0" width="55" height="12" rx="2" class="packet-cmd"/>
+    <text x="27.5" y="9" class="packet-label" text-anchor="middle">REQ #98B</text>
+    <animateMotion path="M 140 90 L 520 90" dur="4s" repeatCount="indefinite" />
   </g>
   <g>
-    <rect x="0" y="0" width="55" height="12" rx="2" class="packet-reply">
-      <animateMotion path="M 520 90 L 140 90" dur="4s" begin="2s" repeatCount="indefinite" />
-    </rect>
-    <text x="0" y="0" class="packet-label" text-anchor="middle" transform="translate(27, 9)">
-      TEMP: 26.8C
-      <animateMotion path="M 520 90 L 140 90" dur="4s" begin="2s" repeatCount="indefinite" />
-    </text>
+    <rect x="0" y="0" width="55" height="12" rx="2" class="packet-reply"/>
+    <text x="27.5" y="9" class="packet-label" text-anchor="middle">TEMP: 26.8C</text>
+    <animateMotion path="M 520 90 L 140 90" dur="4s" begin="2s" repeatCount="indefinite" />
   </g>
   <text x="350" y="178" class="text-sub" text-anchor="middle" fill="#475569">การสื่อสารแบบ Half-Duplex: ใช้สายส่งข้อมูล 1 เส้นร่วมกัน โดย Master ส่งรหัสเรียกเซนเซอร์ แล้วเซนเซอร์ส่งข้อมูลกลับในสายเดิม</text>
 </svg>
@@ -1018,7 +994,7 @@ void loop() {
     .current-flow { fill: none; stroke: #3b82f6; stroke-width: 3; stroke-dasharray: 8 12; animation: currentSpeed 8s ease-in-out infinite; }
     
     @keyframes heatPulse {
-      0%, 100% { opacity: 0.05; }
+      0%, 100% { opacity: 0; }
       40%, 60% { opacity: 0.8; }
     }
     @keyframes currentSpeed {
@@ -1027,7 +1003,7 @@ void loop() {
     }
     
     /* Voltmeter needle rotation */
-    .meter-needle { fill: none; stroke: #dc2626; stroke-width: 2.5; stroke-linecap: round; transform-origin: 730px 130px; animation: voltageMove 8s ease-in-out infinite; }
+    .meter-needle { fill: none; stroke: #dc2626; stroke-width: 2.5; stroke-linecap: round; transform-origin: 730px 140px; animation: voltageMove 8s ease-in-out infinite; }
     @keyframes voltageMove {
       0%, 100% { transform: rotate(-50deg); } /* 1.0V */
       40%, 60% { transform: rotate(50deg); }  /* 5.0V */
@@ -1038,10 +1014,10 @@ void loop() {
     .val-hot { animation: showHot 8s infinite; }
     @keyframes showCold {
       0%, 25%, 75%, 100% { opacity: 1; }
-      35%, 65% { opacity: 0.05; }
+      35%, 65% { opacity: 0; }
     }
     @keyframes showHot {
-      0%, 25%, 75%, 100% { opacity: 0.05; }
+      0%, 25%, 75%, 100% { opacity: 0; }
       35%, 65% { opacity: 1; }
     }
   </style>
@@ -1193,18 +1169,18 @@ $$T = \left( \frac{12 - 4}{16} \right) \cdot 150 = \frac{8}{16} \cdot 150 = 75\ 
     }
     
     /* FFT Bar animation */
-    .fft-bar { fill: #0284c7; width: 8px; transform-origin: bottom; rx: 1px; }
+    .fft-bar { fill: #0284c7; transform-origin: 0px 140px; }
     .fft-b1 { animation: fftBouncing1 1.2s ease-in-out infinite alternate; }
     .fft-b2 { animation: fftBouncing2 0.8s ease-in-out infinite alternate; }
     .fft-b3 { animation: fftBouncing3 1.5s ease-in-out infinite alternate; }
     .fft-b4 { animation: fftBouncing4 1.0s ease-in-out infinite alternate; }
     .fft-b5 { animation: fftBouncing5 1.3s ease-in-out infinite alternate; }
     
-    @keyframes fftBouncing1 { 0% { height: 10px; } 100% { height: 45px; } }
-    @keyframes fftBouncing2 { 0% { height: 25px; } 100% { height: 15px; } }
-    @keyframes fftBouncing3 { 0% { height: 5px; } 100% { height: 55px; } }
-    @keyframes fftBouncing4 { 0% { height: 40px; } 100% { height: 10px; } }
-    @keyframes fftBouncing5 { 0% { height: 15px; } 100% { height: 30px; } }
+    @keyframes fftBouncing1 { 0% { transform: scaleY(0.18); } 100% { transform: scaleY(0.82); } }
+    @keyframes fftBouncing2 { 0% { transform: scaleY(0.45); } 100% { transform: scaleY(0.27); } }
+    @keyframes fftBouncing3 { 0% { transform: scaleY(0.09); } 100% { transform: scaleY(1.0); } }
+    @keyframes fftBouncing4 { 0% { transform: scaleY(0.73); } 100% { transform: scaleY(0.18); } }
+    @keyframes fftBouncing5 { 0% { transform: scaleY(0.27); } 100% { transform: scaleY(0.55); } }
     
     /* Slow network packets */
     .cloud-packet { fill: #0d9488; }
@@ -1252,11 +1228,11 @@ $$T = \left( \frac{12 - 4}{16} \right) \cdot 150 = \frac{8}{16} \cdot 150 = 75\ 
     <line x1="25" y1="118" x2="155" y2="118" stroke="#f1f5f9" stroke-width="1"/>
     
     <!-- Bouncing Bars -->
-    <rect x="35" y="140" class="fft-bar fft-b1" y="-45"/>
-    <rect x="55" y="140" class="fft-bar fft-b2" y="-15"/>
-    <rect x="75" y="140" class="fft-bar fft-b3" y="-55"/>
-    <rect x="95" y="140" class="fft-bar fft-b4" y="-10"/>
-    <rect x="115" y="140" class="fft-bar fft-b5" y="-30"/>
+    <rect x="35" y="85" width="8" height="55" rx="1" class="fft-bar fft-b1"/>
+    <rect x="55" y="85" width="8" height="55" rx="1" class="fft-bar fft-b2"/>
+    <rect x="75" y="85" width="8" height="55" rx="1" class="fft-bar fft-b3"/>
+    <rect x="95" y="85" width="8" height="55" rx="1" class="fft-bar fft-b4"/>
+    <rect x="115" y="85" width="8" height="55" rx="1" class="fft-bar fft-b5"/>
     
     <!-- Axes labels -->
     <line x1="25" y1="140" x2="155" y2="140" stroke="#475569" stroke-width="1"/>

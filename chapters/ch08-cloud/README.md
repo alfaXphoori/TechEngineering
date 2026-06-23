@@ -104,15 +104,129 @@ $$a_{RMS} = \sqrt{\frac{1}{N} \sum_{i=1}^{N} (a_{x,i}^2 + a_{y,i}^2 + a_{z,i}^2)
 
 **IoT Platform (แพลตฟอร์ม IoT)** คือซอฟต์แวร์ระบบระดับกลาง (Middleware) บนระบบคลาวด์ที่ทำหน้าที่เป็นสะพานเชื่อมต่อระหว่างอุปกรณ์ฮาร์ดแวร์ปลายทาง (Edge Devices เช่น ESP32) กับผู้ใช้งานผ่านแอปพลิเคชัน แพลตฟอร์ม IoT ที่ได้มาตรฐานอุตสาหกรรมประกอบด้วยองค์ประกอบสำคัญ 5 ส่วนด้วยกัน:
 
-```
-[เซนเซอร์/ฮาร์ดแวร์] --> (Ingestion: MQTT/HTTP) --> [IoT Platform] --> (Storage: TSDB)
-                                                          |
-                                           +--------------+--------------+
-                                           |                             |
-                                  (Device Management)             (Visualization)
-                                           |                             |
-                                     [จัดการบอร์ด]                   [หน้าจอควบคุม]
-```
+<div style="text-align: center; margin: 25px 0;">
+<svg viewBox="0 0 820 400" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+  <title>องค์ประกอบของแพลตฟอร์ม IoT และการไหลของข้อมูล</title>
+  <style>
+    .bg-main { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1.5; rx: 16px; }
+    .wire { fill: none; stroke: #cbd5e1; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .telemetry-flow { fill: none; stroke: #10b981; stroke-width: 3; stroke-dasharray: 8 12; stroke-linecap: round; animation: flowMarch 2s linear infinite; }
+    .control-flow { fill: none; stroke: #8b5cf6; stroke-width: 3; stroke-dasharray: 8 12; stroke-linecap: round; animation: flowMarch 2s linear infinite; }
+    .text-main { font-size: 13.5px; font-weight: 700; fill: #0f172a; }
+    .text-sub { font-size: 11px; fill: #475569; font-weight: 500; }
+    .node-sensor { fill: url(#grad-sensor); stroke: #3b82f6; stroke-width: 1.5; rx: 8px; filter: url(#shadow); }
+    .node-ingestion { fill: url(#grad-ingestion); stroke: #10b981; stroke-width: 1.5; rx: 8px; filter: url(#shadow); }
+    .node-platform { fill: url(#grad-platform); stroke: #8b5cf6; stroke-width: 1.5; rx: 8px; filter: url(#shadow); }
+    .node-storage { fill: url(#grad-storage); stroke: #f97316; stroke-width: 1.5; rx: 8px; filter: url(#shadow); }
+    .node-deviceman { fill: url(#grad-deviceman); stroke: #a855f7; stroke-width: 1.5; rx: 8px; filter: url(#shadow); }
+    .node-device { fill: url(#grad-device); stroke: #d946ef; stroke-width: 1.5; rx: 8px; filter: url(#shadow); }
+    .node-vis { fill: url(#grad-vis); stroke: #0ea5e9; stroke-width: 1.5; rx: 8px; filter: url(#shadow); }
+    .node-dash { fill: url(#grad-dash); stroke: #06b6d4; stroke-width: 1.5; rx: 8px; filter: url(#shadow); }
+    @keyframes flowMarch {
+      to { stroke-dashoffset: -40; }
+    }
+  </style>
+  <defs>
+    <linearGradient id="grad-sensor" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#eff6ff" />
+      <stop offset="100%" stop-color="#dbeafe" />
+    </linearGradient>
+    <linearGradient id="grad-ingestion" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ecfdf5" />
+      <stop offset="100%" stop-color="#d1fae5" />
+    </linearGradient>
+    <linearGradient id="grad-platform" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f5f3ff" />
+      <stop offset="100%" stop-color="#ede9fe" />
+    </linearGradient>
+    <linearGradient id="grad-storage" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff7ed" />
+      <stop offset="100%" stop-color="#ffedd5" />
+    </linearGradient>
+    <linearGradient id="grad-deviceman" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#faf5ff" />
+      <stop offset="100%" stop-color="#f3e8ff" />
+    </linearGradient>
+    <linearGradient id="grad-device" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fdf4ff" />
+      <stop offset="100%" stop-color="#fae8ff" />
+    </linearGradient>
+    <linearGradient id="grad-vis" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f0f9ff" />
+      <stop offset="100%" stop-color="#e0f2fe" />
+    </linearGradient>
+    <linearGradient id="grad-dash" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ecfeff" />
+      <stop offset="100%" stop-color="#cffafe" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.06" />
+    </filter>
+  </defs>
+
+  <rect x="5" y="5" width="810" height="390" class="bg-main"/>
+
+  <!-- Static Wire Paths -->
+  <path d="M 180 75 L 240 75" class="wire"/>
+  <path d="M 400 75 L 460 75" class="wire"/>
+  <path d="M 620 75 L 680 75" class="wire"/>
+  <path d="M 540 110 L 540 150 L 415 150 L 415 195" class="wire"/>
+  <path d="M 415 255 L 415 295" class="wire"/>
+  <path d="M 540 110 L 540 150 L 615 150 L 615 195" class="wire"/>
+  <path d="M 615 255 L 615 295" class="wire"/>
+
+  <!-- Flow Animations -->
+  <path d="M 180 75 L 240 75" class="telemetry-flow"/>
+  <path d="M 400 75 L 460 75" class="telemetry-flow"/>
+  <path d="M 620 75 L 680 75" class="telemetry-flow"/>
+  <path d="M 540 110 L 540 150 L 615 150 L 615 195" class="telemetry-flow"/>
+  <path d="M 615 255 L 615 295" class="telemetry-flow"/>
+  
+  <path d="M 540 110 L 540 150 L 415 150 L 415 195" class="control-flow"/>
+  <path d="M 415 255 L 415 295" class="control-flow"/>
+
+  <!-- Nodes -->
+  <!-- 1. เซนเซอร์ / ฮาร์ดแวร์ -->
+  <rect x="20" y="40" width="160" height="70" class="node-sensor"/>
+  <text x="100" y="68" class="text-main" text-anchor="middle">เซนเซอร์ / ฮาร์ดแวร์</text>
+  <text x="100" y="88" class="text-sub" text-anchor="middle">(ESP32, Sensor)</text>
+
+  <!-- 2. การรับเข้าข้อมูล -->
+  <rect x="240" y="40" width="160" height="70" class="node-ingestion"/>
+  <text x="320" y="68" class="text-main" text-anchor="middle">การรับเข้าข้อมูล</text>
+  <text x="320" y="88" class="text-sub" text-anchor="middle">(Ingestion: MQTT/HTTP)</text>
+
+  <!-- 3. แพลตฟอร์ม IoT -->
+  <rect x="460" y="40" width="160" height="70" class="node-platform"/>
+  <text x="540" y="68" class="text-main" text-anchor="middle">แพลตฟอร์ม IoT</text>
+  <text x="540" y="88" class="text-sub" text-anchor="middle">(Blynk Cloud Core)</text>
+
+  <!-- 4. คลังข้อมูลอนุกรมเวลา -->
+  <rect x="680" y="40" width="120" height="70" class="node-storage"/>
+  <text x="740" y="68" class="text-main" text-anchor="middle">คลังข้อมูล</text>
+  <text x="740" y="88" class="text-sub" text-anchor="middle">(Storage: TSDB)</text>
+
+  <!-- 5. จัดการอุปกรณ์ -->
+  <rect x="330" y="195" width="170" height="60" class="node-deviceman"/>
+  <text x="415" y="223" class="text-main" text-anchor="middle">ระบบจัดการอุปกรณ์</text>
+  <text x="415" y="241" class="text-sub" text-anchor="middle">(Device Management)</text>
+
+  <!-- 6. จัดการบอร์ด -->
+  <rect x="330" y="295" width="170" height="60" class="node-device"/>
+  <text x="415" y="323" class="text-main" text-anchor="middle">ลงทะเบียนบอร์ด / OTA</text>
+  <text x="415" y="341" class="text-sub" text-anchor="middle">(Board Provisioning)</text>
+
+  <!-- 7. การแสดงผลข้อมูล -->
+  <rect x="530" y="195" width="170" height="60" class="node-vis"/>
+  <text x="615" y="223" class="text-main" text-anchor="middle">ส่วนแสดงผลข้อมูล</text>
+  <text x="615" y="241" class="text-sub" text-anchor="middle">(Visualization)</text>
+
+  <!-- 8. หน้าจอควบคุม -->
+  <rect x="530" y="295" width="170" height="60" class="node-dash"/>
+  <text x="615" y="323" class="text-main" text-anchor="middle">หน้าจอควบคุม</text>
+  <text x="615" y="341" class="text-sub" text-anchor="middle">(Dashboard / App)</text>
+</svg>
+</div>
 
 1. **Device Management (ระบบจัดการอุปกรณ์):** ทำหน้าที่ลงทะเบียน คืนสิทธิ์ ตรวจสอบสถานะการเชื่อมต่อ (Online/Offline) และอำนวยความสะดวกในการอัปเดตเฟิร์มแวร์อุปกรณ์ระยะไกลผ่านอากาศ (Over-The-Air: OTA)
 2. **Data Ingestion (ช่องทางรับเข้าข้อมูล):** รับข้อมูลจากอุปกรณ์เซนเซอร์ผ่านโปรโตคอลสำหรับการสื่อสาร IoT เช่น MQTT, HTTP หรือ CoAP โดยต้องรองรับทราฟฟิกข้อมูลที่ไหลเข้าหนาแน่นพร้อมๆ กันได้ดี
@@ -292,6 +406,22 @@ void loop() {
 
 สำหรับ Blynk คลาวด์ได้ทำการรวมระบบ TSDB ไว้หลังบ้านเรียบร้อยแล้ว ทำให้นักศึกษาดึงประวัติมาวาดกราฟเส้นย้อนหลัง (SuperChart) ได้ง่ายโดยไม่ต้องเขียนโค้ดคิวรีข้อมูลด้วยตนเอง
 
+#### 8.7.2 โครงสร้างและแนวคิดสำคัญของ InfluxDB (InfluxDB Core Concepts)
+
+ในระบบ IoT คลาวด์ ฐานข้อมูลอนุกรมเวลาที่ได้รับความนิยมสูงสุดตัวหนึ่งคือ **InfluxDB** เพื่อที่จะใช้งานและเขียนโปรแกรมคิวรีข้อมูลในระดับสูงได้อย่างถูกต้อง วิศวกรต้องเข้าใจองค์ประกอบพื้นฐาน 4 ประการในการจัดเก็บข้อมูลของ InfluxDB:
+
+1. **Measurement (การวัด):**
+   เปรียบเสมือน "ชื่อตาราง" (Table) ในฐานข้อมูลเชิงสัมพันธ์ทั่วไป ใช้สำหรับบ่งบอกประเภทหรือกลุ่มของข้อมูลที่วัดจากแหล่งเดียวกัน ตัวอย่างเช่น `boiler_telemetry` (ข้อมูลโทรมาตรหม้อไอน้ำ) หรือ `bearing_vibration` (ความสั่นสะเทือนของตลับลูกปืน)
+   
+2. **Tag (แท็ก):**
+   ข้อมูลระบุคุณลักษณะหรือคำอธิบาย (Metadata) ของข้อมูลการวัด โดยค่าของ Tag จะจัดเก็บในรูปแบบคู่ Key-Value ที่เป็นสตริง (String) และ**ถูกทำดัชนี (Indexed)** โดยระบบเสมอ ทำให้คิวรีค้นหา คัดกรอง หรือจัดกลุ่มได้รวดเร็วมาก ข้อเสียคือไม่ควรใช้ข้อมูลที่มีความหลากหลายสูงมากเกินไป (High Cardinality) เป็น Tag ตัวอย่างเช่น `device_id="esp32-01"`, `location="factory-floor-a"`, `sensor_type="thermocouple"`
+   
+3. **Field (ฟิลด์):**
+   ข้อมูลผลลัพธ์จากการวัดจริงตามเวลา (Telemetry Data) เก็บเป็นคู่ Key-Value ที่**ไม่ถูกทำดัชนี (Non-indexed)** โดยค่าของ Field สามารถเป็นได้ทั้งตัวเลขจำนวนเต็ม (Integer) ทศนิยม (Float) บูลีน (Boolean) หรือสตริง (String) ตัวอย่างเช่น `temperature=124.5`, `pressure=8.2`, `vibration_rms=1.85`
+   
+4. **Timestamp (แกนเวลา):**
+   เวลาที่ระบุจุดเกิดเหตุการณ์หรือเวลาที่ทำการวัดจริง (Time of entry) ซึ่งเป็นแกนหลักที่ระบุความเป็นอนุกรมเวลา โดย InfluxDB จะจัดเก็บในรูปแบบ UNIX Epoch time ที่มีความละเอียดสูงถึงระดับนาโนวินาที (Nanoseconds) ซึ่งจะนำมาใช้เป็นคีย์หลักอัตโนมัติในการบันทึกและสืบค้นข้อมูลเสมอ
+
 ---
 
 ### 8.8 กรณีศึกษาเชิงวิศวกรรมเครื่องกล (Mechanical/Industrial Case Studies)
@@ -451,6 +581,12 @@ void loop() {
    *   *ข้อพิจารณาสำหรับ ESP32:* การเปิดใช้ไลบรารีเข้ารหัสอย่าง `WiFiClientSecure` แทน `WiFiClient` ปกติ เพื่อต่อ Blynk ผ่านพอร์ตเข้ารหัส SSL (พอร์ต 443 หรือ 9443) ต้องแลกมาด้วยทรัพยากรการประมวลผลทางคณิตศาสตร์เข้ารหัสที่ซับซ้อน ทำให้เกิด **CPU Overhead** และใช้เนื้อที่ของหน่วยความจำ **RAM เพิ่มขึ้น 20 - 30 KB** ในการเก็บบัฟเฟอร์แลกเปลี่ยนคีย์ ซึ่งวิศวกรออกแบบระบบต้องตรวจสอบหน่วยความจำคงเหลือให้รัดกุมก่อนเปิดใช้งาน
 3. **ความปลอดภัยของการอัปเดตระบบระยะไกล (Secure OTA Updates):**
    การดาวน์โหลดโค้ดเฟิร์มแวร์เพื่อแก้ไขและอัปเดตอุปกรณ์ผ่านอากาศ (Over-The-Air) เสี่ยงต่อภัยคุกคามการแทรกโค้ดอันตราย (Malicious Firmware Injection) จากภายนอก แพลตฟอร์มมาตรฐานอุตสาหกรรมจึงมักใช้หลักการ **Firmware Signing** โดยการลงชื่อดิจิทัลให้กับโค้ดใหม่ผ่านกุญแจส่วนตัว (Private Key) และมีกุญแจสาธารณะ (Public Key) ฝังอยู่ในบอร์ดเพื่อตรวจสอบความถูกต้องร่วมกับการเช็คค่าแฮช (SHA-256 Checksum) เพื่อยืนยันว่าเฟิร์มแวร์ไม่ถูกแก้ไขระหว่างทางก่อนอนุมัติให้เขียนทับ
+4. **วิธีการยืนยันตัวตนของ MQTT Broker (MQTT Broker Authentication Methods):**
+   ในการรับส่งข้อมูลผ่านโปรโตคอล MQTT เพื่อความปลอดภัย นอกจากการเข้ารหัสช่องทางสื่อสารด้วย TLS/SSL แล้ว MQTT Broker จะต้องตรวจสอบสิทธิ์ในการเข้าถึงของไคลเอนต์ (ESP32) เพื่อกำหนดสิทธิ์ในการ Publish หรือ Subscribe โดยมีวิธีการหลัก 2 วิธีดังนี้:
+   *   **การยืนยันตัวตนด้วยใบรับรองความปลอดภัย TLS/SSL (TLS/SSL Client Certificates / Mutual TLS):**
+       เป็นมาตรฐานความปลอดภัยสูงสุด (mTLS) โดยแทนที่จะใช้ Username และ Password โบรกเกอร์และไคลเอนต์ (ESP32) ต่างฝ่ายต่างส่งใบรับรองดิจิทัล (X.509 Certificate) เพื่อยืนยันตัวตนของกันและกัน ไคลเอนต์จะต้องบันทึกใบรับรองความปลอดภัยและคีย์ลับเฉพาะตัว (Private Key & Client Certificate) ลงในหน่วยความจำแฟลชภายใน เพื่อใช้ยืนยันความถูกต้องในขั้นตอน Handshake วิธีนี้ช่วยป้องกันภัยคุกคามจากการดักฟังและแอบอ้างสิทธิ์ (Spoofing) ได้ 100% แต่ต้องการทรัพยากรประมวลผลสูงมาก
+   *   **การยืนยันตัวตนด้วยโทเค็น (Token-based Authentication / JWT):**
+       เป็นกระบวนการยืนยันสิทธิ์โดยการใช้โทเค็น (Token) ชั่วคราวหรือโทเค็นเฉพาะของอุปกรณ์ (เช่น Blynk Auth Token หรือ JSON Web Token - JWT) แทนการเปิดเผยรหัสผ่านจริงทางกายภาพ โดยไคลเอนต์จะส่งโทเค็นนี้ไปในฟิลด์ Username หรือ Password เมื่อเชื่อมต่อกับ MQTT Broker ข้อดีคือวิศวกรผู้ควบคุมระบบคลาวด์สามารถสั่งยกเลิกสิทธิ์การทำงานของอุปกรณ์เฉพาะตัว (Revoke Token) ได้ทันทีเมื่อบอร์ดถูกขโมยหรือเสียหาย โดยไม่ต้องเปลี่ยนรหัสผ่านของระบบทั้งหมด และยังสามารถกำหนดช่วงอายุของโทเค็นให้หมดอายุอัตโนมัติได้
 
 ---
 

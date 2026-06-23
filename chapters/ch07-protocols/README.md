@@ -63,6 +63,98 @@
 - **Headers** — เช่น `Content-Length: 128`
 - **Body** — ข้อมูลที่เซิร์ฟเวอร์ตอบกลับ
 
+#### 7.3.4 แผนภาพการส่ง HTTP Request และ Response
+เพื่อให้เห็นภาพลำดับการทำงานที่ชัดเจน แผนภาพเคลื่อนไหวด้านล่างนี้แสดงขั้นตอนการส่งข้อมูลจาก ESP32 Client ไปยัง Web Server และการตอบกลับ
+
+<div style="text-align: center; margin: 20px 0;">
+<svg viewBox="0 0 740 240" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+  <style>
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1; rx: 10px; }
+    .client-box { fill: #faf5ff; stroke: #a78bfa; stroke-width: 2; rx: 8px; }
+    .server-box { fill: #eff6ff; stroke: #60a5fa; stroke-width: 2; rx: 8px; }
+    .wire { fill: none; stroke: #cbd5e1; stroke-width: 2; }
+    .wire-active-req { fill: none; stroke: #a78bfa; stroke-width: 2; stroke-dasharray: 8 4; animation: flowReq 3s linear infinite; }
+    .wire-active-res { fill: none; stroke: #60a5fa; stroke-width: 2; stroke-dasharray: 8 4; animation: flowRes 3s linear infinite; }
+    .envelope-req { fill: #c084fc; stroke: #7e22ce; stroke-width: 1; rx: 3px; animation: moveReq 6s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+    .envelope-res { fill: #93c5fd; stroke: #1d4ed8; stroke-width: 1; rx: 3px; animation: moveRes 6s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+    .text-main { font-size: 13px; font-weight: 700; fill: #1e293b; }
+    .text-sub { font-size: 11px; fill: #64748b; }
+    .text-code { font-family: monospace; font-size: 11px; fill: #7c3aed; font-weight: bold; }
+    .text-title { font-size: 14px; font-weight: 800; fill: #0f172a; }
+    
+    @keyframes flowReq {
+      0% { stroke-dashoffset: 24; }
+      100% { stroke-dashoffset: 0; }
+    }
+    @keyframes flowRes {
+      0% { stroke-dashoffset: 0; }
+      100% { stroke-dashoffset: 24; }
+    }
+    @keyframes moveReq {
+      0% { transform: translate(160px, 90px); opacity: 0; }
+      5%, 35% { opacity: 1; }
+      40%, 100% { transform: translate(520px, 90px); opacity: 0; }
+    }
+    @keyframes moveRes {
+      0%, 45% { transform: translate(520px, 140px); opacity: 0; }
+      50%, 80% { opacity: 1; }
+      85%, 100% { transform: translate(160px, 140px); opacity: 0; }
+    }
+  </style>
+  <rect x="5" y="5" width="730" height="230" class="bg"/>
+  <text x="370" y="32" class="text-title" text-anchor="middle">การสื่อสารแบบ HTTP Request / Response (ร้องขอ - ตอบกลับ)</text>
+  
+  <!-- ESP32 Client Box -->
+  <rect x="25" y="60" width="135" height="120" class="client-box"/>
+  <text x="92.5" y="85" class="text-main" text-anchor="middle">ESP32 Client</text>
+  <text x="92.5" y="105" class="text-sub" text-anchor="middle">ริเริ่มการเชื่อมต่อ TCP</text>
+  <text x="92.5" y="125" class="text-sub" text-anchor="middle">ส่งข้อมูลตามตารางเวลา</text>
+  <text x="92.5" y="150" class="text-code" text-anchor="middle">HTTP POST</text>
+  
+  <!-- Cloud/Server Box -->
+  <rect x="580" y="60" width="135" height="120" class="server-box"/>
+  <text x="647.5" y="85" class="text-main" text-anchor="middle">Web Server</text>
+  <text x="647.5" y="105" class="text-sub" text-anchor="middle">(เช่น API Gateway)</text>
+  <text x="647.5" y="125" class="text-sub" text-anchor="middle">รอการร้องขออย่างเดียว</text>
+  <text x="647.5" y="145" class="text-sub" text-anchor="middle">ประมวลผลแล้วบันทึก</text>
+  
+  <!-- Connections -->
+  <!-- Request Line (Top) -->
+  <line x1="160" y1="100" x2="580" y2="100" class="wire"/>
+  <line x1="160" y1="100" x2="580" y2="100" class="wire-active-req"/>
+  <!-- Arrow top right -->
+  <path d="M 572 95 L 580 100 L 572 105 Z" fill="#7e22ce"/>
+  
+  <!-- Response Line (Bottom) -->
+  <line x1="160" y1="150" x2="580" y2="150" class="wire"/>
+  <line x1="160" y1="150" x2="580" y2="150" class="wire-active-res"/>
+  <!-- Arrow bottom left -->
+  <path d="M 168 145 L 160 150 L 168 155 Z" fill="#1d4ed8"/>
+  
+  <!-- Message Labels -->
+  <!-- Request Info -->
+  <text x="370" y="85" class="text-sub" text-anchor="middle" fill="#7e22ce" font-weight="bold">HTTP Request: POST /data</text>
+  <text x="370" y="118" class="text-code" text-anchor="middle" fill="#7e22ce">{"device_id":"ESP32","temp":32.5}</text>
+  
+  <!-- Response Info -->
+  <text x="370" y="175" class="text-sub" text-anchor="middle" fill="#1d4ed8" font-weight="bold">HTTP Response: 200 OK</text>
+  <text x="370" y="193" class="text-code" text-anchor="middle" fill="#1d4ed8">{"status":"success","id":128}</text>
+  
+  <!-- Request Envelope Icon -->
+  <g class="envelope-req">
+    <rect x="-15" y="-10" width="30" height="20" rx="2" />
+    <path d="M -15 -10 L 0 0 L 15 -10" fill="none" stroke="#7e22ce" stroke-width="1"/>
+  </g>
+  
+  <!-- Response Envelope Icon -->
+  <g class="envelope-res">
+    <rect x="-15" y="-10" width="30" height="20" rx="2" />
+    <path d="M -15 -10 L 0 0 L 15 -10" fill="none" stroke="#1d4ed8" stroke-width="1"/>
+  </g>
+  
+</svg>
+</div>
+
 ---
 
 ### 7.4 REST API และหลักการ
@@ -125,6 +217,126 @@ MQTT ทำงานแบบ **Publish/Subscribe (Pub/Sub)** ซึ่งต่
 - **Publisher** — อุปกรณ์ที่ "เผยแพร่" ข้อมูลไปยัง Topic เช่น ESP32 ส่งค่าอุณหภูมิ
 - **Subscriber** — อุปกรณ์ที่ "สมัครรับ" ข้อมูลจาก Topic ที่สนใจ
 
+แผนภาพเคลื่อนไหวด้านล่างนี้แสดงกลไกการแลกเปลี่ยนข้อมูลแบบ Publish/Subscribe โดยมี Broker เป็นศูนย์กลางในการกระจายข้อมูลอุณหภูมิไปยังผู้รับหลายรายพร้อมกัน:
+
+<div style="text-align: center; margin: 20px 0;">
+<svg viewBox="0 0 760 270" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+  <style>
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1; rx: 10px; }
+    .pub-box { fill: #faf5ff; stroke: #a78bfa; stroke-width: 2; rx: 8px; }
+    .broker-box { fill: #fffbeb; stroke: #fcd34d; stroke-width: 2; rx: 8px; }
+    .sub-box { fill: #f0fdf4; stroke: #86efac; stroke-width: 2; rx: 8px; }
+    .dashboard-box { fill: #ecfeff; stroke: #06b6d4; stroke-width: 2; rx: 8px; }
+    .wire { fill: none; stroke: #cbd5e1; stroke-width: 2; }
+    .wire-pub { fill: none; stroke: #a78bfa; stroke-width: 2; stroke-dasharray: 6 4; animation: flowPub 3s linear infinite; }
+    .wire-sub1 { fill: none; stroke: #06b6d4; stroke-width: 2; stroke-dasharray: 6 4; animation: flowSub1 3s linear infinite; }
+    .wire-sub2 { fill: none; stroke: #86efac; stroke-width: 2; stroke-dasharray: 6 4; animation: flowSub2 3s linear infinite; }
+    
+    .msg-pub { fill: #c084fc; stroke: #7e22ce; stroke-width: 1; rx: 3px; animation: mqttPubCycle 6s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+    .msg-sub1 { fill: #67e8f9; stroke: #0891b2; stroke-width: 1; rx: 3px; animation: mqttSub1Cycle 6s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+    .msg-sub2 { fill: #a7f3d0; stroke: #059669; stroke-width: 1; rx: 3px; animation: mqttSub2Cycle 6s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+    
+    .text-main { font-size: 13px; font-weight: 700; fill: #1e293b; }
+    .text-sub { font-size: 11px; fill: #64748b; }
+    .text-code { font-family: monospace; font-size: 11px; fill: #7c3aed; font-weight: bold; }
+    .text-title { font-size: 14px; font-weight: 800; fill: #0f172a; }
+    
+    @keyframes flowPub {
+      0% { stroke-dashoffset: 20; }
+      100% { stroke-dashoffset: 0; }
+    }
+    @keyframes flowSub1 {
+      0% { stroke-dashoffset: 0; }
+      100% { stroke-dashoffset: 20; }
+    }
+    @keyframes flowSub2 {
+      0% { stroke-dashoffset: 0; }
+      100% { stroke-dashoffset: 20; }
+    }
+    
+    @keyframes mqttPubCycle {
+      0% { transform: translate(190px, 135px); opacity: 0; }
+      5%, 30% { opacity: 1; }
+      35%, 100% { transform: translate(320px, 135px); opacity: 0; }
+    }
+    @keyframes mqttSub1Cycle {
+      0%, 40% { transform: translate(440px, 110px); opacity: 0; }
+      45%, 70% { opacity: 1; }
+      75%, 100% { transform: translate(570px, 72px); opacity: 0; }
+    }
+    @keyframes mqttSub2Cycle {
+      0%, 40% { transform: translate(440px, 160px); opacity: 0; }
+      45%, 70% { opacity: 1; }
+      75%, 100% { transform: translate(570px, 198px); opacity: 0; }
+    }
+  </style>
+  <rect x="5" y="5" width="750" height="260" class="bg"/>
+  <text x="380" y="32" class="text-title" text-anchor="middle">สถาปัตยกรรม MQTT (Publish / Subscribe)</text>
+  
+  <!-- Publisher Box -->
+  <rect x="25" y="85" width="150" height="100" class="pub-box"/>
+  <text x="100" y="110" class="text-main" text-anchor="middle">ESP32 Publisher</text>
+  <text x="100" y="130" class="text-sub" text-anchor="middle">ผู้เผยแพร่ข้อมูลอุณหภูมิ</text>
+  <text x="100" y="150" class="text-sub" text-anchor="middle">Topic: home/temp</text>
+  <text x="100" y="170" class="text-code" text-anchor="middle">temp: 32.5</text>
+  
+  <!-- MQTT Broker Box (Center) -->
+  <rect x="305" y="85" width="150" height="100" class="broker-box"/>
+  <text x="380" y="110" class="text-main" text-anchor="middle">MQTT Broker</text>
+  <text x="380" y="130" class="text-sub" text-anchor="middle">ตัวกลางคัดแยกข้อมูล</text>
+  <text x="380" y="150" class="text-sub" text-anchor="middle">ตาม Topic</text>
+  <text x="380" y="170" class="text-code" text-anchor="middle" fill="#d97706">Mosquitto / HiveMQ</text>
+  
+  <!-- Subscriber 1 (Web Dashboard) -->
+  <rect x="585" y="30" width="150" height="85" class="dashboard-box"/>
+  <text x="660" y="55" class="text-main" text-anchor="middle">Web Dashboard</text>
+  <text x="660" y="75" class="text-sub" text-anchor="middle">Sub: home/temp</text>
+  <text x="660" y="98" class="text-code" text-anchor="middle" fill="#0891b2">Temp: 32.5 °C</text>
+  
+  <!-- Subscriber 2 (Mobile App) -->
+  <rect x="585" y="155" width="150" height="85" class="sub-box"/>
+  <text x="660" y="180" class="text-main" text-anchor="middle">Mobile App</text>
+  <text x="660" y="200" class="text-sub" text-anchor="middle">Sub: home/temp</text>
+  <text x="660" y="223" class="text-code" text-anchor="middle" fill="#059669">Temp: 32.5 °C</text>
+  
+  <!-- Paths -->
+  <!-- Pub to Broker -->
+  <line x1="175" y1="135" x2="305" y2="135" class="wire"/>
+  <line x1="175" y1="135" x2="305" y2="135" class="wire-pub"/>
+  <path d="M 297 130 L 305 135 L 297 140 Z" fill="#7e22ce"/>
+  
+  <!-- Broker to Sub 1 (Web Dashboard) -->
+  <line x1="455" y1="110" x2="585" y2="72" class="wire"/>
+  <line x1="455" y1="110" x2="585" y2="72" class="wire-sub1"/>
+  <path d="M 577 69 L 585 72 L 579 78 Z" fill="#0891b2"/>
+  
+  <!-- Broker to Sub 2 (Mobile App) -->
+  <line x1="455" y1="160" x2="585" y2="198" class="wire"/>
+  <line x1="455" y1="160" x2="585" y2="198" class="wire-sub2"/>
+  <path d="M 579 192 L 585 198 L 577 201 Z" fill="#059669"/>
+  
+  <!-- Message Envelope Icons -->
+  <!-- Pub Envelope -->
+  <g class="msg-pub">
+    <rect x="-12" y="-8" width="24" height="16" rx="2" />
+    <path d="M -12 -8 L 0 0 L 12 -8" fill="none" stroke="#7e22ce" stroke-width="1"/>
+  </g>
+  
+  <!-- Sub 1 Envelope -->
+  <g class="msg-sub1">
+    <rect x="-12" y="-8" width="24" height="16" rx="2" />
+    <path d="M -12 -8 L 0 0 L 12 -8" fill="none" stroke="#0891b2" stroke-width="1"/>
+  </g>
+  
+  <!-- Sub 2 Envelope -->
+  <g class="msg-sub2">
+    <rect x="-12" y="-8" width="24" height="16" rx="2" />
+    <path d="M -12 -8 L 0 0 L 12 -8" fill="none" stroke="#059669" stroke-width="1"/>
+  </g>
+  
+</svg>
+</div>
+
 #### 7.6.2 โครงสร้าง Topic
 
 Topic ใน MQTT จัดเป็นลำดับชั้น (Hierarchy) คล้ายโครงสร้างโฟลเดอร์:
@@ -141,11 +353,62 @@ building/floor2/room201/temperature
 
 #### 7.6.3 ระดับ QoS (Quality of Service)
 
-| ระดับ QoS | ชื่อ | คำอธิบาย | การรับประกัน |
-|-----------|------|----------|-------------|
-| **0** | At most once | ส่งครั้งเดียว ไม่ยืนยัน | อาจสูญหาย — เร็วที่สุด |
-| **1** | At least once | ส่งซ้ำจนกว่าจะได้รับ ACK | อาจซ้ำ — สมดุลดี |
-| **2** | Exactly once | ใช้ Handshake 4 ขั้นตอน | ไม่ซ้ำ ไม่หาย — ช้าที่สุด |
+MQTT มีกลไกการรับประกันการรับส่งข้อมูลผ่านระดับ **QoS (Quality of Service)** 3 ระดับ เพื่อรองรับเสถียรภาพเครือข่ายและข้อจำกัดของอุปกรณ์ที่แตกต่างกัน:
+
+| ระดับ QoS | ชื่อเรียก | คำอธิบาย | การแลกเปลี่ยนแพ็กเก็ตคีย์หลัก | เหมาะกับงาน |
+|-----------|------|----------|---------------------------|------------|
+| **0** | At most once | ส่งข้อมูลครั้งเดียว ไม่รอการยืนยัน | `PUBLISH` ➔ จบงานทันที | ข้อมูลเซ็นเซอร์ทั่วไปที่ส่งถี่ ๆ (เช่น อุณหภูมิรายวินาที) |
+| **1** | At least once | มั่นใจว่าถึงปลายทาง แต่อาจมีข้อมูลซ้ำ | `PUBLISH` ➔ `PUBACK` | คำสั่งเปิด-ปิดไฟ หรือข้อมูลที่ห้ามสูญหายเด็ดขาด |
+| **2** | Exactly once | ข้อมูลถึงผู้รับครั้งเดียวแน่นอน ไม่ซ้ำ | `PUBLISH` ➔ `PUBREC` ➔ `PUBREL` ➔ `PUBCOMP` | ระบบการเงิน, การหักยอดสินค้า หรือคำสั่งที่ห้ามเกิดซ้ำซ้อน |
+
+##### ลำดับขั้นตอนการแลกเปลี่ยนแพ็กเก็ตควบคุม (Packet Flow Sequence)
+
+เพื่อให้เข้าใจเชิงลึกว่าแต่ละระดับ QoS จัดการข้อมูลอย่างไรในระดับ TCP Payload ด้านล่างนี้คือลำดับแพ็กเก็ตควบคุมที่แลกเปลี่ยนกันระหว่างผู้ส่ง (Client/Publisher) และผู้รับ (Broker):
+
+###### 1. ลำดับของ QoS 0 (At most once - อย่างมากหนึ่งครั้ง)
+ส่งแบบ **"ยิงแล้วลืม" (Fire and Forget)** ไม่มีการเก็บสถานะ ไม่มีการรอแพ็กเก็ตตอบกลับใด ๆ
+```
+Publisher                    Broker
+    │                          │
+    │ ─── 1. PUBLISH ────────> │ (ส่งข้อมูลเสร็จสิ้นทันที)
+    │                          │
+```
+- **ขั้นตอน:** ผู้ส่งทำการส่งแพ็กเก็ต `PUBLISH` เพียงครั้งเดียว และไม่มีการติดตามการตอบรับ
+- **ข้อดี:** ความหน่วงต่ำมาก (Latency ต่ำสุด) ใช้แบนด์วิดท์และพลังงานน้อยที่สุด
+- **ความเสี่ยง:** หากสัญญาณเครือข่ายมีปัญหาระหว่างส่ง ข้อมูลจะสูญหายทันทีโดยไม่มีการรับรู้
+
+###### 2. ลำดับของ QoS 1 (At least once - อย่างน้อยหนึ่งครั้ง)
+รับประกันข้อมูลถึงปลายทางแน่นอน แต่อาจได้รับข้อความซ้ำได้หากตัวส่งเข้าใจผิดว่าข้อความหล่นหาย
+```
+Publisher                    Broker
+    │                          │
+    │ ─── 1. PUBLISH (PacketID: 1) ──> │ (ได้รับและบันทึกข้อความ)
+    │ <── 2. PUBACK (PacketID: 1) ──── │ (ส่งสัญญาณตอบรับ)
+    │                          │
+```
+- **ขั้นตอน:**
+  1. ผู้ส่งบันทึกข้อความไว้ใน Memory เครื่อง และส่ง `PUBLISH` พร้อมตัวระบุเลขแพ็กเก็ต (`Packet ID`)
+  2. ผู้รับบันทึกข้อความลงระบบ ประมวลผล และส่งแพ็กเก็ต `PUBACK` (Publish Acknowledgement) กลับไปหาผู้ส่ง
+  3. เมื่อผู้ส่งได้รับ `PUBACK` ตรงกับ `Packet ID` จึงลบข้อความนั้นออกจาก Memory
+- **การจัดการกรณีเครือข่ายขัดข้อง:** หากผู้ส่งไม่ได้ส่ง `PUBACK` กลับมาภายในเวลาที่กำหนด (Timeout) ผู้ส่งจะส่ง `PUBLISH` ซ้ำอีกครั้งโดยเพิ่มแฟล็ก `DUP: 1` (Duplicate) เพื่อเตือนผู้รับ
+
+###### 3. ลำดับของ QoS 2 (Exactly once - ครั้งเดียวและแน่นอน)
+การันตีความถูกต้องสูงสุด ป้องกันปัญหากรณีข้อมูลซ้ำซ้อนอย่างสมบูรณ์แบบโดยใช้ระบบ Handshake 4 ขั้นตอน:
+```
+Publisher                    Broker
+    │                          │
+    │ ─── 1. PUBLISH (PacketID: 2) ──> │ (ได้รับและจำ Packet ID นี้ไว้ชั่วคราว)
+    │ <── 2. PUBREC (PacketID: 2) ──── │ (ตอบรับว่าได้รับข้อความแล้ว)
+    │ ─── 3. PUBREL (PacketID: 2) ───> │ (ปล่อยข้อความสู่ Subscriber / ปลดล็อค)
+    │ <── 4. PUBCOMP (PacketID: 2) ─── │ (เสร็จสิ้นกระบวนการแลกเปลี่ยน)
+    │                          │
+```
+- **ขั้นตอน:**
+  1. **PUBLISH (ส่ง):** ผู้ส่งส่งข้อความระบุ `Packet ID`
+  2. **PUBREC (ตอบรับว่าได้รับ):** ผู้รับรับทราบการส่งและบันทึกข้อมูลไว้ แต่จะยังไม่กระจายไปยัง Subscriber โดยตอบรับด้วยแพ็กเก็ต `PUBREC` (Publish Received) กลับไป
+  3. **PUBREL (แจ้งลบสถานะตัวส่ง):** เมื่อผู้ส่งได้รับ `PUBREC` จะตอบกลับด้วย `PUBREL` (Publish Release) เพื่อบอกให้ผู้รับเตรียมเผยแพร่ข้อความและลบเลขแพ็กเก็ตที่บันทึกไว้ได้
+  4. **PUBCOMP (ยืนยันสิ้นสุดงาน):** ผู้รับกระจายข้อความเสร็จแล้ว ส่งสัญญาณ `PUBCOMP` (Publish Complete) กลับไปเพื่อบอกผู้ส่งว่าเสร็จสมบูรณ์ร้อยเปอร์เซ็นต์
+```
 
 #### 7.6.4 คุณสมบัติพิเศษ
 
@@ -156,18 +419,22 @@ building/floor2/room201/temperature
 
 ---
 
-### 7.7 ตารางเปรียบเทียบ HTTP กับ MQTT
+### 7.7 ตารางเปรียบเทียบแบบเจาะลึก: HTTP/REST ปะทะ MQTT
 
-| เกณฑ์ | HTTP/REST | MQTT |
-|-------|-----------|------|
-| **รูปแบบการสื่อสาร** | Request/Response | Publish/Subscribe |
-| **ขนาด Header** | ใหญ่ (หลายร้อยไบต์) | เล็กมาก (เริ่มต้น 2 ไบต์) |
-| **การใช้พลังงาน** | สูง | ต่ำ |
-| **การส่งข้อมูลแบบ Real-time** | ต้อง Polling หรือ WebSocket | รองรับโดยธรรมชาติ |
-| **การส่งข้อมูลจาก Server → Client** | ทำได้ยาก | ทำได้ง่ายผ่าน Subscribe |
-| **ความซับซ้อนในการติดตั้ง** | ต่ำ (ใช้ URL ธรรมดา) | ปานกลาง (ต้องมี Broker) |
-| **QoS** | ไม่มี (ใช้ TCP รับประกัน) | มี 3 ระดับ |
-| **เหมาะกับงาน** | ส่งข้อมูลไม่บ่อย, เรียก API | ส่งข้อมูลถี่, สั่งงานอุปกรณ์จำนวนมาก |
+การเลือกโพรโทคอลที่เหมาะสมมีผลโดยตรงต่อการเลือกแบตเตอรี่ ขนาดหน่วยความจำบอร์ด และค่าใช้จ่ายอินเทอร์เน็ตของโครงการ IoT ตารางด้านล่างเป็นการเปรียบเทียบเชิงวิศวกรรมระหว่าง HTTP/REST และ MQTT:
+
+| เกณฑ์การพิจารณา | HTTP/REST | MQTT |
+| :--- | :--- | :--- |
+| **รูปแบบสถาปัตยกรรม (Architecture)** | **Request-Response (ดึง/ส่งแบบทิศทางเดียว)**<br>Client ต้องร้องขอก่อน เซิร์ฟเวอร์จึงตอบกลับ | **Publish-Subscribe (กระจายตามหัวข้อ)**<br>Broker เป็นตัวกลางจัดการข้อมูลผ่าน Topic |
+| **ขนาดเมตาดาต้า (Header Overhead)** | **สูงมาก (300 - 1,000 ไบต์ต่อครั้ง)**<br>เนื่องจากใช้ข้อความ Text เช่น HTTP Headers, User-Agent | **ต่ำมาก (เริ่มต้นเพียง 2 ไบต์)**<br>จัดเก็บในรูปแบบไบนารีฟอร์แมตขนาดเล็กพิเศษ |
+| **ความคงอยู่ของการเชื่อมต่อ (Persistence)** | **ไม่คงอยู่ (Stateless)**<br>สร้างและปิดการเชื่อมต่อ TCP บ่อยครั้ง (ยกเว้นใช้ Keep-Alive) | **คงอยู่ตลอดเวลา (Persistent)**<br>รักษาการเชื่อมต่อไว้ด้วยการส่งแพ็กเก็ต Ping ประหยัดเวลา Handshake |
+| **ความหน่วงเวลา (Latency)** | **สูงปานกลาง**<br>ต้องเสียเวลาสร้าง TCP handshake และแลกเปลี่ยน Header ใหม่ทุกรอบ | **ต่ำมาก (Real-time)**<br>เนื่องจากท่อเชื่อมต่อ TCP เปิดค้างไว้แล้ว ส่งข้อมูลถึงทันที |
+| **คุณภาพการบริการ (QoS Support)** | **ไม่มีในระดับแอปพลิเคชัน**<br>อาศัยการรับประกันของ TCP ด้านล่างเท่านั้น หากแอปหลุดต้องเขียนซ้ำเอง | **มี 3 ระดับในตัว (QoS 0, 1, 2)**<br>เลือกระดับความน่าเชื่อถือของการส่งข้อมูลได้อิสระ |
+| **การใช้พลังงาน (Power Consumption)** | **สูง**<br>ต้องใช้ CPU ประมวลผลและเปิดวิทยุรับส่งบ่อยครั้งเนื่องจากข้อมูลมีขนาดใหญ่ | **ต่ำมาก**<br>ลด Overhead ส่งผลให้ชิปอยู่ในโหมด Deep Sleep ได้ยาวนานกว่า |
+| **การส่งข้อมูลจาก Server ➔ Client** | **ทำได้ยาก**<br>ต้องใช้เทคนิค Polling (ถามซ้ำ ๆ) หรือเปลี่ยนไปใช้ WebSockets | **ทำได้ง่ายและเร็ว**<br>เซิร์ฟเวอร์สามารถ Publish ไปยัง Topic ที่อุปกรณ์ Subscribe ไว้ได้ทันที |
+| **ปริมาณแบนด์วิดท์ (Bandwidth)** | **ใช้ปริมาณข้อมูลมาก**<br>ไม่เหมาะกับอุปกรณ์ที่ส่งผ่านซิมการ์ด 4G/5G ที่คิดตามปริมาณการรับส่งข้อมูล | **ใช้ข้อมูลน้อยมาก (ประหยัดสุด)**<br>เหมาะอย่างยิ่งกับการรับส่งข้อมูลที่นับเป็นกิโลไบต์/เดือน |
+| **ความซับซ้อนของโครงสร้างระบบ** | **ต่ำ**<br>ไม่ต้องใช้ Broker เพิ่มเติม สามารถเรียกใช้ URL API ได้โดยตรง | **ปานกลาง**<br>ต้องติดตั้งและดูแลรักษาเซิร์ฟเวอร์ MQTT Broker (เช่น Mosquitto) |
+| **ความเหมาะสมของหน้างาน** | 1. การร้องขอข้อมูลขนาดใหญ่เป็นรอบ ๆ<br>2. การเรียกใช้ Web Service API ภายนอก<br>3. การอัปโหลดเฟิร์มแวร์อุปกรณ์ (OTA) | 1. บอร์ดแบตเตอรี่ต่ำในพื้นที่ห่างไกล<br>2. ระบบแจ้งเตือนเซ็นเซอร์แบบ Real-time<br>3. มีอุปกรณ์รับส่งข้อมูลหลักร้อยถึงล้านตัวพร้อม ๆ กัน |
 
 ---
 
@@ -232,6 +499,19 @@ void loop() {
   }
   delay(10000);  // ส่งทุก 10 วินาที
 }
+
+##### อธิบายการทำงานของโค้ด HTTP POST (คำอธิบายรายบรรทัด)
+- **การนำเข้าไลบรารี (`#include <HTTPClient.h>`):** เรียกใช้งานโมดูลสำหรับการสร้างการเชื่อมต่อ HTTP ซึ่งถูกพอร์ตมากับ ESP32 Core เพื่อช่วยอำนวยความสะดวกในการจัดรูปแบบ Headers และการสร้างคำสั่งร้องขอ (GET, POST, PUT, DELETE)
+- **การเริ่มต้นออบเจกต์อินสแตนซ์ (`HTTPClient http;`):** ประกาศตัวแปรเพื่อใช้จัดการการแลกเปลี่ยนข้อมูล
+- **การตั้งพารามิเตอร์ URL ปลายทาง (`http.begin(serverUrl)`):** เป็นการเริ่มต้นเก็บ URL ที่ระบุประเภทโปรโตคอล (HTTP หรือ HTTPS) และโฮสต์ เช่น `https://httpbin.org/post`
+- **การกำหนดประเภทเนื้อหาและ Headers (`http.addHeader(...)`):**
+  ```cpp
+  http.addHeader("Content-Type", "application/json");
+  ```
+  เพื่อส่งสัญญาณให้เว็บเซิร์ฟเวอร์ปลายทางทราบว่า Payload ที่ส่งไปอยู่ในรูปแบบ JSON และต้องใช้ JSON Parser ในการประมวลผล
+- **การทำ HTTP POST (`int httpResponseCode = http.POST(jsonPayload)`):** เป็นฟังก์ชันบล็อกการทำงาน (Blocking Function) ที่จะส่งคำร้องและเนื้อความ JSON ไปยังเซิร์ฟเวอร์ และคืนค่าเป็น **HTTP Status Code** (จำนวนเต็ม) กลับมาเก็บไว้เพื่อตรวจสอบความสำเร็จ (เช่น 200 หรือ 201 หมายถึงส่งสำเร็จ, ค่าติดลบหมายถึงเชื่อมต่อเซิร์ฟเวอร์ไม่ได้)
+- **การรับข้อความตอบกลับ (`http.getString()`):** หากส่งผ่านและได้รหัสมากกว่า 0 โค้ดจะดึงข้อมูลการประมวลผล (Body Response) ที่เซิร์ฟเวอร์ส่งกลับมาในรูปของ String เพื่อแสดงผลใน Serial Monitor
+- **การปิดการเชื่อมต่อเพื่อคืนหน่วยความจำ (`http.end()`):** คำสั่งสำคัญในการยกเลิกและปิดท่อ TCP Socket เพื่อคืน Memory ของ ESP32 ให้กลับมาว่าง ป้องกันปัญหา Memory Leak ของอุปกรณ์
 ```
 
 #### 7.8.2 Publish/Subscribe ผ่าน MQTT
@@ -315,6 +595,30 @@ void loop() {
     lastSend = millis();
   }
 }
+
+##### อธิบายการทำงานของโค้ด PubSubClient MQTT (คำอธิบายรายบรรทัด)
+- **การประกาศตัวแปรไคลเอนต์และตัวนำทางเครือข่าย:**
+  ```cpp
+  WiFiClient espClient;
+  PubSubClient mqtt(espClient);
+  ```
+  เนื่องจาก `PubSubClient` จำเป็นต้องใช้ออบเจกต์เครือข่ายพื้นฐานในการจัดการ TCP Stream เราจึงสร้าง `WiFiClient` ส่งผ่านเข้าไปในคอนสตรัคเตอร์ของ MQTT ไคลเอนต์
+- **ฟังก์ชันตอบกลับข้อความ (`void mqttCallback(char* topic, byte* payload, unsigned int length)`):**
+  เป็นฟังก์ชัน Event Handler ที่ Broker จะเรียกใช้เมื่อมีข้อความใหม่ถูก Publish เข้ามาใน Topic ที่ ESP32 สมัครรับข้อมูล (`Subscribe`) ไว้ ตัวฟังก์ชันจะทำการวนลูปแปลงข้อมูลจาก byte array ในตัวแปร `payload` ออกมาเป็น String เพื่อเอาไปตรวจสอบเงื่อนไข เช่น เปิด-ปิดไฟ LED
+- **การเชื่อมต่อและรักษาการทำงาน (`reconnect()`):**
+  ```cpp
+  mqtt.connect("ESP32-ME-001", NULL, NULL, "ksu/me/lab301/status", 1, true, "offline")
+  ```
+  ฟังก์ชันนี้จะเชื่อมต่อเข้ากับ Broker โดยมีการฝากข้อความ **Last Will and Testament (LWT)** ไว้กับเซิร์ฟเวอร์:
+  - ชื่อหัวข้อแจ้งสถานะ: `ksu/me/lab301/status`
+  - QoS: 1
+  - Retain: true
+  - ข้อความเมื่อหลุดกะทันหัน: `"offline"`
+  - เมื่อสามารถเชื่อมต่อ Broker สำเร็จ บอร์ดจะส่งคำขอ `mqtt.subscribe(subTopic)` ทันที และส่งข้อความ `"online"` ไปยัง Topic สถานะเพื่อระบุว่าบอร์ดพร้อมทำงานแล้ว
+- **ฟังก์ชันลูปการรันงานหลัก (`mqtt.loop()`):**
+  ต้องเรียกใช้คำสั่งนี้ในฟังก์ชัน `loop()` เสมอ เนื่องจากทำหน้าที่จัดการการรับส่งข้อความในบัฟเฟอร์ คอยส่งสัญญาณ `PINGREQ` ไปยัง Broker เพื่อบอกว่าอุปกรณ์ยังทำงานอยู่ (Keep-Alive) และคอยกระตุ้นฟังก์ชัน `mqttCallback` เมื่อมีข้อความเข้า
+- **การส่งข้อมูลแบบไม่หน่วงลูปหลัก (`millis() - lastSend > 5000`):**
+  หลีกเลี่ยงการใช้คำสั่ง `delay()` ในลูปหลัก เพื่อไม่ให้โปรแกรมหยุดการทำงานชั่วขณะ ซึ่งจะขัดขวางการรับข้อความด่วนผ่านคำสั่ง `mqtt.loop()` โดยใช้การเช็คเวลารูปแบบ Millis ในการสั่งส่งข้อมูลอุณหภูมิ (Publish) ทุก ๆ 5 วินาทีแทน
 ```
 
 ---

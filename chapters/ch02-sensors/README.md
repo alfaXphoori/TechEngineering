@@ -351,7 +351,7 @@ $$T = \frac{R_{RTD} - R_0}{R_0 \cdot \alpha} = \frac{R_{RTD} - 100}{100 \cdot 0.
     .pulse-dot { fill: #ef4444; }
     .text-main { font-size: 13px; font-weight: 700; fill: #1e293b; }
     .text-sub { font-size: 11px; fill: #64748b; }
-    .text-code { font-family: monospace; font-size: 12px; fill: #7c3aed; font-weight: bold; }
+    .text-code { font-family: monospace; font-size: 11px; fill: #7c3aed; font-weight: bold; }
     @keyframes analogFlow {
       0% { stroke-dashoffset: 200; }
       100% { stroke-dashoffset: 0; }
@@ -362,12 +362,12 @@ $$T = \frac{R_{RTD} - R_0}{R_0 \cdot \alpha} = \frac{R_{RTD} - 100}{100 \cdot 0.
   <text x="85" y="45" class="text-main" text-anchor="middle">เซนเซอร์แอนะล็อก</text>
   <text x="85" y="62" class="text-sub" text-anchor="middle">(เช่น LM35, LDR)</text>
   <text x="85" y="78" class="text-sub" text-anchor="middle" fill="#2563eb" font-weight="bold">แรงดันต่อเนื่อง (V)</text>
-  <rect x="530" y="20" width="150" height="70" class="mcu"/>
-  <text x="605" y="42" class="text-main" text-anchor="middle">ESP32 (ADC1 ขา 34)</text>
-  <text x="605" y="60" class="text-sub" text-anchor="middle">อ่านค่าแอนะล็อก 12 บิต</text>
-  <text x="605" y="78" class="text-code" text-anchor="middle">analogRead(34) ➔ 0-4095</text>
-  <path d="M 150 55 C 230 15, 270 95, 340 55 C 410 15, 450 95, 530 55" class="wire-bg"/>
-  <path id="analogPath" d="M 150 55 C 230 15, 270 95, 340 55 C 410 15, 450 95, 530 55" class="wire-flow"/>
+  <rect x="505" y="15" width="175" height="80" class="mcu"/>
+  <text x="592.5" y="37" class="text-main" text-anchor="middle">ESP32 (ADC1 ขา 34)</text>
+  <text x="592.5" y="55" class="text-sub" text-anchor="middle">อ่านค่าแอนะล็อก 12 บิต</text>
+  <text x="592.5" y="75" class="text-code" text-anchor="middle">analogRead(34) ➔ 0-4095</text>
+  <path d="M 150 55 C 230 15, 270 95, 340 55 C 410 15, 450 95, 505 55" class="wire-bg"/>
+  <path id="analogPath" d="M 150 55 C 230 15, 270 95, 340 55 C 410 15, 450 95, 505 55" class="wire-flow"/>
   <circle r="5" class="pulse-dot">
     <animateMotion dur="3s" repeatCount="indefinite">
       <mpath href="#analogPath"/>
@@ -423,7 +423,7 @@ void loop() {
     .pulse-square { fill: #ef4444; }
     .text-main { font-size: 13px; font-weight: 700; fill: #1e293b; }
     .text-sub { font-size: 11px; fill: #64748b; }
-    .text-code { font-family: monospace; font-size: 12px; fill: #7c3aed; font-weight: bold; }
+    .text-code { font-family: monospace; font-size: 11px; fill: #7c3aed; font-weight: bold; }
     @keyframes digitalFlow {
       0% { stroke-dashoffset: 200; }
       100% { stroke-dashoffset: 0; }
@@ -434,12 +434,12 @@ void loop() {
   <text x="85" y="45" class="text-main" text-anchor="middle">เซนเซอร์ดิจิทัลตรง</text>
   <text x="85" y="62" class="text-sub" text-anchor="middle">(เช่น PIR, IR)</text>
   <text x="85" y="78" class="text-sub" text-anchor="middle" fill="#059669" font-weight="bold">HIGH (3.3V) / LOW (0V)</text>
-  <rect x="530" y="20" width="150" height="70" class="mcu"/>
-  <text x="605" y="42" class="text-main" text-anchor="middle">ESP32 (GPIO 19)</text>
-  <text x="605" y="60" class="text-sub" text-anchor="middle">อ่านค่าสถานะดิจิทัลตรง</text>
-  <text x="605" y="78" class="text-code" text-anchor="middle">digitalRead(19) ➔ 1 / 0</text>
-  <path d="M 150 75 L 210 75 L 210 35 L 280 35 L 280 75 L 350 75 L 350 35 L 420 35 L 420 75 L 530 75" class="wire-bg"/>
-  <path id="digitalPath" d="M 150 75 L 210 75 L 210 35 L 280 35 L 280 75 L 350 75 L 350 35 L 420 35 L 420 75 L 530 75" class="wire-flow"/>
+  <rect x="505" y="15" width="175" height="80" class="mcu"/>
+  <text x="592.5" y="37" class="text-main" text-anchor="middle">ESP32 (GPIO 19)</text>
+  <text x="592.5" y="55" class="text-sub" text-anchor="middle">อ่านค่าสถานะดิจิทัลตรง</text>
+  <text x="592.5" y="75" class="text-code" text-anchor="middle">digitalRead(19) ➔ 1 / 0</text>
+  <path d="M 150 75 L 210 75 L 210 35 L 280 35 L 280 75 L 350 75 L 350 35 L 420 35 L 420 75 L 505 75" class="wire-bg"/>
+  <path id="digitalPath" d="M 150 75 L 210 75 L 210 35 L 280 35 L 280 75 L 350 75 L 350 35 L 420 35 L 420 75 L 505 75" class="wire-flow"/>
   <circle r="5" class="pulse-square">
     <animateMotion dur="2s" repeatCount="indefinite">
       <mpath href="#digitalPath"/>
@@ -486,9 +486,9 @@ void loop() {
   <text x="80" y="115" class="text-sub" text-anchor="middle" fill="#7c3aed" font-weight="bold">GPIO 21, 22</text>
   <line x1="140" y1="75" x2="520" y2="75" class="line-scl"/>
   <line x1="140" y1="75" x2="520" y2="75" class="scl-pulse"/>
-  <text x="160" y="68" class="text-bus" fill="#d97706">SCL (Clock)</text>
+  <text x="160" y="55" class="text-bus" fill="#d97706">SCL (Clock)</text>
   <line x1="140" y1="105" x2="520" y2="105" class="line-sda"/>
-  <text x="160" y="120" class="text-bus" fill="#059669">SDA (Data)</text>
+  <text x="160" y="130" class="text-bus" fill="#059669">SDA (Data)</text>
   <rect x="520" y="20" width="150" height="60" class="sensor"/>
   <text x="595" y="42" class="text-main" text-anchor="middle">BMP280</text>
   <text x="595" y="58" class="text-sub" text-anchor="middle">Address: 0x76 (Sensor 1)</text>
@@ -547,15 +547,15 @@ void loop() {
   <text x="80" y="110" class="text-main" text-anchor="middle">ESP32</text>
   <text x="80" y="130" class="text-sub" text-anchor="middle">(SPI Master)</text>
   <line x1="140" y1="65" x2="520" y2="65" class="wire"/>
-  <text x="150" y="60" class="text-bus">SCK (Clock)</text>
+  <text x="150" y="50" class="text-bus">SCK (Clock)</text>
   <line x1="140" y1="95" x2="520" y2="95" class="wire-active"/>
-  <text x="150" y="90" class="text-bus" fill="#db2777">MOSI (Data Out)</text>
+  <text x="150" y="80" class="text-bus" fill="#db2777">MOSI (Data Out)</text>
   <line x1="140" y1="125" x2="520" y2="125" class="wire-active"/>
-  <text x="150" y="120" class="text-bus" fill="#059669">MISO (Data In)</text>
+  <text x="150" y="110" class="text-bus" fill="#059669">MISO (Data In)</text>
   <path d="M 140 165 L 430 165 L 430 100 L 520 100" class="wire-cs-low"/>
-  <text x="150" y="160" class="text-bus" fill="#dc2626">CS A (Active LOW ➔ Enabled)</text>
+  <text x="150" y="150" class="text-bus" fill="#dc2626">CS A (Active LOW ➔ Enabled)</text>
   <line x1="140" y1="185" x2="520" y2="185" class="wire-cs-high"/>
-  <text x="150" y="195" class="text-bus" fill="#94a3b8">CS B (Standby HIGH ➔ Disabled)</text>
+  <text x="150" y="205" class="text-bus" fill="#94a3b8">CS B (Standby HIGH ➔ Disabled)</text>
   <rect x="520" y="30" width="150" height="80" class="sensor"/>
   <text x="595" y="65" class="text-main" text-anchor="middle">Sensor A</text>
   <text x="595" y="85" class="text-sub" text-anchor="middle">(SPI Slave 1 - Active)</text>
@@ -606,7 +606,7 @@ void loop() {
   <text x="80" y="85" class="text-main" text-anchor="middle">ESP32</text>
   <text x="80" y="105" class="text-sub" text-anchor="middle">(One-Wire Master)</text>
   <line x1="140" y1="90" x2="520" y2="90" class="wire-one"/>
-  <text x="150" y="82" class="text-bus">DQ (Single Data Line)</text>
+  <text x="150" y="75" class="text-bus">DQ (Single Data Line)</text>
   <line x1="220" y1="90" x2="220" y2="30" class="wire-pullup"/>
   <rect x="212" y="42" width="16" height="25" rx="2" class="resistor"/>
   <line x1="212" y1="47" x2="228" y2="47" stroke="#fbbf24" stroke-width="2"/>

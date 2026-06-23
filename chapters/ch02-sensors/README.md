@@ -128,8 +128,8 @@
       40%, 60% { opacity: 1.0; }
     }
     @keyframes needleMove {
-      0%, 100% { transform: rotate(-45deg); } /* Vout = 1.65V (Dark) */
-      40%, 60% { transform: rotate(45deg); }  /* Vout = 0.3V (Bright) */
+      0%, 100% { transform: rotate(0deg); }   /* Vout = 1.65V (Dark) */
+      40%, 60% { transform: rotate(-74deg); }  /* Vout = 0.3V (Bright) */
     }
     
     /* Variable text display sync */

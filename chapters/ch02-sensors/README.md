@@ -552,9 +552,9 @@ void loop() {
   <text x="150" y="90" class="text-bus" fill="#db2777">MOSI (Data Out)</text>
   <line x1="140" y1="125" x2="520" y2="125" class="wire-active"/>
   <text x="150" y="120" class="text-bus" fill="#059669">MISO (Data In)</text>
-  <path d="M 140 165 L 450 165 L 450 170 L 520 170" class="wire-cs-low"/>
+  <path d="M 140 165 L 430 165 L 430 100 L 520 100" class="wire-cs-low"/>
   <text x="150" y="160" class="text-bus" fill="#dc2626">CS A (Active LOW ➔ Enabled)</text>
-  <path d="M 140 185 L 480 185 L 480 200 L 520 200" class="wire-cs-high"/>
+  <line x1="140" y1="185" x2="520" y2="185" class="wire-cs-high"/>
   <text x="150" y="195" class="text-bus" fill="#94a3b8">CS B (Standby HIGH ➔ Disabled)</text>
   <rect x="520" y="30" width="150" height="80" class="sensor"/>
   <text x="595" y="65" class="text-main" text-anchor="middle">Sensor A</text>

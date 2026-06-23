@@ -124,7 +124,7 @@
    - นอกจากนี้ยังมีตัวแปรเสริม เช่น `msg.topic` เพื่อระบุหัวข้อหรือประเภทของข้อมูลที่เคลื่อนที่ผ่านตัวนำทาง (Wire)
 
 3. **Function Node JavaScript Programming:**
-   - เป็นโหนดที่มีความยืดหยุ่นสูงที่สุดเนื่องจากเปิดโอกาสให้เขียนโปรแกรม JavaScript ลงไป เพื่อคำนวณและประมวลผล ตัวอย่างเช่น:
+   - เป็นโหนดที่มีความยืดหยุ่นสูงที่สุดเนื่องจากเปิดโอกาสให้เขียนโปรแกรม JavaScript ลงไป เพื่อคำวณและประมวลผล ตัวอย่างเช่น:
      ```javascript
      // ตัวอย่างการคัดกรองข้อมูลอุณหภูมิและเปลี่ยนสถานะแจ้งเตือน
      let temp = msg.payload.temperature;
@@ -147,26 +147,37 @@
 <svg viewBox="0 0 800 360" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
   <title>โครงสร้างการไหลของข้อมูลใน Node-RED</title>
   <style>
-    .bg { fill: #0f172a; stroke: #1e293b; stroke-width: 2; rx: 12px; }
-    .grid { fill: none; stroke: #1e293b; stroke-width: 1; stroke-dasharray: 4 4; }
-    .node-border-mqtt { fill: #312e81; stroke: #6366f1; stroke-width: 2; rx: 8px; }
-    .node-border-func { fill: #064e3b; stroke: #10b981; stroke-width: 2; rx: 8px; }
-    .node-border-ui { fill: #78350f; stroke: #f59e0b; stroke-width: 2; rx: 8px; }
-    .wire { fill: none; stroke: #475569; stroke-width: 3; stroke-linecap: round; }
-    .wire-active { fill: none; stroke: #38bdf8; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 8 10; animation: flowData 2s linear infinite; }
-    .packet { fill: #38bdf8; filter: drop-shadow(0 0 4px #38bdf8); }
-    .node-title { font-size: 14px; font-weight: bold; fill: #f8fafc; }
-    .node-sub { font-size: 11px; fill: #94a3b8; }
-    .text-tag { font-size: 10px; font-weight: bold; fill: #ffffff; }
-    .tag-mqtt { fill: #4f46e5; rx: 4px; }
-    .tag-func { fill: #059669; rx: 4px; }
-    .tag-ui { fill: #d97706; rx: 4px; }
-    .port { fill: #e2e8f0; stroke: #475569; stroke-width: 1.5; }
-    .wire-glow { fill: none; stroke: #06b6d4; stroke-width: 5; opacity: 0.15; stroke-linecap: round; }
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; rx: 12px; }
+    .grid { fill: none; stroke: #e2e8f0; stroke-width: 1; stroke-dasharray: 5 5; }
+    
+    /* Node-RED style nodes - Flat Design */
+    .node-box { fill: #ffffff; stroke: #334155; stroke-width: 2; rx: 6px; }
+    
+    /* Wires and paths */
+    .wire { fill: none; stroke: #475569; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .wire-active { fill: none; stroke: #f59e0b; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 8 10; animation: flowData 2.6s linear infinite; }
+    
+    /* Packets */
+    .packet { fill: #f59e0b; stroke: #ffffff; stroke-width: 1.5; }
+    .packet-green { fill: #16a34a; stroke: #ffffff; stroke-width: 1.5; }
+    .packet-red { fill: #dc2626; stroke: #ffffff; stroke-width: 1.5; }
+    
+    /* Ports */
+    .port { fill: #ffffff; stroke: #334155; stroke-width: 1.5; }
+    
+    /* Text styles */
+    .text-main { font-size: 14px; font-weight: bold; fill: #1e293b; }
+    .text-sub { font-size: 12px; fill: #64748b; }
+    .text-tag { font-size: 10px; font-weight: bold; fill: #1e293b; }
+    
+    /* Tags inside nodes */
+    .tag-mqtt { fill: #e0e7ff; stroke: #6366f1; stroke-width: 1; rx: 3px; }
+    .tag-func { fill: #d1fae5; stroke: #10b981; stroke-width: 1; rx: 3px; }
+    .tag-ui { fill: #fef3c7; stroke: #f59e0b; stroke-width: 1; rx: 3px; }
     
     /* Animations */
     @keyframes flowData {
-      to { stroke-dashoffset: -36; }
+      to { stroke-dashoffset: -44; }
     }
     .gauge-needle {
       transform-origin: 640px 145px;
@@ -187,107 +198,110 @@
       50%, 100% { stroke-dashoffset: 0; }
     }
     .node-hover {
-      transition: all 0.3s ease;
+      transition: all 0.2s ease;
     }
     .node-hover:hover {
-      filter: brightness(1.2);
+      filter: brightness(0.97);
       cursor: pointer;
     }
   </style>
 
-  <!-- Background and grid -->
-  <rect x="0" y="0" width="800" height="360" class="bg"/>
+  <!-- Panel background -->
+  <rect x="5" y="5" width="790" height="350" class="bg"/>
+  
+  <!-- Grid -->
   <g class="grid">
-    <path d="M 0,40 H 800 M 0,80 H 800 M 0,120 H 800 M 0,160 H 800 M 0,200 H 800 M 0,240 H 800 M 0,280 H 800 M 0,320 H 800" />
-    <path d="M 80,0 V 360 M 160,0 V 360 M 240,0 V 360 M 320,0 V 360 M 400,0 V 360 M 480,0 V 360 M 560,0 V 360 M 640,0 V 360 M 720,0 V 360" />
+    <path d="M 5,40 H 795 M 5,80 H 795 M 5,120 H 795 M 5,160 H 795 M 5,200 H 795 M 5,240 H 795 M 5,280 H 795 M 5,320 H 795" />
+    <path d="M 80,5 V 355 M 160,5 V 355 M 240,5 V 355 M 320,5 V 355 M 400,5 V 355 M 480,5 V 355 M 560,5 V 355 M 640,5 V 355 M 720,5 V 355" />
   </g>
 
   <!-- Connection Wires -->
-  <!-- Wire from MQTT to Function -->
-  <path d="M 230,120 C 280,120 280,180 330,180" class="wire-glow"/>
   <path d="M 230,120 C 280,120 280,180 330,180" class="wire"/>
   <path id="wire1" d="M 230,120 C 280,120 280,180 330,180" class="wire-active"/>
 
-  <!-- Wire from Function Output 1 to Gauge -->
-  <path d="M 480,165 C 530,165 530,120 580,120" class="wire-glow"/>
   <path d="M 480,165 C 530,165 530,120 580,120" class="wire"/>
-  <path id="wire2" d="M 480,165 C 530,165 530,120 580,120" class="wire-active"/>
+  <path id="wire2" d="M 480,165 C 530,165 530,120 580,120" class="wire-active" stroke="#16a34a"/>
 
-  <!-- Wire from Function Output 2 to Chart -->
-  <path d="M 480,195 C 530,195 530,240 580,240" class="wire-glow"/>
   <path d="M 480,195 C 530,195 530,240 580,240" class="wire"/>
-  <path id="wire3" d="M 480,195 C 530,195 530,240 580,240" class="wire-active"/>
+  <path id="wire3" d="M 480,195 C 530,195 530,240 580,240" class="wire-active" stroke="#dc2626"/>
 
-  <!-- Node 1: MQTT Input (mqtt in) -->
+  <!-- Node 1: MQTT Input -->
   <g transform="translate(50, 80)" class="node-hover">
-    <rect x="0" y="0" width="180" height="80" class="node-border-mqtt"/>
-    <rect x="10" y="10" width="55" height="18" class="tag-mqtt"/>
-    <text x="37" y="22" class="text-tag" text-anchor="middle">mqtt in</text>
-    <text x="15" y="48" class="node-title">รับค่าอุณหภูมิ</text>
-    <text x="15" y="66" class="node-sub">หัวข้อ: office/temp</text>
+    <rect x="0" y="0" width="180" height="80" class="node-box"/>
+    <!-- Node Tag -->
+    <rect x="12" y="12" width="55" height="18" class="tag-mqtt"/>
+    <text x="39" y="24" class="text-tag" text-anchor="middle">mqtt in</text>
+    <!-- Labels -->
+    <text x="15" y="48" class="text-main">รับค่าอุณหภูมิ</text>
+    <text x="15" y="66" class="text-sub">หัวข้อ: office/temp</text>
+    <!-- Output Port -->
     <circle cx="180" cy="40" r="5" class="port"/>
   </g>
 
   <!-- Node 2: Function Node -->
   <g transform="translate(300, 140)" class="node-hover">
-    <rect x="0" y="0" width="180" height="80" class="node-border-func"/>
-    <rect x="10" y="10" width="55" height="18" class="tag-func"/>
-    <text x="37" y="22" class="text-tag" text-anchor="middle">function</text>
-    <text x="15" y="48" class="node-title">ตรวจสอบเงื่อนไข</text>
-    <text x="15" y="66" class="node-sub">msg.payload > 35.0 ?</text>
+    <rect x="0" y="0" width="180" height="80" class="node-box"/>
+    <rect x="12" y="12" width="55" height="18" class="tag-func"/>
+    <text x="39" y="24" class="text-tag" text-anchor="middle">function</text>
+    <text x="15" y="48" class="text-main">ตรวจสอบเงื่อนไข</text>
+    <text x="15" y="66" class="text-sub">msg.payload > 35.0 ?</text>
+    <!-- Input Port -->
     <circle cx="0" cy="40" r="5" class="port"/>
+    <!-- Output Ports -->
     <circle cx="180" cy="25" r="5" class="port"/>
     <circle cx="180" cy="55" r="5" class="port"/>
-    <text x="170" y="28" font-size="9" fill="#94a3b8" text-anchor="end">1</text>
-    <text x="170" y="58" font-size="9" fill="#94a3b8" text-anchor="end">2</text>
+    <text x="170" y="28" font-size="9" fill="#64748b" text-anchor="end">1</text>
+    <text x="170" y="58" font-size="9" fill="#64748b" text-anchor="end">2</text>
   </g>
 
-  <!-- Node 3: Gauge Node (ui_gauge) -->
+  <!-- Node 3: Gauge Node -->
   <g transform="translate(580, 80)" class="node-hover">
-    <rect x="0" y="0" width="180" height="80" class="node-border-ui"/>
-    <rect x="10" y="10" width="55" height="18" class="tag-ui"/>
-    <text x="37" y="22" class="text-tag" text-anchor="middle">ui_gauge</text>
-    <text x="15" y="48" class="node-title">เกจวัดความร้อน</text>
-    <text x="15" y="66" class="node-sub">แท็บ: แดชบอร์ดหลัก</text>
+    <rect x="0" y="0" width="180" height="80" class="node-box"/>
+    <rect x="12" y="12" width="55" height="18" class="tag-ui"/>
+    <text x="39" y="24" class="text-tag" text-anchor="middle">ui_gauge</text>
+    <text x="15" y="48" class="text-main">เกจวัดความร้อน</text>
+    <text x="15" y="66" class="text-sub">แท็บ: แดชบอร์ดหลัก</text>
+    <!-- Input Port -->
     <circle cx="0" cy="40" r="5" class="port"/>
   </g>
 
-  <!-- Node 4: Chart Node (ui_chart) -->
+  <!-- Node 4: Chart Node -->
   <g transform="translate(580, 200)" class="node-hover">
-    <rect x="0" y="0" width="180" height="80" class="node-border-ui"/>
-    <rect x="10" y="10" width="55" height="18" class="tag-ui"/>
-    <text x="37" y="22" class="text-tag" text-anchor="middle">ui_chart</text>
-    <text x="15" y="48" class="node-title">กราฟความร้อน</text>
-    <text x="15" y="66" class="node-sub">แสดงแนวโน้มเวลา</text>
+    <rect x="0" y="0" width="180" height="80" class="node-box"/>
+    <rect x="12" y="12" width="55" height="18" class="tag-ui"/>
+    <text x="39" y="24" class="text-tag" text-anchor="middle">ui_chart</text>
+    <text x="15" y="48" class="text-main">กราฟความร้อน</text>
+    <text x="15" y="66" class="text-sub">แสดงแนวโน้มเวลา</text>
+    <!-- Input Port -->
     <circle cx="0" cy="40" r="5" class="port"/>
   </g>
 
   <!-- Data Flow Simulation Packets -->
-  <circle r="4" class="packet">
-    <animateMotion dur="2s" repeatCount="indefinite">
+  <circle r="5" class="packet">
+    <animateMotion dur="2.6s" repeatCount="indefinite">
       <mpath href="#wire1"/>
     </animateMotion>
   </circle>
-  <circle r="4" class="packet" opacity="0.6">
-    <animateMotion dur="2s" begin="0.66s" repeatCount="indefinite">
+  <circle r="5" class="packet" opacity="0.65">
+    <animateMotion dur="2.6s" begin="0.86s" repeatCount="indefinite">
       <mpath href="#wire1"/>
     </animateMotion>
   </circle>
-  <circle r="4" class="packet" opacity="0.3">
-    <animateMotion dur="2s" begin="1.33s" repeatCount="indefinite">
+  <circle r="5" class="packet" opacity="0.3">
+    <animateMotion dur="2.6s" begin="1.72s" repeatCount="indefinite">
       <mpath href="#wire1"/>
     </animateMotion>
   </circle>
 
   <!-- Path 2 flow -->
-  <circle r="4" fill="#10b981" filter="drop-shadow(0 0 4px #10b981)">
-    <animateMotion dur="2s" begin="0.3s" repeatCount="indefinite">
+  <circle r="5" class="packet-green">
+    <animateMotion dur="2.6s" begin="0.4s" repeatCount="indefinite">
       <mpath href="#wire2"/>
     </animateMotion>
   </circle>
   <!-- Path 3 flow -->
-  <circle r="4" fill="#f59e0b" filter="drop-shadow(0 0 4px #f59e0b)">
-    <animateMotion dur="2s" begin="0.8s" repeatCount="indefinite">
+  <circle r="5" class="packet-red">
+    <animateMotion dur="2.6s" begin="1.2s" repeatCount="indefinite">
       <mpath href="#wire3"/>
     </animateMotion>
   </circle>
@@ -295,21 +309,21 @@
   <!-- Side Panel Miniatures -->
   <!-- Gauge Mini Graphic -->
   <g transform="translate(735, 105)">
-    <path d="M -15,10 A 18,18 0 0,1 15,10" fill="none" stroke="#334155" stroke-width="4" stroke-linecap="round"/>
-    <path d="M -15,10 A 18,18 0 0,1 5, -8" fill="none" stroke="#ef4444" stroke-width="4" stroke-linecap="round"/>
-    <line x1="0" y1="10" x2="12" y2="-2" stroke="#ffffff" stroke-width="2" stroke-linecap="round" class="gauge-needle"/>
-    <circle cx="0" cy="10" r="3" fill="#ffffff"/>
+    <path d="M -15,10 A 18,18 0 0,1 15,10" fill="none" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/>
+    <path d="M -15,10 A 18,18 0 0,1 5, -8" fill="none" stroke="#dc2626" stroke-width="4" stroke-linecap="round"/>
+    <line x1="0" y1="10" x2="12" y2="-2" stroke="#334155" stroke-width="2.5" stroke-linecap="round" class="gauge-needle"/>
+    <circle cx="0" cy="10" r="3.5" fill="#334155"/>
   </g>
 
   <!-- Chart Mini Graphic -->
   <g transform="translate(720, 240)">
-    <line x1="0" y1="0" x2="30" y2="0" stroke="#334155" stroke-width="1"/>
-    <line x1="0" y1="-15" x2="30" y2="-15" stroke="#334155" stroke-width="1"/>
-    <path d="M 0,0 L 5,-4 L 10, -2 L 15, -12 L 20, -8 L 25, -18 L 30, -14" fill="none" stroke="#38bdf8" stroke-width="2" class="chart-line"/>
+    <line x1="0" y1="0" x2="30" y2="0" stroke="#cbd5e1" stroke-width="1.5"/>
+    <line x1="0" y1="-15" x2="30" y2="-15" stroke="#cbd5e1" stroke-width="1.5"/>
+    <path d="M 0,0 L 5,-4 L 10, -2 L 15, -12 L 20, -8 L 25, -18 L 30, -14" fill="none" stroke="#16a34a" stroke-width="2.5" class="chart-line"/>
   </g>
 
   <!-- Labels -->
-  <text x="400" y="340" fill="#94a3b8" font-size="12" text-anchor="middle">ทิศทางการไหลของวัตถุข้อความ (msg) จากโหนดอินพุต ผ่านฟังก์ชันประมวลผล สู่หน้าจอแดชบอร์ด</text>
+  <text x="400" y="336" fill="#64748b" font-size="12" font-weight="500" text-anchor="middle">ทิศทางการไหลของวัตถุข้อความ (msg) จากโหนดอินพุต ผ่านฟังก์ชันประมวลผล สู่หน้าจอแดชบอร์ด</text>
 
 </svg>
 <div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 9.1 แผนภาพการไหลของข้อมูล (Flow) ในระบบ Node-RED แสดงการรับ ส่ง และแปลงข้อมูล</div>
@@ -445,151 +459,154 @@ Blynk แก้ไขปัญหานี้โดยการเตรีย�
 <svg viewBox="0 0 820 380" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
   <title>สถาปัตยกรรมและกระบวนการซิงโครไนซ์ข้อมูลผ่าน Blynk Cloud</title>
   <style>
-    .bg { fill: #0b0f19; stroke: #1e293b; stroke-width: 2; rx: 12px; }
-    .grid { fill: none; stroke: #1e293b; stroke-width: 1; stroke-dasharray: 4 4; }
-    .device-box { fill: #1e293b; stroke: #475569; stroke-width: 2; rx: 8px; }
-    .cloud-box { fill: #1e1b4b; stroke: #4f46e5; stroke-width: 2; rx: 8px; }
-    .app-box { fill: #0f172a; stroke: #ea580c; stroke-width: 2; rx: 8px; }
-    .title-text { font-size: 14px; font-weight: bold; fill: #f8fafc; }
-    .sub-text { font-size: 11px; fill: #94a3b8; }
-    .code-text { font-size: 11px; font-family: monospace; fill: #38bdf8; font-weight: bold; }
-    .code-orange { font-size: 11px; font-family: monospace; fill: #fb923c; font-weight: bold; }
-    .sync-line { fill: none; stroke-width: 2; stroke-linecap: round; }
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; rx: 12px; }
+    .grid { fill: none; stroke: #e2e8f0; stroke-width: 1; stroke-dasharray: 5 5; }
     
-    /* Animations */
+    /* Device / Container Boxes */
+    .mcu-box { fill: #faf5ff; stroke: #7c3aed; stroke-width: 2; rx: 8px; }
+    .sub-box { fill: #ffffff; stroke: #334155; stroke-width: 2; rx: 8px; }
+    .code-box { fill: #f1f5f9; stroke: #e2e8f0; stroke-width: 1; rx: 4px; }
+    
+    /* Text styles */
+    .text-title { font-size: 14px; font-weight: bold; fill: #1e293b; }
+    .text-sub { font-size: 12px; fill: #64748b; }
+    .text-code-purple { font-size: 11px; font-family: monospace; fill: #7c3aed; font-weight: bold; }
+    .text-code-amber { font-size: 11px; font-family: monospace; fill: #d97706; font-weight: bold; }
+    
+    /* Wires / Paths */
+    .comm-wire { fill: none; stroke: #cbd5e1; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    
+    /* Flow Animations */
     @keyframes flowRight {
-      0% { stroke-dashoffset: 24; }
-      100% { stroke-dashoffset: 0; }
+      to { stroke-dashoffset: -24; }
     }
     @keyframes flowLeft {
-      0% { stroke-dashoffset: 0; }
-      100% { stroke-dashoffset: 24; }
+      to { stroke-dashoffset: 24; }
     }
-    .flow-to-cloud { stroke: #38bdf8; stroke-dasharray: 6 6; stroke-width: 2.5; animation: flowRight 1.5s linear infinite; }
-    .flow-to-app { stroke: #38bdf8; stroke-dasharray: 6 6; stroke-width: 2.5; animation: flowRight 1.5s linear infinite; }
-    .flow-from-app { stroke: #fb923c; stroke-dasharray: 6 6; stroke-width: 2.5; animation: flowLeft 1.5s linear infinite; }
-    .flow-to-esp { stroke: #fb923c; stroke-dasharray: 6 6; stroke-width: 2.5; animation: flowLeft 1.5s linear infinite; }
-    .sync-req { stroke: #a78bfa; stroke-dasharray: 4 4; stroke-width: 2; animation: flowLeft 2s linear infinite; }
+    .flow-uplink { fill: none; stroke: #16a34a; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 6 6; animation: flowRight 1.5s linear infinite; }
+    .flow-downlink { fill: none; stroke: #d97706; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 6 6; animation: flowLeft 1.5s linear infinite; }
+    .flow-sync { fill: none; stroke: #7c3aed; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 4 4; animation: flowLeft 2s linear infinite; }
     
-    .glow-orange { filter: drop-shadow(0 0 6px #ea580c); }
-    .glow-cyan { filter: drop-shadow(0 0 6px #06b6d4); }
-    .glow-purple { filter: drop-shadow(0 0 6px #8b5cf6); }
-    
-    .app-screen { fill: #020617; stroke: #334155; rx: 4px; }
-    .widget-gauge { fill: #1e293b; stroke: #06b6d4; stroke-width: 1.5; rx: 4px; }
-    .widget-btn { fill: #ea580c; stroke: #ff7849; stroke-width: 1.5; rx: 4px; }
+    /* UI components in Mobile App */
+    .app-screen { fill: #f8fafc; stroke: #94a3b8; stroke-width: 1.5; rx: 6px; }
+    .widget-gauge { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; rx: 4px; }
+    .widget-btn { fill: #fef3c7; stroke: #d97706; stroke-width: 1.5; rx: 4px; }
+    .btn-toggle { fill: #d97706; rx: 8px; }
+    .btn-knob { fill: #ffffff; stroke: #cbd5e1; }
   </style>
 
-  <!-- Background -->
-  <rect x="0" y="0" width="820" height="380" class="bg"/>
+  <!-- Panel background -->
+  <rect x="5" y="5" width="810" height="370" class="bg"/>
+  
+  <!-- Grid -->
   <g class="grid">
-    <path d="M 0,50 H 820 M 0,100 H 820 M 0,150 H 820 M 0,200 H 820 M 0,250 H 820 M 0,300 H 820 M 0,350 H 820" />
-    <path d="M 100,0 V 380 M 200,0 V 380 M 300,0 V 380 M 400,0 V 380 M 500,0 V 380 M 600,0 V 380 M 700,0 V 380" />
+    <path d="M 5,50 H 815 M 5,100 H 815 M 5,150 H 815 M 5,200 H 815 M 5,250 H 815 M 5,300 H 815 M 5,350 H 815" />
+    <path d="M 100,5 V 375 M 200,5 V 375 M 300,5 V 375 M 400,5 V 375 M 500,5 V 375 M 600,5 V 375 M 700,5 V 375" />
   </g>
 
-  <!-- Lines of data communication (Paths) -->
-  <!-- Segment 1: ESP32 to Cloud (V0) -->
-  <path d="M 230,100 L 370,100" class="sync-line" stroke="#1e293b" stroke-width="3"/>
-  <path d="M 230,100 L 370,100" class="flow-to-cloud"/>
-  <!-- Segment 2: Cloud to App (V0) -->
-  <path d="M 450,100 L 590,100" class="sync-line" stroke="#1e293b" stroke-width="3"/>
-  <path d="M 450,100 L 590,100" class="flow-to-app"/>
+  <!-- Communication paths -->
+  <!-- V0 Uplink Flow (ESP32 -> Cloud -> App) -->
+  <path d="M 230,100 L 370,100" class="comm-wire"/>
+  <path d="M 230,100 L 370,100" class="flow-uplink"/>
+  <path d="M 450,100 L 590,100" class="comm-wire"/>
+  <path d="M 450,100 L 590,100" class="flow-uplink"/>
 
-  <!-- Segment 1: App to Cloud (V1) -->
-  <path d="M 450,220 L 590,220" class="sync-line" stroke="#1e293b" stroke-width="3"/>
-  <path d="M 450,220 L 590,220" class="flow-from-app"/>
-  <!-- Segment 2: Cloud to ESP32 (V1) -->
-  <path d="M 230,220 L 370,220" class="sync-line" stroke="#1e293b" stroke-width="3"/>
-  <path d="M 230,220 L 370,220" class="flow-to-esp"/>
+  <!-- V1 Downlink Flow (App -> Cloud -> ESP32) -->
+  <path d="M 450,220 L 590,220" class="comm-wire"/>
+  <path d="M 450,220 L 590,220" class="flow-downlink"/>
+  <path d="M 230,220 L 370,220" class="comm-wire"/>
+  <path d="M 230,220 L 370,220" class="flow-downlink"/>
 
-  <!-- Line 3: syncVirtual request (ESP -> Cloud) -->
-  <path d="M 230,300 C 300,340 330,340 370,300" class="sync-line" stroke="#1e293b" stroke-width="2"/>
-  <path d="M 230,300 C 300,340 330,340 370,300" class="sync-req"/>
+  <!-- Sync Request Path -->
+  <path d="M 230,300 C 300,340 330,340 370,300" class="comm-wire" stroke-width="2"/>
+  <path d="M 230,300 C 300,340 330,340 370,300" class="flow-sync"/>
 
-  <!-- 1. LEFT CONTAINER: ESP32 (Physical Device) -->
+  <!-- 1. LEFT CONTAINER: ESP32 MCU (fill: #faf5ff, stroke: #7c3aed) -->
   <g transform="translate(30, 40)">
-    <rect x="0" y="0" width="200" height="290" class="device-box"/>
-    <text x="100" y="25" class="title-text" text-anchor="middle">🔌 ESP32 ไมโครคอนโทรลเลอร์</text>
+    <rect x="0" y="0" width="200" height="290" class="mcu-box"/>
+    <text x="100" y="25" class="text-title" text-anchor="middle">🔌 ESP32 ไมโครคอนโทรลเลอร์</text>
     
     <!-- Code Blocks inside ESP32 -->
-    <rect x="10" y="45" width="180" height="65" fill="#0f172a" rx="4" stroke="#334155"/>
-    <text x="20" y="62" class="sub-text" fill="#94a3b8">ส่งค่าอุณหภูมิ (ทุก 2 วินาที)</text>
-    <text x="20" y="80" class="code-text">float temp = readTemp();</text>
-    <text x="20" y="98" class="code-text">Blynk.virtualWrite(V0, temp);</text>
-    <circle cx="190" cy="60" r="5" fill="#38bdf8" class="glow-cyan"/>
+    <!-- Temp Sensor Read Block -->
+    <rect x="10" y="45" width="180" height="65" class="code-box"/>
+    <text x="20" y="62" class="text-sub">ส่งค่าอุณหภูมิ (ทุก 2 วินาที)</text>
+    <text x="20" y="80" class="text-code-purple">float temp = readTemp();</text>
+    <text x="20" y="98" class="text-code-purple">Blynk.virtualWrite(V0, temp);</text>
+    <circle cx="190" cy="60" r="5" fill="#16a34a"/>
 
-    <!-- LED Control Block (BLYNK_WRITE) -->
-    <rect x="10" y="125" width="180" height="75" fill="#0f172a" rx="4" stroke="#334155"/>
-    <text x="20" y="142" class="sub-text" fill="#f59e0b">รับคำสั่งควบคุม LED</text>
-    <text x="20" y="160" class="code-orange">BLYNK_WRITE(V1) {</text>
-    <text x="30" y="176" class="code-orange">  int state = param.asInt();</text>
-    <text x="30" y="191" class="code-orange">  digitalWrite(LED, state);</text>
-    <text x="20" y="195" class="code-orange">}</text>
-    <circle cx="190" cy="180" r="5" fill="#fb923c" class="glow-orange"/>
+    <!-- LED Control Block -->
+    <rect x="10" y="125" width="180" height="75" class="code-box"/>
+    <text x="20" y="142" class="text-sub">รับคำสั่งควบคุม LED</text>
+    <text x="20" y="160" class="text-code-amber">BLYNK_WRITE(V1) {</text>
+    <text x="30" y="176" class="text-code-amber">  int state = param.asInt();</text>
+    <text x="30" y="191" class="text-code-amber">  digitalWrite(LED, state);</text>
+    <text x="20" y="195" class="text-code-amber">}</text>
+    <circle cx="190" cy="180" r="5" fill="#d97706"/>
 
     <!-- Sync Trigger Block -->
-    <rect x="10" y="215" width="180" height="60" fill="#0f172a" rx="4" stroke="#334155"/>
-    <text x="20" y="232" class="sub-text" fill="#c084fc">ร้องขอสถานะล่าสุดเมื่อต่อเน็ต</text>
-    <text x="20" y="250" class="code-text" fill="#c084fc">BLYNK_CONNECTED() {</text>
-    <text x="30" y="268" class="code-text" fill="#c084fc">  Blynk.syncVirtual(V1);</text>
-    <text x="20" y="272" class="code-text" fill="#c084fc">}</text>
-    <circle cx="190" cy="260" r="5" fill="#c084fc" class="glow-purple"/>
+    <rect x="10" y="215" width="180" height="60" class="code-box"/>
+    <text x="20" y="232" class="text-sub">ร้องขอสถานะล่าสุดเมื่อต่อเน็ต</text>
+    <text x="20" y="250" class="text-code-purple" fill="#7c3aed">BLYNK_CONNECTED() {</text>
+    <text x="30" y="268" class="text-code-purple" fill="#7c3aed">  Blynk.syncVirtual(V1);</text>
+    <text x="20" y="272" class="text-code-purple" fill="#7c3aed">}</text>
+    <circle cx="190" cy="260" r="5" fill="#7c3aed"/>
   </g>
 
-  <!-- 2. MIDDLE CONTAINER: Blynk Cloud (State Broker) -->
+  <!-- 2. MIDDLE CONTAINER: Blynk Cloud (fill: #ffffff, stroke: #334155) -->
   <g transform="translate(370, 40)">
-    <rect x="0" y="0" width="80" height="290" class="cloud-box"/>
-    <text x="40" y="25" class="title-text" text-anchor="middle">☁️ Cloud</text>
+    <rect x="0" y="0" width="80" height="290" class="sub-box"/>
+    <text x="40" y="25" class="text-title" text-anchor="middle">☁️ Cloud</text>
     
-    <!-- Cloud Icon -->
-    <g transform="translate(20, 40)" fill="#4f46e5" opacity="0.6">
-      <path d="M10 20 a 10 10 0 0 1 10 -10 a 8 8 0 0 1 14 3 a 10 10 0 0 1 16 7 a 6 6 0 0 1 -6 6 h -28 a 6 6 0 0 1 -6 -6 z"/>
-    </g>
+    <!-- Cloud Icon (Flat style) -->
+    <path d="M 25,60 A 10,10 0 0 1 45,55 A 12,12 0 0 1 60,65 A 10,10 0 0 1 55,78 L 25,78 A 8,8 0 0 1 25,60 Z" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1.5"/>
 
-    <!-- Registers/Datastreams -->
-    <rect x="8" y="80" width="64" height="60" fill="#312e81" rx="4" stroke="#6366f1"/>
-    <text x="40" y="98" class="text-tag" text-anchor="middle">V0 (Float)</text>
-    <text x="40" y="118" font-size="10" fill="#94a3b8" text-anchor="middle">ข้อมูลเซนเซอร์</text>
-    <text x="40" y="132" font-size="11" font-weight="bold" fill="#38bdf8" text-anchor="middle">25.5 °C</text>
+    <!-- Registers / Datastreams -->
+    <!-- V0 Register -->
+    <rect x="8" y="90" width="64" height="55" class="code-box"/>
+    <text x="40" y="105" font-size="10" font-weight="bold" fill="#1e293b" text-anchor="middle">V0 (Float)</text>
+    <text x="40" y="120" font-size="9" fill="#64748b" text-anchor="middle">เซนเซอร์</text>
+    <text x="40" y="134" font-size="11" font-weight="bold" fill="#16a34a" text-anchor="middle">25.5 °C</text>
 
-    <rect x="8" y="180" width="64" height="60" fill="#581c87" rx="4" stroke="#a855f7"/>
-    <text x="40" y="198" class="text-tag" text-anchor="middle">V1 (Int)</text>
-    <text x="40" y="218" font-size="10" fill="#e9d5ff" text-anchor="middle">คำสั่งสวิตช์</text>
-    <text x="40" y="232" font-size="12" font-weight="bold" fill="#fb923c" text-anchor="middle">1 (ON)</text>
+    <!-- V1 Register -->
+    <rect x="8" y="180" width="64" height="55" class="code-box"/>
+    <text x="40" y="195" font-size="10" font-weight="bold" fill="#1e293b" text-anchor="middle">V1 (Int)</text>
+    <text x="40" y="210" font-size="9" fill="#64748b" text-anchor="middle">สวิตช์ไฟ</text>
+    <text x="40" y="224" font-size="11" font-weight="bold" fill="#d97706" text-anchor="middle">1 (ON)</text>
   </g>
 
-  <!-- 3. RIGHT CONTAINER: Blynk Mobile App / Dashboard -->
+  <!-- 3. RIGHT CONTAINER: Blynk Mobile App / Dashboard (fill: #ffffff, stroke: #334155) -->
   <g transform="translate(590, 40)">
-    <rect x="0" y="0" width="200" height="290" class="app-box"/>
-    <text x="100" y="25" class="title-text" text-anchor="middle">📱 แอปมือถือ Blynk</text>
+    <rect x="0" y="0" width="200" height="290" class="sub-box"/>
+    <text x="100" y="25" class="text-title" text-anchor="middle">📱 แอปมือถือ Blynk</text>
 
+    <!-- Mobile Frame Screen -->
     <rect x="25" y="45" width="150" height="230" class="app-screen"/>
-    <text x="100" y="62" font-size="10" fill="#475569" font-weight="bold" text-anchor="middle">ห้องทำงาน #1</text>
-    <line x1="40" y1="68" x2="160" y2="68" stroke="#1e293b" stroke-width="1"/>
+    <text x="100" y="62" font-size="10" fill="#334155" font-weight="bold" text-anchor="middle">ห้องทำงาน #1</text>
+    <line x1="40" y1="68" x2="160" y2="68" stroke="#cbd5e1" stroke-width="1"/>
 
     <!-- Widget Gauge (V0) -->
-    <rect x="40" y="80" width="120" height="60" class="widget-gauge"/>
-    <text x="100" y="96" font-size="10" fill="#94a3b8" text-anchor="middle">อุณหภูมิ (V0)</text>
-    <text x="100" y="118" font-size="16" font-weight="bold" fill="#22d3ee" text-anchor="middle">25.5 °C</text>
-    <path d="M 60,130 L 140,130" stroke="#0891b2" stroke-width="2"/>
-    <circle cx="100" cy="130" r="3" fill="#22d3ee"/>
+    <rect x="35" y="80" width="130" height="60" class="widget-gauge"/>
+    <text x="100" y="94" font-size="10" fill="#64748b" text-anchor="middle">อุณหภูมิ (V0)</text>
+    <text x="100" y="114" font-size="15" font-weight="bold" fill="#16a34a" text-anchor="middle">25.5 °C</text>
+    <path d="M 60,126 L 140,126" stroke="#16a34a" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="100" cy="126" r="3.5" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
 
     <!-- Widget Button (V1) -->
-    <rect x="40" y="170" width="120" height="60" class="widget-btn"/>
-    <text x="100" y="186" font-size="10" fill="#ffedd5" text-anchor="middle">ควบคุม LED (V1)</text>
-    <rect x="80" y="196" width="40" height="20" rx="10" fill="#f97316"/>
-    <circle cx="110" cy="206" r="8" fill="#ffffff" class="glow-orange"/>
-    <text x="100" y="246" font-size="9" fill="#94a3b8" text-anchor="middle">กดปุ่ม = เปลี่ยนสถานะในคลาวด์</text>
+    <rect x="35" y="170" width="130" height="60" class="widget-btn"/>
+    <text x="100" y="184" font-size="10" fill="#64748b" text-anchor="middle">ควบคุม LED (V1)</text>
+    <rect x="80" y="196" width="40" height="18" rx="9" class="btn-toggle"/>
+    <circle cx="111" cy="205" r="7.5" class="btn-knob"/>
+    <text x="100" y="246" font-size="9" fill="#94a3b8" text-anchor="middle">กดปุ่ม = เปลี่ยนค่าในคลาวด์</text>
   </g>
 
   <!-- Labels & Legends -->
-  <text x="300" y="90" font-size="10" fill="#38bdf8" text-anchor="middle">1. virtualWrite(V0)</text>
-  <text x="520" y="90" font-size="10" fill="#38bdf8" text-anchor="middle">2. Push ไปหน้าจอแอป</text>
+  <text x="300" y="90" font-size="10.5" fill="#16a34a" font-weight="bold" text-anchor="middle">1. virtualWrite(V0)</text>
+  <text x="520" y="90" font-size="10.5" fill="#16a34a" font-weight="bold" text-anchor="middle">2. พุชข้อมูลขึ้นหน้าจอ</text>
   
-  <text x="520" y="244" font-size="10" fill="#fb923c" text-anchor="middle">3. กดปุ่มเปิดไฟ V1 = 1</text>
-  <text x="300" y="244" font-size="10" fill="#fb923c" text-anchor="middle">4. คลาวด์ส่งคำสั่ง BLYNK_WRITE(V1)</text>
+  <text x="520" y="244" font-size="10.5" fill="#d97706" font-weight="bold" text-anchor="middle">3. เปลี่ยนค่าปุ่มสวิตช์</text>
+  <text x="300" y="244" font-size="10.5" fill="#d97706" font-weight="bold" text-anchor="middle">4. ส่งโค้ด BLYNK_WRITE(V1)</text>
 
-  <text x="300" y="345" font-size="10" fill="#c084fc" text-anchor="middle">5. syncVirtual(V1) โหลดสถานะล่าสุดตอนบู๊ต</text>
+  <text x="300" y="342" font-size="10.5" fill="#7c3aed" font-weight="bold" text-anchor="middle">5. syncVirtual(V1) โหลดสถานะล่าสุดเมื่อบู๊ต</text>
 </svg>
 <div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 9.2 สถาปัตยกรรม Virtual Pins และการทำงานประสานกัน (Synchronization) ระหว่างไมโครคอนโทรลเลอร์, Blynk Cloud และโมบายแอปพลิเคชัน</div>
 </div>

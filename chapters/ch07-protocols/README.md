@@ -69,15 +69,15 @@
 <div style="text-align: center; margin: 20px 0;">
 <svg viewBox="0 0 740 240" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
   <style>
-    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1; rx: 10px; }
-    .client-box { fill: #faf5ff; stroke: #a78bfa; stroke-width: 2; rx: 8px; }
-    .server-box { fill: #eff6ff; stroke: #60a5fa; stroke-width: 2; rx: 8px; }
-    .wire { fill: none; stroke: #cbd5e1; stroke-width: 2; }
-    .wire-active-req { fill: none; stroke: #a78bfa; stroke-width: 2; stroke-dasharray: 8 4; animation: flowReq 3s linear infinite; }
-    .wire-active-res { fill: none; stroke: #60a5fa; stroke-width: 2; stroke-dasharray: 8 4; animation: flowRes 3s linear infinite; }
-    .envelope-req { fill: #c084fc; stroke: #7e22ce; stroke-width: 1; rx: 3px; animation: moveReq 6s infinite cubic-bezier(0.4, 0, 0.2, 1); }
-    .envelope-res { fill: #93c5fd; stroke: #1d4ed8; stroke-width: 1; rx: 3px; animation: moveRes 6s infinite cubic-bezier(0.4, 0, 0.2, 1); }
-    .text-main { font-size: 13px; font-weight: 700; fill: #1e293b; }
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; rx: 12px; }
+    .client-box { fill: #faf5ff; stroke: #7c3aed; stroke-width: 2; rx: 8px; }
+    .server-box { fill: #ffffff; stroke: #334155; stroke-width: 2; rx: 4px; }
+    .wire { fill: none; stroke: #334155; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .wire-active-req { fill: none; stroke: #f59e0b; stroke-width: 2.5; stroke-dasharray: 8 4; stroke-linecap: round; animation: flowReq 3s linear infinite; }
+    .wire-active-res { fill: none; stroke: #16a34a; stroke-width: 2.5; stroke-dasharray: 8 4; stroke-linecap: round; animation: flowRes 3s linear infinite; }
+    .envelope-req { fill: #ffffff; stroke: #f59e0b; stroke-width: 2; rx: 3px; animation: moveReq 6s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+    .envelope-res { fill: #ffffff; stroke: #16a34a; stroke-width: 2; rx: 3px; animation: moveRes 6s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+    .text-main { font-size: 13px; font-weight: 700; fill: #334155; }
     .text-sub { font-size: 11px; fill: #64748b; }
     .text-code { font-family: monospace; font-size: 11px; fill: #7c3aed; font-weight: bold; }
     .text-title { font-size: 14px; font-weight: 800; fill: #0f172a; }
@@ -106,7 +106,7 @@
   
   <!-- ESP32 Client Box -->
   <rect x="25" y="60" width="135" height="120" class="client-box"/>
-  <text x="92.5" y="85" class="text-main" text-anchor="middle">ESP32 Client</text>
+  <text x="92.5" y="85" class="text-main" text-anchor="middle" fill="#7c3aed">ESP32 Client</text>
   <text x="92.5" y="105" class="text-sub" text-anchor="middle">ริเริ่มการเชื่อมต่อ TCP</text>
   <text x="92.5" y="125" class="text-sub" text-anchor="middle">ส่งข้อมูลตามตารางเวลา</text>
   <text x="92.5" y="150" class="text-code" text-anchor="middle">HTTP POST</text>
@@ -123,33 +123,33 @@
   <line x1="160" y1="100" x2="580" y2="100" class="wire"/>
   <line x1="160" y1="100" x2="580" y2="100" class="wire-active-req"/>
   <!-- Arrow top right -->
-  <path d="M 572 95 L 580 100 L 572 105 Z" fill="#7e22ce"/>
+  <path d="M 572 95 L 580 100 L 572 105 Z" fill="#f59e0b"/>
   
   <!-- Response Line (Bottom) -->
   <line x1="160" y1="150" x2="580" y2="150" class="wire"/>
   <line x1="160" y1="150" x2="580" y2="150" class="wire-active-res"/>
   <!-- Arrow bottom left -->
-  <path d="M 168 145 L 160 150 L 168 155 Z" fill="#1d4ed8"/>
+  <path d="M 168 145 L 160 150 L 168 155 Z" fill="#16a34a"/>
   
   <!-- Message Labels -->
   <!-- Request Info -->
-  <text x="370" y="85" class="text-sub" text-anchor="middle" fill="#7e22ce" font-weight="bold">HTTP Request: POST /data</text>
-  <text x="370" y="118" class="text-code" text-anchor="middle" fill="#7e22ce">{"device_id":"ESP32","temp":32.5}</text>
+  <text x="370" y="85" class="text-sub" text-anchor="middle" fill="#f59e0b" font-weight="bold">HTTP Request: POST /data</text>
+  <text x="370" y="118" class="text-code" text-anchor="middle" fill="#f59e0b">{"device_id":"ESP32","temp":32.5}</text>
   
   <!-- Response Info -->
-  <text x="370" y="175" class="text-sub" text-anchor="middle" fill="#1d4ed8" font-weight="bold">HTTP Response: 200 OK</text>
-  <text x="370" y="193" class="text-code" text-anchor="middle" fill="#1d4ed8">{"status":"success","id":128}</text>
+  <text x="370" y="175" class="text-sub" text-anchor="middle" fill="#16a34a" font-weight="bold">HTTP Response: 200 OK</text>
+  <text x="370" y="193" class="text-code" text-anchor="middle" fill="#16a34a">{"status":"success","id":128}</text>
   
   <!-- Request Envelope Icon -->
   <g class="envelope-req">
     <rect x="-15" y="-10" width="30" height="20" rx="2" />
-    <path d="M -15 -10 L 0 0 L 15 -10" fill="none" stroke="#7e22ce" stroke-width="1"/>
+    <path d="M -15 -10 L 0 0 L 15 -10" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
   </g>
   
   <!-- Response Envelope Icon -->
   <g class="envelope-res">
     <rect x="-15" y="-10" width="30" height="20" rx="2" />
-    <path d="M -15 -10 L 0 0 L 15 -10" fill="none" stroke="#1d4ed8" stroke-width="1"/>
+    <path d="M -15 -10 L 0 0 L 15 -10" fill="none" stroke="#16a34a" stroke-width="1.5"/>
   </g>
   
 </svg>
@@ -222,21 +222,21 @@ MQTT ทำงานแบบ **Publish/Subscribe (Pub/Sub)** ซึ่งต่
 <div style="text-align: center; margin: 20px 0;">
 <svg viewBox="0 0 760 270" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
   <style>
-    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1; rx: 10px; }
-    .pub-box { fill: #faf5ff; stroke: #a78bfa; stroke-width: 2; rx: 8px; }
-    .broker-box { fill: #fffbeb; stroke: #fcd34d; stroke-width: 2; rx: 8px; }
-    .sub-box { fill: #f0fdf4; stroke: #86efac; stroke-width: 2; rx: 8px; }
-    .dashboard-box { fill: #ecfeff; stroke: #06b6d4; stroke-width: 2; rx: 8px; }
-    .wire { fill: none; stroke: #cbd5e1; stroke-width: 2; }
-    .wire-pub { fill: none; stroke: #a78bfa; stroke-width: 2; stroke-dasharray: 6 4; animation: flowPub 3s linear infinite; }
-    .wire-sub1 { fill: none; stroke: #06b6d4; stroke-width: 2; stroke-dasharray: 6 4; animation: flowSub1 3s linear infinite; }
-    .wire-sub2 { fill: none; stroke: #86efac; stroke-width: 2; stroke-dasharray: 6 4; animation: flowSub2 3s linear infinite; }
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; rx: 12px; }
+    .pub-box { fill: #faf5ff; stroke: #7c3aed; stroke-width: 2; rx: 8px; }
+    .broker-box { fill: #ffffff; stroke: #334155; stroke-width: 2; rx: 4px; }
+    .sub-box { fill: #ffffff; stroke: #334155; stroke-width: 2; rx: 4px; }
+    .dashboard-box { fill: #ffffff; stroke: #334155; stroke-width: 2; rx: 4px; }
+    .wire { fill: none; stroke: #334155; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .wire-pub { fill: none; stroke: #f59e0b; stroke-width: 2.5; stroke-dasharray: 6 4; stroke-linecap: round; animation: flowPub 3s linear infinite; }
+    .wire-sub1 { fill: none; stroke: #16a34a; stroke-width: 2.5; stroke-dasharray: 6 4; stroke-linecap: round; animation: flowSub1 3s linear infinite; }
+    .wire-sub2 { fill: none; stroke: #16a34a; stroke-width: 2.5; stroke-dasharray: 6 4; stroke-linecap: round; animation: flowSub2 3s linear infinite; }
     
-    .msg-pub { fill: #c084fc; stroke: #7e22ce; stroke-width: 1; rx: 3px; animation: mqttPubCycle 6s infinite cubic-bezier(0.4, 0, 0.2, 1); }
-    .msg-sub1 { fill: #67e8f9; stroke: #0891b2; stroke-width: 1; rx: 3px; animation: mqttSub1Cycle 6s infinite cubic-bezier(0.4, 0, 0.2, 1); }
-    .msg-sub2 { fill: #a7f3d0; stroke: #059669; stroke-width: 1; rx: 3px; animation: mqttSub2Cycle 6s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+    .msg-pub { fill: #ffffff; stroke: #f59e0b; stroke-width: 2; rx: 3px; animation: mqttPubCycle 6s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+    .msg-sub1 { fill: #ffffff; stroke: #16a34a; stroke-width: 2; rx: 3px; animation: mqttSub1Cycle 6s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+    .msg-sub2 { fill: #ffffff; stroke: #16a34a; stroke-width: 2; rx: 3px; animation: mqttSub2Cycle 6s infinite cubic-bezier(0.4, 0, 0.2, 1); }
     
-    .text-main { font-size: 13px; font-weight: 700; fill: #1e293b; }
+    .text-main { font-size: 13px; font-weight: 700; fill: #334155; }
     .text-sub { font-size: 11px; fill: #64748b; }
     .text-code { font-family: monospace; font-size: 11px; fill: #7c3aed; font-weight: bold; }
     .text-title { font-size: 14px; font-weight: 800; fill: #0f172a; }
@@ -275,7 +275,7 @@ MQTT ทำงานแบบ **Publish/Subscribe (Pub/Sub)** ซึ่งต่
   
   <!-- Publisher Box -->
   <rect x="25" y="85" width="150" height="100" class="pub-box"/>
-  <text x="100" y="110" class="text-main" text-anchor="middle">ESP32 Publisher</text>
+  <text x="100" y="110" class="text-main" text-anchor="middle" fill="#7c3aed">ESP32 Publisher</text>
   <text x="100" y="130" class="text-sub" text-anchor="middle">ผู้เผยแพร่ข้อมูลอุณหภูมิ</text>
   <text x="100" y="150" class="text-sub" text-anchor="middle">Topic: home/temp</text>
   <text x="100" y="170" class="text-code" text-anchor="middle">temp: 32.5</text>
@@ -285,53 +285,53 @@ MQTT ทำงานแบบ **Publish/Subscribe (Pub/Sub)** ซึ่งต่
   <text x="380" y="110" class="text-main" text-anchor="middle">MQTT Broker</text>
   <text x="380" y="130" class="text-sub" text-anchor="middle">ตัวกลางคัดแยกข้อมูล</text>
   <text x="380" y="150" class="text-sub" text-anchor="middle">ตาม Topic</text>
-  <text x="380" y="170" class="text-code" text-anchor="middle" fill="#d97706">Mosquitto / HiveMQ</text>
+  <text x="380" y="170" class="text-code" text-anchor="middle" fill="#334155">Mosquitto / HiveMQ</text>
   
   <!-- Subscriber 1 (Web Dashboard) -->
   <rect x="585" y="30" width="150" height="85" class="dashboard-box"/>
   <text x="660" y="55" class="text-main" text-anchor="middle">Web Dashboard</text>
   <text x="660" y="75" class="text-sub" text-anchor="middle">Sub: home/temp</text>
-  <text x="660" y="98" class="text-code" text-anchor="middle" fill="#0891b2">Temp: 32.5 °C</text>
+  <text x="660" y="98" class="text-code" text-anchor="middle" fill="#16a34a">Temp: 32.5 °C</text>
   
   <!-- Subscriber 2 (Mobile App) -->
   <rect x="585" y="155" width="150" height="85" class="sub-box"/>
   <text x="660" y="180" class="text-main" text-anchor="middle">Mobile App</text>
   <text x="660" y="200" class="text-sub" text-anchor="middle">Sub: home/temp</text>
-  <text x="660" y="223" class="text-code" text-anchor="middle" fill="#059669">Temp: 32.5 °C</text>
+  <text x="660" y="223" class="text-code" text-anchor="middle" fill="#16a34a">Temp: 32.5 °C</text>
   
   <!-- Paths -->
   <!-- Pub to Broker -->
   <line x1="175" y1="135" x2="305" y2="135" class="wire"/>
   <line x1="175" y1="135" x2="305" y2="135" class="wire-pub"/>
-  <path d="M 297 130 L 305 135 L 297 140 Z" fill="#7e22ce"/>
+  <path d="M 297 130 L 305 135 L 297 140 Z" fill="#f59e0b"/>
   
   <!-- Broker to Sub 1 (Web Dashboard) -->
   <line x1="455" y1="110" x2="585" y2="72" class="wire"/>
   <line x1="455" y1="110" x2="585" y2="72" class="wire-sub1"/>
-  <path d="M 577 69 L 585 72 L 579 78 Z" fill="#0891b2"/>
+  <path d="M 577 69 L 585 72 L 579 78 Z" fill="#16a34a"/>
   
   <!-- Broker to Sub 2 (Mobile App) -->
   <line x1="455" y1="160" x2="585" y2="198" class="wire"/>
   <line x1="455" y1="160" x2="585" y2="198" class="wire-sub2"/>
-  <path d="M 579 192 L 585 198 L 577 201 Z" fill="#059669"/>
+  <path d="M 579 192 L 585 198 L 577 201 Z" fill="#16a34a"/>
   
   <!-- Message Envelope Icons -->
   <!-- Pub Envelope -->
   <g class="msg-pub">
     <rect x="-12" y="-8" width="24" height="16" rx="2" />
-    <path d="M -12 -8 L 0 0 L 12 -8" fill="none" stroke="#7e22ce" stroke-width="1"/>
+    <path d="M -12 -8 L 0 0 L 12 -8" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
   </g>
   
   <!-- Sub 1 Envelope -->
   <g class="msg-sub1">
     <rect x="-12" y="-8" width="24" height="16" rx="2" />
-    <path d="M -12 -8 L 0 0 L 12 -8" fill="none" stroke="#0891b2" stroke-width="1"/>
+    <path d="M -12 -8 L 0 0 L 12 -8" fill="none" stroke="#16a34a" stroke-width="1.5"/>
   </g>
   
   <!-- Sub 2 Envelope -->
   <g class="msg-sub2">
     <rect x="-12" y="-8" width="24" height="16" rx="2" />
-    <path d="M -12 -8 L 0 0 L 12 -8" fill="none" stroke="#059669" stroke-width="1"/>
+    <path d="M -12 -8 L 0 0 L 12 -8" fill="none" stroke="#16a34a" stroke-width="1.5"/>
   </g>
   
 </svg>

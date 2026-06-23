@@ -108,61 +108,18 @@ $$a_{RMS} = \sqrt{\frac{1}{N} \sum_{i=1}^{N} (a_{x,i}^2 + a_{y,i}^2 + a_{z,i}^2)
 <svg viewBox="0 0 820 400" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
   <title>องค์ประกอบของแพลตฟอร์ม IoT และการไหลของข้อมูล</title>
   <style>
-    .bg-main { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1.5; rx: 16px; }
-    .wire { fill: none; stroke: #cbd5e1; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
-    .telemetry-flow { fill: none; stroke: #10b981; stroke-width: 3; stroke-dasharray: 8 12; stroke-linecap: round; animation: flowMarch 2s linear infinite; }
-    .control-flow { fill: none; stroke: #8b5cf6; stroke-width: 3; stroke-dasharray: 8 12; stroke-linecap: round; animation: flowMarch 2s linear infinite; }
-    .text-main { font-size: 13.5px; font-weight: 700; fill: #0f172a; }
-    .text-sub { font-size: 11px; fill: #475569; font-weight: 500; }
-    .node-sensor { fill: url(#grad-sensor); stroke: #3b82f6; stroke-width: 1.5; rx: 8px; filter: url(#shadow); }
-    .node-ingestion { fill: url(#grad-ingestion); stroke: #10b981; stroke-width: 1.5; rx: 8px; filter: url(#shadow); }
-    .node-platform { fill: url(#grad-platform); stroke: #8b5cf6; stroke-width: 1.5; rx: 8px; filter: url(#shadow); }
-    .node-storage { fill: url(#grad-storage); stroke: #f97316; stroke-width: 1.5; rx: 8px; filter: url(#shadow); }
-    .node-deviceman { fill: url(#grad-deviceman); stroke: #a855f7; stroke-width: 1.5; rx: 8px; filter: url(#shadow); }
-    .node-device { fill: url(#grad-device); stroke: #d946ef; stroke-width: 1.5; rx: 8px; filter: url(#shadow); }
-    .node-vis { fill: url(#grad-vis); stroke: #0ea5e9; stroke-width: 1.5; rx: 8px; filter: url(#shadow); }
-    .node-dash { fill: url(#grad-dash); stroke: #06b6d4; stroke-width: 1.5; rx: 8px; filter: url(#shadow); }
+    .bg-main { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; rx: 12px; }
+    .wire { fill: none; stroke: #334155; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .telemetry-flow { fill: none; stroke: #16a34a; stroke-width: 3.5; stroke-dasharray: 10 12; stroke-linecap: round; animation: flowMarch 2.6s linear infinite; }
+    .control-flow { fill: none; stroke: #dc2626; stroke-width: 3.5; stroke-dasharray: 10 12; stroke-linecap: round; animation: flowMarch 2.6s linear infinite; }
+    .text-main { font-size: 13.5px; font-weight: 700; fill: #1e293b; }
+    .text-sub { font-size: 11px; fill: #64748b; font-weight: 500; }
+    .mcu-box { fill: #faf5ff; stroke: #7c3aed; stroke-width: 2; rx: 8px; }
+    .comp-box { fill: #ffffff; stroke: #334155; stroke-width: 2; rx: 4px; }
     @keyframes flowMarch {
-      to { stroke-dashoffset: -40; }
+      to { stroke-dashoffset: -44; }
     }
   </style>
-  <defs>
-    <linearGradient id="grad-sensor" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#eff6ff" />
-      <stop offset="100%" stop-color="#dbeafe" />
-    </linearGradient>
-    <linearGradient id="grad-ingestion" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ecfdf5" />
-      <stop offset="100%" stop-color="#d1fae5" />
-    </linearGradient>
-    <linearGradient id="grad-platform" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f5f3ff" />
-      <stop offset="100%" stop-color="#ede9fe" />
-    </linearGradient>
-    <linearGradient id="grad-storage" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#fff7ed" />
-      <stop offset="100%" stop-color="#ffedd5" />
-    </linearGradient>
-    <linearGradient id="grad-deviceman" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#faf5ff" />
-      <stop offset="100%" stop-color="#f3e8ff" />
-    </linearGradient>
-    <linearGradient id="grad-device" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#fdf4ff" />
-      <stop offset="100%" stop-color="#fae8ff" />
-    </linearGradient>
-    <linearGradient id="grad-vis" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f0f9ff" />
-      <stop offset="100%" stop-color="#e0f2fe" />
-    </linearGradient>
-    <linearGradient id="grad-dash" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ecfeff" />
-      <stop offset="100%" stop-color="#cffafe" />
-    </linearGradient>
-    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.06" />
-    </filter>
-  </defs>
 
   <rect x="5" y="5" width="810" height="390" class="bg-main"/>
 
@@ -186,43 +143,43 @@ $$a_{RMS} = \sqrt{\frac{1}{N} \sum_{i=1}^{N} (a_{x,i}^2 + a_{y,i}^2 + a_{z,i}^2)
   <path d="M 415 255 L 415 295" class="control-flow"/>
 
   <!-- Nodes -->
-  <!-- 1. เซนเซอร์ / ฮาร์ดแวร์ -->
-  <rect x="20" y="40" width="160" height="70" class="node-sensor"/>
+  <!-- 1. เซนเซอร์ / ฮาร์ดแวร์ (MCU) -->
+  <rect x="20" y="40" width="160" height="70" class="mcu-box"/>
   <text x="100" y="68" class="text-main" text-anchor="middle">เซนเซอร์ / ฮาร์ดแวร์</text>
   <text x="100" y="88" class="text-sub" text-anchor="middle">(ESP32, Sensor)</text>
 
-  <!-- 2. การรับเข้าข้อมูล -->
-  <rect x="240" y="40" width="160" height="70" class="node-ingestion"/>
+  <!-- 2. การรับเข้าข้อมูล (Component) -->
+  <rect x="240" y="40" width="160" height="70" class="comp-box"/>
   <text x="320" y="68" class="text-main" text-anchor="middle">การรับเข้าข้อมูล</text>
   <text x="320" y="88" class="text-sub" text-anchor="middle">(Ingestion: MQTT/HTTP)</text>
 
-  <!-- 3. แพลตฟอร์ม IoT -->
-  <rect x="460" y="40" width="160" height="70" class="node-platform"/>
+  <!-- 3. แพลตฟอร์ม IoT (MCU/Platform Core) -->
+  <rect x="460" y="40" width="160" height="70" class="mcu-box"/>
   <text x="540" y="68" class="text-main" text-anchor="middle">แพลตฟอร์ม IoT</text>
   <text x="540" y="88" class="text-sub" text-anchor="middle">(Blynk Cloud Core)</text>
 
-  <!-- 4. คลังข้อมูลอนุกรมเวลา -->
-  <rect x="680" y="40" width="120" height="70" class="node-storage"/>
+  <!-- 4. คลังข้อมูลอนุกรมเวลา (Component) -->
+  <rect x="680" y="40" width="120" height="70" class="comp-box"/>
   <text x="740" y="68" class="text-main" text-anchor="middle">คลังข้อมูล</text>
   <text x="740" y="88" class="text-sub" text-anchor="middle">(Storage: TSDB)</text>
 
-  <!-- 5. จัดการอุปกรณ์ -->
-  <rect x="330" y="195" width="170" height="60" class="node-deviceman"/>
+  <!-- 5. จัดการอุปกรณ์ (Component) -->
+  <rect x="330" y="195" width="170" height="60" class="comp-box"/>
   <text x="415" y="223" class="text-main" text-anchor="middle">ระบบจัดการอุปกรณ์</text>
   <text x="415" y="241" class="text-sub" text-anchor="middle">(Device Management)</text>
 
-  <!-- 6. จัดการบอร์ด -->
-  <rect x="330" y="295" width="170" height="60" class="node-device"/>
+  <!-- 6. จัดการบอร์ด (MCU side) -->
+  <rect x="330" y="295" width="170" height="60" class="mcu-box"/>
   <text x="415" y="323" class="text-main" text-anchor="middle">ลงทะเบียนบอร์ด / OTA</text>
   <text x="415" y="341" class="text-sub" text-anchor="middle">(Board Provisioning)</text>
 
-  <!-- 7. การแสดงผลข้อมูล -->
-  <rect x="530" y="195" width="170" height="60" class="node-vis"/>
+  <!-- 7. การแสดงผลข้อมูล (Component) -->
+  <rect x="530" y="195" width="170" height="60" class="comp-box"/>
   <text x="615" y="223" class="text-main" text-anchor="middle">ส่วนแสดงผลข้อมูล</text>
   <text x="615" y="241" class="text-sub" text-anchor="middle">(Visualization)</text>
 
-  <!-- 8. หน้าจอควบคุม -->
-  <rect x="530" y="295" width="170" height="60" class="node-dash"/>
+  <!-- 8. หน้าจอควบคุม (Component) -->
+  <rect x="530" y="295" width="170" height="60" class="comp-box"/>
   <text x="615" y="323" class="text-main" text-anchor="middle">หน้าจอควบคุม</text>
   <text x="615" y="341" class="text-sub" text-anchor="middle">(Dashboard / App)</text>
 </svg>

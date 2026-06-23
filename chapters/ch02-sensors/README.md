@@ -206,6 +206,43 @@ $$T = \frac{R_{RTD} - R_0}{R_0 \cdot \alpha} = \frac{R_{RTD} - 100}{100 \cdot 0.
 - ESP32 มี ADC (Analog-to-Digital Converter) ขนาด 12 บิต แปลงแรงดัน 0–3.3 V เป็นค่าดิจิทัล 0–4095
 - ขาที่ใช้ได้: GPIO 32–39 (ADC1) และ GPIO 0, 2, 4, 12–15, 25–27 (ADC2)
 
+<div style="text-align: center; margin: 20px 0;">
+<svg viewBox="0 0 700 120" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+  <style>
+    .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1; rx: 8px; }
+    .mcu { fill: #faf5ff; stroke: #a78bfa; stroke-width: 2; rx: 8px; }
+    .sensor { fill: #eff6ff; stroke: #60a5fa; stroke-width: 2; rx: 8px; }
+    .wire-bg { fill: none; stroke: #cbd5e1; stroke-width: 2; }
+    .wire-flow { fill: none; stroke: #3b82f6; stroke-width: 3; stroke-dasharray: 200; stroke-linecap: round; animation: analogFlow 3s linear infinite; }
+    .pulse-dot { fill: #ef4444; }
+    .text-main { font-size: 13px; font-weight: 700; fill: #1e293b; }
+    .text-sub { font-size: 11px; fill: #64748b; }
+    .text-code { font-family: monospace; font-size: 12px; fill: #7c3aed; font-weight: bold; }
+    @keyframes analogFlow {
+      0% { stroke-dashoffset: 200; }
+      100% { stroke-dashoffset: 0; }
+    }
+  </style>
+  <rect x="5" y="5" width="690" height="110" class="bg"/>
+  <rect x="20" y="20" width="130" height="70" class="sensor"/>
+  <text x="85" y="45" class="text-main" text-anchor="middle">เซนเซอร์แอนะล็อก</text>
+  <text x="85" y="62" class="text-sub" text-anchor="middle">(เช่น LM35, LDR)</text>
+  <text x="85" y="78" class="text-sub" text-anchor="middle" fill="#2563eb" font-weight="bold">แรงดันต่อเนื่อง (V)</text>
+  <rect x="530" y="20" width="150" height="70" class="mcu"/>
+  <text x="605" y="42" class="text-main" text-anchor="middle">ESP32 (ADC1 ขา 34)</text>
+  <text x="605" y="60" class="text-sub" text-anchor="middle">อ่านค่าแอนะล็อก 12 บิต</text>
+  <text x="605" y="78" class="text-code" text-anchor="middle">analogRead(34) ➔ 0-4095</text>
+  <path d="M 150 55 C 230 15, 270 95, 340 55 C 410 15, 450 95, 530 55" class="wire-bg"/>
+  <path id="analogPath" d="M 150 55 C 230 15, 270 95, 340 55 C 410 15, 450 95, 530 55" class="wire-flow"/>
+  <circle r="5" class="pulse-dot">
+    <animateMotion dur="3s" repeatCount="indefinite">
+      <mpath href="#analogPath"/>
+    </animateMotion>
+  </circle>
+  <text x="340" y="100" class="text-sub" text-anchor="middle" fill="#475569">สัญญาณแรงดันเปลี่ยนแปลงต่อเนื่องตามปริมาณกายภาพ</text>
+</svg>
+</div>
+
 **ตัวอย่างการอ่านค่าแอนะล็อก (Wokwi):**
 
 ```cpp
@@ -241,6 +278,43 @@ void loop() {
 *   **เซนเซอร์ตรวจจับสิ่งกีดขวางอินฟราเรด (IR Obstacle Sensor):** ส่ง $LOW$ เมื่อตรวจพบวัตถุสะท้อนแสงกลับ และส่ง $HIGH$ เมื่อทางสะดวก
 *   **สวิตช์ปุ่มกด (Push Button Switch):** ส่งสัญญาณลอจิกเปลี่ยนไปเมื่อปุ่มโดนกด
 
+<div style="text-align: center; margin: 20px 0;">
+<svg viewBox="0 0 700 120" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+  <style>
+    .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1; rx: 8px; }
+    .mcu { fill: #faf5ff; stroke: #a78bfa; stroke-width: 2; rx: 8px; }
+    .sensor { fill: #eff6ff; stroke: #60a5fa; stroke-width: 2; rx: 8px; }
+    .wire-bg { fill: none; stroke: #cbd5e1; stroke-width: 2; }
+    .wire-flow { fill: none; stroke: #10b981; stroke-width: 3; stroke-dasharray: 200; stroke-linecap: round; animation: digitalFlow 2s linear infinite; }
+    .pulse-square { fill: #ef4444; }
+    .text-main { font-size: 13px; font-weight: 700; fill: #1e293b; }
+    .text-sub { font-size: 11px; fill: #64748b; }
+    .text-code { font-family: monospace; font-size: 12px; fill: #7c3aed; font-weight: bold; }
+    @keyframes digitalFlow {
+      0% { stroke-dashoffset: 200; }
+      100% { stroke-dashoffset: 0; }
+    }
+  </style>
+  <rect x="5" y="5" width="690" height="110" class="bg"/>
+  <rect x="20" y="20" width="130" height="70" class="sensor"/>
+  <text x="85" y="45" class="text-main" text-anchor="middle">เซนเซอร์ดิจิทัลตรง</text>
+  <text x="85" y="62" class="text-sub" text-anchor="middle">(เช่น PIR, IR)</text>
+  <text x="85" y="78" class="text-sub" text-anchor="middle" fill="#059669" font-weight="bold">HIGH (3.3V) / LOW (0V)</text>
+  <rect x="530" y="20" width="150" height="70" class="mcu"/>
+  <text x="605" y="42" class="text-main" text-anchor="middle">ESP32 (GPIO 19)</text>
+  <text x="605" y="60" class="text-sub" text-anchor="middle">อ่านค่าสถานะดิจิทัลตรง</text>
+  <text x="605" y="78" class="text-code" text-anchor="middle">digitalRead(19) ➔ 1 / 0</text>
+  <path d="M 150 75 L 210 75 L 210 35 L 280 35 L 280 75 L 350 75 L 350 35 L 420 35 L 420 75 L 530 75" class="wire-bg"/>
+  <path id="digitalPath" d="M 150 75 L 210 75 L 210 35 L 280 35 L 280 75 L 350 75 L 350 35 L 420 35 L 420 75 L 530 75" class="wire-flow"/>
+  <circle r="5" class="pulse-square">
+    <animateMotion dur="2s" repeatCount="indefinite">
+      <mpath href="#digitalPath"/>
+    </animateMotion>
+  </circle>
+  <text x="340" y="100" class="text-sub" text-anchor="middle" fill="#475569">สัญญาณเปลี่ยนสถานะสลับพัลส์เหลี่ยม HIGH หรือ LOW ทันทีตามสถานะ</text>
+</svg>
+</div>
+
 #### 2. สัญญาณโปรโตคอลการสื่อสารข้อมูลดิจิทัล (Digital Communication Protocols)
 เซนเซอร์สมัยใหม่จำนวนมากทำหน้าที่ประมวลผลสัญญาณและแปลงเป็นข้อมูลตัวเลขสำเร็จรูปอยู่ภายในชิป จากนั้นจึงส่งข้อมูลที่เป็นชุดบิต (Data Packet) ผ่านพอร์ตสื่อสารแบบอนุกรม (Serial Communication Bus) ไปยัง ESP32 โปรโตคอลหลักที่ใช้งานมีดังนี้:
 
@@ -253,6 +327,67 @@ void loop() {
 *   **ความสามารถพิเศษ:** รองรับการเชื่อมต่ออุปกรณ์เซนเซอร์หลายตัว (Multi-drop) บนบัสเดียวกัน โดยใช้รหัสแอดเดรสระบุตัวเซนเซอร์ (Device Address เช่น $0x76$ หรือ $0x68$) ขนาด 7 บิต ทำให้สามารถต่อเซนเซอร์ต่างชนิดกัน เช่น BMP280 และ MPU6050 เข้ากับขาคู่เดียวกันบน ESP32 ได้โดยไม่สับสน
 *   **ความเร็วระดับมาตรฐาน:** $100\text{ kbps}$ (Standard Mode) และ $400\text{ kbps}$ (Fast Mode)
 
+<div style="text-align: center; margin: 20px 0;">
+<svg viewBox="0 0 700 180" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+  <style>
+    .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1; rx: 8px; }
+    .mcu { fill: #faf5ff; stroke: #a78bfa; stroke-width: 2; rx: 8px; }
+    .sensor { fill: #eff6ff; stroke: #60a5fa; stroke-width: 2; rx: 8px; }
+    .line-scl { fill: none; stroke: #f59e0b; stroke-width: 2; }
+    .line-sda { fill: none; stroke: #10b981; stroke-width: 2; }
+    .scl-pulse { fill: none; stroke: #d97706; stroke-width: 2; stroke-dasharray: 10 5; animation: clockPulse 1.5s linear infinite; }
+    .sda-packet { fill: #ef4444; stroke: #ffffff; stroke-width: 1; }
+    .packet-label { font-size: 8px; fill: #ffffff; font-weight: bold; font-family: monospace; }
+    .text-main { font-size: 12px; font-weight: 700; fill: #1e293b; }
+    .text-sub { font-size: 10px; fill: #64748b; }
+    .text-bus { font-size: 11px; font-weight: 800; font-family: monospace; }
+    @keyframes clockPulse {
+      to { stroke-dashoffset: -15; }
+    }
+  </style>
+  <rect x="5" y="5" width="690" height="170" class="bg"/>
+  <rect x="20" y="45" width="120" height="90" class="mcu"/>
+  <text x="80" y="75" class="text-main" text-anchor="middle">ESP32</text>
+  <text x="80" y="95" class="text-sub" text-anchor="middle">(I2C Master)</text>
+  <text x="80" y="115" class="text-sub" text-anchor="middle" fill="#7c3aed" font-weight="bold">GPIO 21, 22</text>
+  <line x1="140" y1="75" x2="520" y2="75" class="line-scl"/>
+  <line x1="140" y1="75" x2="520" y2="75" class="scl-pulse"/>
+  <text x="160" y="68" class="text-bus" fill="#d97706">SCL (Clock)</text>
+  <line x1="140" y1="105" x2="520" y2="105" class="line-sda"/>
+  <text x="160" y="120" class="text-bus" fill="#059669">SDA (Data)</text>
+  <rect x="520" y="20" width="150" height="60" class="sensor"/>
+  <text x="595" y="42" class="text-main" text-anchor="middle">BMP280</text>
+  <text x="595" y="58" class="text-sub" text-anchor="middle">Address: 0x76 (Sensor 1)</text>
+  <line x1="520" y1="75" x2="480" y2="75" stroke="#cbd5e1" stroke-width="1.5"/>
+  <line x1="520" y1="45" x2="450" y2="45" stroke="#cbd5e1" stroke-width="1.5"/>
+  <line x1="450" y1="45" x2="450" y2="105" stroke="#cbd5e1" stroke-width="1.5"/>
+  <rect x="520" y="100" width="150" height="60" class="sensor"/>
+  <text x="595" y="122" class="text-main" text-anchor="middle">MPU6050</text>
+  <text x="595" y="138" class="text-sub" text-anchor="middle">Address: 0x68 (Sensor 2)</text>
+  <circle cx="450" cy="105" r="3" fill="#10b981"/>
+  <circle cx="480" cy="75" r="3" fill="#f59e0b"/>
+  <g>
+    <rect x="0" y="0" width="45" height="14" rx="3" class="sda-packet">
+      <animateMotion path="M 140 105 L 520 105" dur="4s" repeatCount="indefinite" />
+    </rect>
+    <text x="0" y="0" class="packet-label" text-anchor="middle" transform="translate(22, 10)">
+      ADDR 0x76
+      <animateMotion path="M 140 105 L 520 105" dur="4s" repeatCount="indefinite" />
+    </text>
+  </g>
+  <g>
+    <rect x="0" y="0" width="45" height="14" rx="3" fill="#3b82f6" stroke="#ffffff" stroke-width="1">
+      <animateMotion path="M 520 105 L 140 105" dur="4s" begin="2s" repeatCount="indefinite" />
+    </rect>
+    <text x="0" y="0" class="packet-label" text-anchor="middle" transform="translate(22, 10)">
+      DATA: 25C
+      <animateMotion path="M 520 105 L 140 105" dur="4s" begin="2s" repeatCount="indefinite" />
+    </text>
+  </g>
+  <text x="340" y="160" class="text-sub" text-anchor="middle" fill="#475569">SDA ส่งที่อยู่เพื่อเรียกเซนเซอร์ (ADDR) และเซนเซอร์จะตอบรับและส่งข้อมูล (DATA) กลับมาในสายสัญญาณเส้นเดิม</text>
+</svg>
+</div>
+
 #### B. SPI (Serial Peripheral Interface)
 โปรโตคอลการสื่อสารความเร็วสูงแบบ Synchronous พัฒนาโดย Motorola เหมาะสำหรับการส่งข้อมูลปริมาณมาก เช่น หน้าจอแสดงผลกราฟิก หรือเซนเซอร์ความละเอียดสูง
 *   **ลักษณะทางกายภาพ:** ใช้สายสัญญาณหลัก 4 เส้น:
@@ -264,12 +399,137 @@ void loop() {
 *   **ความสามารถพิเศษ:** ทำงานได้รวดเร็วกว่า I2C มาก (ระดับความเร็วสูงสุดถึงหลักหลายสิบ MHz) เนื่องจากไม่ต้องจัดการส่งแอดเดรสบิตผ่านข้อมูลสายหลัก แต่ใช้สายฮาร์ดแวร์ CS ในการเลือกว่าจะติดต่อกับอุปกรณ์ตัวใดโดยเฉพาะแทน
 *   **ข้อจำกัด:** เมื่อจำนวนเซนเซอร์เพิ่มขึ้น จะต้องเปลืองขา GPIO ของ ESP32 เพิ่มตามจำนวนเซนเซอร์เพื่อนำไปทำเป็นขา CS ของเซนเซอร์แต่ละตัว
 
+<div style="text-align: center; margin: 20px 0;">
+<svg viewBox="0 0 700 240" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+  <style>
+    .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1; rx: 8px; }
+    .mcu { fill: #faf5ff; stroke: #a78bfa; stroke-width: 2; rx: 8px; }
+    .sensor { fill: #eff6ff; stroke: #60a5fa; stroke-width: 2; rx: 8px; }
+    .wire { fill: none; stroke: #cbd5e1; stroke-width: 1.5; }
+    .wire-active { fill: none; stroke: #3b82f6; stroke-width: 2; }
+    .wire-cs-low { fill: none; stroke: #ef4444; stroke-width: 2; }
+    .wire-cs-high { fill: none; stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 3 3; }
+    .text-main { font-size: 12px; font-weight: 700; fill: #1e293b; }
+    .text-sub { font-size: 10px; fill: #64748b; }
+    .text-bus { font-size: 10px; font-weight: bold; font-family: monospace; fill: #475569; }
+    .packet-mosi { fill: #ec4899; stroke: #ffffff; stroke-width: 1; }
+    .packet-miso { fill: #10b981; stroke: #ffffff; stroke-width: 1; }
+    .packet-label { font-size: 8px; fill: #ffffff; font-weight: bold; font-family: monospace; }
+  </style>
+  <rect x="5" y="5" width="690" height="230" class="bg"/>
+  <rect x="20" y="45" width="120" height="150" class="mcu"/>
+  <text x="80" y="110" class="text-main" text-anchor="middle">ESP32</text>
+  <text x="80" y="130" class="text-sub" text-anchor="middle">(SPI Master)</text>
+  <line x1="140" y1="65" x2="520" y2="65" class="wire"/>
+  <text x="150" y="60" class="text-bus">SCK (Clock)</text>
+  <line x1="140" y1="95" x2="520" y2="95" class="wire-active"/>
+  <text x="150" y="90" class="text-bus" fill="#db2777">MOSI (Data Out)</text>
+  <line x1="140" y1="125" x2="520" y2="125" class="wire-active"/>
+  <text x="150" y="120" class="text-bus" fill="#059669">MISO (Data In)</text>
+  <path d="M 140 165 L 450 165 L 450 170 L 520 170" class="wire-cs-low"/>
+  <text x="150" y="160" class="text-bus" fill="#dc2626">CS A (Active LOW ➔ Enabled)</text>
+  <path d="M 140 185 L 480 185 L 480 200 L 520 200" class="wire-cs-high"/>
+  <text x="150" y="195" class="text-bus" fill="#94a3b8">CS B (Standby HIGH ➔ Disabled)</text>
+  <rect x="520" y="30" width="150" height="80" class="sensor"/>
+  <text x="595" y="65" class="text-main" text-anchor="middle">Sensor A</text>
+  <text x="595" y="85" class="text-sub" text-anchor="middle">(SPI Slave 1 - Active)</text>
+  <rect x="520" y="150" width="150" height="70" class="sensor" style="opacity: 0.5;"/>
+  <text x="595" y="185" class="text-main" text-anchor="middle" style="opacity: 0.5;">Sensor B</text>
+  <text x="595" y="200" class="text-sub" text-anchor="middle" style="opacity: 0.5;">(Disabled)</text>
+  <circle cx="450" cy="95" r="3" fill="#cbd5e1"/>
+  <circle cx="450" cy="125" r="3" fill="#cbd5e1"/>
+  <g>
+    <rect x="0" y="0" width="40" height="12" rx="2" class="packet-mosi">
+      <animateMotion path="M 140 95 L 520 95" dur="3s" repeatCount="indefinite" />
+    </rect>
+    <text x="0" y="0" class="packet-label" text-anchor="middle" transform="translate(20, 9)">
+      WRITE
+      <animateMotion path="M 140 95 L 520 95" dur="3s" repeatCount="indefinite" />
+    </text>
+  </g>
+  <g>
+    <rect x="0" y="0" width="40" height="12" rx="2" class="packet-miso">
+      <animateMotion path="M 520 125 L 140 125" dur="3s" repeatCount="indefinite" />
+    </rect>
+    <text x="0" y="0" class="packet-label" text-anchor="middle" transform="translate(20, 9)">
+      READ
+      <animateMotion path="M 520 125 L 140 125" dur="3s" repeatCount="indefinite" />
+    </text>
+  </g>
+  <text x="350" y="222" class="text-sub" text-anchor="middle" fill="#475569">การส่งข้อมูลแบบ Full-Duplex: ข้อมูลไหลผ่าน MOSI และ MISO พร้อมกันในรอบบัสเดียว เมื่อขา CS A ถูกดึงลงต่ำ (LOW)</text>
+</svg>
+</div>
+
 #### C. One-Wire
 โปรโตคอลการสื่อสารที่เป็นสิทธิบัตรของ Dallas Semiconductor (ปัจจุบันคือ Maxim Integrated) ออกแบบมาเพื่อเน้นการเชื่อมต่อที่ประหยัดสายสัญญาณและอุปกรณ์มีราคาประหยัด
 *   **ลักษณะทางกายภาพ:** ใช้สายสัญญาณรับส่งข้อมูลเพียง **1 เส้น** (Data Line) ร่วมกับสายกราวด์ (GND) และต้องการตัวต้านทาน Pull-up (มักใช้ $4.7\text{ k}\Omega$)
 *   **การเชื่อมต่อ:** เป็นการรับ-ส่งข้อมูลทิศทางเดียวสลับเวลา (Half-Duplex) บนสายสัญญาณเส้นเดียว
 *   **ความสามารถพิเศษ:** อุปกรณ์ One-Wire ทุกตัวมีรหัสระบุตัวตน 64 บิตที่เป็นเอกลักษณ์เฉพาะตัว (Unique ROM ID) ฝังมาจากโรงงาน ทำให้เราสามารถต่อเซนเซอร์ One-Wire ชนิดเดียวกัน เช่น เซนเซอร์วัดอุณหภูมิกันน้ำ DS18B20 หลายสิบตัวขนานกันบนสายข้อมูลเส้นเดียว และสั่งอ่านอุณหภูมิทีละตัวได้โดยใช้สายทองแดงเพียงชุดเดียวไปตามพื้นที่ต่างๆ
 *   **ตัวอย่างการประยุกต์ใช้:** เซนเซอร์ DHT22 (วัดอุณหภูมิและความชื้น) และ DS18B20 (วัดอุณหภูมิความละเอียดสูงชนิดกันน้ำ)
+
+<div style="text-align: center; margin: 20px 0;">
+<svg viewBox="0 0 700 200" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+  <style>
+    .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1; rx: 8px; }
+    .mcu { fill: #faf5ff; stroke: #a78bfa; stroke-width: 2; rx: 8px; }
+    .sensor { fill: #eff6ff; stroke: #60a5fa; stroke-width: 2; rx: 8px; }
+    .wire-one { fill: none; stroke: #2563eb; stroke-width: 2; }
+    .wire-pullup { fill: none; stroke: #ef4444; stroke-width: 1.5; }
+    .resistor { fill: #fff; stroke: #64748b; stroke-width: 1.5; }
+    .text-main { font-size: 12px; font-weight: 700; fill: #1e293b; }
+    .text-sub { font-size: 10px; fill: #64748b; }
+    .text-bus { font-size: 10px; font-weight: bold; font-family: monospace; fill: #2563eb; }
+    .packet-cmd { fill: #6366f1; stroke: #ffffff; stroke-width: 1; }
+    .packet-reply { fill: #f59e0b; stroke: #ffffff; stroke-width: 1; }
+    .packet-label { font-size: 7px; fill: #ffffff; font-weight: bold; font-family: monospace; }
+  </style>
+  <rect x="5" y="5" width="690" height="190" class="bg"/>
+  <rect x="20" y="50" width="120" height="80" class="mcu"/>
+  <text x="80" y="85" class="text-main" text-anchor="middle">ESP32</text>
+  <text x="80" y="105" class="text-sub" text-anchor="middle">(One-Wire Master)</text>
+  <line x1="140" y1="90" x2="520" y2="90" class="wire-one"/>
+  <text x="150" y="82" class="text-bus">DQ (Single Data Line)</text>
+  <line x1="220" y1="90" x2="220" y2="30" class="wire-pullup"/>
+  <rect x="212" y="42" width="16" height="25" rx="2" class="resistor"/>
+  <line x1="212" y1="47" x2="228" y2="47" stroke="#fbbf24" stroke-width="2"/>
+  <line x1="212" y1="52" x2="228" y2="52" stroke="#a78bfa" stroke-width="2"/>
+  <line x1="212" y1="57" x2="228" y2="57" stroke="#dc2626" stroke-width="2"/>
+  <text x="235" y="48" class="text-sub" font-weight="bold">Pull-up</text>
+  <text x="235" y="58" class="text-sub">4.7 kΩ</text>
+  <text x="220" y="24" class="text-bus" fill="#dc2626" text-anchor="middle">VCC (3.3V)</text>
+  <rect x="520" y="25" width="150" height="50" class="sensor"/>
+  <text x="595" y="45" class="text-main" text-anchor="middle">DS18B20 #1</text>
+  <text x="595" y="60" class="text-sub" text-anchor="middle">ID: 0x28...12A</text>
+  <line x1="520" y1="50" x2="400" y2="50" stroke="#cbd5e1" stroke-width="1.5"/>
+  <line x1="400" y1="50" x2="400" y2="90" stroke="#cbd5e1" stroke-width="1.5"/>
+  <circle cx="400" cy="90" r="3" fill="#2563eb"/>
+  <rect x="520" y="105" width="150" height="50" class="sensor"/>
+  <text x="595" y="125" class="text-main" text-anchor="middle">DS18B20 #2</text>
+  <text x="595" y="140" class="text-sub" text-anchor="middle">ID: 0x28...98B</text>
+  <line x1="520" y1="130" x2="470" y2="130" stroke="#cbd5e1" stroke-width="1.5"/>
+  <line x1="470" y1="130" x2="470" y2="90" stroke="#cbd5e1" stroke-width="1.5"/>
+  <circle cx="470" cy="90" r="3" fill="#2563eb"/>
+  <g>
+    <rect x="0" y="0" width="55" height="12" rx="2" class="packet-cmd">
+      <animateMotion path="M 140 90 L 520 90" dur="4s" repeatCount="indefinite" />
+    </rect>
+    <text x="0" y="0" class="packet-label" text-anchor="middle" transform="translate(27, 9)">
+      REQ #98B
+      <animateMotion path="M 140 90 L 520 90" dur="4s" repeatCount="indefinite" />
+    </text>
+  </g>
+  <g>
+    <rect x="0" y="0" width="55" height="12" rx="2" class="packet-reply">
+      <animateMotion path="M 520 90 L 140 90" dur="4s" begin="2s" repeatCount="indefinite" />
+    </rect>
+    <text x="0" y="0" class="packet-label" text-anchor="middle" transform="translate(27, 9)">
+      TEMP: 26.8C
+      <animateMotion path="M 520 90 L 140 90" dur="4s" begin="2s" repeatCount="indefinite" />
+    </text>
+  </g>
+  <text x="350" y="178" class="text-sub" text-anchor="middle" fill="#475569">การสื่อสารแบบ Half-Duplex: ใช้สายส่งข้อมูล 1 เส้นร่วมกัน โดย Master ส่งรหัสเรียกเซนเซอร์ แล้วเซนเซอร์ส่งข้อมูลกลับในสายเดิม</text>
+</svg>
+</div>
 
 ### 2.4.3 เปรียบเทียบการเชื่อมต่อ
 

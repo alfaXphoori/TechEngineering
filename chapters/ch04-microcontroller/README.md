@@ -1263,8 +1263,8 @@ void loop() {
   </g>
 
   <!-- Arrow: COOLDOWN → IDLE (Timer 10s) via right side -->
-  <path d="M500,414 L630,414 Q680,414 680,208 Q680,140 490,174" class="arrow" fill="none" stroke="#334155" stroke-width="2"/>
-  <text x="690" y="300" class="lbl-edge" text-anchor="middle" transform="rotate(-90,690,300)">Timer 10s หมดลง → กลับ IDLE</text>
+  <path d="M500,400 Q518,400 518,382 L518,192 Q518,174 490,174" class="arrow" fill="none" stroke="#334155" stroke-width="2"/>
+  <text x="528" y="235" class="lbl-edge" fill="#334155" text-anchor="start">Timer 10s หมดลง → กลับ IDLE</text>
 
   <!-- FAULT arrow from IDLE (Sensor Error / Temp > 95°C) — left side -->
   <path d="M270,174 Q120,174 120,418" class="arrow-fault"/>
@@ -1282,11 +1282,11 @@ void loop() {
   </g>
 
   <!-- Arrow: FAULT → IDLE (Reset) -->
-  <path d="M130,418 Q160,360 270,295" class="arrow-reset"/>
+  <path d="M130,418 Q160,250 270,174" class="arrow-reset"/>
   <!-- Text background mask for Reset Label -->
-  <rect x="110" y="356" width="130" height="28" fill="#f8fafc" rx="4"/>
-  <text x="175" y="367" class="lbl-edge" fill="#16a34a" font-size="9.5" text-anchor="middle">Temp&lt;70°C &amp; Sensor OK</text>
-  <text x="175" y="379" class="lbl-edge" fill="#16a34a" font-size="9.5" text-anchor="middle">&amp; กดปุ่ม Reset</text>
+  <rect x="115" y="310" width="120" height="28" fill="#f8fafc" rx="4"/>
+  <text x="175" y="321" class="lbl-edge" fill="#16a34a" font-size="9.5" text-anchor="middle">Temp&lt;70°C &amp; Sensor OK</text>
+  <text x="175" y="333" class="lbl-edge" fill="#16a34a" font-size="9.5" text-anchor="middle">&amp; กดปุ่ม Reset</text>
   <!-- Moving dot on reset path -->
   <circle id="ch4-drst" class="ch4-dot" cx="130" cy="418" r="4" fill="#16a34a"/>
 

@@ -217,7 +217,251 @@ $$\text{Physical Sensor} \rightarrow \text{Edge MCU (ESP32)} \rightarrow \text{L
 
 ## 8.6 การเขียนโปรแกรมเชื่อมต่อ ESP32 เข้ากับ Blynk Cloud
 
-การทำให้อุปกรณ์ฮาร์ดแวร์เชื่อมต่อกับแพลตฟอร์ม Blynk คลาวด์ได้อย่างปลอดภัยและมีเสถียรภาพ ต้องเข้าใจโครงสร้างซอฟต์แวร์ดังต่อไปนี้:
+การทำให้อุปกรณ์ฮาร์ดแวร์เชื่อมต่อกับแพลตฟอร์ม Blynk คลาวด์ได้อย่างปลอดภัยและมีเสถียรภาพ ต้องเข้าใจการไหลของข้อมูลการเชื่อมต่อและโครงสร้างซอฟต์แวร์ดังต่อไปนี้:
+
+<div style="text-align: center; margin: 25px 0;">
+<svg viewBox="0 0 850 460" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+  <title>แผนภาพแสดงสถาปัตยกรรมการเชื่อมต่อของระบบ Blynk IoT</title>
+  <style>
+    #blynk-conn-svg .bg-main { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; rx: 12px; }
+    #blynk-conn-svg .box-esp32 { fill: #faf5ff; stroke: #7c3aed; stroke-width: 2; rx: 8px; }
+    #blynk-conn-svg .box-cloud { fill: #eff6ff; stroke: #2563eb; stroke-width: 2; rx: 8px; }
+    #blynk-conn-svg .box-app { fill: #f0fdf4; stroke: #16a34a; stroke-width: 2; rx: 8px; }
+    #blynk-conn-svg .box-sensor { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; rx: 4px; }
+    
+    #blynk-conn-svg .lbl-main-title { font-size: 15px; font-weight: 700; fill: #1e293b; }
+    #blynk-conn-svg .lbl-title { font-size: 11px; font-weight: 700; fill: #0f172a; }
+    #blynk-conn-svg .lbl-sub { font-size: 8.5px; fill: #475569; font-weight: 500; }
+    #blynk-conn-svg .lbl-vpin { font-size: 9px; font-weight: bold; fill: #ffffff; }
+    
+    #blynk-conn-svg .path-data-up { fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2.5; stroke-dasharray: 6 8; animation: blynk-flowRight 2.5s linear infinite; }
+    #blynk-conn-svg .path-data-down { fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2.5; stroke-dasharray: 6 8; animation: blynk-flowLeft 2.5s linear infinite; }
+    
+    @keyframes blynk-flowRight {
+      to { stroke-dashoffset: -28; }
+    }
+    @keyframes blynk-flowLeft {
+      to { stroke-dashoffset: 28; }
+    }
+    
+    #blynk-conn-svg .btn-glow { animation: blynk-pulseGlow 2s infinite ease-in-out; }
+    @keyframes blynk-pulseGlow {
+      0%, 100% { filter: drop-shadow(0 0 1px #eab30844); }
+      50% { filter: drop-shadow(0 0 6px #eab308aa); }
+    }
+  </style>
+
+  <defs>
+    <marker id="arr-r" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#ef4444"/></marker>
+    <marker id="arr-g" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#10b981"/></marker>
+    <marker id="arr-y" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#eab308"/></marker>
+    <marker id="arr-i" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#6366f1"/></marker>
+  </defs>
+
+  <g id="blynk-conn-svg">
+    <!-- Background -->
+    <rect x="5" y="5" width="840" height="450" class="bg-main"/>
+
+    <!-- Main Title -->
+    <text x="425" y="32" text-anchor="middle" class="lbl-main-title">แผนภาพแสดงสถาปัตยกรรมการเชื่อมต่อของระบบ Blynk IoT (Two-way Communication)</text>
+
+    <!-- ==================== LEFT: HARDWARE & SENSORS ==================== -->
+    <!-- Sensors & Actuators -->
+    <g>
+      <!-- Temp Sensor -->
+      <rect x="15" y="80" width="105" height="44" class="box-sensor"/>
+      <text x="67.5" y="98" font-size="9.5" font-weight="700" fill="#334155" text-anchor="middle">Thermocouple K</text>
+      <text x="67.5" y="112" font-size="8" fill="#64748b" text-anchor="middle">(MAX6675 SPI)</text>
+      <path d="M 120 102 H 150" stroke="#475569" stroke-width="1.5" fill="none"/>
+      <text x="135" y="97" font-size="7.5" fill="#64748b" text-anchor="middle">SPI</text>
+      
+      <!-- Pressure Sensor -->
+      <rect x="15" y="150" width="105" height="44" class="box-sensor"/>
+      <text x="67.5" y="168" font-size="9.5" font-weight="700" fill="#334155" text-anchor="middle">Pressure Sens</text>
+      <text x="67.5" y="182" font-size="8" fill="#64748b" text-anchor="middle">(Analog 0-5V)</text>
+      <path d="M 120 172 H 150" stroke="#475569" stroke-width="1.5" fill="none"/>
+      <text x="135" y="167" font-size="7.5" fill="#64748b" text-anchor="middle">ADC1</text>
+      
+      <!-- Burner Relay -->
+      <rect x="15" y="270" width="105" height="44" class="box-sensor"/>
+      <text x="67.5" y="288" font-size="9.5" font-weight="700" fill="#334155" text-anchor="middle">Burner Relay</text>
+      <text x="67.5" y="302" font-size="8" fill="#64748b" text-anchor="middle">(Control Valve)</text>
+      <path d="M 120 292 H 150" stroke="#475569" stroke-width="1.5" fill="none"/>
+      <text x="135" y="287" font-size="7.5" fill="#64748b" text-anchor="middle">GPIO25</text>
+      
+      <!-- Alarm LED -->
+      <rect x="15" y="340" width="105" height="44" class="box-sensor"/>
+      <text x="67.5" y="358" font-size="9.5" font-weight="700" fill="#334155" text-anchor="middle">Alarm LED</text>
+      <text x="67.5" y="372" font-size="8" fill="#64748b" text-anchor="middle">(Local Warning)</text>
+      <path d="M 120 362 H 150" stroke="#475569" stroke-width="1.5" fill="none"/>
+      <text x="135" y="357" font-size="7.5" fill="#64748b" text-anchor="middle">GPIO26</text>
+    </g>
+
+    <!-- ESP32 Board Outer Box -->
+    <g>
+      <rect x="150" y="60" width="180" height="360" class="box-esp32"/>
+      <text x="240" y="82" class="lbl-title" text-anchor="middle" fill="#7c3aed">บอร์ด ESP32 (Edge MCU)</text>
+      
+      <!-- ESP32 Graphic representation -->
+      <rect x="170" y="100" width="140" height="190" rx="4" fill="#1e293b" stroke="#4c1d95" stroke-width="2"/>
+      <!-- Chip -->
+      <rect x="210" y="125" width="60" height="50" rx="2" fill="#334155" stroke="#94a3b8" stroke-width="1"/>
+      <text x="240" y="155" font-size="8.5" fill="#ffffff" font-weight="bold" text-anchor="middle">ESP32-WROOM</text>
+      <!-- Wi-Fi Antenna -->
+      <rect x="220" y="108" width="40" height="15" fill="#0f172a" stroke="#cbd5e1" stroke-width="0.5"/>
+      <line x1="225" y1="113" x2="255" y2="113" stroke="#cbd5e1" stroke-width="1"/>
+      <line x1="225" y1="118" x2="255" y2="118" stroke="#cbd5e1" stroke-width="1"/>
+      
+      <!-- Code logic labels inside ESP32 board -->
+      <rect x="175" y="195" width="130" height="85" rx="3" fill="#0f172a" stroke="#6d28d9" stroke-width="1"/>
+      <text x="240" y="210" font-size="8.5" fill="#a78bfa" font-weight="bold" text-anchor="middle">Software Logic</text>
+      <text x="182" y="228" font-size="8" fill="#e2e8f0">• BlynkTimer (Non-blocking)</text>
+      <text x="182" y="243" font-size="8" fill="#e2e8f0">• Local Safety Interlock</text>
+      <text x="182" y="258" font-size="8" fill="#e2e8f0">• Blynk.run() &amp; Telemetry</text>
+
+      <!-- Wi-Fi SSID Status text -->
+      <text x="240" y="325" font-size="9" fill="#7c3aed" font-weight="bold" text-anchor="middle">📶 Wi-Fi: Wokwi-GUEST</text>
+      <text x="240" y="342" font-size="8" fill="#64748b" text-anchor="middle">Auth: Blynk.begin() / config()</text>
+      <rect x="170" y="360" width="140" height="42" rx="4" fill="#faf5ff" stroke="#ddd6fe" stroke-width="1"/>
+      <text x="240" y="375" font-size="8" fill="#5b21b6" text-anchor="middle" font-weight="bold">Edge-Cloud Hybrid</text>
+      <text x="240" y="388" font-size="7.5" fill="#6d28d9" text-anchor="middle">ควบคุมคีย์หลักได้แม้ออฟไลน์</text>
+      
+      <!-- Pins markers -->
+      <circle cx="150" cy="102" r="3" fill="#cbd5e1"/>
+      <circle cx="150" cy="172" r="3" fill="#cbd5e1"/>
+      <circle cx="150" cy="292" r="3" fill="#cbd5e1"/>
+      <circle cx="150" cy="362" r="3" fill="#cbd5e1"/>
+    </g>
+
+    <!-- ==================== MIDDLE: BLYNK CLOUD ==================== -->
+    <!-- Blynk Cloud Box -->
+    <g>
+      <rect x="420" y="60" width="180" height="360" class="box-cloud"/>
+      <text x="510" y="82" class="lbl-title" text-anchor="middle" fill="#2563eb">เซิร์ฟเวอร์ Blynk Cloud</text>
+      <text x="510" y="97" class="lbl-sub" text-anchor="middle">(Template &amp; Auth Verification)</text>
+      
+      <!-- Virtual Pins Database Capsules -->
+      <!-- Capsule V1 -->
+      <rect x="445" y="115" width="130" height="32" rx="6" fill="#10b981"/>
+      <text x="510" y="135" text-anchor="middle" class="lbl-vpin">V1: Pressure (Bar)</text>
+      
+      <!-- Capsule V2 -->
+      <rect x="445" y="165" width="130" height="32" rx="6" fill="#10b981"/>
+      <text x="510" y="185" text-anchor="middle" class="lbl-vpin">V2: Temperature (°C)</text>
+      
+      <!-- Capsule V3 -->
+      <rect x="445" y="215" width="130" height="32" rx="6" fill="#eab308"/>
+      <text x="510" y="235" text-anchor="middle" class="lbl-vpin">V3: Alarm Status</text>
+      
+      <!-- Capsule V4 -->
+      <rect x="445" y="265" width="130" height="32" rx="6" fill="#ef4444"/>
+      <text x="510" y="285" text-anchor="middle" class="lbl-vpin">V4: Burner Switch</text>
+      
+      <!-- Capsule V5 -->
+      <rect x="445" y="315" width="130" height="32" rx="6" fill="#6366f1"/>
+      <text x="510" y="335" text-anchor="middle" class="lbl-vpin">V5: Status Message</text>
+      
+      <rect x="440" y="362" width="140" height="42" rx="4" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+      <text x="510" y="377" font-size="8.5" fill="#1e40af" text-anchor="middle" font-weight="bold">Digital Twin Shadow</text>
+      <text x="510" y="390" font-size="7.5" fill="#1e3a8a" text-anchor="middle">เก็บสถานะล่าสุดคลาวด์ตลอดเวลา</text>
+    </g>
+
+    <!-- ==================== RIGHT: DASHBOARD WIDGETS ==================== -->
+    <!-- Blynk App / Web Dashboard -->
+    <g>
+      <rect x="660" y="60" width="165" height="360" class="box-app"/>
+      <text x="742.5" y="82" class="lbl-title" text-anchor="middle" fill="#16a34a">หน้าจอแผงควบคุม (App/Web)</text>
+      <text x="742.5" y="97" class="lbl-sub" text-anchor="middle">(Blynk Dashboard Widgets)</text>
+      
+      <!-- Gauge Widget for V1 -->
+      <rect x="680" y="115" width="125" height="32" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="686" y="129" font-size="9" fill="#475569" font-weight="700">Gauge: ความดัน</text>
+      <text x="798" y="135" font-size="8" fill="#10b981" text-anchor="end" font-weight="bold">V1 (Bar)</text>
+      
+      <!-- Value Display for V2 -->
+      <rect x="680" y="165" width="125" height="32" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="686" y="179" font-size="9" fill="#475569" font-weight="700">Value: อุณหภูมิ</text>
+      <text x="798" y="185" font-size="8" fill="#10b981" text-anchor="end" font-weight="bold">V2 (°C)</text>
+      
+      <!-- LED for V3 -->
+      <rect x="680" y="215" width="125" height="32" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="686" y="229" font-size="9" fill="#475569" font-weight="700">LED: เตือนภัย</text>
+      <circle cx="770" cy="231" r="5" fill="#eab308" class="btn-glow"/>
+      <text x="798" y="235" font-size="8" fill="#eab308" text-anchor="end" font-weight="bold">V3</text>
+      
+      <!-- Switch for V4 -->
+      <rect x="680" y="265" width="125" height="32" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="686" y="279" font-size="9" fill="#475569" font-weight="700">Switch: เปิด/ปิด</text>
+      <rect x="755" y="273" width="22" height="12" rx="6" fill="#ef4444"/>
+      <circle cx="761" cy="279" r="4" fill="#ffffff"/>
+      <text x="798" y="285" font-size="8" fill="#ef4444" text-anchor="end" font-weight="bold">V4</text>
+      
+      <!-- Terminal for V5 -->
+      <rect x="680" y="315" width="125" height="42" rx="4" fill="#1e293b" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="686" y="329" font-size="8.5" fill="#38bdf8" font-weight="700">Terminal: สถานะ</text>
+      <text x="686" y="341" font-size="7.5" fill="#94a3b8">Log: Boiler Running</text>
+      <text x="798" y="350" font-size="8" fill="#6366f1" text-anchor="end" font-weight="bold">V5</text>
+      
+      <!-- Users mobile phone display layout -->
+      <rect x="680" y="368" width="125" height="38" rx="4" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+      <text x="742.5" y="382" font-size="8.5" fill="#166534" text-anchor="middle" font-weight="bold">Blynk Mobile App</text>
+      <text x="742.5" y="394" font-size="7.5" fill="#15803d" text-anchor="middle">แสดงผลและสั่งงานผ่านสมาร์ทโฟน</text>
+    </g>
+
+    <!-- ==================== CONNECTIONS AND DATA FLOWS ==================== -->
+    <!-- ESP32 to Blynk Cloud lines -->
+    <g>
+      <!-- V1 Telemetry (Pressure) -->
+      <path d="M 330 131 H 439" class="path-data-up" stroke="#10b981"/>
+      <path d="M 330 131 H 445" fill="none" stroke="#10b981" stroke-width="1.5" opacity="0.3" marker-end="url(#arr-g)"/>
+      <text x="375" y="124" font-size="7.5" fill="#10b981" text-anchor="middle" font-weight="bold">V1 (Write)</text>
+
+      <!-- V2 Telemetry (Temp) -->
+      <path d="M 330 181 H 439" class="path-data-up" stroke="#10b981"/>
+      <path d="M 330 181 H 445" fill="none" stroke="#10b981" stroke-width="1.5" opacity="0.3" marker-end="url(#arr-g)"/>
+      <text x="375" y="174" font-size="7.5" fill="#10b981" text-anchor="middle" font-weight="bold">V2 (Write)</text>
+
+      <!-- V3 Alarm State -->
+      <path d="M 330 231 H 439" class="path-data-up" stroke="#eab308"/>
+      <path d="M 330 231 H 445" fill="none" stroke="#eab308" stroke-width="1.5" opacity="0.3" marker-end="url(#arr-y)"/>
+      <text x="375" y="224" font-size="7.5" fill="#ca8a04" text-anchor="middle" font-weight="bold">V3 (Write)</text>
+
+      <!-- V4 Command (Switch) -->
+      <path d="M 445 281 H 336" class="path-data-down" stroke="#ef4444"/>
+      <path d="M 445 281 H 330" fill="none" stroke="#ef4444" stroke-width="1.5" opacity="0.3" marker-end="url(#arr-r)"/>
+      <text x="375" y="274" font-size="7.5" fill="#ef4444" text-anchor="middle" font-weight="bold">V4 (Read)</text>
+
+      <!-- V5 Status Msg -->
+      <path d="M 330 331 H 439" class="path-data-up" stroke="#6366f1"/>
+      <path d="M 330 331 H 445" fill="none" stroke="#6366f1" stroke-width="1.5" opacity="0.3" marker-end="url(#arr-i)"/>
+      <text x="375" y="324" font-size="7.5" fill="#6366f1" text-anchor="middle" font-weight="bold">V5 (Write)</text>
+    </g>
+
+    <!-- Blynk Cloud to Dashboard lines -->
+    <g>
+      <!-- V1 Gauge -->
+      <path d="M 575 131 H 674" class="path-data-up" stroke="#10b981"/>
+      <path d="M 575 131 H 680" fill="none" stroke="#10b981" stroke-width="1.5" opacity="0.3" marker-end="url(#arr-g)"/>
+
+      <!-- V2 Value -->
+      <path d="M 575 181 H 674" class="path-data-up" stroke="#10b981"/>
+      <path d="M 575 181 H 680" fill="none" stroke="#10b981" stroke-width="1.5" opacity="0.3" marker-end="url(#arr-g)"/>
+
+      <!-- V3 LED -->
+      <path d="M 575 231 H 674" class="path-data-up" stroke="#eab308"/>
+      <path d="M 575 231 H 680" fill="none" stroke="#eab308" stroke-width="1.5" opacity="0.3" marker-end="url(#arr-y)"/>
+
+      <!-- V4 Switch (Dashboard -> Cloud) -->
+      <path d="M 680 281 H 581" class="path-data-down" stroke="#ef4444"/>
+      <path d="M 680 281 H 575" fill="none" stroke="#ef4444" stroke-width="1.5" opacity="0.3" marker-end="url(#arr-r)"/>
+
+      <!-- V5 Terminal -->
+      <path d="M 575 331 H 674" class="path-data-up" stroke="#6366f1"/>
+      <path d="M 575 331 H 680" fill="none" stroke="#6366f1" stroke-width="1.5" opacity="0.3" marker-end="url(#arr-i)"/>
+    </g>
+  </g>
+</svg>
+</div>
 
 ### 8.6.1 กุญแจยืนยันตัวตน (Authentication Token) และแนวปฏิบัติความปลอดภัย
 *   **Authentication Token (Auth Token):** เปรียบเสมือนรหัสผ่านเฉพาะประจำตัวของอุปกรณ์ฮาร์ดแวร์ตัวนั้น หาก Auth Token นี้หลุดรอดไปอยู่บนอินเทอร์เน็ต ผู้ประสงค์ร้ายสามารถส่งข้อมูลปลอมหรือแย่งการควบคุมเอาต์พุตได้ทันที

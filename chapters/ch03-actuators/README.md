@@ -373,18 +373,11 @@ $$R_B = \frac{3.3 - 0.7}{3\text{ mA}} = \frac{2.6}{0.003} \approx 867\ \Omega \;
     .switch-arm { stroke: #1e293b; stroke-width: 4; stroke-linecap: round; }
     .switch-node { fill: #334155; }
     .motor-body { fill: #ffffff; stroke: #334155; stroke-width: 2.5; }
-    .propeller { fill: #64748b; transform-origin: 380px 160px; animation: HBridgeMotor 9s linear infinite; }
     
     .text-main { font-size: 14px; font-weight: 700; fill: #1e293b; }
     .text-sub { font-size: 12px; fill: #64748b; }
     .text-code { font-size: 12px; font-family: monospace; font-weight: 700; }
     
-    /* Switch Animations */
-    .s1-arm { transform-origin: 240px 70px; animation: S1Move 9s ease-in-out infinite; }
-    .s2-arm { transform-origin: 240px 250px; animation: S2Move 9s ease-in-out infinite; }
-    .s3-arm { transform-origin: 520px 70px; animation: S3Move 9s ease-in-out infinite; }
-    .s4-arm { transform-origin: 520px 250px; animation: S4Move 9s ease-in-out infinite; }
-
     /* Explanation Box Animations */
     .explain-fw { animation: glowFw 9s ease-in-out infinite; }
     .explain-rv { animation: glowRv 9s ease-in-out infinite; }
@@ -406,33 +399,6 @@ $$R_B = \frac{3.3 - 0.7}{3\text{ mA}} = \frac{2.6}{0.003} \approx 867\ \Omega \;
       0%, 63.3% { opacity: 0; }
       66.6%, 96.6% { opacity: 1; }
       100% { opacity: 0; }
-    }
-
-    @keyframes S1Move {
-      0%, 30% { transform: rotate(0deg); }
-      33.3%, 100% { transform: rotate(30deg); }
-    }
-    @keyframes S2Move {
-      0%, 30% { transform: rotate(-30deg); }
-      33.3%, 63.3% { transform: rotate(0deg); }
-      66.6%, 100% { transform: rotate(-30deg); }
-    }
-    @keyframes S3Move {
-      0%, 30% { transform: rotate(-30deg); }
-      33.3%, 63.3% { transform: rotate(0deg); }
-      66.6%, 100% { transform: rotate(-30deg); }
-    }
-    @keyframes S4Move {
-      0%, 30% { transform: rotate(0deg); }
-      33.3%, 100% { transform: rotate(30deg); }
-    }
-
-    @keyframes HBridgeMotor {
-      0% { transform: rotate(0deg); }
-      30% { transform: rotate(1080deg); }
-      33.3% { transform: rotate(1080deg); }
-      63.3% { transform: rotate(0deg); }
-      66.6%, 100% { transform: rotate(0deg); }
     }
   </style>
   <rect x="5" y="5" width="750" height="330" class="bg"/>
@@ -490,18 +456,45 @@ $$R_B = \frac{3.3 - 0.7}{3\text{ mA}} = \frac{2.6}{0.003} \approx 867\ \Omega \;
   <circle cx="520" cy="250" r="4" class="switch-node"/>
   <text x="545" y="230" class="text-code">S4</text>
   
-  <!-- Switch Arms -->
-  <line x1="240" y1="70" x2="240" y2="125" class="switch-arm s1-arm"/>
-  <line x1="240" y1="250" x2="240" y2="195" class="switch-arm s2-arm"/>
-  <line x1="520" y1="70" x2="520" y2="125" class="switch-arm s3-arm"/>
-  <line x1="520" y1="250" x2="520" y2="195" class="switch-arm s4-arm"/>
+  <!-- Switch Arms with cross-browser SMIL animations -->
+  <line x1="240" y1="70" x2="240" y2="125" class="switch-arm">
+    <animateTransform attributeName="transform" type="rotate"
+      values="0 240 70; 0 240 70; 30 240 70; 30 240 70; 0 240 70"
+      keyTimes="0; 0.30; 0.333; 0.966; 1"
+      dur="9s" repeatCount="indefinite" />
+  </line>
+  <line x1="240" y1="250" x2="240" y2="195" class="switch-arm">
+    <animateTransform attributeName="transform" type="rotate"
+      values="-30 240 250; -30 240 250; 0 240 250; 0 240 250; -30 240 250; -30 240 250; -30 240 250"
+      keyTimes="0; 0.30; 0.333; 0.633; 0.666; 0.966; 1"
+      dur="9s" repeatCount="indefinite" />
+  </line>
+  <line x1="520" y1="70" x2="520" y2="125" class="switch-arm">
+    <animateTransform attributeName="transform" type="rotate"
+      values="-30 520 70; -30 520 70; 0 520 70; 0 520 70; -30 520 70; -30 520 70; -30 520 70"
+      keyTimes="0; 0.30; 0.333; 0.633; 0.666; 0.966; 1"
+      dur="9s" repeatCount="indefinite" />
+  </line>
+  <line x1="520" y1="250" x2="520" y2="195" class="switch-arm">
+    <animateTransform attributeName="transform" type="rotate"
+      values="0 520 250; 0 520 250; 30 520 250; 30 520 250; 0 520 250"
+      keyTimes="0; 0.30; 0.333; 0.966; 1"
+      dur="9s" repeatCount="indefinite" />
+  </line>
   
   <!-- Motor Drawing -->
   <circle cx="380" cy="160" r="30" class="motor-body"/>
   <text x="380" y="165" font-size="16" font-weight="700" fill="#334155" text-anchor="middle">M</text>
-  <!-- Motor Propeller -->
-  <path d="M 380 160 L 360 150 C 355 147, 355 140, 360 140 C 365 140, 375 150, 380 160 Z" class="propeller"/>
-  <path d="M 380 160 L 400 170 C 405 173, 405 180, 400 180 C 395 180, 385 170, 380 160 Z" class="propeller"/>
+  
+  <!-- Motor Propeller (Grouped & Animated with SMIL) -->
+  <g>
+    <path d="M 380 160 L 360 150 C 355 147, 355 140, 360 140 C 365 140, 375 150, 380 160 Z" fill="#64748b"/>
+    <path d="M 380 160 L 400 170 C 405 173, 405 180, 400 180 C 395 180, 385 170, 380 160 Z" fill="#64748b"/>
+    <animateTransform attributeName="transform" type="rotate"
+      values="0 380 160; 1080 380 160; 1080 380 160; 0 380 160; 0 380 160"
+      keyTimes="0; 0.30; 0.333; 0.633; 1"
+      dur="9s" repeatCount="indefinite" />
+  </g>
 
   <!-- Explanations on the Left/Right -->
   <!-- Left info: Input states -->
@@ -608,7 +601,7 @@ void loop() {
     
     .coil-box { fill: #ffffff; stroke: #334155; stroke-width: 2.5; rx: 6px; }
     .diode-body { fill: #ffffff; stroke: #334155; stroke-width: 2; }
-    .switch-arm { stroke: #1e293b; stroke-width: 4; stroke-linecap: round; transform-origin: 300px 220px; animation: switchFlyback 6s ease-in-out infinite; }
+    .fb-arm { stroke: #1e293b; stroke-width: 4; stroke-linecap: round; transform-box: view-box; transform-origin: 300px 220px; animation: switchFlyback 6s ease-in-out infinite; }
     .node { fill: #334155; }
     
     .text-main { font-size: 14px; font-weight: 700; fill: #1e293b; }
@@ -677,7 +670,7 @@ void loop() {
   <!-- Mechanical Switch -->
   <circle cx="300" cy="220" r="4" class="node"/>
   <circle cx="300" cy="260" r="4" class="node"/>
-  <line x1="300" y1="220" x2="300" y2="260" class="switch-arm"/>
+  <line x1="300" y1="220" x2="300" y2="260" class="fb-arm"/>
   <text x="330" y="245" class="text-main">สวิตช์ / ทรานซิสเตอร์</text>
 
   <!-- Ground -->
@@ -927,7 +920,7 @@ $$\theta \approx \left( \frac{t_p - 1.0}{2.0 - 1.0} \right) \times 180^\circ$$
     .frame-box { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; rx: 6px; }
     .pulse { fill: #7c3aed; stroke: #5b21b6; stroke-width: 1.5; }
     .servo-body { fill: #1e293b; stroke: #0f172a; stroke-width: 2; rx: 6px; }
-    .servo-horn { fill: #f59e0b; stroke: #b45309; stroke-width: 2; transform-origin: 590px 175px; animation: hornMove 9s ease-in-out infinite; }
+    .servo-horn { fill: #f59e0b; stroke: #b45309; stroke-width: 2; transform-box: view-box; transform-origin: 590px 175px; animation: hornMove 9s ease-in-out infinite; }
     .text-main { font-size: 13px; font-weight: 700; fill: #1e293b; }
     .text-sub { font-size: 11px; fill: #64748b; }
     .text-code { font-size: 13px; font-weight: 700; font-family: monospace; }
@@ -1065,7 +1058,7 @@ $$\text{สเต็ปต่อรอบ} = \frac{360^\circ}{\text{Step Angle}}
     .text-main { font-size: 13px; font-weight: 700; fill: #1e293b; }
     .text-sub { font-size: 11px; fill: #64748b; }
     .text-code { font-size: 12px; font-weight: 700; font-family: monospace; }
-    .rotor { fill: #ef4444; stroke: #991b1b; stroke-width: 2; transform-origin: 250px 180px; animation: rotorStep 8s steps(1) infinite; }
+    .rotor { fill: #ef4444; stroke: #991b1b; stroke-width: 2; transform-box: view-box; transform-origin: 250px 180px; animation: rotorStep 8s steps(1) infinite; }
 
     /* coil energize glows : 4 phases, each lit during its step */
     .cA { animation: litA 8s steps(1) infinite; }

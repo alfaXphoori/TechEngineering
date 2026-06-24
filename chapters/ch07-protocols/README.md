@@ -367,25 +367,115 @@ MQTT มีกลไกการรับประกันการรับส
 
 ##### 1. ลำดับของ QoS 0 (At most once - อย่างมากหนึ่งครั้ง)
 ส่งแบบ **"ยิงแล้วลืม" (Fire and Forget)** ไม่มีการเก็บสถานะ ไม่มีการรอแพ็กเก็ตตอบกลับใด ๆ
-```
-Publisher                    Broker
-    │                          │
-    │ ─── 1. PUBLISH ────────> │ (ส่งข้อมูลเสร็จสิ้นทันที)
-    │                          │
-```
+<div style="text-align: center; margin: 20px 0;">
+<svg viewBox="0 0 600 130" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+  <title>QoS 0 Sequence Diagram</title>
+  <style>
+    .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1.5; rx: 8px; }
+    .lifeline { stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 4 4; }
+    .node-box { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; rx: 4px; }
+    .txt-node { font-size: 12px; font-weight: bold; fill: #1e293b; }
+    
+    .msg-line { fill: none; stroke: #94a3b8; stroke-width: 2; }
+    .msg-flow { fill: none; stroke: #3b82f6; stroke-width: 2; stroke-dasharray: 6 6; animation: msg-march 1.5s linear infinite; }
+    .msg-text { font-size: 11.5px; font-weight: bold; fill: #2563eb; }
+    .note-text { font-size: 11px; fill: #64748b; }
+    
+    @keyframes msg-march {
+      to { stroke-dashoffset: -12; }
+    }
+  </style>
+
+  <rect x="5" y="5" width="590" height="120" class="bg"/>
+  
+  <defs>
+    <marker id="arrow-seq" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 7 5 L 0 8.5 z" fill="#3b82f6"/>
+    </marker>
+  </defs>
+
+  <!-- Lifelines -->
+  <line x1="150" y1="45" x2="150" y2="105" class="lifeline"/>
+  <line x1="450" y1="45" x2="450" y2="105" class="lifeline"/>
+  
+  <rect x="90" y="20" width="120" height="26" class="node-box"/>
+  <text x="150" y="37" text-anchor="middle" class="txt-node">Publisher</text>
+
+  <rect x="390" y="20" width="120" height="26" class="node-box"/>
+  <text x="450" y="37" text-anchor="middle" class="txt-node">Broker</text>
+
+  <!-- Message 1 -->
+  <line x1="150" y1="75" x2="450" y2="75" class="msg-line" marker-end="url(#arrow-seq)"/>
+  <line x1="150" y1="75" x2="445" y2="75" class="msg-flow"/>
+  <text x="300" y="68" text-anchor="middle" class="msg-text">1. PUBLISH</text>
+  <text x="462" y="80" text-anchor="start" class="note-text">(ได้รับข้อมูลและประมวลผลทันที)</text>
+</svg>
+</div>
 - **ขั้นตอน:** ผู้ส่งทำการส่งแพ็กเก็ต `PUBLISH` เพียงครั้งเดียว และไม่มีการติดตามการตอบรับ
 - **ข้อดี:** ความหน่วงต่ำมาก (Latency ต่ำสุด) ใช้แบนด์วิดท์และพลังงานน้อยที่สุด
 - **ความเสี่ยง:** หากสัญญาณเครือข่ายมีปัญหาระหว่างส่ง ข้อมูลจะสูญหายทันทีโดยไม่มีการรับรู้
 
 ##### 2. ลำดับของ QoS 1 (At least once - อย่างน้อยหนึ่งครั้ง)
 รับประกันข้อมูลถึงปลายทางแน่นอน แต่อาจได้รับข้อความซ้ำได้หากตัวส่งเข้าใจผิดว่าข้อความหล่นหาย
-```
-Publisher                    Broker
-    │                          │
-    │ ─── 1. PUBLISH (PacketID: 1) ──> │ (ได้รับและบันทึกข้อความ)
-    │ <── 2. PUBACK (PacketID: 1) ──── │ (ส่งสัญญาณตอบรับ)
-    │                          │
-```
+<div style="text-align: center; margin: 20px 0;">
+<svg viewBox="0 0 600 170" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+  <title>QoS 1 Sequence Diagram</title>
+  <style>
+    .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1.5; rx: 8px; }
+    .lifeline { stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 4 4; }
+    .node-box { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; rx: 4px; }
+    .txt-node { font-size: 12px; font-weight: bold; fill: #1e293b; }
+    
+    .msg-line { fill: none; stroke: #94a3b8; stroke-width: 2; }
+    .msg-flow-right { fill: none; stroke: #3b82f6; stroke-width: 2; stroke-dasharray: 6 6; animation: march-r 1.5s linear infinite; }
+    .msg-flow-left { fill: none; stroke: #10b981; stroke-width: 2; stroke-dasharray: 6 6; animation: march-l 1.5s linear infinite; }
+    
+    .msg-text-blue { font-size: 11.5px; font-weight: bold; fill: #2563eb; }
+    .msg-text-green { font-size: 11.5px; font-weight: bold; fill: #059669; }
+    .note-text { font-size: 11px; fill: #64748b; }
+    
+    @keyframes march-r {
+      to { stroke-dashoffset: -12; }
+    }
+    @keyframes march-l {
+      to { stroke-dashoffset: 12; }
+    }
+  </style>
+
+  <rect x="5" y="5" width="590" height="160" class="bg"/>
+  
+  <defs>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 7 5 L 0 8.5 z" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 7 5 L 0 8.5 z" fill="#10b981"/>
+    </marker>
+  </defs>
+
+  <!-- Lifelines -->
+  <line x1="150" y1="45" x2="150" y2="145" class="lifeline"/>
+  <line x1="450" y1="45" x2="450" y2="145" class="lifeline"/>
+  
+  <rect x="90" y="20" width="120" height="26" class="node-box"/>
+  <text x="150" y="37" text-anchor="middle" class="txt-node">Publisher</text>
+
+  <rect x="390" y="20" width="120" height="26" class="node-box"/>
+  <text x="450" y="37" text-anchor="middle" class="txt-node">Broker</text>
+
+  <!-- Message 1 -->
+  <line x1="150" y1="75" x2="450" y2="75" class="msg-line" marker-end="url(#arrow-blue)"/>
+  <line x1="150" y1="75" x2="445" y2="75" class="msg-flow-right"/>
+  <text x="300" y="68" text-anchor="middle" class="msg-text-blue">1. PUBLISH (PacketID: 1)</text>
+  <text x="462" y="80" text-anchor="start" class="note-text">(ได้รับและบันทึกข้อความ)</text>
+
+  <!-- Message 2 -->
+  <line x1="450" y1="115" x2="150" y2="115" class="msg-line" marker-end="url(#arrow-green)"/>
+  <line x1="450" y1="115" x2="155" y2="115" class="msg-flow-left"/>
+  <text x="300" y="108" text-anchor="middle" class="msg-text-green">2. PUBACK (PacketID: 1)</text>
+  <text x="138" y="120" text-anchor="end" class="note-text">(ลบข้อความออกจากหน่วยความจำ)</text>
+</svg>
+</div>
 - **ขั้นตอน:**
   1. ผู้ส่งบันทึกข้อความไว้ใน Memory เครื่อง และส่ง `PUBLISH` พร้อมตัวระบุเลขแพ็กเก็ต (`Packet ID`)
   2. ผู้รับบันทึกข้อความลงระบบ ประมวลผล และส่งแพ็กเก็ต `PUBACK` (Publish Acknowledgement) กลับไปหาผู้ส่ง
@@ -394,15 +484,83 @@ Publisher                    Broker
 
 ##### 3. ลำดับของ QoS 2 (Exactly once - ครั้งเดียวและแน่นอน)
 การันตีความถูกต้องสูงสุด ป้องกันปัญหากรณีข้อมูลซ้ำซ้อนอย่างสมบูรณ์แบบโดยใช้ระบบ Handshake 4 ขั้นตอน:
-```
-Publisher                    Broker
-    │                          │
-    │ ─── 1. PUBLISH (PacketID: 2) ──> │ (ได้รับและจำ Packet ID นี้ไว้ชั่วคราว)
-    │ <── 2. PUBREC (PacketID: 2) ──── │ (ตอบรับว่าได้รับข้อความแล้ว)
-    │ ─── 3. PUBREL (PacketID: 2) ───> │ (ปล่อยข้อความสู่ Subscriber / ปลดล็อค)
-    │ <── 4. PUBCOMP (PacketID: 2) ─── │ (เสร็จสิ้นกระบวนการแลกเปลี่ยน)
-    │                          │
-```
+<div style="text-align: center; margin: 20px 0;">
+<svg viewBox="0 0 600 250" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+  <title>QoS 2 Sequence Diagram</title>
+  <style>
+    .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1.5; rx: 8px; }
+    .lifeline { stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 4 4; }
+    .node-box { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; rx: 4px; }
+    .txt-node { font-size: 12px; font-weight: bold; fill: #1e293b; }
+    
+    .msg-line { fill: none; stroke: #94a3b8; stroke-width: 2; }
+    .msg-flow-right { fill: none; stroke: #3b82f6; stroke-width: 2; stroke-dasharray: 6 6; animation: march-r 1.5s linear infinite; }
+    .msg-flow-left { fill: none; stroke: #10b981; stroke-width: 2; stroke-dasharray: 6 6; animation: march-l 1.5s linear infinite; }
+    .msg-flow-purple-right { fill: none; stroke: #8b5cf6; stroke-width: 2; stroke-dasharray: 6 6; animation: march-r 1.5s linear infinite; }
+    .msg-flow-purple-left { fill: none; stroke: #8b5cf6; stroke-width: 2; stroke-dasharray: 6 6; animation: march-l 1.5s linear infinite; }
+    
+    .msg-text-blue { font-size: 11px; font-weight: bold; fill: #2563eb; }
+    .msg-text-green { font-size: 11px; font-weight: bold; fill: #059669; }
+    .msg-text-purple { font-size: 11px; font-weight: bold; fill: #6d28d9; }
+    .note-text { font-size: 10.5px; fill: #64748b; }
+    
+    @keyframes march-r {
+      to { stroke-dashoffset: -12; }
+    }
+    @keyframes march-l {
+      to { stroke-dashoffset: 12; }
+    }
+  </style>
+
+  <rect x="5" y="5" width="590" height="240" class="bg"/>
+  
+  <defs>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 7 5 L 0 8.5 z" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 7 5 L 0 8.5 z" fill="#10b981"/>
+    </marker>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 7 5 L 0 8.5 z" fill="#8b5cf6"/>
+    </marker>
+  </defs>
+
+  <!-- Lifelines -->
+  <line x1="150" y1="45" x2="150" y2="225" class="lifeline"/>
+  <line x1="450" y1="45" x2="450" y2="225" class="lifeline"/>
+  
+  <rect x="90" y="20" width="120" height="26" class="node-box"/>
+  <text x="150" y="37" text-anchor="middle" class="txt-node">Publisher</text>
+
+  <rect x="390" y="20" width="120" height="26" class="node-box"/>
+  <text x="450" y="37" text-anchor="middle" class="txt-node">Broker</text>
+
+  <!-- Message 1 -->
+  <line x1="150" y1="70" x2="450" y2="70" class="msg-line" marker-end="url(#arrow-blue)"/>
+  <line x1="150" y1="70" x2="445" y2="70" class="msg-flow-right"/>
+  <text x="300" y="63" text-anchor="middle" class="msg-text-blue">1. PUBLISH (PacketID: 2)</text>
+  <text x="462" y="74" text-anchor="start" class="note-text">(จำ Packet ID ไว้ชั่วคราว)</text>
+
+  <!-- Message 2 -->
+  <line x1="450" y1="110" x2="150" y2="110" class="msg-line" marker-end="url(#arrow-green)"/>
+  <line x1="450" y1="110" x2="155" y2="110" class="msg-flow-left"/>
+  <text x="300" y="103" text-anchor="middle" class="msg-text-green">2. PUBREC (PacketID: 2)</text>
+  <text x="138" y="114" text-anchor="end" class="note-text">(รับทราบและบล็อกข้อมูลซ้ำ)</text>
+
+  <!-- Message 3 -->
+  <line x1="150" y1="150" x2="450" y2="150" class="msg-line" marker-end="url(#arrow-purple)"/>
+  <line x1="150" y1="150" x2="445" y2="150" class="msg-flow-purple-right"/>
+  <text x="300" y="143" text-anchor="middle" class="msg-text-purple">3. PUBREL (PacketID: 2)</text>
+  <text x="462" y="154" text-anchor="start" class="note-text">(ส่งข้อมูลหาผู้รับ / ปลดล็อก)</text>
+
+  <!-- Message 4 -->
+  <line x1="450" y1="190" x2="150" y2="190" class="msg-line" marker-end="url(#arrow-purple)"/>
+  <line x1="450" y1="190" x2="155" y2="190" class="msg-flow-purple-left"/>
+  <text x="300" y="183" text-anchor="middle" font-size="11px" font-weight="bold" fill="#6d28d9">4. PUBCOMP (PacketID: 2)</text>
+  <text x="138" y="194" text-anchor="end" class="note-text">(เสร็จสิ้นกระบวนการแลกเปลี่ยน)</text>
+</svg>
+</div>
 - **ขั้นตอน:**
   1. **PUBLISH (ส่ง):** ผู้ส่งส่งข้อความระบุ `Packet ID`
   2. **PUBREC (ตอบรับว่าได้รับ):** ผู้รับรับทราบการส่งและบันทึกข้อมูลไว้ แต่จะยังไม่กระจายไปยัง Subscriber โดยตอบรับด้วยแพ็กเก็ต `PUBREC` (Publish Received) กลับไป

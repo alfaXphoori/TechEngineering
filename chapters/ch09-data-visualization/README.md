@@ -716,21 +716,100 @@ void loop() {
 
 ### การออกแบบ Layout
 
-```
-┌─────────────────────────────────────────────────┐
-│  🏭  แดชบอร์ดติดตามมอเตอร์ #1                    │
-├────────────────┬────────────────┬───────────────┤
-│  [Gauge]       │  [Gauge]       │  [สถานะ]      │
-│  อุณหภูมิ       │  RPM           │  🟢 Running   │
-│  42.3 °C       │  1,480 rpm     │               │
-├────────────────┴────────────────┴───────────────┤
-│  [กราฟเส้น] อุณหภูมิ & กระแสไฟฟ้า ย้อนหลัง 1 ชม.  │
-│  ──────────────────────────────────────          │
-├────────────────┬────────────────────────────────┤
-│  [ปุ่ม]        │  [สไลเดอร์]                     │
-│  หยุดฉุกเฉิน    │  ปรับความเร็ว: ████░░░░ 60%     │
-└────────────────┴────────────────────────────────┘
-```
+<div style="text-align: center; margin: 25px 0;">
+<svg viewBox="0 0 760 380" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+  <title>แดชบอร์ดติดตามมอเตอร์ #1 (Layout Mockup)</title>
+  <style>
+    .db-bg { fill: #0f172a; stroke: #1e293b; stroke-width: 2; rx: 12px; }
+    .card { fill: #1e293b; stroke: #334155; stroke-width: 1.5; rx: 8px; }
+    
+    .txt-header { font-size: 15px; font-weight: bold; fill: #f8fafc; }
+    .txt-lbl { font-size: 12px; fill: #94a3b8; }
+    .txt-val-temp { font-size: 24px; font-weight: bold; fill: #f97316; }
+    .txt-val-rpm { font-size: 24px; font-weight: bold; fill: #38bdf8; }
+    
+    .btn-estop { fill: #ef4444; stroke: #b91c1c; stroke-width: 1.5; rx: 6px; }
+    .btn-txt { font-size: 12px; font-weight: bold; fill: #ffffff; }
+    
+    .slider-track { fill: #475569; rx: 3px; }
+    .slider-fill { fill: #3b82f6; rx: 3px; }
+    
+    .chart-line { fill: none; stroke: #38bdf8; stroke-width: 2.5; stroke-linecap: round; }
+    .chart-line-sub { fill: none; stroke: #fb7185; stroke-width: 1.5; stroke-linecap: round; stroke-dasharray: 4 4; }
+    .chart-area { fill: url(#chart-grad); opacity: 0.15; }
+    .chart-grid { stroke: #334155; stroke-width: 1; stroke-dasharray: 2 4; }
+  </style>
+
+  <rect x="5" y="5" width="750" height="370" class="db-bg"/>
+  
+  <!-- Gradients -->
+  <defs>
+    <linearGradient id="chart-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Header -->
+  <text x="30" y="38" class="txt-header">🏭 แดชบอร์ดติดตามมอเตอร์ #1 (Motor #1 Monitoring Dashboard)</text>
+  <rect x="620" y="22" width="110" height="24" rx="12" fill="#064e3b" stroke="#059669" stroke-width="1"/>
+  <text x="675" y="38" text-anchor="middle" font-size="11px" font-weight="bold" fill="#34d399">🟢 Connected</text>
+
+  <!-- Card 1: Temp -->
+  <rect x="30" y="65" width="220" height="110" class="card"/>
+  <text x="50" y="95" class="txt-lbl">🌡️ อุณหภูมิตัวเรือน (Body Temp)</text>
+  <text x="50" y="135" class="txt-val-temp">42.3 °C</text>
+  <text x="50" y="158" font-size="10.5px" fill="#64748b">ขีดจำกัดความร้อนสูงสุด: 65 °C</text>
+
+  <!-- Card 2: RPM -->
+  <rect x="270" y="65" width="220" height="110" class="card"/>
+  <text x="290" y="95" class="txt-lbl">🔄 ความเร็วรอบมอเตอร์ (RPM)</text>
+  <text x="290" y="135" class="txt-val-rpm">1,480 rpm</text>
+  <text x="290" y="158" font-size="10.5px" fill="#64748b">ความเร็วรอบใช้งานสูงสุด: 1800 rpm</text>
+
+  <!-- Card 3: Status -->
+  <rect x="510" y="65" width="220" height="110" class="card"/>
+  <text x="530" y="95" class="txt-lbl">⚙️ สถานะระบบ (System Status)</text>
+  <rect x="530" y="112" width="110" height="30" rx="6" fill="#064e3b" stroke="#10b981" stroke-width="1.5"/>
+  <text x="585" y="132" text-anchor="middle" font-size="13px" font-weight="bold" fill="#34d399">🟢 RUNNING</text>
+  <text x="530" y="158" font-size="10.5px" fill="#64748b">โหมดควบคุม: รีโมท (Auto)</text>
+
+  <!-- Card 4: Historical Chart -->
+  <rect x="30" y="195" width="460" height="150" class="card"/>
+  <text x="50" y="222" class="txt-lbl">📈 กราฟเส้นแสดงอุณหภูมิ &amp; กระแสไฟฟ้า (ย้อนหลัง 1 ชม.)</text>
+  
+  <!-- Chart Grid -->
+  <line x1="60" y1="245" x2="460" y2="245" class="chart-grid"/>
+  <line x1="60" y1="280" x2="460" y2="280" class="chart-grid"/>
+  <line x1="60" y1="315" x2="460" y2="315" class="chart-grid"/>
+  
+  <!-- Chart Lines & Area -->
+  <path d="M 60 300 Q 110 270 160 290 T 260 250 T 360 280 T 460 260 L 460 315 L 60 315 Z" class="chart-area"/>
+  <path d="M 60 300 Q 110 270 160 290 T 260 250 T 360 280 T 460 260" class="chart-line"/>
+  <path d="M 60 280 Q 110 290 160 260 T 260 280 T 360 250 T 460 270" class="chart-line-sub"/>
+  
+  <!-- Chart Legends -->
+  <circle cx="340" cy="220" r="4" fill="#38bdf8"/>
+  <text x="350" y="223" font-size="10px" fill="#94a3b8">อุณหภูมิ (°C)</text>
+  
+  <circle cx="410" cy="220" r="4" fill="#fb7185"/>
+  <text x="420" y="223" font-size="10px" fill="#94a3b8">กระแส (A)</text>
+
+  <!-- Card 5: Controls -->
+  <rect x="510" y="195" width="220" height="150" class="card"/>
+  <text x="530" y="222" class="txt-lbl">🕹️ แผงควบคุม (Control Panel)</text>
+  
+  <!-- E-Stop button -->
+  <rect x="530" y="240" width="180" height="34" class="btn-estop"/>
+  <text x="620" y="261" text-anchor="middle" class="btn-txt">🚨 หยุดฉุกเฉิน (EMERGENCY STOP)</text>
+
+  <!-- Slider -->
+  <text x="530" y="300" font-size="11px" fill="#94a3b8">ปรับความเร็วรอบพัดลม (Target: 60%)</text>
+  <rect x="530" y="312" width="180" height="6" class="slider-track"/>
+  <rect x="530" y="312" width="108" height="6" class="slider-fill"/>
+  <circle cx="638" cy="315" r="7" fill="#ffffff" stroke="#3b82f6" stroke-width="2.5"/>
+</svg>
+</div>
 
 ### ตัวอย่างโค้ดจำลองบน Wokwi (ESP32 + Serial Dashboard)
 

@@ -1187,18 +1187,79 @@ $$\text{Link Margin (dB)} = \text{Received Power (dBm)} - \text{Sensitivity (dBm
 
 #### Network Slicing (การแบ่งส่วนเครือข่ายเสมือน)
 
-```
-┌─────────────────────────────────────────────────┐
-│          โครงสร้างพื้นฐาน 5G ทางกายภาพ          │
-│   (5G RAN + Transport Network + 5G Core)        │
-├──────────────┬──────────────┬───────────────────┤
-│  Slice A     │  Slice B     │  Slice C          │
-│  eMBB        │  URLLC       │  mMTC             │
-│  - BW สูง    │  - Latency   │  - IoT Mass       │
-│  - 4K Video  │    < 1 ms    │  - NB-IoT/LTE-M   │
-│  - VR/AR     │  - Robotics  │  - แบตเตอรี่ยาว  │
-└──────────────┴──────────────┴───────────────────┘
-```
+<div style="text-align: center; margin: 25px 0;">
+<svg viewBox="0 0 760 270" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+  <title>การแบ่งส่วนเครือข่าย (5G Network Slicing)</title>
+  <style>
+    .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1.5; rx: 12px; }
+    .box-infra { fill: #f1f5f9; stroke: #cbd5e1; stroke-width: 2; rx: 8px; }
+    
+    .box-slice { stroke-width: 2; rx: 8px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.02)); }
+    .slice-a { fill: #eff6ff; stroke: #3b82f6; }
+    .slice-b { fill: #faf5ff; stroke: #8b5cf6; }
+    .slice-c { fill: #ecfdf5; stroke: #10b981; }
+    
+    .txt-infra-title { font-size: 15px; font-weight: bold; fill: #1e293b; }
+    .txt-infra-sub { font-size: 12.5px; fill: #475569; font-weight: 500; }
+    
+    .txt-slice-title { font-size: 13.5px; font-weight: bold; fill: #0f172a; }
+    .txt-slice-detail { font-size: 11.5px; fill: #334155; }
+    
+    .arrow-shaft { fill: none; stroke: #cbd5e1; stroke-width: 2; stroke-linecap: round; }
+    .arrow-flow-blue { fill: none; stroke: #3b82f6; stroke-width: 2; stroke-dasharray: 4 6; animation: march 1.5s linear infinite; }
+    .arrow-flow-purple { fill: none; stroke: #8b5cf6; stroke-width: 2; stroke-dasharray: 4 6; animation: march 1.5s linear infinite; }
+    .arrow-flow-green { fill: none; stroke: #10b981; stroke-width: 2; stroke-dasharray: 4 6; animation: march 1.5s linear infinite; }
+    
+    @keyframes march {
+      to { stroke-dashoffset: -10; }
+    }
+  </style>
+
+  <rect x="5" y="5" width="750" height="260" class="bg"/>
+  
+  <defs>
+    <marker id="arrow-slice" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 7 5 L 0 8.5 z" fill="#cbd5e1"/>
+    </marker>
+  </defs>
+
+  <!-- Physical Infrastructure Box -->
+  <rect x="40" y="20" width="680" height="65" class="box-infra"/>
+  <text x="380" y="43" text-anchor="middle" class="txt-infra-title">⚙️ โครงสร้างพื้นฐาน 5G ทางกายภาพ (5G Physical Infrastructure)</text>
+  <text x="380" y="62" text-anchor="middle" class="txt-infra-sub">(5G RAN + Transport Network + 5G Core)</text>
+
+  <!-- Arrows from Infrastructure to Slices -->
+  <line x1="145" y1="85" x2="145" y2="120" class="arrow-shaft" marker-end="url(#arrow-slice)"/>
+  <line x1="145" y1="85" x2="145" y2="115" class="arrow-flow-blue"/>
+  
+  <line x1="380" y1="85" x2="380" y2="120" class="arrow-shaft" marker-end="url(#arrow-slice)"/>
+  <line x1="380" y1="85" x2="380" y2="115" class="arrow-flow-purple"/>
+  
+  <line x1="615" y1="85" x2="615" y2="120" class="arrow-shaft" marker-end="url(#arrow-slice)"/>
+  <line x1="615" y1="85" x2="615" y2="115" class="arrow-flow-green"/>
+
+  <!-- Slice A -->
+  <rect x="40" y="120" width="210" height="120" class="box-slice slice-a"/>
+  <text x="55" y="145" class="txt-slice-title">🍰 Slice A: eMBB</text>
+  <text x="55" y="168" class="txt-slice-detail">▪ เน้นความกว้างช่องสัญญาณ (BW)</text>
+  <text x="55" y="188" class="txt-slice-detail">▪ ความเร็วรับส่งข้อมูลสูงมาก (Gbps)</text>
+  <text x="55" y="208" class="txt-slice-detail">▪ ตัวอย่าง: วิดีโอ 4K/8K, VR/AR</text>
+
+  <!-- Slice B -->
+  <rect x="275" y="120" width="210" height="120" class="box-slice slice-b"/>
+  <text x="290" y="145" class="txt-slice-title">⚡ Slice B: URLLC</text>
+  <text x="290" y="168" class="txt-slice-detail">▪ เน้นความหน่วงเวลาต่ำพิเศษ</text>
+  <text x="290" y="188" class="txt-slice-detail">▪ Latency &lt; 1 ms, เสถียรภาพสูง</text>
+  <text x="290" y="208" class="txt-slice-detail">▪ ตัวอย่าง: รถยนต์ไร้คนขับ, ผ่าตัดไกล</text>
+
+  <!-- Slice C -->
+  <rect x="510" y="120" width="210" height="120" class="box-slice slice-c"/>
+  <text x="525" y="145" class="txt-slice-title">🌐 Slice C: mMTC</text>
+  <text x="525" y="168" class="txt-slice-detail">▪ รองรับอุปกรณ์ IoT หนาแน่นสูง</text>
+  <text x="525" y="188" class="txt-slice-detail">▪ อุปกรณ์ใช้พลังงานต่ำ แบตยาวนาน</text>
+  <text x="525" y="208" class="txt-slice-detail">▪ ตัวอย่าง: NB-IoT, Smart Sensors</text>
+</svg>
+</div>
 
 *   **Slice Isolation:** แต่ละ Slice ทำงานแยกกันสมบูรณ์
 *   **SLA Guarantee:** รับประกัน QoS เฉพาะเจาะจงสำหรับแต่ละ Slice
@@ -1251,24 +1312,133 @@ $$\text{Link Margin (dB)} = \text{Received Power (dBm)} - \text{Sensitivity (dBm
 
 ### 6.9.2 ผังตัดสินใจ (Decision Flowchart)
 
-```
-                       เริ่มต้นออกแบบระบบไร้สาย
-                                  │
-                   ┌──────────────┴──────────────┐
-                   ▼                             ▼
-           ระยะทางไกล (> 1 km)?           ระยะทางใกล้ (< 100 m)?
-                   │                             │
-         ┌─────────┴─────────┐         ┌─────────┴─────────┐
-         ▼                   ▼         ▼                   ▼
-    แบนด์วิดท์สูง?      แบนด์วิดท์ต่ำ?   แบนด์วิดท์สูง?      แบนด์วิดท์ต่ำ?
-    (> 100 kbps)        (< 10 kbps)    (> 1 Mbps)          (< 250 kbps)
-         │                   │              │          ┌─────┴─────┐
-         ▼                   ▼              ▼          ▼           ▼
-      Cellular             LoRa          Wi-Fi    ต้องการ Mesh?  ต่อตรงมือถือ?
-    (NB-IoT/5G)          /LoRaWAN                     │              │
-                                                       ▼              ▼
-                                                    Zigbee           BLE
-```
+<div style="text-align: center; margin: 25px 0;">
+<svg viewBox="0 0 760 420" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+  <title>ผังการตัดสินใจเลือกเทคโนโลยีสื่อสารไร้สาย (Decision Flowchart)</title>
+  <style>
+    .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1.5; rx: 12px; }
+    
+    .node-start { fill: #e2e8f0; stroke: #94a3b8; stroke-width: 2; rx: 18px; }
+    .node-question { fill: #eff6ff; stroke: #3b82f6; stroke-width: 1.5; rx: 6px; }
+    
+    .node-result { stroke-width: 2; rx: 20px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.04)); }
+    .res-cellular { fill: #fee2e2; stroke: #ef4444; }
+    .res-lora { fill: #fffbeb; stroke: #f59e0b; }
+    .res-wifi { fill: #ecfdf5; stroke: #10b981; }
+    .res-zigbee { fill: #f0fdf4; stroke: #22c55e; }
+    .res-ble { fill: #f0f9ff; stroke: #0ea5e9; }
+    
+    .txt-start { font-size: 13.5px; font-weight: bold; fill: #334155; }
+    .txt-question { font-size: 11.5px; font-weight: bold; fill: #1e3a8a; }
+    .txt-q-sub { font-size: 9.5px; fill: #1d4ed8; font-weight: normal; }
+    .txt-result { font-size: 13px; font-weight: bold; fill: #0f172a; }
+    .txt-res-sub { font-size: 10.5px; fill: #475569; }
+    
+    .path-line { fill: none; stroke: #cbd5e1; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .path-flow { fill: none; stroke: #94a3b8; stroke-width: 2; stroke-dasharray: 4 6; stroke-linecap: round; stroke-linejoin: round; animation: march 1.5s linear infinite; }
+    
+    @keyframes march {
+      to { stroke-dashoffset: -10; }
+    }
+  </style>
+
+  <rect x="5" y="5" width="750" height="410" class="bg"/>
+  
+  <defs>
+    <marker id="arrow-flow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 7 5 L 0 8.5 z" fill="#cbd5e1"/>
+    </marker>
+  </defs>
+
+  <!-- Level 0: Start -->
+  <rect x="270" y="15" width="220" height="36" class="node-start"/>
+  <text x="380" y="37" text-anchor="middle" class="txt-start">เริ่มต้นออกแบบระบบไร้สาย</text>
+
+  <!-- Connection: Start -> Level 1 Questions -->
+  <path d="M 380 51 L 380 70 L 190 70 L 190 90" class="path-line" marker-end="url(#arrow-flow)"/>
+  <path d="M 380 51 L 380 70 L 570 70 L 570 90" class="path-line" marker-end="url(#arrow-flow)"/>
+  
+  <!-- Level 1 Questions -->
+  <!-- Left: Long Distance -->
+  <rect x="90" y="90" width="200" height="45" class="node-question"/>
+  <text x="190" y="116" text-anchor="middle" class="txt-question">ระยะทางไกล (&gt; 1 km)?</text>
+  
+  <!-- Right: Short Distance -->
+  <rect x="470" y="90" width="200" height="45" class="node-question"/>
+  <text x="570" y="116" text-anchor="middle" class="txt-question">ระยะทางใกล้ (&lt; 100 m)?</text>
+
+  <!-- Connection: Level 1 -> Level 2 Questions -->
+  <!-- Left Side Splits -->
+  <path d="M 190 135 L 190 155 L 95 155 L 95 180" class="path-line" marker-end="url(#arrow-flow)"/>
+  <path d="M 190 135 L 190 155 L 285 155 L 285 180" class="path-line" marker-end="url(#arrow-flow)"/>
+  <!-- Right Side Splits -->
+  <path d="M 570 135 L 570 155 L 455 155 L 455 180" class="path-line" marker-end="url(#arrow-flow)"/>
+  <path d="M 570 135 L 570 155 L 655 155 L 655 180" class="path-line" marker-end="url(#arrow-flow)"/>
+
+  <!-- Level 2 Questions -->
+  <!-- LL -->
+  <rect x="20" y="180" width="150" height="50" class="node-question"/>
+  <text x="95" y="202" text-anchor="middle" class="txt-question">แบนด์วิดท์สูง?</text>
+  <text x="95" y="217" text-anchor="middle" class="txt-q-sub">(&gt; 100 kbps)</text>
+  
+  <!-- LR -->
+  <rect x="210" y="180" width="150" height="50" class="node-question"/>
+  <text x="285" y="202" text-anchor="middle" class="txt-question">แบนด์วิดท์ต่ำ?</text>
+  <text x="285" y="217" text-anchor="middle" class="txt-q-sub">(&lt; 10 kbps)</text>
+  
+  <!-- RL -->
+  <rect x="380" y="180" width="150" height="50" class="node-question"/>
+  <text x="455" y="202" text-anchor="middle" class="txt-question">แบนด์วิดท์สูง?</text>
+  <text x="455" y="217" text-anchor="middle" class="txt-q-sub">(&gt; 1 Mbps)</text>
+  
+  <!-- RR -->
+  <rect x="570" y="180" width="170" height="50" class="node-question"/>
+  <text x="655" y="202" text-anchor="middle" class="txt-question">แบนด์วิดท์ต่ำ?</text>
+  <text x="655" y="217" text-anchor="middle" class="txt-q-sub">(&lt; 250 kbps)</text>
+
+  <!-- Connection: Level 2 -> Level 3 Results -->
+  <line x1="95" y1="230" x2="95" y2="270" class="path-line" marker-end="url(#arrow-flow)"/>
+  <line x1="285" y1="230" x2="285" y2="270" class="path-line" marker-end="url(#arrow-flow)"/>
+  <line x1="455" y1="230" x2="455" y2="270" class="path-line" marker-end="url(#arrow-flow)"/>
+  
+  <!-- Connection: RR Split into sub-questions -->
+  <path d="M 655 230 L 655 248 L 577.5 248 L 577.5 270" class="path-line" marker-end="url(#arrow-flow)"/>
+  <path d="M 655 230 L 655 248 L 692.5 248 L 692.5 270" class="path-line" marker-end="url(#arrow-flow)"/>
+
+  <!-- Level 3 Results / Sub-questions -->
+  <!-- Result LL (Cellular) -->
+  <rect x="20" y="270" width="150" height="40" class="node-result res-cellular"/>
+  <text x="95" y="287" text-anchor="middle" class="txt-result">Cellular</text>
+  <text x="95" y="301" text-anchor="middle" class="txt-res-sub">(NB-IoT / 5G)</text>
+
+  <!-- Result LR (LoRa) -->
+  <rect x="210" y="270" width="150" height="40" class="node-result res-lora"/>
+  <text x="285" y="287" text-anchor="middle" class="txt-result">LoRa / LoRaWAN</text>
+  <text x="285" y="301" text-anchor="middle" class="txt-res-sub">(สำหรับระยะไกลพิเศษ)</text>
+
+  <!-- Result RL (Wi-Fi) -->
+  <rect x="380" y="270" width="150" height="40" class="node-result res-wifi"/>
+  <text x="455" y="295" text-anchor="middle" class="txt-result">Wi-Fi</text>
+
+  <!-- Sub-questions under RR -->
+  <rect x="525" y="270" width="105" height="45" class="node-question"/>
+  <text x="577.5" y="296" text-anchor="middle" class="txt-question">ต้องการ Mesh?</text>
+
+  <rect x="640" y="270" width="105" height="45" class="node-question"/>
+  <text x="692.5" y="296" text-anchor="middle" class="txt-question">ต่อตรงมือถือ?</text>
+
+  <!-- Connection: Sub-questions -> Final Results -->
+  <line x1="577.5" y1="315" x2="577.5" y2="355" class="path-line" marker-end="url(#arrow-flow)"/>
+  <line x1="692.5" y1="315" x2="692.5" y2="355" class="path-line" marker-end="url(#arrow-flow)"/>
+
+  <!-- Final Results from sub-questions -->
+  <rect x="525" y="355" width="105" height="40" class="node-result res-zigbee"/>
+  <text x="577.5" y="380" text-anchor="middle" class="txt-result">Zigbee</text>
+
+  <rect x="640" y="355" width="105" height="40" class="node-result res-ble"/>
+  <text x="692.5" y="380" text-anchor="middle" class="txt-result">BLE</text>
+</svg>
+</div>
 
 ---
 

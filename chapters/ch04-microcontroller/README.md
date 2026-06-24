@@ -1283,8 +1283,10 @@ void loop() {
 
   <!-- Arrow: FAULT → IDLE (Reset) -->
   <path d="M130,418 Q160,360 270,295" class="arrow-reset"/>
-  <text x="165" y="368" class="lbl-edge" fill="#16a34a" font-size="9.5">Temp&lt;70°C &amp; Sensor OK</text>
-  <text x="175" y="380" class="lbl-edge" fill="#16a34a" font-size="9.5">&amp; กดปุ่ม Reset</text>
+  <!-- Text background mask for Reset Label -->
+  <rect x="110" y="356" width="130" height="28" fill="#f8fafc" rx="4"/>
+  <text x="175" y="367" class="lbl-edge" fill="#16a34a" font-size="9.5" text-anchor="middle">Temp&lt;70°C &amp; Sensor OK</text>
+  <text x="175" y="379" class="lbl-edge" fill="#16a34a" font-size="9.5" text-anchor="middle">&amp; กดปุ่ม Reset</text>
   <!-- Moving dot on reset path -->
   <circle id="ch4-drst" class="ch4-dot" cx="130" cy="418" r="4" fill="#16a34a"/>
 

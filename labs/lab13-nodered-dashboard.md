@@ -1,75 +1,114 @@
 # 🔬 Lab 13: แดชบอร์ดด้วย Node-RED
 
-**รายวิชา:** เทคโนโลยีดิจิทัลสำหรับวิศวกรรม (Digital Technology for Engineering)
-**หลักสูตร:** วิศวกรรมเครื่องกล ชั้นปีที่ 1
-
-## วัตถุประสงค์
-- เข้าใจหลักการทำงานของ Node-RED ในฐานะเครื่องมือจัดการสายข้อมูล (Data Flow) สำหรับงานอินเทอร์เน็ตของสรรพสิ่ง (IoT)
-- สามารถส่งข้อมูลจากบอร์ดจำลอง ESP32 ใน Wokwi ไปยังโบรคเกอร์ (MQTT Broker) ได้
-- สร้างและจัดเรียงหน้าปัดแสดงผล (Dashboard) ด้วยเกจวัด (Gauge) กราฟ (Chart) และข้อความ (Text) ผ่าน Node-RED ได้สำเร็จ
+**รายวิชา:** เทคโนโลยีดิจิทัลสำหรับวิศวกรรม (Digital Technology for Engineering)  
+**หลักสูตร:** วิศวกรรมเครื่องกล ชั้นปีที่ 1  
+**เครื่องมือ:** Wokwi Simulator + Node-RED (localhost หรือ Cloud) + HiveMQ  
+**เวลา:** 3 ชั่วโมง
 
 ---
 
-**ภาพรวมขั้นตอน:**
-ในแล็บนี้เราจะจำลองการทำงานของบอร์ด ESP32 ด้วยโปรแกรม Wokwi เพื่ออ่านค่าจากเซนเซอร์ DHT22 จากนั้นส่งข้อมูลอุณหภูมิและความชื้นในรูปแบบ JSON ผ่านโปรโตคอล MQTT (ใช้ Public Broker) ไปยัง Node-RED เพื่อสร้างหน้าเว็บแดชบอร์ด (Web Dashboard) สำหรับแสดงผลแบบเรียลไทม์
+## วัตถุประสงค์
 
-## ส่วนที่ 1: การเตรียมความพร้อม Node-RED และ Dashboard (15 นาที)
+- อธิบายหลักการ Flow-Based Programming ของ Node-RED และบทบาทของ `msg.payload` ได้
+- เขียนโปรแกรม ESP32 บน Wokwi ส่งข้อมูล JSON ผ่าน MQTT ได้
+- สร้าง Flow ใน Node-RED เชื่อม `mqtt in` → `json` → `function` → `ui_gauge` / `ui_chart` ได้
+- เขียน JavaScript ในโหนด `function` เพื่อคัดกรองและแปลงข้อมูลได้
+- ออกแบบหน้าแดชบอร์ด Node-RED พร้อม Tab/Group/Widget ได้
 
-ก่อนที่จะเริ่มสร้างโฟลว์ข้อมูล เราจำเป็นต้องติดตั้งเครื่องมือเสริม (Nodes) สำหรับการทำแดชบอร์ดเสียก่อน
+---
 
-1. เปิดใช้งาน Node-RED ของนักศึกษา (พิมพ์คำสั่ง `node-red` ใน Command Prompt หรือรันผ่านระบบ Cloud ตามที่อาจารย์ผู้สอนกำหนด)
-2. เข้าสู่หน้าต่างออกแบบ Node-RED ผ่านเว็บเบราว์เซอร์ (ปกติคือ `http://localhost:1880`)
-3. ไปที่เมนูหลัก (ขีดสามขีดมุมขวาบน) เลือก **"Manage palette"**
-4. เลือกแท็บ **Install** ค้นหาคำว่า `node-red-dashboard` แล้วกดปุ่ม **Install**
-5. เมื่อติดตั้งเสร็จสิ้น จะปรากฏกลุ่มโหนด **dashboard** เพิ่มขึ้นมาในแถบเครื่องมือด้านซ้ายมือ
+## ส่วนที่ 1: ติดตั้ง Node-RED Dashboard และทำความเข้าใจโครงสร้าง (20 นาที)
 
-## ส่วนที่ 2: การตั้งค่า ESP32 บน Wokwi (30 นาที)
+### ความรู้เบื้องต้น
 
-ในส่วนนี้เราจะเขียนโปรแกรมเพื่อจำลองบอร์ด ESP32 ให้ทำหน้าที่เป็นอุปกรณ์ส่งข้อมูล (Publisher)
+**Node-RED** ใช้แนวคิด **Flow-Based Programming** — โปรแกรมสร้างจากโหนด (Node) ที่เชื่อมกันด้วยเส้น (Wire) ข้อมูลไหลผ่านเส้นในรูปแบบวัตถุ JavaScript ที่เรียกว่า **Message Object (`msg`)** โดยค่าหลักอยู่ใน `msg.payload`
 
-1. เข้าสู่เว็บไซต์ [Wokwi](https://wokwi.com) แล้วสร้างโปรเจกต์ **ESP32** ใหม่
-2. เพิ่มอุปกรณ์เซนเซอร์ **DHT22** ลงในพื้นที่ทำงาน และลากสายสัญญาณ (SDA/Data) ไปต่อที่ขา **D15** ของ ESP32
-3. ไปที่แท็บ **Library Manager** (ไอคอนรูปหนังสือ) กดปุ่ม `+` เพื่อเพิ่มไลบรารี 2 ตัว ได้แก่:
-   - `PubSubClient` (สำหรับเชื่อมต่อ MQTT)
-   - `DHT sensor library` (สำหรับอ่านค่าเซนเซอร์)
-4. คัดลอกโค้ดภาษา C++ ด้านล่างนี้ไปวางในไฟล์ `sketch.ino`:
+Node-RED มีโหนด 3 ประเภท:
+
+| ประเภท | ตัวอย่างโหนด | หน้าที่ |
+|:---|:---|:---|
+| **Input** | `mqtt in`, `inject` | รับข้อมูลจากภายนอก ส่งเข้าโฟลว์ |
+| **Processing** | `function`, `json`, `change`, `switch` | ประมวลผล แปลง หรือกรองข้อมูล |
+| **Output** | `mqtt out`, `debug`, `ui_gauge`, `ui_chart` | ส่งข้อมูลออก หรือแสดงผล |
+
+โครงสร้าง Dashboard ของ `node-red-dashboard`:
+- **Tab** — หน้าหลัก เช่น "ห้องเครื่อง" และ "สิ่งแวดล้อม"
+- **Group** — กลุ่ม Widget ภายใน Tab เช่น "เซนเซอร์อุณหภูมิ"
+- **Widget** — ชิ้นส่วนแสดงผล เช่น Gauge, Chart, Text
+
+### ขั้นตอนปฏิบัติ
+
+1. เปิด Node-RED (`node-red` ใน Terminal หรือผ่านระบบ Cloud ตามที่อาจารย์กำหนด)
+2. เข้าหน้า Editor: `http://localhost:1880`
+3. เมนู (ขีดสามขีด มุมขวาบน) → **Manage palette** → แท็บ **Install**
+4. ค้นหา `node-red-dashboard` → กด **Install** → รอจนเสร็จ
+5. ตรวจสอบว่าแถบซ้ายมือมีหมวด **dashboard** เพิ่มมาแล้ว
+
+### ตารางบันทึกผล — ส่วนที่ 1
+
+| รายการ | สถานะ |
+|:---|:---|
+| Node-RED เปิดใช้ได้ที่ localhost:1880 | ________ |
+| node-red-dashboard ติดตั้งสำเร็จ | ________ |
+| เห็นหมวด dashboard ในแถบโหนดซ้ายมือ | ________ |
+
+---
+
+## ส่วนที่ 2: ตั้งค่า ESP32 บน Wokwi ให้ส่งข้อมูล JSON (45 นาที)
+
+### ความรู้เบื้องต้น
+
+ESP32 จะส่งข้อมูลเซนเซอร์เป็น **JSON (JavaScript Object Notation)** เพราะ JSON อ่านง่ายทั้งสำหรับคนและเครื่อง โครงสร้างง่าย ๆ:
+
+```json
+{"temp": 32.5, "hum": 65.2}
+```
+
+เมื่อ Node-RED รับข้อมูลนี้ผ่าน `mqtt in` ค่าจะเป็นสตริงก่อน (`msg.payload = '{"temp":32.5,"hum":65.2}'`) — โหนด `json` จะแปลงสตริงนี้เป็น JavaScript Object ทำให้เข้าถึงค่าได้ด้วย `msg.payload.temp` และ `msg.payload.hum`
+
+เซนเซอร์ DHT22 วัดอุณหภูมิและความชื้นสัมพัทธ์ ใช้โปรโตคอล One-Wire ส่งข้อมูล 40 บิตต่อรอบ (16 บิตความชื้น + 16 บิตอุณหภูมิ + 8 บิต checksum)
+
+### ขั้นตอนปฏิบัติ
+
+**ต่อวงจร:**
+
+| อุปกรณ์ | ขา ESP32 |
+|:---|:---|
+| DHT22 ขา VCC | 3.3V |
+| DHT22 ขา GND | GND |
+| DHT22 ขา DATA | GPIO 15 |
+
+เพิ่มไลบรารีใน Wokwi Library Manager: **`PubSubClient`** และ **`DHT sensor library`**
+
+เขียนโค้ดในไฟล์ `sketch.ino`:
 
 ```cpp
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <DHT.h>
 
-const char* ssid = "Wokwi-GUEST";
-const char* password = "";
+const char* ssid        = "Wokwi-GUEST";
+const char* password    = "";
 const char* mqtt_server = "broker.hivemq.com";
 
-// ข้อควรระวัง: เปลี่ยนรหัสนักศึกษาด้านล่างให้เป็นของตนเอง เพื่อไม่ให้ข้อมูลชนกับเพื่อน
+// เปลี่ยน YOUR_STUDENT_ID เป็นรหัสนักศึกษาจริง
 const char* mqtt_topic = "ksumech/lab13/YOUR_STUDENT_ID/data";
 
-WiFiClient espClient;
-PubSubClient client(espClient);
-
-#define DHTPIN 15
+#define DHTPIN  15
 #define DHTTYPE DHT22
-DHT dht(DHTPIN, DHTTYPE);
 
-void setup_wifi() {
-  Serial.print("Connecting to WiFi");
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println(" Connected!");
-}
+DHT dht(DHTPIN, DHTTYPE);
+WiFiClient   espClient;
+PubSubClient client(espClient);
 
 void reconnect() {
   while (!client.connected()) {
-    Serial.print("Attempting MQTT connection...");
-    String clientId = "ESP32_MechEng_" + String(random(0xffff), HEX);
+    Serial.print("MQTT connecting...");
+    String clientId = "ESP32-Lab13-" + String(random(0xffff), HEX);
     if (client.connect(clientId.c_str())) {
-      Serial.println("connected to MQTT broker");
+      Serial.println("connected!");
     } else {
+      Serial.printf("failed (rc=%d), retry in 5s\n", client.state());
       delay(5000);
     }
   }
@@ -77,102 +116,229 @@ void reconnect() {
 
 void setup() {
   Serial.begin(115200);
-  setup_wifi();
-  client.setServer(mqtt_server, 1883);
   dht.begin();
+
+  WiFi.begin(ssid, password);
+  Serial.print("Wi-Fi connecting");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\nWi-Fi connected! IP: " + WiFi.localIP().toString());
+
+  client.setServer(mqtt_server, 1883);
 }
 
 void loop() {
-  if (!client.connected()) {
-    reconnect();
-  }
+  if (!client.connected()) reconnect();
   client.loop();
 
-  float t = dht.readTemperature();
-  float h = dht.readHumidity();
+  static unsigned long lastSend = 0;
+  if (millis() - lastSend >= 5000) {
+    lastSend = millis();
 
-  // ตรวจสอบว่าอ่านค่าเซนเซอร์สำเร็จหรือไม่
-  if (!isnan(t) && !isnan(h)) {
-    // สร้างข้อความรูปแบบ JSON (JSON format)
-    String payload = "{\"temp\":" + String(t) + ", \"hum\":" + String(h) + "}";
-    Serial.print("Publishing message: ");
-    Serial.println(payload);
-    
-    // ส่งข้อมูลไปยัง MQTT Broker
-    client.publish(mqtt_topic, payload.c_str());
+    float t = dht.readTemperature();
+    float h = dht.readHumidity();
+
+    if (!isnan(t) && !isnan(h)) {
+      // สร้าง JSON payload ด้วย snprintf (ปลอดภัยกว่า String concatenation)
+      char payload[64];
+      snprintf(payload, sizeof(payload),
+               "{\"temp\":%.1f,\"hum\":%.1f}", t, h);
+
+      bool ok = client.publish(mqtt_topic, payload);
+      Serial.printf("Publish [%s]: %s (%s)\n",
+                    mqtt_topic, payload, ok ? "OK" : "FAIL");
+    } else {
+      Serial.println("DHT อ่านค่าไม่ได้ (NaN) — ตรวจสอบการต่อวงจร");
+    }
   }
-  delay(5000); // ส่งข้อมูลทุกๆ 5 วินาที
 }
 ```
-5. กดปุ่ม **Start Simulation** (เครื่องหมาย Play สีเขียว) และเปิดหน้าต่าง Serial Monitor เพื่อตรวจสอบการเชื่อมต่ออินเทอร์เน็ต
 
-## ส่วนที่ 3: การสร้าง Data Flow และ Layout แดชบอร์ด (45 นาที)
+กด **Start Simulation** → Serial Monitor ควรแสดง:
+```
+Wi-Fi connected! IP: 10.13.52.xx
+MQTT connecting...connected!
+Publish [ksumech/lab13/.../data]: {"temp":28.3,"hum":62.1} (OK)
+```
 
-ตารางด้านล่างนี้อธิบายโหนด (Node) หลักที่เราจะใช้งานใน Node-RED:
+### สังเกต/วิเคราะห์
 
-| ชื่อโหนด (Node) | กลุ่ม (Category) | หน้าที่การทำงาน |
-| :--- | :--- | :--- |
-| `mqtt in` | network | รับข้อมูลจากโบรคเกอร์ตาม Topic ที่กำหนด |
-| `json` | parser | แปลงข้อความ (String) ให้เป็นออบเจกต์ JSON เพื่อให้อ่านค่าได้ง่าย |
-| `change` | function | ดึงค่าตัวแปรเฉพาะส่วน เช่น คัดแยกเฉพาะอุณหภูมิ หรือเฉพาะความชื้น |
-| `gauge` | dashboard | แสดงผลข้อมูลตัวเลขบนหน้าปัด (เกจวัด) แบบเรียลไทม์ |
-| `chart` | dashboard | แสดงผลข้อมูลประวัติย้อนหลังในรูปแบบกราฟเส้น (Line Chart) |
-| `text` | dashboard | แสดงผลข้อมูลในรูปแบบตัวอักษรหรือตัวเลขธรรมดา |
+- ลองแก้ `delay` ระหว่างรอ Wi-Fi จาก 500 ms เป็น 100 ms — มีผลอะไรบ้าง?
+- ทำไมจึงตรวจสอบ `isnan(t)` ก่อน publish?
 
-**ขั้นตอนปฏิบัติ:**
-1. ลากโหนด `mqtt in` มาวางใน Workspace ดับเบิลคลิกเพื่อตั้งค่า Server เป็น `broker.hivemq.com` Port `1883` และตั้งค่า Topic ให้ **ตรงกับที่ระบุในโค้ด ESP32 ทุกตัวอักษร**
-2. ลากโหนด `json` มาต่อจาก `mqtt in`
-3. ลากโหนด `change` มา 2 ตัว เพื่อแยกข้อมูล:
-   - ตัวที่ 1 ดับเบิลคลิกและตั้งค่า Rules เป็น: Set `msg.payload` to `msg.payload.temp` (สำหรับอุณหภูมิ)
-   - ตัวที่ 2 ดับเบิลคลิกและตั้งค่า Rules เป็น: Set `msg.payload` to `msg.payload.hum` (สำหรับความชื้น)
-   นำโหนด `change` ทั้งสองตัวไปต่อกับขาออกของโหนด `json`
-4. ไปที่แถบเมนูด้านขวา เลือกแท็บสัญลักษณ์กราฟ (Dashboard) กด **+ tab** สร้างแท็บชื่อ "Smart Factory" และในแท็บให้กด **+ group** สร้างกลุ่มชื่อ "Environment Data"
-5. ลากโหนด `gauge` และ `chart` มาต่อกับขาออกของ `change` (ตัวที่แยกอุณหภูมิ)
-   - ดับเบิลคลิกตั้งค่า `gauge` ให้อยู่ในกลุ่ม "Environment Data" กำหนดช่วงข้อมูล (Range) 0 ถึง 50
-6. ลากโหนด `text` มาต่อกับขาออกของ `change` (ตัวที่แยกความชื้น) ให้อยู่ในกลุ่มเดียวกัน
-7. กดปุ่ม **Deploy** สีแดงที่มุมขวาบน
-8. เข้าชมหน้าแดชบอร์ดโดยพิมพ์ URL: `http://localhost:1880/ui` (หรือคลิกที่ไอคอนลูกศรเฉียงในแท็บ Dashboard)
+### ตารางบันทึกผล — ส่วนที่ 2
+
+| การทดสอบ | ผลที่สังเกตได้ |
+|:---|:---|
+| Serial แสดง "Wi-Fi connected!" | ________ |
+| Serial แสดง "connected!" (MQTT) | ________ |
+| Payload JSON ที่ส่ง (บันทึกตัวอย่าง 1 ค่า) | ________ |
+| ค่า temp ที่ DHT22 รายงาน | ________ °C |
+| ค่า hum ที่ DHT22 รายงาน | ________ %RH |
 
 ---
 
-## ผลการทดลอง
+## ส่วนที่ 3: สร้าง Flow และ Dashboard ใน Node-RED (60 นาที)
 
-ให้นักศึกษาบันทึกผลที่ได้จากการทดลองลงในช่องว่างด้านล่าง:
+### ความรู้เบื้องต้น
 
-1. ข้อความที่ปรากฏบน Serial Monitor ของ Wokwi เมื่อรันโปรแกรมสำเร็จ:
-   _______________________________________________________________________________________
-2. ข้อมูล JSON ที่ถูกส่งออกไป (Payload) มีหน้าตาอย่างไร:
-   _______________________________________________________________________________________
-3. **[สำหรับวาดภาพหรือแทรกรูป]** ภาพโครงสร้างการต่อสายโหนด (Flow) ใน Node-RED
-   <br><br><br><br><br>
-4. **[สำหรับวาดภาพหรือแทรกรูป]** ภาพหน้าจอของเว็บ Dashboard ที่แสดงเกจวัดและกราฟ
-   <br><br><br><br><br>
+ข้อมูลไหลใน Node-RED ตามลำดับโหนดที่เชื่อมกัน:
+
+```
+[mqtt in] → [json] → [function] → [ui_gauge]
+                    ↘ [ui_chart]
+```
+
+**โหนด `function`** ให้เขียน JavaScript อิสระ ควบคุม `msg.payload` ได้เต็มที่:
+```javascript
+// ตัวอย่าง: แยกเฉพาะ temp ออกมา และเพิ่ม warning flag
+let temp = msg.payload.temp;
+msg.payload = temp;
+msg.label = temp > 35 ? "HOT!" : "Normal";
+return msg;
+```
+ฟังก์ชัน return `msg` ส่งข้อมูลต่อไปยังโหนดถัดไป, return `null` หมายถึงหยุดโฟลว์
+
+### ขั้นตอนปฏิบัติ
+
+**ขั้นที่ 1: สร้าง Tab และ Group สำหรับ Dashboard**
+
+1. คลิกไอคอนแท็บ **Dashboard** (ขวามือ) → กด **+ tab** → ตั้งชื่อ `Smart Factory`
+2. กด **+ group** ในแท็บ Smart Factory → ตั้งชื่อ `Environment Data`
+
+**ขั้นที่ 2: สร้าง Flow**
+
+3. ลากโหนด **`mqtt in`** มาใน Workspace → ดับเบิลคลิกตั้งค่า:
+   - Server: เพิ่ม Server ใหม่ → Host: `broker.hivemq.com`, Port: `1883`
+   - Topic: `ksumech/lab13/YOUR_STUDENT_ID/data` (ให้ตรงกับโค้ด ESP32 ทุกตัวอักษร)
+   - QoS: 0
+
+4. ลากโหนด **`json`** มาวางต่อจาก `mqtt in` → ลากเส้นเชื่อม (Wire)
+   > โหนด `json` แปลงสตริง JSON เป็น JavaScript Object ให้เข้าถึงค่าด้วย `.temp` และ `.hum` ได้
+
+5. ลากโหนด **`function`** มา 2 ตัว → ต่อจาก `json` (แตก 2 เส้น):
+   - ตัวที่ 1 (แยก temp): ดับเบิลคลิก → แท็บ **On Message** → ใส่โค้ด:
+     ```javascript
+     // แยกค่าอุณหภูมิ และเพิ่มการแจ้งเตือนถ้าสูงเกิน 35°C
+     let temp = msg.payload.temp;
+     if (typeof temp === 'number') {
+         msg.payload = temp;
+         msg.topic = "อุณหภูมิ";
+         // ส่ง warning ไปยัง debug node ด้วย
+         if (temp > 35) {
+             node.warn("⚠️ อุณหภูมิสูง: " + temp + " °C");
+         }
+         return msg;
+     }
+     return null;  // กรองข้อมูลผิดรูปแบบออก
+     ```
+   - ตัวที่ 2 (แยก hum): ใส่โค้ด:
+     ```javascript
+     // แยกค่าความชื้น
+     let hum = msg.payload.hum;
+     if (typeof hum === 'number') {
+         msg.payload = hum;
+         msg.topic = "ความชื้น";
+         return msg;
+     }
+     return null;
+     ```
+
+6. ต่อจากโหนด function (temp):
+   - ลากโหนด **`ui_gauge`** → ดับเบิลคลิกตั้งค่า:
+     - Group: `Environment Data`
+     - Label: `อุณหภูมิ`
+     - Units: `°C`
+     - Range: 0 ถึง 50
+     - Colour Gradient: เพิ่มสีแดงที่ > 35
+   - ลากโหนด **`ui_chart`** → ดับเบิลคลิกตั้งค่า:
+     - Group: `Environment Data`
+     - Label: `กราฟอุณหภูมิ`
+     - Type: Line chart
+     - X-axis: Last 10 minutes
+
+7. ต่อจากโหนด function (hum):
+   - ลากโหนด **`ui_text`** → ตั้งค่า Group: `Environment Data`, Label: `ความชื้น`, Format: `{{msg.payload}} %RH`
+
+8. เพิ่มโหนด **`debug`** ต่อจาก `json` อีก 1 ตัว เพื่อดูข้อมูลดิบใน Debug panel
+
+9. กดปุ่ม **Deploy** (แดง มุมขวาบน)
+
+10. เปิด Dashboard: `http://localhost:1880/ui`
+
+### ตารางบันทึกผล — ส่วนที่ 3
+
+| รายการ | ผลที่สังเกตได้ |
+|:---|:---|
+| Flow deploy สำเร็จ (ไม่มี Error node สีแดง) | ________ |
+| Debug panel แสดง JSON Object จาก mqtt in | ________ |
+| Gauge แสดงค่าอุณหภูมิ | ________ °C |
+| Chart วาดเส้นกราฟ | ________ |
+| Text แสดงค่าความชื้น | ________ %RH |
 
 ---
 
-## แบบฝึกหัดและคำถามท้ายใบงาน
+## ส่วนที่ 4: ปรับแต่ง Dashboard และเพิ่ม Logic (25 นาที)
 
-1. หากนักศึกษาต้องการแสดงหน่วยของอุณหภูมิเป็น "องศาเซลเซียส (°C)" ในหน้าปัดเกจวัด (Gauge) จะต้องเข้าไปตั้งค่าที่ช่องใดใน Node-RED?
-   **ตอบ:** __________________________________________________________________________
-   _______________________________________________________________________________
+### โจทย์ออกแบบ
 
-2. โหนด `json` มีความสำคัญอย่างไรในแล็บนี้ หากนักศึกษาลืมใส่โหนด `json` ไปคั่นกลาง จะเกิดข้อผิดพลาดอะไรขึ้นในการแสดงผลบนกราฟ?
-   **ตอบ:** __________________________________________________________________________
-   _______________________________________________________________________________
+เพิ่มระบบแจ้งเตือนง่าย ๆ เข้าไปใน Dashboard:
 
-3. สมมติว่าต้องการเพิ่มเซนเซอร์ความดัน (Pressure) ใน Wokwi รูปแบบข้อความ JSON (Payload string) ในภาษา C++ ควรถูกปรับแก้เป็นอย่างไร?
-   **ตอบ:** __________________________________________________________________________
-   _______________________________________________________________________________
+1. **เพิ่มโหนด `switch`** ต่อจากโหนด function (temp) เพื่อแยกเส้น:
+   - เส้นที่ 1: `msg.payload >= 35` → ต่อไปยังโหนด `ui_text` ที่ตั้งค่าแสดงข้อความสีแดง `⚠️ อุณหภูมิสูง!`
+   - เส้นที่ 2: `msg.payload < 35` → ต่อไปยังโหนด `ui_text` ที่แสดงสีเขียว `✅ ปกติ`
+
+2. **ทดสอบ**: ปรับค่าจำลองใน Wokwi (แก้โค้ดให้ temp = 40.0 คงที่) → Deploy → ดูว่าแจ้งเตือนสีแดงปรากฏบน Dashboard
+
+### ตารางบันทึกผล — ส่วนที่ 4
+
+| เงื่อนไขทดสอบ | สถานะที่แสดงบน Dashboard |
+|:---|:---|
+| อุณหภูมิจำลอง = 40 °C | ________ |
+| อุณหภูมิจำลอง = 28 °C | ________ |
+
+---
+
+## แบบฝึกหัดท้ายใบงาน
+
+1. **บทบาทของโหนด `json`**: ถ้าลบโหนด `json` ออกจาก Flow แล้วต่อ `mqtt in` → `function` โดยตรง และพยายามเขียน `msg.payload.temp` ใน function node จะเกิดอะไรขึ้น? ทำไม?
+
+   > คำตอบ: _______________________________________________________________
+
+2. **msg.payload คืออะไร**: ในโหนด `function` ทดลองเพิ่มบรรทัด `node.log(typeof msg.payload)` ก่อน return — บันทึกผลที่เห็นใน Debug console ก่อนและหลังโหนด `json` เปรียบเทียบกัน
+
+   > ก่อนโหนด json: ________ | หลังโหนด json: ________
+
+3. **ประยุกต์ใช้งานเครื่องกล**: สมมติต้องสร้างแดชบอร์ดสำหรับระบบน้ำมันหล่อลื่นเครื่องกด (hydraulic press) ที่ต้องแสดงความดัน (bar), อุณหภูมิน้ำมัน (°C), และระดับน้ำมัน (%) พร้อมแจ้งเตือนเมื่อความดันเกิน 200 bar — ออกแบบ Flow ของ Node-RED (ระบุโหนดที่ใช้ตามลำดับ และ JavaScript ใน function node ที่จำเป็น)
+
+   > คำตอบ: _______________________________________________________________
+
+4. **ThingsBoard vs Node-RED**: เปรียบเทียบข้อดีและข้อจำกัดของ Node-RED และ ThingsBoard สำหรับใช้เป็น Dashboard ในงานโรงงานขนาดกลาง (50 เครื่องจักร) — ควรเลือกใช้อะไร เพราะเหตุใด?
+
+   > คำตอบ: _______________________________________________________________
 
 ---
 
 ## การส่งงาน
 
-> 📋 ส่งงานผ่าน Google Form ที่อาจารย์ประจำวิชาแจ้งในคลาสเรียน โดยอัปโหลดไฟล์ PDF ของใบงานที่กรอกข้อมูลสมบูรณ์แล้ว
+> 📋 ส่งงานผ่าน Google Form: **(ลิงก์จากอาจารย์ผู้สอน)**
+
+สิ่งที่ต้องส่ง:
+1. Screenshot Serial Monitor ของ Wokwi แสดงข้อมูล JSON ที่ publish สำเร็จ
+2. Screenshot โครงสร้าง Flow ใน Node-RED (ต้องเห็นโหนดทั้งหมดและเส้นเชื่อม)
+3. Screenshot หน้า Dashboard (`localhost:1880/ui`) แสดง Gauge, Chart, และ Text
+4. Screenshot Debug panel แสดง JSON Object ที่รับจาก MQTT
+5. คำตอบแบบฝึกหัดท้ายใบงานครบทุกข้อ
 
 ### Checklist ก่อนส่ง
-- [ ] กรอกรหัสนักศึกษาและเปลี่ยน Topic ในโค้ด ESP32 เรียบร้อยแล้ว
-- [ ] ทดสอบการทำงานใน Wokwi และเชื่อมต่อ WiFi / MQTT สำเร็จ
-- [ ] มีหน้าต่าง Dashboard แสดงกราฟ (Chart), เกจ (Gauge) และข้อความ (Text) ครบถ้วน
-- [ ] แทรกภาพแคปหน้าจอ (Screenshot) ของ Flow และ Dashboard ลงในส่วนผลการทดลอง
-- [ ] ตอบคำถามท้ายการทดลองครบถ้วนทั้ง 3 ข้อ
+
+- [ ] เปลี่ยน `YOUR_STUDENT_ID` เป็นรหัสนักศึกษาจริงในโค้ด ESP32 และ Node-RED แล้ว
+- [ ] Wokwi simulate ผ่าน และ Serial แสดง "Publish ... OK"
+- [ ] Node-RED Flow deploy สำเร็จ ไม่มีโหนดแสดง Error
+- [ ] Dashboard แสดง Gauge วัดอุณหภูมิ, Chart กราฟเส้น, และ Text ความชื้น
+- [ ] ระบบแจ้งเตือน (ส่วนที่ 4) ทำงานได้ถูกต้อง
+- [ ] กรอกตารางบันทึกผลครบทุกส่วน
+- [ ] ตอบแบบฝึกหัดท้ายใบงานครบ 4 ข้อ
+- [ ] ระบุชื่อ-นามสกุล และรหัสนักศึกษาในฟอร์ม

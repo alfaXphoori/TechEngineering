@@ -920,7 +920,7 @@ $$\theta \approx \left( \frac{t_p - 1.0}{2.0 - 1.0} \right) \times 180^\circ$$
     .frame-box { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; rx: 6px; }
     .pulse { fill: #7c3aed; stroke: #5b21b6; stroke-width: 1.5; }
     .servo-body { fill: #1e293b; stroke: #0f172a; stroke-width: 2; rx: 6px; }
-    .servo-horn { fill: #f59e0b; stroke: #b45309; stroke-width: 2; transform-box: view-box; transform-origin: 590px 175px; animation: hornMove 9s ease-in-out infinite; }
+    .servo-horn { fill: #f59e0b; stroke: #b45309; stroke-width: 2; }
     .text-main { font-size: 13px; font-weight: 700; fill: #1e293b; }
     .text-sub { font-size: 11px; fill: #64748b; }
     .text-code { font-size: 13px; font-weight: 700; font-family: monospace; }
@@ -932,13 +932,6 @@ $$\theta \approx \left( \frac{t_p - 1.0}{2.0 - 1.0} \right) \times 180^\circ$$
     @keyframes ph1 { 0%,28% {opacity:1;} 33%,100% {opacity:0;} }
     @keyframes ph2 { 0%,30% {opacity:0;} 36%,61% {opacity:1;} 66%,100% {opacity:0;} }
     @keyframes ph3 { 0%,63% {opacity:0;} 69%,96% {opacity:1;} 100% {opacity:0;} }
-
-    @keyframes hornMove {
-      0%, 30%   { transform: rotate(-90deg); }
-      36%, 63%  { transform: rotate(0deg); }
-      69%, 96%  { transform: rotate(90deg); }
-      100%      { transform: rotate(-90deg); }
-    }
   </style>
   <rect x="5" y="5" width="750" height="310" class="bg"/>
   <text x="380" y="30" class="text-main" text-anchor="middle">ความกว้างพัลส์ (Pulse Width) → มุมของเซอร์โว (คาบคงที่ 20 ms / 50 Hz)</text>
@@ -950,10 +943,10 @@ $$\theta \approx \left( \frac{t_p - 1.0}{2.0 - 1.0} \right) \times 180^\circ$$
   <text x="60" y="172" class="text-sub">0 ms</text>
   <text x="420" y="172" class="text-sub">20 ms</text>
 
-  <!-- Pulses (only one visible at a time) -->
-  <rect class="pulse p1" x="60" y="95" width="38"  height="60"/>
-  <rect class="pulse p2" x="60" y="95" width="57"  height="60"/>
-  <rect class="pulse p3" x="60" y="95" width="76"  height="60"/>
+  <!-- Pulses (only one visible at a time, scaled correctly where 20 ms = 380px) -->
+  <rect class="pulse p1" x="60" y="95" width="19"  height="60"/>
+  <rect class="pulse p2" x="60" y="95" width="28.5"  height="60"/>
+  <rect class="pulse p3" x="60" y="95" width="38"  height="60"/>
 
   <!-- Pulse-width readouts -->
   <g class="p1"><text x="250" y="200" class="text-code" fill="#7c3aed" text-anchor="middle">พัลส์ 1.0 ms  →  มุม 0°</text></g>
@@ -964,8 +957,13 @@ $$\theta \approx \left( \frac{t_p - 1.0}{2.0 - 1.0} \right) \times 180^\circ$$
   <rect x="560" y="175" width="60" height="80" class="servo-body"/>
   <text x="590" y="275" class="text-sub" text-anchor="middle">Servo (SG90)</text>
   <circle cx="590" cy="175" r="8" fill="#cbd5e1" stroke="#475569" stroke-width="2"/>
-  <!-- Horn: drawn pointing up from pivot, rotated by animation -->
-  <rect class="servo-horn" x="585" y="105" width="10" height="72" rx="4"/>
+  <!-- Horn: drawn pointing up from pivot, rotated by SMIL animation -->
+  <rect class="servo-horn" x="585" y="105" width="10" height="72" rx="4">
+    <animateTransform attributeName="transform" type="rotate"
+      values="-90 590 175; -90 590 175; 0 590 175; 0 590 175; 90 590 175; 90 590 175; -90 590 175"
+      keyTimes="0; 0.30; 0.36; 0.63; 0.69; 0.96; 1"
+      dur="9s" repeatCount="indefinite" />
+  </rect>
   <circle cx="590" cy="175" r="4" fill="#0f172a"/>
 
   <!-- Angle arc guide -->

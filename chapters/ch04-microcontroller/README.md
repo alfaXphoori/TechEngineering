@@ -1256,37 +1256,37 @@ void loop() {
 
   <!-- COOLDOWN_DELAY -->
   <g class="g-cool">
-    <rect x="255" y="380" width="250" height="68" rx="8" fill="#fefce8" stroke="#ca8a04" stroke-width="2"/>
+    <rect x="260" y="380" width="240" height="68" rx="8" fill="#fefce8" stroke="#ca8a04" stroke-width="2"/>
     <text x="380" y="401" text-anchor="middle" class="lbl-title" fill="#92400e">COOLDOWN_DELAY</text>
     <text x="380" y="417" text-anchor="middle" class="lbl-sub">● ปั๊ม: เปิด (ON) ต่อเนื่อง 10 วิ</text>
     <text x="380" y="432" text-anchor="middle" class="lbl-sub">● สัญญาณเตือน: ปิด (OFF)</text>
   </g>
 
   <!-- Arrow: COOLDOWN → IDLE (Timer 10s) via right side -->
-  <path d="M630,414 Q680,414 680,208 Q680,140 490,174" class="arrow" fill="none" stroke="#334155" stroke-width="2"/>
+  <path d="M500,414 L630,414 Q680,414 680,208 Q680,140 490,174" class="arrow" fill="none" stroke="#334155" stroke-width="2"/>
   <text x="690" y="300" class="lbl-edge" text-anchor="middle" transform="rotate(-90,690,300)">Timer 10s หมดลง → กลับ IDLE</text>
 
   <!-- FAULT arrow from IDLE (Sensor Error / Temp > 95°C) — left side -->
-  <path d="M270,174 Q120,174 120,460" class="arrow-fault"/>
+  <path d="M270,174 Q120,174 120,418" class="arrow-fault"/>
   <text x="60" y="320" class="lbl-edge" fill="#e11d48" text-anchor="middle" transform="rotate(-90,60,320)">Sensor Error / Temp &gt; 95°C</text>
   <!-- Moving dot on fault path -->
   <circle id="ch4-derr" class="ch4-dot" cx="120" cy="220" r="4"/>
 
   <!-- FAULT box -->
   <g class="g-fault">
-    <rect x="50" y="418" width="300" height="80" rx="8" fill="#fff1f2" stroke="#e11d48" stroke-width="2.5"/>
-    <text x="200" y="440" text-anchor="middle" class="lbl-title" fill="#be123c" font-size="14">FAULT 🚨</text>
-    <text x="200" y="457" text-anchor="middle" class="lbl-sub">● ปั๊ม: เปิดค้าง (Failsafe ON)</text>
-    <text x="200" y="472" text-anchor="middle" class="lbl-sub">● สัญญาณเตือน: ดัง (Siren ON)</text>
-    <text x="200" y="487" text-anchor="middle" class="lbl-sub">● ต้องกดปุ่ม Reset ด้วยตนเอง</text>
+    <rect x="20" y="418" width="220" height="80" rx="8" fill="#fff1f2" stroke="#e11d48" stroke-width="2.5"/>
+    <text x="130" y="440" text-anchor="middle" class="lbl-title" fill="#be123c" font-size="14">FAULT 🚨</text>
+    <text x="130" y="457" text-anchor="middle" class="lbl-sub">● ปั๊ม: เปิดค้าง (Failsafe ON)</text>
+    <text x="130" y="472" text-anchor="middle" class="lbl-sub">● สัญญาณเตือน: ดัง (Siren ON)</text>
+    <text x="130" y="487" text-anchor="middle" class="lbl-sub">● ต้องกดปุ่ม Reset ด้วยตนเอง</text>
   </g>
 
   <!-- Arrow: FAULT → IDLE (Reset) -->
-  <path d="M200,418 Q200,360 270,295" class="arrow-reset"/>
-  <text x="148" y="368" class="lbl-edge" fill="#16a34a" font-size="9">Temp&lt;70°C &amp; Sensor OK</text>
-  <text x="155" y="380" class="lbl-edge" fill="#16a34a" font-size="9">&amp; กดปุ่ม Reset</text>
+  <path d="M130,418 Q160,360 270,295" class="arrow-reset"/>
+  <text x="165" y="368" class="lbl-edge" fill="#16a34a" font-size="9.5">Temp&lt;70°C &amp; Sensor OK</text>
+  <text x="175" y="380" class="lbl-edge" fill="#16a34a" font-size="9.5">&amp; กดปุ่ม Reset</text>
   <!-- Moving dot on reset path -->
-  <circle id="ch4-drst" class="ch4-dot" cx="200" cy="418" r="4" fill="#16a34a"/>
+  <circle id="ch4-drst" class="ch4-dot" cx="130" cy="418" r="4" fill="#16a34a"/>
 
   <!-- FAULT arrow also from PUMPING left path -->
   <path d="M270,295 Q160,295 120,418" class="arrow-fault" fill="none"/>

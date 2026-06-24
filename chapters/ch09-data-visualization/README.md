@@ -371,24 +371,24 @@ GROUP BY time(5m) fill(linear)
 
 ---
 
-### 9.5.3 Blynk
+### 9.5.3 ThingsBoard
 
-**Blynk** เป็นแพลตฟอร์มระบบคลาวด์สำเร็จรูปที่เน้นความเร็วในการขึ้นโครงร่างโปรเจกต์ IoT (Rapid Prototyping) ช่วยให้นักพัฒนาและนักเรียนวิศวกรรมสามารถสร้างสรรค์แดชบอร์ดบนโมบายแอปพลิเคชันระบบ iOS/Android และบนเว็บเบราว์เซอร์ได้โดยแทบไม่ต้องมีความรู้เกี่ยวกับการทำ Web Server หรือเขียนแอปพลิเคชันมือถือแบบดั้งเดิม
+**ThingsBoard** เป็นแพลตฟอร์ม IoT ระดับอุตสาหกรรม (Industrial-grade IoT Platform) แบบโอเพนซอร์สที่ออกแบบมาเพื่อรองรับทั้งการเรียนรู้และงานจริงในระบบฝังตัว ผู้พัฒนาสามารถสร้างแดชบอร์ดเว็บแบบลากวาง (Drag-and-drop Web Dashboard) พร้อมวิดเจ็ตหลากหลาย เช่น เกจวัดค่า กราฟอนุกรมเวลา และ LED แสดงสถานะ นอกจากนี้ยังมีแอปมือถือ (ThingsBoard Mobile App) สำหรับ iOS และ Android อุปกรณ์เชื่อมต่อผ่านโปรโตคอล MQTT โดยส่งข้อมูลโทรมาตร (Telemetry) ขึ้นคลาวด์และรับคำสั่งควบคุมกลับมา (RPC) แบบสองทิศทาง ระบบมีฐานข้อมูลอนุกรมเวลา (Time-series Storage) และระบบแจ้งเตือน (Alarms) ในตัวโดยไม่ต้องติดตั้งซอฟต์แวร์เพิ่มเติม
 
 ---
 
 ### ตารางเปรียบเทียบเครื่องมือ
 
-| คุณสมบัติ | Node-RED | Grafana | Blynk |
+| คุณสมบัติ | Node-RED | Grafana | ThingsBoard |
 |----------|----------|---------|------------|
-| ประเภท | Self-hosted | Self-hosted | Cloud |
-| ความยากในการเริ่มต้น | ง่าย | ปานกลาง | ง่ายมาก |
-| ปรับแต่งกราฟ | ปานกลาง | สูงมาก | ปานกลาง |
+| ประเภท | Self-hosted | Self-hosted | Cloud / Self-hosted |
+| ความยากในการเริ่มต้น | ง่าย | ปานกลาง | ปานกลาง |
+| ปรับแต่งกราฟ | ปานกลาง | สูงมาก | สูง |
 | รองรับ Real-Time | ✅ | ✅ | ✅ |
 | โมบายแอป | ❌ | จำกัด | ✅ |
-| ค่าใช้จ่าย | ฟรี | ฟรี (OSS) | ฟรี (จำกัด) |
-| เหมาะกับ | Prototype, งานขนาดเล็ก | Production, งานขนาดใหญ่ | การเรียนรู้, งานเล็ก |
-| ตั้ง Alert ได้ | ✅ (ผ่าน Flow) | ✅ (Built-in) | ✅ (ThingHTTP) |
+| ค่าใช้จ่าย | ฟรี | ฟรี (OSS) | ฟรี (จำกัด) / OSS |
+| เหมาะกับ | Prototype, งานขนาดเล็ก | Production, งานขนาดใหญ่ | การเรียนรู้ถึงงานอุตสาหกรรม |
+| ตั้ง Alert ได้ | ✅ (ผ่าน Flow) | ✅ (Built-in) | ✅ (Built-in Alarms) |
 
 ---
 
@@ -420,287 +420,324 @@ GROUP BY time(5m) fill(linear)
 - **เว็บแอป (Web App):** เปิดผ่านเบราว์เซอร์ ไม่ต้องติดตั้ง อัปเดตง่าย ใช้ได้ทุกอุปกรณ์ เหมาะกับแดชบอร์ดในโรงงาน
 - **โมบายแอป (Mobile App):** ติดตั้งบนมือถือ รับ Push Notification ได้ ใช้งาน Offline บางส่วน เหมาะกับการแจ้งเตือนฉุกเฉิน
 
-### 9.6.4 การใช้ Blynk และสถาปัตยกรรม Virtual Pins
+### 9.6.4 การใช้ ThingsBoard และสถาปัตยกรรม Telemetry / RPC
 
-แพลตฟอร์ม **Blynk** มุ่งเน้นการปฏิสัมพันธ์ระหว่างอุปกรณ์ไมโครคอนโทรลเลอร์กับผู้ใช้งานผ่านระบบเซิร์ฟเวอร์คลาวด์ระดับโลก โดยจุดเด่นสำคัญที่สุดที่ขับเคลื่อนกลไกการสื่อสารนี้คือ **สถาปัตยกรรมพินเสมือน (Virtual Pins Architecture)**
+แพลตฟอร์ม **ThingsBoard** ออกแบบการสื่อสารระหว่างอุปกรณ์ไมโครคอนโทรลเลอร์กับผู้ใช้งานบนหลักการ **คีย์สตริง (String Key)** แทนการอ้างอิงพินทางกายภาพโดยตรง ทำให้โค้ดบนบอร์ดเป็นอิสระจากขา GPIO และสามารถปรับเปลี่ยนฮาร์ดแวร์ได้โดยไม่กระทบต่อการตั้งค่าแดชบอร์ด
 
-#### 1. พินเสมือน (Virtual Pins) คืออะไร?
-ในฮาร์ดแวร์ทั่วไป เช่น ESP32 จะมีพินทางกายภาพ (Physical GPIO Pins) เช่น GPIO2, GPIO15 สำหรับต่อไฟ LED หรือเซนเซอร์ แต่การควบคุมข้ามเครือข่ายอินเทอร์เน็ตโดยตรงผ่านพินทางกายภาพจะจำกัดความยืดหยุ่น เช่น หากต้องสลับพินฮาร์ดแวร์ในวงจรใหม่ จะทำให้ตัวแสดงผลและโมบายแอปใช้งานไม่ได้ทันทีและต้องแก้ไขระบบครั้งใหญ่
+#### 1. คีย์โทรมาตรและ RPC Method (Telemetry Keys & RPC Methods)
+ThingsBoard ไม่มีแนวคิด "พินเสมือน" แต่ใช้สองกลไกหลัก:
+- **Telemetry Keys (คีย์โทรมาตร):** สตริงชื่อตัวแปรที่บอร์ดส่งขึ้นคลาวด์ เช่น `"temperature"`, `"humidity"` ซึ่งแดชบอร์ดจะผูก Widget เข้ากับคีย์เหล่านี้โดยตรง
+- **RPC Methods (เมธอด RPC):** ชื่อคำสั่งในรูปแบบสตริง เช่น `"setLed"`, `"setSpeed"` ที่แดชบอร์ดส่งลงมาควบคุมฮาร์ดแวร์ บอร์ดจะระบุแอคชันเฉพาะผ่านชื่อเมธอดนี้และนำค่าพารามิเตอร์ไปสั่งงาน GPIO
+- **ข้อดี:** เปลี่ยนพิน GPIO ในวงจร (เช่น จาก GPIO2 เป็น GPIO5) โดยแก้โค้ดฝั่งบอร์ดเพียงจุดเดียว แดชบอร์ดไม่ต้องเปลี่ยนแปลงใด ๆ
 
-Blynk จึงออกแบบแนวคิด **Virtual Pins (V0 ถึง V255)** ซึ่งเปรียบเหมือน "ถังหน่วยความจำเสมือนบนคลาวด์" ที่ไม่ยึดติดกับพินกายภาพใด ๆ:
-- มีสถานะเปรียบเสมือนตัวนำข้อมูลหรือช่องทาง (Data Streams) ที่จัดตั้งขึ้นระหว่างโมบายแอปพลิเคชัน คลาวด์ และบอร์ด ESP32
-- ข้อมูลที่ถูกส่งผ่าน Virtual Pins สามารถเป็นได้ทั้งข้อมูลตัวเลขข้อมูลจริง (Float), จำนวนเต็ม (Int), อักษร (String) หรือชุดข้อมูลอาร์เรย์ (Array)
+#### 2. กลไกการอัปโหลดข้อมูลเซนเซอร์ (Uplink — publish Telemetry)
+เมื่อ ESP32 ต้องการส่งอุณหภูมิขึ้นแสดงผลบนแดชบอร์ด:
+- บอร์ดจัดเตรียมข้อมูลในรูปแบบ JSON เช่น `{"temperature": 28.5}`
+- เรียกใช้ `client.publish("v1/devices/me/telemetry", payload)` ผ่านโปรโตคอล MQTT ไปยัง ThingsBoard Cloud ที่ `thingsboard.cloud:1883`
+- ThingsBoard จะบันทึกค่าลงฐานข้อมูลอนุกรมเวลา (Time-series Storage) และอัปเดต Widget ทุกตัวที่ผูกกับคีย์ `"temperature"` บนแดชบอร์ดในทันที
 
-#### 2. กลไกการอัปโหลดข้อมูลเซนเซอร์ (Uplink - `Blynk.virtualWrite`)
-เมื่อ ESP32 ต้องการส่งข้อมูลจากสภาพแวดล้อมจริง เช่น ข้อมูลอุณหภูมิขึ้นไปแสดงผลบนหน้าแดชบอร์ด:
-- ESP32 จะประมวลผลข้อมูลและเรียกใช้ฟังก์ชัน `Blynk.virtualWrite(V0, temp)`
-- คำสั่งนี้จะทำการสร้างแพ็กเก็ตข้อมูลขนาดเล็กและยิงผ่านโปรโตคอล TCP/SSL ไปยัง Blynk Server 
-- Blynk Server เมื่อได้รับค่าที่ช่องหน่วยความจำ V0 จะอัปเดตฐานข้อมูลคลาวด์ และแจ้งเตือนไปยังสมาร์ทโฟนที่เปิดแอปพลิเคชันอยู่ทันทีผ่านการเชื่อมต่อแบบเรียลไทม์ (WebSockets) ทำให้เกจหรือกราฟที่แมปกับพิน V0 ปรับระดับเข็มขึ้นอย่างรวดเร็ว
+#### 3. กลไกการรับคำสั่งควบคุมอุปกรณ์ (Downlink — RPC Command)
+เมื่อผู้ใช้กดสวิตช์ Toggle บนแดชบอร์ดเพื่อสั่งเปิด-ปิด LED:
+- แดชบอร์ดส่ง RPC Request มาในรูป JSON เช่น `{"method": "setLed", "params": true}` ลงมาที่ Topic `v1/devices/me/rpc/request/{id}`
+- บอร์ดที่ Subscribe Topic `v1/devices/me/rpc/request/+` ไว้จะได้รับข้อความนี้ผ่านฟังก์ชัน Callback `onRpcCommand()`
+- ภายใน Callback บอร์ดแยกค่า `method` และ `params` ออกมาสั่งงาน `digitalWrite(LED_PIN, params)` แล้วตอบกลับ (RPC Response) บน Topic `v1/devices/me/rpc/response/{id}` ด้วย `{"success": true}`
 
-#### 3. กลไกการรับคำสั่งควบคุมอุปกรณ์ (Downlink - `BLYNK_WRITE`)
-เมื่อผู้ใช้งานป้อนคำสั่งผ่านโมบายแอปพลิเคชัน เช่น กดปุ่มสัมผัสเพื่อสั่งเปิดไฟ LED:
-- แอพ Blynk บนโทรศัพท์มือถือจะส่งคำขออัปเดตค่าพิน V1 ไปยัง Blynk Cloud
-- Blynk Cloud จะบันทึกสถานะใหม่ และส่งสัญญาณพุช (Push Alert Event) ไปยัง ESP32 ที่รอฟังอยู่
-- ในเฟิร์มแวร์ของ ESP32 ไลบรารีของ Blynk จะดักจับเหตุการณ์นี้ และทำการเรียกใช้ตัวควบคุมคอลแบ็กเฉพาะผ่านชุดคำสั่งแมโครที่เรียกว่า **`BLYNK_WRITE(V1)`**
-- ฟังก์ชันนี้ทำงานเปรียบเสมือนอินเทอร์รัปต์ทางซอฟต์แวร์ ภายในฟังก์ชันนี้เราจะใช้คำสั่งดึงค่าสถานะ `param.asInt()` (เพื่อรับค่า 0 หรือ 1) หรือ `param.asStr()` แล้วนำไปสั่งงานขาพินทางกายภาพ เช่น `digitalWrite(GPIO_PIN, value)`
+#### 4. การซิงโครไนซ์สถานะอุปกรณ์ด้วย Shared Attributes
+**ปัญหา:** เมื่อ ESP32 รีบูตหลังไฟดับ ค่าตัวแปรในหน่วยความจำ RAM จะหายทั้งหมด (LED กลับเป็น OFF) แต่แดชบอร์ดยังแสดงสวิตช์เป็น ON เนื่องจากคลาวด์เก็บสถานะล่าสุดไว้ สถานะจึงไม่ตรงกัน
 
-#### 4. ความสำคัญของการประสานงานและซิงโครไนซ์สถานะ (Cloud State Synchronization)
-ปัญหาสำคัญของการนำระบบควบคุมอุปกรณ์มาใช้งานจริงคือ **"การสูญเสียการประสานสถานะ (State Inconsistency)"** ซึ่งเกิดขึ้นเมื่อ:
-- ตัวอย่างเช่น ผู้ใช้สั่งเปิดไฟผ่านแอปไว้ (พิน V1 บนระบบคลาวด์เป็น 1 - ON)
-- จากนั้นบอร์ด ESP32 เกิดเหตุไฟดับ หรืออินเทอร์เน็ตหลุด และทำการรีเซ็ตเครื่องใหม่ (Reboot)
-- เมื่อ ESP32 กลับมาทำงานใหม่ ค่าตัวแปรในวงจรกายภาพจะถูกตั้งค่ากลับไปที่ 0 (ไฟ LED ดับ) แต่ในแอปบนสมาร์ทโฟนยังคงมองเห็นปุ่มเป็นสีแดง (ไฟเปิด) เนื่องจากคลาวด์เก็บบันทึกสถานะล่าสุดไว้เป็น 1 สถานะทั้งสองจึงไม่ตรงกัน!
-
-Blynk แก้ไขปัญหานี้โดยการเตรียมโครงสร้างซิงโครไนซ์สถานะย้อนกลับ:
-- **`BLYNK_CONNECTED()`:** เป็นฟังก์ชันพิเศษที่จะทำงานเพียงครั้งเดียวเมื่อ ESP32 เชื่อมต่อกับคลาวด์ Blynk สำเร็จ
-- **`Blynk.syncVirtual(V1)`:** เมื่อฟังก์ชันนี้ทำงานใน `BLYNK_CONNECTED()` ตัวไมโครคอนโทรลเลอร์จะยิงสัญญาณแจ้งเตือนไปยัง Blynk Cloud เพื่อขอดึงสถานะปัจจุบันของพินเสมือน V1 ย้อนกลับลงมา 
-- Blynk Cloud จะส่งข้อมูลล่าสุดลงมา ซึ่งจะไปทริกเกอร์ให้ฟังก์ชัน `BLYNK_WRITE(V1)` ทำงานทันทีโดยอัตโนมัติ ช่วยสั่งเปิดไฟ LED ในความจริงให้สอดรับกับหน้าจอแอป
+**วิธีแก้ด้วย ThingsBoard Shared Attributes:**
+- เมื่อบอร์ดเชื่อมต่อคลาวด์สำเร็จ บอร์ดจะส่งคำขอดึงสถานะล่าสุดไปยัง Topic `v1/devices/me/attributes/request/1`
+- ThingsBoard จะตอบกลับด้วยค่าคุณลักษณะ (Attribute) ที่บันทึกไว้บนคลาวด์ เช่น `{"ledState": true}`
+- บอร์ดอ่านค่านี้มาตั้งสถานะฮาร์ดแวร์ให้ตรงกับแดชบอร์ดโดยอัตโนมัติทันที
+- กลไกนี้เรียกว่า **Digital Twin** — ThingsBoard เก็บ "ภาพจำลองดิจิทัล" ของสถานะอุปกรณ์ทุกตัวบนคลาวด์ตลอดเวลา
 
 <div style="text-align: center; margin: 25px 0;">
-<svg viewBox="0 0 820 380" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
-  <title>สถาปัตยกรรมและกระบวนการซิงโครไนซ์ข้อมูลผ่าน Blynk Cloud</title>
+<svg viewBox="0 0 820 400" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
+  <title>สถาปัตยกรรม ThingsBoard Telemetry และ RPC สองทิศทาง</title>
   <style>
-    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; rx: 12px; }
-    .grid { fill: none; stroke: #e2e8f0; stroke-width: 1; stroke-dasharray: 5 5; }
-    
-    /* Device / Container Boxes */
-    .mcu-box { fill: #faf5ff; stroke: #7c3aed; stroke-width: 2; rx: 8px; }
-    .sub-box { fill: #ffffff; stroke: #334155; stroke-width: 2; rx: 8px; }
-    .code-box { fill: #f1f5f9; stroke: #e2e8f0; stroke-width: 1; rx: 4px; }
-    
-    /* Text styles */
-    .text-title { font-size: 14px; font-weight: bold; fill: #1e293b; }
-    .text-sub { font-size: 12px; fill: #64748b; }
-    .text-code-purple { font-size: 11px; font-family: monospace; fill: #7c3aed; font-weight: bold; }
-    .text-code-amber { font-size: 11px; font-family: monospace; fill: #d97706; font-weight: bold; }
-    
-    /* Wires / Paths */
-    .comm-wire { fill: none; stroke: #cbd5e1; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
-    
-    /* Flow Animations */
-    @keyframes flowRight {
-      to { stroke-dashoffset: -24; }
-    }
-    @keyframes flowLeft {
-      to { stroke-dashoffset: 24; }
-    }
-    .flow-uplink { fill: none; stroke: #16a34a; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 6 6; animation: flowRight 1.5s linear infinite; }
-    .flow-downlink { fill: none; stroke: #d97706; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 6 6; animation: flowLeft 1.5s linear infinite; }
-    .flow-sync { fill: none; stroke: #7c3aed; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 4 4; animation: flowLeft 2s linear infinite; }
-    
-    /* UI components in Mobile App */
-    .app-screen { fill: #f8fafc; stroke: #94a3b8; stroke-width: 1.5; rx: 6px; }
-    .widget-gauge { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; rx: 4px; }
-    .widget-btn { fill: #fef3c7; stroke: #d97706; stroke-width: 1.5; rx: 4px; }
-    .btn-toggle { fill: #d97706; rx: 8px; }
-    .btn-knob { fill: #ffffff; stroke: #cbd5e1; }
+    #tb9-svg .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
+    #tb9-svg .box-esp { fill: #faf5ff; stroke: #7c3aed; stroke-width: 2; }
+    #tb9-svg .box-cloud { fill: #eff6ff; stroke: #2563eb; stroke-width: 2; }
+    #tb9-svg .box-dash { fill: #f0fdf4; stroke: #16a34a; stroke-width: 2; }
+    #tb9-svg .code-box { fill: #f1f5f9; stroke: #e2e8f0; stroke-width: 1; }
+
+    #tb9-svg .lbl-title { font-size: 13px; font-weight: 700; fill: #0f172a; }
+    #tb9-svg .lbl-sub { font-size: 9px; fill: #64748b; font-weight: 500; }
+    #tb9-svg .lbl-code-p { font-size: 9px; font-family: monospace; fill: #7c3aed; font-weight: bold; }
+    #tb9-svg .lbl-code-g { font-size: 9px; font-family: monospace; fill: #059669; font-weight: bold; }
+    #tb9-svg .lbl-code-r { font-size: 9px; font-family: monospace; fill: #dc2626; font-weight: bold; }
+    #tb9-svg .lbl-key { font-size: 9px; font-weight: 700; fill: #ffffff; }
+
+    #tb9-svg .flow-up { fill: none; stroke: #10b981; stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 6 7; animation: tb9-right 1.8s linear infinite; }
+    #tb9-svg .flow-down { fill: none; stroke: #ef4444; stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 6 7; animation: tb9-left 1.8s linear infinite; }
+    #tb9-svg .flow-sync { fill: none; stroke: #6366f1; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 4 5; animation: tb9-left 2.2s linear infinite; }
+
+    @keyframes tb9-right { to { stroke-dashoffset: -26; } }
+    @keyframes tb9-left  { to { stroke-dashoffset:  26; } }
+
+    #tb9-svg .pill-g { fill: #10b981; }
+    #tb9-svg .pill-r { fill: #ef4444; }
+    #tb9-svg .pill-i { fill: #6366f1; }
+    #tb9-svg .widget-box { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; }
+    #tb9-svg .btn-glow { animation: tb9-pulse 2s infinite ease-in-out; }
+    @keyframes tb9-pulse { 0%,100% { opacity: 0.8; } 50% { opacity: 1; } }
   </style>
 
-  <!-- Panel background -->
-  <rect x="5" y="5" width="810" height="370" class="bg"/>
-  
-  <!-- Grid -->
-  <g class="grid">
-    <path d="M 5,50 H 815 M 5,100 H 815 M 5,150 H 815 M 5,200 H 815 M 5,250 H 815 M 5,300 H 815 M 5,350 H 815" />
-    <path d="M 100,5 V 375 M 200,5 V 375 M 300,5 V 375 M 400,5 V 375 M 500,5 V 375 M 600,5 V 375 M 700,5 V 375" />
+  <g id="tb9-svg">
+    <rect x="5" y="5" width="810" height="390" rx="10" class="bg"/>
+
+    <!-- Main Title -->
+    <text x="410" y="30" text-anchor="middle" font-size="14" font-weight="700" fill="#1e293b">สถาปัตยกรรม ThingsBoard: Telemetry Keys + RPC Methods (สองทิศทาง)</text>
+
+    <!-- ========== LEFT: ESP32 ========== -->
+    <rect x="20" y="50" width="215" height="320" rx="8" class="box-esp"/>
+    <text x="127" y="73" text-anchor="middle" class="lbl-title" fill="#7c3aed">ESP32 (บอร์ดควบคุม)</text>
+    <text x="127" y="88" text-anchor="middle" class="lbl-sub">WiFi: Wokwi-GUEST | Auth: Access Token</text>
+
+    <!-- Code block: Telemetry publish -->
+    <rect x="32" y="100" width="191" height="72" rx="4" class="code-box"/>
+    <text x="42" y="115" class="lbl-sub">ส่งข้อมูลอุณหภูมิขึ้นคลาวด์ (ทุก 3 วินาที)</text>
+    <text x="42" y="132" class="lbl-code-g">StaticJsonDocument&lt;128&gt; doc;</text>
+    <text x="42" y="147" class="lbl-code-g">doc["temperature"] = temp;</text>
+    <text x="42" y="162" class="lbl-code-g">client.publish(</text>
+    <text x="52" y="175" class="lbl-code-g">"v1/devices/me/telemetry", buf);</text>
+    <circle cx="223" cy="110" r="5" fill="#10b981"/>
+
+    <!-- Code block: RPC handler -->
+    <rect x="32" y="186" width="191" height="88" rx="4" class="code-box"/>
+    <text x="42" y="201" class="lbl-sub">รับคำสั่ง RPC ควบคุม LED (GPIO2)</text>
+    <text x="42" y="217" class="lbl-code-r">void onRpcCommand(char* topic,</text>
+    <text x="52" y="230" class="lbl-code-r">  byte* payload, uint len) {</text>
+    <text x="52" y="243" class="lbl-code-r">  const char* m = doc["method"];</text>
+    <text x="52" y="256" class="lbl-code-r">  if (!strcmp(m,"setLed"))</text>
+    <text x="62" y="269" class="lbl-code-r">    digitalWrite(2, doc["params"]);</text>
+    <text x="42" y="269" class="lbl-code-r">}</text>
+    <circle cx="223" cy="230" r="5" fill="#ef4444"/>
+
+    <!-- Code block: Shared Attr sync -->
+    <rect x="32" y="288" width="191" height="65" rx="4" class="code-box"/>
+    <text x="42" y="303" class="lbl-sub">ร้องขอสถานะล่าสุดเมื่อเชื่อมต่อใหม่</text>
+    <text x="42" y="319" class="lbl-code-p">client.publish(</text>
+    <text x="52" y="332" class="lbl-code-p">"v1/devices/me/</text>
+    <text x="52" y="345" class="lbl-code-p">  attributes/request/1", "{}");</text>
+    <circle cx="223" cy="318" r="5" fill="#6366f1"/>
+
+    <!-- ========== MIDDLE: ThingsBoard Cloud ========== -->
+    <rect x="305" y="50" width="210" height="320" rx="8" class="box-cloud"/>
+    <text x="410" y="73" text-anchor="middle" class="lbl-title" fill="#2563eb">ThingsBoard Cloud</text>
+    <text x="410" y="88" text-anchor="middle" class="lbl-sub">thingsboard.cloud:1883 | Access Token Auth</text>
+
+    <!-- Telemetry Key pill -->
+    <rect x="330" y="105" width="160" height="32" rx="6" class="pill-g"/>
+    <text x="410" y="125" text-anchor="middle" class="lbl-key">"temperature" (Telemetry Key)</text>
+
+    <!-- RPC Method pill -->
+    <rect x="330" y="195" width="160" height="32" rx="6" class="pill-r"/>
+    <text x="410" y="215" text-anchor="middle" class="lbl-key">"setLed" (RPC Method)</text>
+
+    <!-- Shared Attribute pill -->
+    <rect x="330" y="295" width="160" height="32" rx="6" class="pill-i"/>
+    <text x="410" y="315" text-anchor="middle" class="lbl-key">ledState (Shared Attribute)</text>
+
+    <!-- Digital Twin label -->
+    <rect x="325" y="345" width="170" height="18" rx="4" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+    <text x="410" y="358" text-anchor="middle" font-size="9" font-weight="700" fill="#1e40af">Digital Twin: เก็บสถานะล่าสุดบนคลาวด์</text>
+
+    <!-- ========== RIGHT: Dashboard ========== -->
+    <rect x="585" y="50" width="210" height="320" rx="8" class="box-dash"/>
+    <text x="690" y="73" text-anchor="middle" class="lbl-title" fill="#16a34a">แดชบอร์ด (Web / App)</text>
+    <text x="690" y="88" text-anchor="middle" class="lbl-sub">ThingsBoard Dashboard</text>
+
+    <!-- Widget: Gauge -->
+    <rect x="605" y="105" width="170" height="38" rx="4" class="widget-box"/>
+    <text x="615" y="120" font-size="9" font-weight="700" fill="#475569">Gauge: อุณหภูมิ</text>
+    <text x="770" y="132" text-anchor="end" font-size="9" font-weight="700" fill="#10b981">"temperature"</text>
+    <path d="M 615,135 A 16,16 0 0 1 647,135" fill="none" stroke="#cbd5e1" stroke-width="3" stroke-linecap="round"/>
+    <path d="M 615,135 A 16,16 0 0 1 638,120" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="631" cy="135" r="3" fill="#334155"/>
+
+    <!-- Widget: Switch -->
+    <rect x="605" y="195" width="170" height="38" rx="4" class="widget-box"/>
+    <text x="615" y="210" font-size="9" font-weight="700" fill="#475569">Switch: เปิด/ปิด LED</text>
+    <rect x="735" y="203" width="26" height="14" rx="7" fill="#ef4444"/>
+    <circle cx="741" cy="210" r="5" fill="#ffffff" class="btn-glow"/>
+    <text x="770" y="222" text-anchor="end" font-size="9" font-weight="700" fill="#ef4444">"setLed" RPC</text>
+
+    <!-- Widget: Shared Attr display -->
+    <rect x="605" y="295" width="170" height="38" rx="4" class="widget-box"/>
+    <text x="615" y="310" font-size="9" font-weight="700" fill="#475569">Value: สถานะ LED</text>
+    <text x="770" y="322" text-anchor="end" font-size="9" font-weight="700" fill="#6366f1">ledState (Attr)</text>
+    <circle cx="745" cy="316" r="6" fill="#6366f1" opacity="0.8"/>
+
+    <!-- ========== FLOW LINES ========== -->
+    <!-- Telemetry up: ESP32 -> Cloud -->
+    <path d="M 235 121 H 299" class="flow-up"/>
+    <!-- Telemetry up: Cloud -> Dashboard -->
+    <path d="M 515 121 H 579" class="flow-up"/>
+    <text x="267" y="113" font-size="8" fill="#10b981" font-weight="bold" text-anchor="middle">Telemetry</text>
+    <text x="547" y="113" font-size="8" fill="#10b981" font-weight="bold" text-anchor="middle">push ขึ้นหน้าจอ</text>
+
+    <!-- RPC down: Dashboard -> Cloud -->
+    <path d="M 579 211 H 515" class="flow-down"/>
+    <!-- RPC down: Cloud -> ESP32 -->
+    <path d="M 299 211 H 235" class="flow-down"/>
+    <text x="547" y="205" font-size="8" fill="#ef4444" font-weight="bold" text-anchor="middle">RPC Request</text>
+    <text x="267" y="205" font-size="8" fill="#ef4444" font-weight="bold" text-anchor="middle">RPC Response</text>
+
+    <!-- Sync: ESP32 -> Cloud (curved) -->
+    <path d="M 235 311 C 267 350 299 350 305 311" class="flow-sync"/>
+    <text x="267" y="368" font-size="8" fill="#6366f1" font-weight="bold" text-anchor="middle">Attr Request / Response</text>
+    <!-- Sync: Cloud -> Dashboard -->
+    <path d="M 515 311 H 579" class="flow-sync"/>
+    <text x="547" y="305" font-size="8" fill="#6366f1" font-weight="bold" text-anchor="middle">Attr sync</text>
   </g>
-
-  <!-- Communication paths -->
-  <!-- V0 Uplink Flow (ESP32 -> Cloud -> App) -->
-  <path d="M 230,100 L 370,100" class="comm-wire"/>
-  <path d="M 230,100 L 370,100" class="flow-uplink"/>
-  <path d="M 450,100 L 590,100" class="comm-wire"/>
-  <path d="M 450,100 L 590,100" class="flow-uplink"/>
-
-  <!-- V1 Downlink Flow (App -> Cloud -> ESP32) -->
-  <path d="M 450,220 L 590,220" class="comm-wire"/>
-  <path d="M 450,220 L 590,220" class="flow-downlink"/>
-  <path d="M 230,220 L 370,220" class="comm-wire"/>
-  <path d="M 230,220 L 370,220" class="flow-downlink"/>
-
-  <!-- Sync Request Path -->
-  <path d="M 230,300 C 300,340 330,340 370,300" class="comm-wire" stroke-width="2"/>
-  <path d="M 230,300 C 300,340 330,340 370,300" class="flow-sync"/>
-
-  <!-- 1. LEFT CONTAINER: ESP32 MCU (fill: #faf5ff, stroke: #7c3aed) -->
-  <g transform="translate(30, 40)">
-    <rect x="0" y="0" width="200" height="290" class="mcu-box"/>
-    <text x="100" y="25" class="text-title" text-anchor="middle">🔌 ESP32 ไมโครคอนโทรลเลอร์</text>
-    
-    <!-- Code Blocks inside ESP32 -->
-    <!-- Temp Sensor Read Block -->
-    <rect x="10" y="45" width="180" height="65" class="code-box"/>
-    <text x="20" y="62" class="text-sub">ส่งค่าอุณหภูมิ (ทุก 2 วินาที)</text>
-    <text x="20" y="80" class="text-code-purple">float temp = readTemp();</text>
-    <text x="20" y="98" class="text-code-purple">Blynk.virtualWrite(V0, temp);</text>
-    <circle cx="190" cy="60" r="5" fill="#16a34a"/>
-
-    <!-- LED Control Block -->
-    <rect x="10" y="125" width="180" height="75" class="code-box"/>
-    <text x="20" y="142" class="text-sub">รับคำสั่งควบคุม LED</text>
-    <text x="20" y="160" class="text-code-amber">BLYNK_WRITE(V1) {</text>
-    <text x="30" y="176" class="text-code-amber">  int state = param.asInt();</text>
-    <text x="30" y="191" class="text-code-amber">  digitalWrite(LED, state);</text>
-    <text x="20" y="195" class="text-code-amber">}</text>
-    <circle cx="190" cy="180" r="5" fill="#d97706"/>
-
-    <!-- Sync Trigger Block -->
-    <rect x="10" y="215" width="180" height="60" class="code-box"/>
-    <text x="20" y="232" class="text-sub">ร้องขอสถานะล่าสุดเมื่อต่อเน็ต</text>
-    <text x="20" y="250" class="text-code-purple" fill="#7c3aed">BLYNK_CONNECTED() {</text>
-    <text x="30" y="268" class="text-code-purple" fill="#7c3aed">  Blynk.syncVirtual(V1);</text>
-    <text x="20" y="272" class="text-code-purple" fill="#7c3aed">}</text>
-    <circle cx="190" cy="260" r="5" fill="#7c3aed"/>
-  </g>
-
-  <!-- 2. MIDDLE CONTAINER: Blynk Cloud (fill: #ffffff, stroke: #334155) -->
-  <g transform="translate(370, 40)">
-    <rect x="0" y="0" width="80" height="290" class="sub-box"/>
-    <text x="40" y="25" class="text-title" text-anchor="middle">☁️ Cloud</text>
-    
-    <!-- Cloud Icon (Flat style) -->
-    <path d="M 25,60 A 10,10 0 0 1 45,55 A 12,12 0 0 1 60,65 A 10,10 0 0 1 55,78 L 25,78 A 8,8 0 0 1 25,60 Z" fill="#e0e7ff" stroke="#4f46e5" stroke-width="1.5"/>
-
-    <!-- Registers / Datastreams -->
-    <!-- V0 Register -->
-    <rect x="8" y="90" width="64" height="55" class="code-box"/>
-    <text x="40" y="105" font-size="10" font-weight="bold" fill="#1e293b" text-anchor="middle">V0 (Float)</text>
-    <text x="40" y="120" font-size="9" fill="#64748b" text-anchor="middle">เซนเซอร์</text>
-    <text x="40" y="134" font-size="11" font-weight="bold" fill="#16a34a" text-anchor="middle">25.5 °C</text>
-
-    <!-- V1 Register -->
-    <rect x="8" y="180" width="64" height="55" class="code-box"/>
-    <text x="40" y="195" font-size="10" font-weight="bold" fill="#1e293b" text-anchor="middle">V1 (Int)</text>
-    <text x="40" y="210" font-size="9" fill="#64748b" text-anchor="middle">สวิตช์ไฟ</text>
-    <text x="40" y="224" font-size="11" font-weight="bold" fill="#d97706" text-anchor="middle">1 (ON)</text>
-  </g>
-
-  <!-- 3. RIGHT CONTAINER: Blynk Mobile App / Dashboard (fill: #ffffff, stroke: #334155) -->
-  <g transform="translate(590, 40)">
-    <rect x="0" y="0" width="200" height="290" class="sub-box"/>
-    <text x="100" y="25" class="text-title" text-anchor="middle">📱 แอปมือถือ Blynk</text>
-
-    <!-- Mobile Frame Screen -->
-    <rect x="25" y="45" width="150" height="230" class="app-screen"/>
-    <text x="100" y="62" font-size="10" fill="#334155" font-weight="bold" text-anchor="middle">ห้องทำงาน #1</text>
-    <line x1="40" y1="68" x2="160" y2="68" stroke="#cbd5e1" stroke-width="1"/>
-
-    <!-- Widget Gauge (V0) -->
-    <rect x="35" y="80" width="130" height="60" class="widget-gauge"/>
-    <text x="100" y="94" font-size="10" fill="#64748b" text-anchor="middle">อุณหภูมิ (V0)</text>
-    <text x="100" y="114" font-size="15" font-weight="bold" fill="#16a34a" text-anchor="middle">25.5 °C</text>
-    <path d="M 60,126 L 140,126" stroke="#16a34a" stroke-width="2" stroke-linecap="round"/>
-    <circle cx="100" cy="126" r="3.5" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
-
-    <!-- Widget Button (V1) -->
-    <rect x="35" y="170" width="130" height="60" class="widget-btn"/>
-    <text x="100" y="184" font-size="10" fill="#64748b" text-anchor="middle">ควบคุม LED (V1)</text>
-    <rect x="80" y="196" width="40" height="18" rx="9" class="btn-toggle"/>
-    <circle cx="111" cy="205" r="7.5" class="btn-knob"/>
-    <text x="100" y="246" font-size="9" fill="#94a3b8" text-anchor="middle">กดปุ่ม = เปลี่ยนค่าในคลาวด์</text>
-  </g>
-
-  <!-- Labels & Legends -->
-  <text x="300" y="90" font-size="10.5" fill="#16a34a" font-weight="bold" text-anchor="middle">1. virtualWrite(V0)</text>
-  <text x="520" y="90" font-size="10.5" fill="#16a34a" font-weight="bold" text-anchor="middle">2. พุชข้อมูลขึ้นหน้าจอ</text>
-  
-  <text x="520" y="244" font-size="10.5" fill="#d97706" font-weight="bold" text-anchor="middle">3. เปลี่ยนค่าปุ่มสวิตช์</text>
-  <text x="300" y="244" font-size="10.5" fill="#d97706" font-weight="bold" text-anchor="middle">4. ส่งโค้ด BLYNK_WRITE(V1)</text>
-
-  <text x="300" y="342" font-size="10.5" fill="#7c3aed" font-weight="bold" text-anchor="middle">5. syncVirtual(V1) โหลดสถานะล่าสุดเมื่อบู๊ต</text>
 </svg>
-<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 9.2 สถาปัตยกรรม Virtual Pins และการทำงานประสานกัน (Synchronization) ระหว่างไมโครคอนโทรลเลอร์, Blynk Cloud และโมบายแอปพลิเคชัน</div>
+<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 9.2 สถาปัตยกรรม ThingsBoard: Telemetry Key "temperature" (สีเขียว, ขาขึ้น), RPC Method "setLed" (สีแดง, ขาลง) และ Shared Attribute Sync (สีม่วง, ซิงค์สถานะ)</div>
 </div>
 
 ---
 
-#### 5. ขั้นตอนการจัดเตรียมและเชื่อมต่อโปรเจกต์ Blynk
-1. **สร้างบัญชีคลาวด์:** สมัครลงทะเบียนที่หน้าเว็บ [blynk.cloud](https://blynk.cloud/)
-2. **สร้าง Template:** นิยามโมเดลอุปกรณ์ ตั้งชื่อโมเดล เช่น `ESP32_Control`
-3. **กำหนด Datastreams:** สร้างขวดบรรจุข้อมูล (Datastream) โดยใช้ Virtual Pin เป็นตัวอ้างอิง:
-   - **V0 (อุณหภูมิ):** ชนิดตัวเลขทศนิยม (Double/Float) มีพิกัดขอบเขต $0.0 - 100.0\text{ °C}$
-   - **V1 (สวิตช์ควบคุม):** ชนิดตัวเลขจำนวนเต็ม (Integer) มีระดับค่าคือ $0$ (OFF) หรือ $1$ (ON)
-4. **จัดเตรียม Dashboard (การลากวางหน้าจอ):**
-   - **Web Dashboard:** วางวิดเจ็ตแสดงผลกราฟโดยให้ระบุตัวแปรที่รับมาเป็น `V0` และวางสวิตช์เชื่อมกับ `V1`
-   - **Mobile App:** เปิด Blynk App บนมือถือ นำวิดเจ็ตเกจ (Gauge) ต่อเข้าช่อง `V0` และนำสวิตช์ปุ่มกดผูกเข้ากับ `V1`
-5. **ดึงรหัสระบุตัวตน:** คัดลอกแถบรหัสเชื่อมโยง (Blynk API credentials) ซึ่งจะถูกสร้างในหน้า Template Info:
-   - `BLYNK_TEMPLATE_ID`
-   - `BLYNK_TEMPLATE_NAME`
-   - `BLYNK_AUTH_TOKEN`
+#### 5. ขั้นตอนการจัดเตรียมและเชื่อมต่อโปรเจกต์ ThingsBoard
+1. **สร้างบัญชีคลาวด์:** สมัครลงทะเบียนฟรีที่ [thingsboard.cloud](https://thingsboard.cloud/)
+2. **สร้าง Device:** ไปที่เมนู Entities → Devices → เพิ่มอุปกรณ์ใหม่ เช่น ตั้งชื่อว่า `ESP32_Lab09`
+3. **คัดลอก Access Token:** เปิดหน้ารายละเอียดของ Device → แท็บ Credentials → คัดลอก **Access Token** (ใช้แทนรหัสผ่าน MQTT)
+4. **สร้าง Dashboard และเพิ่ม Widget:**
+   - ไปที่เมนู Dashboards → สร้าง Dashboard ใหม่
+   - เพิ่มวิดเจ็ต **Gauge** ผูกกับ Telemetry Key `temperature` เพื่อแสดงอุณหภูมิแบบเรียลไทม์
+   - เพิ่มวิดเจ็ต **Round Switch** และตั้งค่า RPC Method เป็น `setLed` เพื่อส่งคำสั่งควบคุม LED
+5. **เขียนและอัปโหลดโค้ด ESP32:** ใช้ Libraries `WiFi.h`, `PubSubClient.h`, `ArduinoJson.h` (ดูโค้ดตัวอย่างด้านล่าง) และใส่ Access Token ที่คัดลอกมาในตัวแปร `access_token`
 
 ---
 
-#### ตัวอย่างโค้ดสมบูรณ์: การทำงานร่วมกันระหว่าง Uplink, Downlink และ Sync บน ESP32
+#### ตัวอย่างโค้ดสมบูรณ์: Telemetry, RPC และ Attribute Sync บน ESP32 กับ ThingsBoard
 
-ต่อไปนี้คือรูปแบบโปรแกรมภาษา C++ บนไมโครคอนโทรลเลอร์ ESP32 สำหรับแสดงการบันทึกส่งอุณหภูมิ (V0) พร้อมรับคำสั่งไฟ LED (V1) และการเรียกใช้คำสั่งดึงค่าซิงโครไนซ์ป้องกันข้อมูลคลาดเคลื่อนเวลาบู๊ตระบบ:
+ต่อไปนี้คือรูปแบบโปรแกรมภาษา C++ สำหรับ ESP32 ที่ส่งข้อมูลอุณหภูมิ (Telemetry) ขึ้นคลาวด์ รับคำสั่ง RPC สั่งงาน LED และดึงสถานะล่าสุดจาก Shared Attributes เมื่อบู๊ตระบบ:
 
 ```cpp
-#define BLYNK_TEMPLATE_ID "TMPL6xXxXxxx"
-#define BLYNK_TEMPLATE_NAME "WorkspaceMonitor"
-#define BLYNK_AUTH_TOKEN "YourAuthTokenHere"
-
-// กำหนดให้พิมพ์ข้อความสถานะการตรวจแก้ของ Blynk ลงสู่ Serial Monitor
-#define BLYNK_PRINT Serial
-
 #include <WiFi.h>
-#include <WiFiClient.h>
-#include <BlynkSimpleEsp32.h>
+#include <PubSubClient.h>
+#include <ArduinoJson.h>
 
-char ssid[] = "YourWiFi_SSID";
-char pass[] = "YourWiFi_Password";
+// รายละเอียดการเชื่อมต่อ Wi-Fi (Wokwi ใช้ Wokwi-GUEST ไม่ต้องใส่รหัสผ่าน)
+const char* ssid         = "Wokwi-GUEST";
+const char* pass         = "";
 
-#define LED_PIN 2 // ขาพินควบคุม LED ทางกายภาพบนบอร์ด ESP32
+// รายละเอียด ThingsBoard MQTT Broker
+const char* tb_server    = "thingsboard.cloud";
+const int   tb_port      = 1883;
+const char* access_token = "Your_Access_Token_Here"; // ใส่ Access Token จากหน้า Device
 
-// ออบเจกต์ตัวจับเวลากลไกส่งค่าวิดเจ็ต เพื่อไม่ให้ขัดขังหวงทำงาน loop()
-BlynkTimer timer;
+#define LED_PIN 2 // ขา GPIO ที่ต่อ LED
 
-// ฟังก์ชันที่จะทริกเกอร์ทำงานโดยอัตโนมัติเมื่ออุปกรณ์เชื่อมต่อเซิร์ฟเวอร์สำเร็จ
-BLYNK_CONNECTED() {
-  Serial.println("เชื่อมต่อ Blynk Server สำเร็จ! กำลังร้องขอซิงโครไนซ์...");
-  // ร้องขอให้คลาวด์ป้อนส่งค่าสถานะปัจจุบันของ V1 (สวิตช์ไฟ) ลงมาปรับใช้
-  Blynk.syncVirtual(V1);
+WiFiClient   espClient;
+PubSubClient client(espClient);
+
+unsigned long lastSendTime    = 0;
+const unsigned long INTERVAL  = 3000; // ส่ง Telemetry ทุก 3 วินาที
+
+// ฟังก์ชัน Callback รับข้อความจาก ThingsBoard (RPC + Attribute Response)
+void onMqttMessage(char* topic, byte* payload, unsigned int length) {
+  StaticJsonDocument<256> doc;
+  if (deserializeJson(doc, payload, length) != DeserializationError::Ok) return;
+
+  String topicStr = String(topic);
+
+  // ---- จัดการ RPC Request ----
+  if (topicStr.startsWith("v1/devices/me/rpc/request/")) {
+    const char* method = doc["method"];
+
+    if (strcmp(method, "setLed") == 0) {
+      bool ledState = doc["params"];                    // รับค่า true/false จากสวิตช์แดชบอร์ด
+      digitalWrite(LED_PIN, ledState ? HIGH : LOW);    // สั่งงาน GPIO ตามคำสั่ง
+      Serial.printf("RPC setLed: %s\n", ledState ? "ON" : "OFF");
+
+      // ตอบกลับ ThingsBoard เพื่อยืนยันว่าดำเนินการสำเร็จ
+      String requestId    = topicStr.substring(topicStr.lastIndexOf('/') + 1);
+      String responseTopic = "v1/devices/me/rpc/response/" + requestId;
+      client.publish(responseTopic.c_str(), "{\"success\":true}");
+    }
+  }
+
+  // ---- จัดการ Shared Attribute Response (ซิงค์สถานะเมื่อบู๊ต) ----
+  if (topicStr.startsWith("v1/devices/me/attributes/response/")) {
+    JsonVariant shared = doc["shared"];
+    if (!shared.isNull() && shared.containsKey("ledState")) {
+      bool restoredState = shared["ledState"];
+      digitalWrite(LED_PIN, restoredState ? HIGH : LOW);
+      Serial.printf("Attr Sync: ledState = %s\n", restoredState ? "ON" : "OFF");
+    }
+  }
 }
 
-// โค้ดที่จะทริกเกอร์ทำงานเมื่อสถานะพิน V1 บน Blynk Cloud ถูกเปลี่ยนค่า
-BLYNK_WRITE(V1) {
-  int ledState = param.asInt(); // รับค่าเป็นเลขจำนวนเต็ม (0 หรือ 1)
-  digitalWrite(LED_PIN, ledState); // นำสถานะจากหน้าจอแอปมาเขียนเข้าพิน GPIO
-  
-  Serial.print("ได้รับค่าควบคุม LED (V1): ");
-  Serial.println(ledState == 1 ? "เปิด (ON)" : "ปิด (OFF)");
+// เชื่อมต่อ ThingsBoard และ Subscribe หัวข้อที่จำเป็น
+void reconnect() {
+  while (!client.connected()) {
+    Serial.print("เชื่อมต่อ ThingsBoard...");
+    // Access Token ใช้เป็น Username, Password ให้เป็น NULL
+    if (client.connect("ESP32_Lab09", access_token, NULL)) {
+      Serial.println(" สำเร็จ!");
+      // Subscribe รับคำสั่ง RPC จากแดชบอร์ด
+      client.subscribe("v1/devices/me/rpc/request/+");
+      // Subscribe รับ Shared Attribute Response
+      client.subscribe("v1/devices/me/attributes/response/+");
+      // ร้องขอสถานะล่าสุดจากคลาวด์เมื่อเชื่อมต่อใหม่ (Digital Twin Sync)
+      client.publish("v1/devices/me/attributes/request/1",
+                     "{\"sharedKeys\":\"ledState\"}");
+    } else {
+      Serial.printf(" ล้มเหลว rc=%d ลองใหม่ใน 5 วินาที\n", client.state());
+      delay(5000);
+    }
+  }
 }
 
-// ฟังก์ชันอ่านค่าและส่งอุณหภูมิขึ้นสู่คลาวด์ทำงานแยกส่วนผ่าน Timer
-void sendSensorData() {
-  // จำลองอุณหภูมิจากการคำนวณสุ่มเป็นองศาเซลเซียส
-  float temp = 24.0 + (random(0, 100) / 10.0);
-  
-  // อัปโหลดข้อมูลไปยัง Virtual Pin V0
-  Blynk.virtualWrite(V0, temp);
-  
-  Serial.print("ส่งสถานะอุณหภูมิปัจจุบัน (V0): ");
-  Serial.print(temp, 1);
-  Serial.println(" °C");
+// ส่งข้อมูลอุณหภูมิขึ้น ThingsBoard แบบ Non-blocking ด้วย millis()
+void sendTelemetry() {
+  float temperature = 24.0 + random(0, 120) / 10.0; // จำลองอุณหภูมิ 24.0–36.0 °C
+
+  StaticJsonDocument<128> doc;
+  doc["temperature"] = temperature;
+
+  char payload[128];
+  serializeJson(doc, payload);
+
+  client.publish("v1/devices/me/telemetry", payload);
+  Serial.printf("Telemetry: %s\n", payload);
 }
 
 void setup() {
   Serial.begin(115200);
   pinMode(LED_PIN, OUTPUT);
-  
-  // เชื่อมต่อไวไฟและเข้าระบบ Blynk Server
-  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
-  
-  // ตั้งค่า Timer ให้ส่งค่าเซนเซอร์ทุกๆ 5000 มิลลิวินาที (5 วินาที)
-  // เพื่อป้องกันการส่งที่ถี่เกินไปจนโดนบล็อกการเชื่อมต่อ (Flood Limit)
-  timer.setInterval(5000L, sendSensorData);
+
+  // เชื่อมต่อ Wi-Fi
+  WiFi.begin(ssid, pass);
+  Serial.print("เชื่อมต่อ Wi-Fi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println(" เชื่อมต่อแล้ว!");
+
+  // ตั้งค่า MQTT Broker และ Callback
+  client.setServer(tb_server, tb_port);
+  client.setCallback(onMqttMessage);
 }
 
 void loop() {
-  Blynk.run(); // ดูแลการแลกเปลี่ยนแพ็กเก็ตข้อมูลกับ Blynk Server
-  timer.run(); // รันกลไกกำหนดพิกัดเวลา
+  // เชื่อมต่อใหม่หากหลุด (Non-blocking ในรอบถัดไปเมื่อเวลาผ่าน)
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop(); // ประมวลผลคิว MQTT และ Keep-alive
+
+  // ส่ง Telemetry ตามรอบเวลาโดยไม่ใช้ delay()
+  if (millis() - lastSendTime >= INTERVAL) {
+    lastSendTime = millis();
+    sendTelemetry();
+  }
 }
 ```
 
-> 💡 **สำหรับ Wokwi:** ปัจจุบัน Wokwi ไม่รองรับการเชื่อมต่อ Blynk โดยตรง แต่นักศึกษาสามารถฝึกเขียนโค้ดโครงสร้างบน Wokwi แล้วนำไปทดสอบจริงกับบอร์ด ESP32 ได้ หรือใช้ Serial Monitor จำลองการแสดงผลแทน
+> 💡 **สำหรับ Wokwi:** ThingsBoard ใช้โปรโตคอล MQTT พอร์ต 1883 ซึ่ง Wokwi-GUEST รองรับการเชื่อมต่อออกอินเทอร์เน็ตจริง นักศึกษาสามารถทดสอบโค้ดนี้บน Wokwi ได้โดยตรง — กำหนด SSID เป็น `"Wokwi-GUEST"` และ Password เป็น `""` แล้วใส่ Access Token จากบัญชี ThingsBoard ของตนเอง บอร์ดจะเชื่อมต่อ thingsboard.cloud:1883 ได้จริงในโปรแกรมจำลอง
 
 ---
 
@@ -870,9 +907,9 @@ void loop() {
 - **การแสดงผลข้อมูล** เป็นสะพานระหว่างข้อมูลดิบกับการตัดสินใจ ต้องยึดหลักความชัดเจน มีบริบท และไม่บิดเบือน
 - **กราฟแต่ละชนิด** มีจุดประสงค์เฉพาะ: กราฟเส้นสำหรับแนวโน้ม กราฟแท่งสำหรับเปรียบเทียบ เกจสำหรับค่าปัจจุบัน
 - **แดชบอร์ด** ต้องจัดลำดับความสำคัญ แสดงผลเรียลไทม์ และไม่แออัด
-- **เครื่องมือ** มีหลายตัวเลือก: Node-RED (ง่าย), Grafana (ปรับแต่งสูง), Blynk (Cloud + แอปมือถือ) เลือกใช้ตามความเหมาะสม
+- **เครื่องมือ** มีหลายตัวเลือก: Node-RED (ง่าย), Grafana (ปรับแต่งสูง), ThingsBoard (Cloud + แดชบอร์ด/แอปมือถือผ่าน MQTT/RPC) เลือกใช้ตามความเหมาะสม
 - **UI/UX สำหรับ IoT** ต้องเรียบง่าย ตอบสนองทันที และป้องกันข้อผิดพลาด
-- **Blynk** ช่วยสร้างแอปมือถือสำหรับ IoT ได้รวดเร็วโดยไม่ต้องเขียนแอปเอง
+- **ThingsBoard** ช่วยสร้างแดชบอร์ดและแอปมือถือสำหรับ IoT ได้รวดเร็ว รองรับการควบคุมสองทิศทางผ่าน MQTT และ RPC
 
 > 💡 **จำไว้:** แดชบอร์ดที่ดีที่สุดคือแดชบอร์ดที่ผู้ใช้ "เข้าใจภายใน 3 วินาที" โดยไม่ต้องมีคู่มือ
 
@@ -890,7 +927,7 @@ void loop() {
 
 **ข้อ 3:** จงออกแบบ Layout แดชบอร์ดสำหรับห้องเซิร์ฟเวอร์ที่มีเซนเซอร์วัดอุณหภูมิ 4 จุด เซนเซอร์ความชื้น 2 จุด และสถานะเครื่องปรับอากาศ 2 เครื่อง วาดแผนผังตำแหน่ง Widget ที่จะใช้ พร้อมอธิบายเหตุผลการจัดวาง
 
-**ข้อ 4:** เปรียบเทียบ Node-RED, Grafana และ Blynk ในแง่ต่อไปนี้ โดยสรุปเป็นตาราง:
+**ข้อ 4:** เปรียบเทียบ Node-RED, Grafana และ ThingsBoard ในแง่ต่อไปนี้ โดยสรุปเป็นตาราง:
 - ความง่ายในการติดตั้ง
 - ความสามารถในการปรับแต่งกราฟ
 - ความเหมาะสมกับงาน Production ขนาดใหญ่

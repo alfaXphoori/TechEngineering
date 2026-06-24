@@ -25,7 +25,7 @@
 
 > 💡 **จำง่าย ๆ**: Client = คนสั่งอาหาร, Server = ร้านอาหาร — ลูกค้าสั่ง (Request) แล้วร้านเสิร์ฟ (Response)
 
-ในโลก IoT บอร์ด ESP32 ของเรามักทำหน้าที่เป็น Client ที่ส่งข้อมูลไปยัง Cloud Server เช่น Blynk, Firebase หรือ Node-RED
+ในโลก IoT บอร์ด ESP32 ของเรามักทำหน้าที่เป็น Client ที่ส่งข้อมูลไปยัง Cloud Server เช่น ThingsBoard, Firebase หรือ Node-RED
 
 ---
 

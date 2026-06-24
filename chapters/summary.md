@@ -16,9 +16,9 @@
 - **โพรโทคอลการสื่อสาร:** HTTP/REST (พร้อม JSON) และ MQTT (Publish/Subscribe, Broker, Topic, QoS)
 
 ### 1.3 คลาวด์และการประยุกต์ (Cloud & Application)
-- **เทคโนโลยีคลาวด์:** รูปแบบบริการ IaaS/PaaS/SaaS และแพลตฟอร์ม IoT (Blynk, AWS IoT, Azure IoT)
+- **เทคโนโลยีคลาวด์:** รูปแบบบริการ IaaS/PaaS/SaaS และแพลตฟอร์ม IoT (ThingsBoard, AWS IoT, Azure IoT)
 - **การจัดเก็บและใช้งานข้อมูล:** ฐานข้อมูลเวลา (time-series), REST API, การแจ้งเตือน/ทริกเกอร์
-- **การแสดงผลและโปรแกรมผู้ใช้:** ชนิดกราฟ, แดชบอร์ดเรียลไทม์ (Node-RED), UI/โมบายแอป (Blynk)
+- **การแสดงผลและโปรแกรมผู้ใช้:** ชนิดกราฟ, แดชบอร์ดเรียลไทม์ (Node-RED), UI/โมบายแอป (ThingsBoard)
 
 ### 1.4 การเรียนรู้ของเครื่องเบื้องต้น (Basic Machine Learning)
 - **แนวคิด ML:** การเรียนรู้แบบมีผู้สอน/ไม่มีผู้สอน, ขั้นตอน data → train → test
@@ -32,7 +32,7 @@
 |:---|:---|:---|
 | **Perception / Device** | รับรู้และกระทำกับโลกจริง | เซนเซอร์, ตัวกระทำ, ESP32 |
 | **Network / Connectivity** | ส่งข้อมูลระหว่างอุปกรณ์กับคลาวด์ | Wi-Fi, BLE, LoRa, MQTT, HTTP |
-| **Processing / Cloud** | จัดเก็บ ประมวลผล วิเคราะห์ข้อมูล | Blynk Cloud, ฐานข้อมูล, ML |
+| **Processing / Cloud** | จัดเก็บ ประมวลผล วิเคราะห์ข้อมูล | ThingsBoard Cloud, ฐานข้อมูล, ML |
 | **Application** | แสดงผลและโต้ตอบกับผู้ใช้ | แดชบอร์ด, โมบายแอป, การแจ้งเตือน |
 
 ---
@@ -49,7 +49,7 @@
 | **รีเลย์ / L298N** | ขับโหลดไฟฟ้า/มอเตอร์ | Actuator |
 | **เซอร์โว SG90** | ควบคุมตำแหน่งด้วย PWM | Actuator |
 | **MQTT Broker** | ตัวกลางรับ-ส่งข้อความ Pub/Sub | Protocol |
-| **Blynk Cloud** | คลาวด์เก็บ-แสดงข้อมูล + โมบายแอป/แดชบอร์ดควบคุม | Cloud / UI |
+| **ThingsBoard Cloud** | คลาวด์เก็บ-แสดงข้อมูล + แดชบอร์ด/แอปควบคุม (MQTT/RPC) | Cloud / UI |
 | **Node-RED** | สร้างโฟลว์และแดชบอร์ด | Visualization |
 | **Google Colab** | สภาพแวดล้อมฝึก ML (Python) | ML |
 
@@ -59,7 +59,7 @@
 
 - **โปรแกรมจำลอง/เครื่องมือ:**
   - [Wokwi](https://wokwi.com/) (จำลอง ESP32 + เซนเซอร์)
-  - [Blynk](https://blynk.io/) (คลาวด์ IoT + แอป/แดชบอร์ด)
+  - [ThingsBoard](https://thingsboard.io/) (คลาวด์ IoT + แดชบอร์ด/แอป)
   - [Node-RED](https://nodered.org/) (แดชบอร์ด)
 - **หนังสือ/เอกสารแนะนำ:**
   - *Internet of Things: A Hands-On Approach* โดย Arshdeep Bahga & Vijay Madisetti

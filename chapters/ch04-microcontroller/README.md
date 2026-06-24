@@ -1025,7 +1025,7 @@ void loop() {
 
 #### 4.8.2 แผนภาพสถานะของระบบ (State Transition Diagram)
 
-<svg id="ch4-fsm-svg" viewBox="0 0 760 520" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px;display:block;margin:1.5em auto;font-family:'Segoe UI',sans-serif;">
+<svg id="ch4-fsm-svg" viewBox="0 0 760 520" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px;display:block;margin:1.5em auto;font-family:'IBM Plex Sans Thai', system-ui, sans-serif;">
   <style>
     #ch4-fsm-svg .bg { fill:#f8fafc; stroke:#cbd5e1; stroke-width:1.5; }
     /* State boxes */

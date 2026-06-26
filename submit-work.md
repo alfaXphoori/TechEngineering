@@ -122,10 +122,7 @@ assignments:
 {% for a in page.assignments %}
 <tr>
 <td><span class="wk-num">{{ a.n }}</span></td>
-<td>
-  <strong>{{ a.topic }}</strong>
-  <div style="font-size: .85rem; color: #64748b; margin-top: 4px;">{{ a.work }}</div>
-</td>
+<td>{{ a.topic }}</td>
 <td>{{ a.due }}</td>
 <td>
   {% if a.form and a.form != "#" %}<a class="up-btn" href="{{ a.form }}" target="_blank" rel="noopener">📝 ส่งงาน</a>{% else %}<span class="up-pending">รอลิงก์</span>{% endif %}

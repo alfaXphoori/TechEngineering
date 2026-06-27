@@ -12,7 +12,7 @@ assignments:
     topic: บทนำรายวิชาและอินเทอร์เน็ตของสรรพสิ่ง (IoT)
     work: ใบงานที่ 1 — เครื่องมือและสถาปัตยกรรม IoT
     due: ก่อนคาบสัปดาห์ที่ 2
-    form: "#"
+    form: "https://docs.google.com/forms/d/e/1FAIpQLSeafznNphxuKROTVnpJsUDvS8_yQDMG--SJvMfpljn_fCbPkA/viewform?usp=dialog"
   - n: 2
     topic: ตัวรับรู้ (Sensors)
     work: ใบงานที่ 2 — ตัวรับรู้ (Sensors) และสัญญาณวัด

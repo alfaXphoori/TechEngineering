@@ -17,7 +17,7 @@ assignments:
     topic: ตัวรับรู้ (Sensors)
     work: ใบงานที่ 2 — ตัวรับรู้ (Sensors) และสัญญาณวัด
     due: ก่อนคาบสัปดาห์ที่ 3
-    form: "#"
+    form: "https://docs.google.com/forms/d/e/1FAIpQLSf_bkxS4_olqkOLAbNeRFFi268O45LSLKM8OkFM4a6_NpHOgQ/viewform?usp=dialog"
   - n: 3
     topic: ตัวกระทำและการเชื่อมต่อ
     work: ใบงานที่ 3 — ตัวกระทำและการขับโหลด

@@ -1,9 +1,10 @@
-# Chapter 9: การแสดงผลข้อมูลและโปรแกรมของผู้ใช้
-## Data Visualization & User Interface
+# Chapter 11: การแสดงภาพข้อมูลและการออกแบบส่วนต่อประสานผู้ใช้ (Industrial HMI & Data Visualization)
+
+> บทนี้จะอธิบายหลักการออกแบบแดชบอร์ด (Dashboard) และส่วนต่อประสานกับผู้ใช้งานระดับอุตสาหกรรม (Human-Machine Interface - HMI) ที่ถูกต้องตามหลักวิศวกรรมสรีรศาสตร์ (Ergonomics) ทฤษฎีข้อมูลต่อหมึกพิมพ์ของ Tufte และการประยุกต์ใช้โปรแกรมแสดงผลระดับสูงอย่าง Grafana ร่วมกับแพลตฟอร์มคลาวด์ ThingsBoard
 
 ---
 
-## 9.1 ความสำคัญของการแสดงผลข้อมูลใน IoT
+## 11.1 ความสำคัญของการแสดงผลข้อมูลใน IoT
 
 ระบบ IoT เก็บข้อมูลจากเซนเซอร์จำนวนมหาศาล — อุณหภูมิ ความชื้น แรงสั่นสะเทือน ค่ากระแสไฟฟ้า ฯลฯ ข้อมูลดิบ (Raw Data) เหล่านี้เป็นเพียงตัวเลขที่ไหลเข้ามาไม่หยุด หากไม่มี **การแสดงผลข้อมูล (Data Visualization)** ที่ดี ผู้ใช้จะไม่สามารถแปลงตัวเลขเหล่านั้นเป็น **ความเข้าใจ (Insight)** ได้
 
@@ -18,23 +19,23 @@
 
 ---
 
-## 9.2 หลักการนำเสนอข้อมูลที่ดี
+## 11.2 หลักการนำเสนอข้อมูลที่ดี
 
 การออกแบบการแสดงผลข้อมูลที่ดีต้องยึดหลัก 3 ประการ:
 
-### 9.2.1 ความชัดเจน (Clarity)
+### 11.2.1 ความชัดเจน (Clarity)
 
 - ใช้กราฟที่เหมาะกับประเภทข้อมูล
 - ตั้งชื่อแกน (Axis Label) และหน่วยให้ครบถ้วน เช่น "อุณหภูมิ (°C)" ไม่ใช่แค่ "Temp"
 - หลีกเลี่ยงสี/ลวดลายที่ทำให้สับสน
 
-### 9.2.2 บริบท (Context)
+### 11.2.2 บริบท (Context)
 
 - แสดงช่วงเวลา (Time Range) ให้ชัดเจน
 - มีเส้นอ้างอิง (Reference Line) เช่น ค่าเกณฑ์สูงสุดที่ยอมรับได้
 - เปรียบเทียบกับค่าปกติ เช่น "วันนี้ vs. ค่าเฉลี่ย 7 วัน"
 
-### 9.2.3 ไม่บิดเบือน (No Distortion)
+### 11.2.3 ไม่บิดเบือน (No Distortion)
 
 - แกน Y ต้องเริ่มจาก 0 เมื่อเปรียบเทียบขนาด (Bar Chart)
 - ไม่ตัดข้อมูลบางส่วนออกเพื่อให้กราฟดูดีขึ้น
@@ -48,25 +49,25 @@
 
 ---
 
-## 9.3 ชนิดของกราฟและการเลือกใช้
+## 11.3 ชนิดของกราฟและการเลือกใช้
 
-### 9.3.1 กราฟเส้น (Line Chart)
+### 11.3.1 กราฟเส้น (Line Chart)
 
 เหมาะสำหรับข้อมูลแบบอนุกรมเวลา (Time-Series) เช่น อุณหภูมิทุก ๆ 5 วินาที แรงสั่นสะเทือนตลอดทั้งวัน แสดงให้เห็น **แนวโน้ม (Trend)** ได้ดีที่สุด
 
-### 9.3.2 กราฟแท่ง (Bar Chart)
+### 11.3.2 กราฟแท่ง (Bar Chart)
 
 เหมาะสำหรับเปรียบเทียบค่าระหว่างหมวดหมู่ เช่น ปริมาณการใช้ไฟฟ้าของแต่ละเครื่องจักร พลังงานรายเดือน
 
-### 9.3.3 เกจ / มาตรวัด (Gauge)
+### 11.3.3 เกจ / มาตรวัด (Gauge)
 
 แสดงค่าปัจจุบันเทียบกับช่วงที่กำหนด เช่น ความเร็วรอบมอเตอร์ อุณหภูมิปัจจุบัน เหมาะกับแดชบอร์ดเรียลไทม์
 
-### 9.3.4 แผนภูมิวงกลม (Pie Chart)
+### 11.3.4 แผนภูมิวงกลม (Pie Chart)
 
 แสดงสัดส่วนของแต่ละส่วนเทียบกับทั้งหมด เช่น สัดส่วนพลังงานที่ใช้แต่ละระบบ ใช้เมื่อมีหมวดหมู่ไม่เกิน 5-6 รายการ
 
-### 9.3.5 แผนที่ความร้อน (Heatmap)
+### 11.3.5 แผนที่ความร้อน (Heatmap)
 
 แสดงข้อมูลเป็นตาราง 2 มิติที่ใช้สีแทนค่า เช่น อุณหภูมิของแต่ละจุดบนพื้นที่โรงงานในแต่ละชั่วโมง เหมาะกับข้อมูลที่มีตัวแปร 2 มิติ
 
@@ -82,7 +83,7 @@
 
 ---
 
-## 9.4 แดชบอร์ด (Dashboard) และหลักการออกแบบ
+## 11.4 แดชบอร์ด (Dashboard) และหลักการออกแบบ
 
 **แดชบอร์ด** คือหน้าจอรวมศูนย์ที่แสดงข้อมูลสำคัญทั้งหมดในที่เดียว เปรียบเหมือนแผงหน้าปัดรถยนต์ที่รวมความเร็ว รอบเครื่อง ระดับน้ำมัน และอุณหภูมิไว้ในจุดเดียว
 
@@ -108,230 +109,8 @@
 
 ## 9.5 เครื่องมือสำหรับแสดงผลข้อมูล IoT
 
-### 9.5.1 Node-RED
 
-**Node-RED** เป็นเครื่องมือเขียนโปรแกรมในลักษณะ **Flow-Based Programming (FBP)** ที่ออกแบบมาสำหรับยุค IoT และ Web Services โดยเฉพาะ พัฒนาขึ้นโดย IBM ทำงานบนแพลตฟอร์ม Node.js ทำให้นักพัฒนาสามารถเชื่อมโยงอุปกรณ์ฮาร์ดแวร์, API และบริการออนไลน์เข้าด้วยกันได้อย่างรวดเร็วผ่านตัวแก้ไขแบบลากวาง (Flow Editor) บนเว็บเบราว์เซอร์
-
-#### โครงสร้างและองค์ประกอบหลักของ Node-RED
-1. **Nodes (โหนด):** บล็อกฟังก์ชันสำเร็จรูปที่ทำหน้าที่เฉพาะเจาะจง แบ่งออกเป็น 3 ประเภทหลัก:
-   - **Input Nodes (โหนดนำเข้าข้อมูล):** รับข้อมูลจากแหล่งภายนอกเข้ามายังโฟลว์ เช่น `mqtt in` (รับข้อมูลจาก MQTT Broker), `inject` (การจำลองการส่งข้อมูลด้วยการกดปุ่มส่งแบบตั้งเวลา), และ `http in` (สร้าง Endpoint ของเว็บรับข้อมูลแบบ REST API)
-   - **Processing/Function Nodes (โหนดประมวลผล):** ทำการเปลี่ยนแปลง ปรับปรุง หรือตรวจสอบเงื่อนไขของข้อมูล เช่น `function` (เขียนโค้ดด้วยภาษา JavaScript เพื่อควบคุมข้อมูลอย่างอิสระ), `switch` (แยกเส้นทางการไหลตามเงื่อนไข), และ `change` (แก้ไข เพิ่มเติม หรือลบค่าตัวแปรในออบเจกต์)
-   - **Output Nodes (โหนดส่งออกข้อมูล):** ส่งข้อมูลที่ผ่านการประมวลผลแล้วไปยังปลายทาง เช่น `mqtt out` (ส่งข้อมูลไปเก็บหรือสั่งงานผ่าน MQTT), `debug` (แสดงค่าในหน้าจอดีบักเพื่อตรวจสอบสถานะการทำงาน), และ `ui_gauge` / `ui_chart` (แสดงผลข้อมูลบนหน้าแดชบอร์ด)
-
-2. **Flow & Message Routing (ทิศทางและการส่งต่อข้อมูล):**
-   - การสื่อสารระหว่างโหนดจะใช้วัตถุข้อความภาษา JavaScript ที่เรียกว่า **Message Object (`msg`)**
-   - ตัวแปรหลักที่บรรจุข้อมูลส่งผ่านไปยังโหนดอื่น ๆ คือ **`msg.payload`** ซึ่งอาจเป็นได้ทั้งตัวเลข (Number), ข้อความ (String), หรือออบเจกต์โครงสร้าง (JSON Object)
-   - นอกจากนี้ยังมีตัวแปรเสริม เช่น `msg.topic` เพื่อระบุหัวข้อหรือประเภทของข้อมูลที่เคลื่อนที่ผ่านตัวนำทาง (Wire)
-
-3. **Function Node JavaScript Programming:**
-   - เป็นโหนดที่มีความยืดหยุ่นสูงที่สุดเนื่องจากเปิดโอกาสให้เขียนโปรแกรม JavaScript ลงไป เพื่อคำวณและประมวลผล ตัวอย่างเช่น:
-     ```javascript
-     // ตัวอย่างการคัดกรองข้อมูลอุณหภูมิและเปลี่ยนสถานะแจ้งเตือน
-     let temp = msg.payload.temperature;
-     if (temp > 40.0) {
-         msg.payload = { status: "DANGER", value: temp, alarm: true };
-         return [msg, null]; // ส่งออกไปยังช่องเอาต์พุตที่ 1 (เตือนภัย)
-     } else {
-         msg.payload = { status: "NORMAL", value: temp, alarm: false };
-         return [null, msg]; // ส่งออกไปยังช่องเอาต์พุตที่ 2 (สถานะปกติ)
-     }
-     ```
-
-4. **Node-RED Dashboard Layout Structure:**
-   - โครงสร้างการแสดงผลของโหนดแดชบอร์ด (`node-red-dashboard`) จะเป็นรูปแบบแผนผังต้นไม้ (Tree Structure) เพื่อความเป็นระเบียบและรองรับการจัดสรรบนขนาดหน้าจอที่แตกต่างกัน (Responsive Layout):
-     - **Tabs (แท็บหลัก):** แถบหน้าต่างหลักสำหรับแยกหน้าการแสดงผลตามหมวดหมู่ใหญ่ (เช่น หน้าควบคุมห้องนั่งเล่น, หน้าสถิติพลังงาน)
-     - **Groups (กลุ่มย่อย):** กล่องจัดกลุ่ม (Card Container) บนแต่ละแท็บเพื่อนำเอาชิ้นส่วนควบคุมหรือแสดงผลที่เกี่ยวข้องกันมารวมไว้ด้วยกัน
-     - **Widgets (วิดเจ็ตแสดงผล):** ส่วนควบคุมปฏิสัมพันธ์และอุปกรณ์แสดงผลชิ้นย่อยสุดที่อยู่ภายในกลุ่ม เช่น ปุ่มกด (Button), สวิตช์สลับ (Switch), เกจ (Gauge), กราฟเส้น (Chart) และตารางแสดงข้อมูล (Table)
-
-<div style="text-align: center; margin: 25px 0;">
-<svg viewBox="0 0 800 360" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
-  <title>โครงสร้างการไหลของข้อมูลใน Node-RED</title>
-  <style>
-    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; rx: 12px; }
-    .grid { fill: none; stroke: #e2e8f0; stroke-width: 1; stroke-dasharray: 5 5; }
-    
-    /* Node-RED style nodes - Flat Design */
-    .node-box { fill: #ffffff; stroke: #334155; stroke-width: 2; rx: 6px; }
-    
-    /* Wires and paths */
-    .wire { fill: none; stroke: #475569; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
-    .wire-active { fill: none; stroke: #f59e0b; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 8 10; animation: flowData 2.6s linear infinite; }
-    
-    /* Packets */
-    .packet { fill: #f59e0b; stroke: #ffffff; stroke-width: 1.5; }
-    .packet-green { fill: #16a34a; stroke: #ffffff; stroke-width: 1.5; }
-    .packet-red { fill: #dc2626; stroke: #ffffff; stroke-width: 1.5; }
-    
-    /* Ports */
-    .port { fill: #ffffff; stroke: #334155; stroke-width: 1.5; }
-    
-    /* Text styles */
-    .text-main { font-size: 14px; font-weight: bold; fill: #1e293b; }
-    .text-sub { font-size: 12px; fill: #64748b; }
-    .text-tag { font-size: 10px; font-weight: bold; fill: #1e293b; }
-    
-    /* Tags inside nodes */
-    .tag-mqtt { fill: #e0e7ff; stroke: #6366f1; stroke-width: 1; rx: 3px; }
-    .tag-func { fill: #d1fae5; stroke: #10b981; stroke-width: 1; rx: 3px; }
-    .tag-ui { fill: #fef3c7; stroke: #f59e0b; stroke-width: 1; rx: 3px; }
-    
-    /* Animations */
-    @keyframes flowData {
-      to { stroke-dashoffset: -44; }
-    }
-    .gauge-needle {
-      transform-origin: 640px 145px;
-      animation: swingNeedle 4s ease-in-out infinite alternate;
-    }
-    @keyframes swingNeedle {
-      0% { transform: rotate(-60deg); }
-      50% { transform: rotate(10deg); }
-      100% { transform: rotate(45deg); }
-    }
-    .chart-line {
-      stroke-dasharray: 200;
-      stroke-dashoffset: 200;
-      animation: drawChart 8s linear infinite;
-    }
-    @keyframes drawChart {
-      0%, 10% { stroke-dashoffset: 200; }
-      50%, 100% { stroke-dashoffset: 0; }
-    }
-    .node-hover {
-      transition: all 0.2s ease;
-    }
-    .node-hover:hover {
-      filter: brightness(0.97);
-      cursor: pointer;
-    }
-  </style>
-
-  <!-- Panel background -->
-  <rect x="5" y="5" width="790" height="350" class="bg"/>
-  
-  <!-- Grid -->
-  <g class="grid">
-    <path d="M 5,40 H 795 M 5,80 H 795 M 5,120 H 795 M 5,160 H 795 M 5,200 H 795 M 5,240 H 795 M 5,280 H 795 M 5,320 H 795" />
-    <path d="M 80,5 V 355 M 160,5 V 355 M 240,5 V 355 M 320,5 V 355 M 400,5 V 355 M 480,5 V 355 M 560,5 V 355 M 640,5 V 355 M 720,5 V 355" />
-  </g>
-
-  <!-- Connection Wires -->
-  <path d="M 230,120 C 280,120 280,180 330,180" class="wire"/>
-  <path id="wire1" d="M 230,120 C 280,120 280,180 330,180" class="wire-active"/>
-
-  <path d="M 480,165 C 530,165 530,120 580,120" class="wire"/>
-  <path id="wire2" d="M 480,165 C 530,165 530,120 580,120" class="wire-active" stroke="#16a34a"/>
-
-  <path d="M 480,195 C 530,195 530,240 580,240" class="wire"/>
-  <path id="wire3" d="M 480,195 C 530,195 530,240 580,240" class="wire-active" stroke="#dc2626"/>
-
-  <!-- Node 1: MQTT Input -->
-  <g transform="translate(50, 80)" class="node-hover">
-    <rect x="0" y="0" width="180" height="80" class="node-box"/>
-    <!-- Node Tag -->
-    <rect x="12" y="12" width="55" height="18" class="tag-mqtt"/>
-    <text x="39" y="24" class="text-tag" text-anchor="middle">mqtt in</text>
-    <!-- Labels -->
-    <text x="15" y="48" class="text-main">รับค่าอุณหภูมิ</text>
-    <text x="15" y="66" class="text-sub">หัวข้อ: office/temp</text>
-    <!-- Output Port -->
-    <circle cx="180" cy="40" r="5" class="port"/>
-  </g>
-
-  <!-- Node 2: Function Node -->
-  <g transform="translate(300, 140)" class="node-hover">
-    <rect x="0" y="0" width="180" height="80" class="node-box"/>
-    <rect x="12" y="12" width="55" height="18" class="tag-func"/>
-    <text x="39" y="24" class="text-tag" text-anchor="middle">function</text>
-    <text x="15" y="48" class="text-main">ตรวจสอบเงื่อนไข</text>
-    <text x="15" y="66" class="text-sub">msg.payload > 35.0 ?</text>
-    <!-- Input Port -->
-    <circle cx="0" cy="40" r="5" class="port"/>
-    <!-- Output Ports -->
-    <circle cx="180" cy="25" r="5" class="port"/>
-    <circle cx="180" cy="55" r="5" class="port"/>
-    <text x="170" y="28" font-size="9" fill="#64748b" text-anchor="end">1</text>
-    <text x="170" y="58" font-size="9" fill="#64748b" text-anchor="end">2</text>
-  </g>
-
-  <!-- Node 3: Gauge Node -->
-  <g transform="translate(580, 80)" class="node-hover">
-    <rect x="0" y="0" width="180" height="80" class="node-box"/>
-    <rect x="12" y="12" width="55" height="18" class="tag-ui"/>
-    <text x="39" y="24" class="text-tag" text-anchor="middle">ui_gauge</text>
-    <text x="15" y="48" class="text-main">เกจวัดความร้อน</text>
-    <text x="15" y="66" class="text-sub">แท็บ: แดชบอร์ดหลัก</text>
-    <!-- Input Port -->
-    <circle cx="0" cy="40" r="5" class="port"/>
-  </g>
-
-  <!-- Node 4: Chart Node -->
-  <g transform="translate(580, 200)" class="node-hover">
-    <rect x="0" y="0" width="180" height="80" class="node-box"/>
-    <rect x="12" y="12" width="55" height="18" class="tag-ui"/>
-    <text x="39" y="24" class="text-tag" text-anchor="middle">ui_chart</text>
-    <text x="15" y="48" class="text-main">กราฟความร้อน</text>
-    <text x="15" y="66" class="text-sub">แสดงแนวโน้มเวลา</text>
-    <!-- Input Port -->
-    <circle cx="0" cy="40" r="5" class="port"/>
-  </g>
-
-  <!-- Data Flow Simulation Packets -->
-  <circle r="5" class="packet">
-    <animateMotion dur="2.6s" repeatCount="indefinite">
-      <mpath href="#wire1"/>
-    </animateMotion>
-  </circle>
-  <circle r="5" class="packet" opacity="0.65">
-    <animateMotion dur="2.6s" begin="0.86s" repeatCount="indefinite">
-      <mpath href="#wire1"/>
-    </animateMotion>
-  </circle>
-  <circle r="5" class="packet" opacity="0.3">
-    <animateMotion dur="2.6s" begin="1.72s" repeatCount="indefinite">
-      <mpath href="#wire1"/>
-    </animateMotion>
-  </circle>
-
-  <!-- Path 2 flow -->
-  <circle r="5" class="packet-green">
-    <animateMotion dur="2.6s" begin="0.4s" repeatCount="indefinite">
-      <mpath href="#wire2"/>
-    </animateMotion>
-  </circle>
-  <!-- Path 3 flow -->
-  <circle r="5" class="packet-red">
-    <animateMotion dur="2.6s" begin="1.2s" repeatCount="indefinite">
-      <mpath href="#wire3"/>
-    </animateMotion>
-  </circle>
-
-  <!-- Side Panel Miniatures -->
-  <!-- Gauge Mini Graphic -->
-  <g transform="translate(735, 105)">
-    <path d="M -15,10 A 18,18 0 0,1 15,10" fill="none" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/>
-    <path d="M -15,10 A 18,18 0 0,1 5, -8" fill="none" stroke="#dc2626" stroke-width="4" stroke-linecap="round"/>
-    <line x1="0" y1="10" x2="12" y2="-2" stroke="#334155" stroke-width="2.5" stroke-linecap="round" class="gauge-needle"/>
-    <circle cx="0" cy="10" r="3.5" fill="#334155"/>
-  </g>
-
-  <!-- Chart Mini Graphic -->
-  <g transform="translate(720, 240)">
-    <line x1="0" y1="0" x2="30" y2="0" stroke="#cbd5e1" stroke-width="1.5"/>
-    <line x1="0" y1="-15" x2="30" y2="-15" stroke="#cbd5e1" stroke-width="1.5"/>
-    <path d="M 0,0 L 5,-4 L 10, -2 L 15, -12 L 20, -8 L 25, -18 L 30, -14" fill="none" stroke="#16a34a" stroke-width="2.5" class="chart-line"/>
-  </g>
-
-  <!-- Labels -->
-  <text x="400" y="336" fill="#64748b" font-size="12" font-weight="500" text-anchor="middle">ทิศทางการไหลของวัตถุข้อความ (msg) จากโหนดอินพุต ผ่านฟังก์ชันประมวลผล สู่หน้าจอแดชบอร์ด</text>
-
-</svg>
-<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 9.1 แผนภาพการไหลของข้อมูล (Flow) ในระบบ Node-RED แสดงการรับ ส่ง และแปลงข้อมูล</div>
-</div>
-
----
-
-### 9.5.2 Grafana
+## 11.5 การนำเสนอค่าทางสถิติด้วย Grafana
 
 **Grafana** เป็นแพลตฟอร์มการแสดงผลวิเคราะห์และติดตามข้อมูลระดับองค์กร (Enterprise Grade Analytics Engine) โดดเด่นด้านความสวยงาม ความยืดหยุ่นในการจัดการ และประสิทธิภาพที่โดดเด่นเมื่อใช้ประมวลผลข้อมูลอนุกรมเวลาขนาดใหญ่จากคลาวด์และโรงงานอุตสาหกรรม
 
@@ -371,7 +150,7 @@ GROUP BY time(5m) fill(linear)
 
 ---
 
-### 9.5.3 ThingsBoard
+## 11.6 แดชบอร์ดของ ThingsBoard
 
 **ThingsBoard** เป็นแพลตฟอร์ม IoT ระดับอุตสาหกรรม (Industrial-grade IoT Platform) แบบโอเพนซอร์สที่ออกแบบมาเพื่อรองรับทั้งการเรียนรู้และงานจริงในระบบฝังตัว ผู้พัฒนาสามารถสร้างแดชบอร์ดเว็บแบบลากวาง (Drag-and-drop Web Dashboard) พร้อมวิดเจ็ตหลากหลาย เช่น เกจวัดค่า กราฟอนุกรมเวลา และ LED แสดงสถานะ นอกจากนี้ยังมีแอปมือถือ (ThingsBoard Mobile App) สำหรับ iOS และ Android อุปกรณ์เชื่อมต่อผ่านโปรโตคอล MQTT โดยส่งข้อมูลโทรมาตร (Telemetry) ขึ้นคลาวด์และรับคำสั่งควบคุมกลับมา (RPC) แบบสองทิศทาง ระบบมีฐานข้อมูลอนุกรมเวลา (Time-series Storage) และระบบแจ้งเตือน (Alarms) ในตัวโดยไม่ต้องติดตั้งซอฟต์แวร์เพิ่มเติม
 
@@ -392,9 +171,9 @@ GROUP BY time(5m) fill(linear)
 
 ---
 
-## 9.6 การเชื่อมต่อกับโปรแกรมของผู้ใช้ (User Interface)
+## 11.7 การเชื่อมต่อกับโปรแกรมของผู้ใช้ (User Interface)
 
-### 9.6.1 หลักการ UI/UX สำหรับ IoT
+### 11.7.1 หลักการ UI/UX สำหรับ IoT
 
 **UI (User Interface)** คือหน้าตาที่ผู้ใช้เห็นและสัมผัส **UX (User Experience)** คือประสบการณ์โดยรวมในการใช้งาน
 
@@ -405,7 +184,7 @@ GROUP BY time(5m) fill(linear)
 - **ป้องกันข้อผิดพลาด (Error Prevention):** ปุ่มหยุดเครื่องจักรฉุกเฉินต้องมีการยืนยันก่อนทำงาน
 - **สอดคล้องกัน (Consistency):** ใช้สีและตำแหน่งปุ่มเหมือนกันทุกหน้า
 
-### 9.6.2 ส่วนควบคุม (Control Widgets)
+### 11.7.2 ส่วนควบคุม (Control Widgets)
 
 | ส่วนควบคุม | ใช้สำหรับ | ตัวอย่าง |
 |-----------|----------|---------|
@@ -415,12 +194,12 @@ GROUP BY time(5m) fill(linear)
 | ช่องป้อนข้อมูล (Input Field) | ป้อนค่าตัวเลขที่แม่นยำ | ตั้งค่าอุณหภูมิเป้าหมาย 37.5°C |
 | Dropdown | เลือกจากตัวเลือก | เลือกโหมดทำงาน: Auto/Manual |
 
-### 9.6.3 โมบายแอป vs. เว็บแอป
+### 11.7.3 โมบายแอป vs. เว็บแอป
 
 - **เว็บแอป (Web App):** เปิดผ่านเบราว์เซอร์ ไม่ต้องติดตั้ง อัปเดตง่าย ใช้ได้ทุกอุปกรณ์ เหมาะกับแดชบอร์ดในโรงงาน
 - **โมบายแอป (Mobile App):** ติดตั้งบนมือถือ รับ Push Notification ได้ ใช้งาน Offline บางส่วน เหมาะกับการแจ้งเตือนฉุกเฉิน
 
-### 9.6.4 การใช้ ThingsBoard และสถาปัตยกรรม Telemetry / RPC
+### 11.7.4 การใช้ ThingsBoard และสถาปัตยกรรม Telemetry / RPC
 
 แพลตฟอร์ม **ThingsBoard** ออกแบบการสื่อสารระหว่างอุปกรณ์ไมโครคอนโทรลเลอร์กับผู้ใช้งานบนหลักการ **คีย์สตริง (String Key)** แทนการอ้างอิงพินทางกายภาพโดยตรง ทำให้โค้ดบนบอร์ดเป็นอิสระจากขา GPIO และสามารถปรับเปลี่ยนฮาร์ดแวร์ได้โดยไม่กระทบต่อการตั้งค่าแดชบอร์ด
 
@@ -741,7 +520,7 @@ void loop() {
 
 ---
 
-## 9.7 ตัวอย่างการออกแบบแดชบอร์ดติดตามเครื่องจักร
+## 11.8 ตัวอย่างการออกแบบแดชบอร์ดติดตามเครื่องจักร
 
 ### สถานการณ์จำลอง
 
@@ -934,3 +713,20 @@ void loop() {
 - จงแนะนำว่านักศึกษาปี 1 ควรเริ่มจากเครื่องมือใดและเพราะอะไร
 
 **ข้อ 5:** เขียนโปรแกรม ESP32 บน Wokwi ที่อ่านค่าจาก Potentiometer (ต่อที่ GPIO34) แล้วแสดงผลเป็น "มาตรวัด" แบบข้อความใน Serial Monitor โดยใช้อักขระ `█` และ `░` แสดงระดับ 0-100% เช่น `████████░░░░░░░░░░░░ 40%`
+
+---
+
+## 11.9 สรุปประจำบทที่ 11 (Summary)
+
+1.  **การแสดงผลข้อมูลที่ดี** ต้องให้ลำดับความสำคัญของตัวชี้วัด (KPIs) ชัดเจน สามารถสื่อสารถึงความผิดปกติของสภาวะเครื่องจักรให้กับทีมช่างเทคนิคได้ใน 3 วินาทีแรก
+2.  **หลักการของ Tufte (Data-Ink Ratio)** แนะนำให้นักออกแบบตัดแต่งขอบเส้น แถบสีพื้น หรือลวดลายตกแต่งที่ฟุ่มเฟือยทิ้งไป เพื่อรักษาโฟกัสของข้อมูลจริงให้เด่นชัดที่สุด
+3.  **Grafana** เป็นเครื่องมือสืบค้นข้อมูลเชิงวิเคราะห์และดึงค่าจากแหล่งฐานข้อมูลที่หลากหลาย มาทำหน้ารายงานภาพระดับโปรเจกต์ ได้แก่ การวิเคราะห์แนวโน้ม (Trending) และการทำนายความล้มเหลว
+4.  **ส่วนควบคุม HMI** จะมีทิศทางการไหลข้อนกลับ โดยรองรับคำสั่งจากผู้ใช้งานส่งผ่านโปรโตคอลย้อนกลับไปขับระบบกระทำ (Actuators) เช่น ปล่อยกระแสกระตุ้นคอยล์รีเลย์เปิดพัดลมดูดอากาศ
+
+---
+
+## 11.10 แบบฝึกหัดท้ายบทที่ 11 (Exercises)
+
+**ข้อ 1:** จงอธิบายความสำคัญของการคำนึงถึงทฤษฎีสีในการออกแบบแดชบอร์ดระดับอุตสาหกรรมในห้องควบคุมกลาง
+**ข้อ 2:** ทฤษฎีอัตราส่วนข้อมูลต่อหมึกพิมพ์ (Data-Ink Ratio) มีกฎเหล็กสำคัญอย่างไรในการพล็อตและแสดงผลกราฟสถิติ?
+**ข้อ 3:** สถาปัตยกรรมแบบการควบคุมย้อนกลับ (RPC - Remote Procedure Call) ในคลาวด์ ThingsBoard มีความสำคัญอย่างไรในการควบคุมอุปกรณ์ตัวกระทำภายนอกผ่านหน้าแดชบอร์ด?

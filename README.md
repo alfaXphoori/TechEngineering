@@ -15,16 +15,16 @@
 | **4** | **ตัวกระทำและการเชื่อมต่อ** | LED, รีเลย์, มอเตอร์, เซอร์โว, การขับโหลดด้วยทรานซิสเตอร์/รีเลย์, การแยกกราวด์ | [Actuators](chapters/ch04-actuators/) |
 | **5** | **ไมโครคอนโทรลเลอร์เบื้องต้น (ESP32/Arduino)** | สถาปัตยกรรม MCU, GPIO, โครงสร้างโปรแกรม, การจำลองด้วย Wokwi | [Microcontroller](chapters/ch05-microcontroller/) |
 | **6** | **อ่านเซนเซอร์และควบคุมตัวกระทำด้วยไมโครคอนโทรลเลอร์** | โพรโทคอล I2C/SPI/UART, อ่าน DHT22/BMP280, ตรรกะควบคุมตามเงื่อนไข | [Microcontroller](chapters/ch05-microcontroller/) · [I/O](chapters/ch02-io-interfacing/) |
-| **7** | **เทคโนโลยีไร้สายสำหรับ IoT — Wi-Fi** | คลื่นความถี่และมาตรฐานไร้สาย, Wi-Fi, การต่อ ESP32 เข้าเครือข่ายและ Web Server | [Wireless](chapters/ch06-wireless/) |
-| **8** | **เทคโนโลยีไร้สาย — BLE, LoRa, Zigbee** | เปรียบเทียบ BLE/Zigbee/LoRa/NB-IoT ด้านระยะ พลังงาน อัตราข้อมูล, การเลือกใช้ | [Wireless](chapters/ch06-wireless/) |
+| **7** | **เครือข่ายและการเชื่อมต่อไร้สายพื้นฐาน** | คลื่นความถี่และมาตรฐานไร้สาย, Wi-Fi, การต่อ ESP32 เข้าเครือข่ายและ Web Server | [Wireless](chapters/ch06-wireless/) |
+| **8** | **เทคโนโลยีไร้สายเฉพาะทางและขอบข่ายการใช้** | เปรียบเทียบ BLE/Zigbee/LoRa/NB-IoT, คำนวณความแรงสัญญาณ (Link Budget), การเลือกใช้งาน | [Wireless](chapters/ch06-wireless/) |
 | **—** | **🟧 สอบกลางภาค (Midterm Exam)** | **ครอบคลุมเนื้อหาสัปดาห์ที่ 1–8 \| สัดส่วน 20%** | - |
-| **9** | **โพรโทคอลการสื่อสาร HTTP/REST** | Client/Server, HTTP Methods, REST API, รูปแบบข้อมูล JSON | [Protocols](chapters/ch07-protocols/) |
-| **10** | **โพรโทคอล MQTT** | Publish/Subscribe, Broker, Topic, QoS, การส่งข้อมูลเซนเซอร์ผ่าน MQTT | [Protocols](chapters/ch07-protocols/) |
-| **11** | **เทคโนโลยีคลาวด์และแพลตฟอร์ม IoT** | บริการคลาวด์ (IaaS/PaaS/SaaS), แพลตฟอร์ม IoT, การเชื่อมต่ออุปกรณ์กับคลาวด์ | [Cloud](chapters/ch08-cloud/) |
-| **12** | **การประยุกต์ใช้คลาวด์และการจัดเก็บข้อมูล** | การส่งข้อมูลขึ้น ThingsBoard Cloud, ฐานข้อมูลและ API, การตั้งการแจ้งเตือน | [Cloud](chapters/ch08-cloud/) |
-| **13** | **เทคนิคการแสดงผลข้อมูล (Data Visualization)** | การนำเสนอข้อมูล, ชนิดกราฟ, แดชบอร์ดเรียลไทม์ด้วย Node-RED | [Data Visualization](chapters/ch09-data-visualization/) |
-| **14** | **การเชื่อมต่อกับโปรแกรมของผู้ใช้ (User Interface)** | การออกแบบ UI, แดชบอร์ดและโมบายแอป, การควบคุมอุปกรณ์ผ่าน ThingsBoard | [Data Visualization](chapters/ch09-data-visualization/) |
-| **15** | **พื้นฐานการเรียนรู้ของเครื่อง (Machine Learning) สำหรับ IoT** | แนวคิด ML, ประเภทการเรียนรู้, การจำแนกข้อมูลเซนเซอร์, TinyML/Edge AI | [Machine Learning](chapters/ch10-machine-learning/) |
+| **9** | **โปรโตคอลประยุกต์เว็บและการสื่อสาร API** | รูปแบบ Client/Server, HTTP Methods, REST API, รูปแบบข้อมูล JSON | [HTTP REST](chapters/ch07-http/) |
+| **10** | **โปรโตคอลการรับส่งข้อความแบบไลท์เวท** | รูปแบบ Publish/Subscribe, Broker, Topic, QoS, การส่งข้อมูลผ่าน MQTT | [MQTT](chapters/ch08-mqtt/) |
+| **11** | **แพลตฟอร์มคลาวด์และการจัดการข้อมูล** | บริการคลาวด์ (IaaS/PaaS/SaaS), แพลตฟอร์ม ThingsBoard, การส่งค่า Telemetry / Attributes | [Cloud](chapters/ch09-cloud/) |
+| **12** | **ระบบจัดการกฎและฐานข้อมูลอนุกรมเวลา** | การวิเคราะห์เงื่อนไขด้วย Rule Engine, ส่งแจ้งเตือน API/LINE Notify, ฐานข้อมูลอนุกรมเวลา | [Cloud](chapters/ch09-cloud/) |
+| **13** | **ระบบฐานข้อมูลและแดชบอร์ดแสดงผลท้องถิ่น** | การเขียนโฟลว์และโหนดเชื่อมโยงใน Node-RED, จัดเก็บข้อมูลลง SQLite และ InfluxDB | [Node-RED](chapters/ch10-node-red/) |
+| **14** | **การแสดงภาพข้อมูลและการออกแบบส่วนต่อประสานผู้ใช้** | หลักการแสดงภาพข้อมูลที่ดี, ออกแบบ HMI, การสร้างแดชบอร์ดด้วย Grafana, การควบคุมอุปกรณ์แบบย้อนกลับ | [HMI & UI](chapters/ch11-hmi-visualization/) |
+| **15** | **การเรียนรู้ของเครื่องและการประมวลผลอัจฉริยะที่ปลายขอบ** | แนวคิด ML, ขั้นตอนพัฒนาโมเดลบน Edge Impulse, TinyML/Edge AI วิเคราะห์มอเตอร์สั่นสะเทือน | [Machine Learning](chapters/ch12-machine-learning/) |
 | **—** | **🟧 สอบปลายภาค (Final Exam)** | **ครอบคลุมเนื้อหาสัปดาห์ที่ 9–15 \| สัดส่วน 25%** | [summary.md](chapters/summary.md) |
 
 ---

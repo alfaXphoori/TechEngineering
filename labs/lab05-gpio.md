@@ -1,4 +1,4 @@
-# 🔬 Lab 4: GPIO เบื้องต้นด้วย ESP32 + Wokwi
+# 🔬 Lab 5: GPIO เบื้องต้นด้วย ESP32 + Wokwi
 
 **รายวิชา:** เทคโนโลยีดิจิทัลสำหรับวิศวกรรม (Digital Technology for Engineering)  
 **หลักสูตร:** วิศวกรรมเครื่องกล ชั้นปีที่ 1  

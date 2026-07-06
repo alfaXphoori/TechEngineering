@@ -1,4 +1,4 @@
-# 🔬 Lab 5: ADC และ PWM
+# 🔬 Lab 2: ADC และ PWM
 
 **รายวิชา:** เทคโนโลยีดิจิทัลสำหรับวิศวกรรม (Digital Technology for Engineering)  
 **หลักสูตร:** วิศวกรรมเครื่องกล ชั้นปีที่ 1  

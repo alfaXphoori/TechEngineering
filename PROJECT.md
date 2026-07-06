@@ -31,10 +31,10 @@ To ensure high-quality chapter content, the following expansion standard must be
 /Users/phoori/phoori.ch@ksu.ac.th - Google Drive/My Drive/KSU/Git/TechEngineering/
 ├── chapters/
 │   ├── ch01-iot-introduction/README.md
-│   ├── ch02-sensors/README.md
-│   ├── ch03-actuators/README.md
-│   ├── ch04-microcontroller/README.md
-│   ├── ch05-io-interfacing/README.md
+│   ├── ch03-sensors/README.md
+│   ├── ch04-actuators/README.md
+│   ├── ch05-microcontroller/README.md
+│   ├── ch02-io-interfacing/README.md
 │   ├── ch06-wireless/README.md
 │   ├── ch07-protocols/README.md
 │   ├── ch08-cloud/README.md

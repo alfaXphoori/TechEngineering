@@ -1,15 +1,15 @@
-# Chapter 2: ตัวรับรู้ (Sensors)
+# Chapter 3: ตัวรับรู้ (Sensors)
 ## Sensors for IoT
 
 บทนี้จะพาทำความรู้จักกับ **เซนเซอร์ (Sensor)** ซึ่งเป็นอุปกรณ์สำคัญที่ทำหน้าที่เป็น "ตา หู จมูก" ของระบบ IoT ทำให้ไมโครคอนโทรลเลอร์ (เช่น Arduino Uno ที่จำลองบน Tinkercad หรือ ESP32) สามารถรับรู้สิ่งที่เกิดขึ้นในโลกจริงได้ ไม่ว่าจะเป็นอุณหภูมิ แสงสว่าง ระยะทาง หรือแม้แต่แก๊สที่มองไม่เห็น
 
 ---
 
-## 2.1 ความรู้พื้นฐานอิเล็กทรอนิกส์
+## 3.1 ความรู้พื้นฐานอิเล็กทรอนิกส์
 
 ก่อนเข้าสู่การอ่านค่าเซนเซอร์ด้วยไมโครคอนโทรลเลอร์ ควรเข้าใจแนวคิดพื้นฐานของวงจรไฟฟ้าเล็กน้อย เพราะเซนเซอร์จำนวนมากไม่ได้ส่ง "ตัวเลข" ออกมาโดยตรง แต่ส่งผลลัพธ์เป็นแรงดัน กระแส หรือความต้านทานที่เปลี่ยนไป จากนั้นไมโครคอนโทรลเลอร์จึงอ่านค่าและแปลงเป็นข้อมูลดิจิทัลอีกที
 
-### 2.1.1 แรงดัน กระแส และความต้านทาน (Voltage, Current, Resistance)
+### 3.1.1 แรงดัน กระแส และความต้านทาน (Voltage, Current, Resistance)
 
 ในวงจรไฟฟ้าพื้นฐาน เรามักพบปริมาณสำคัญ 3 ตัว ได้แก่ แรงดันไฟฟ้า กระแสไฟฟ้า และความต้านทาน
 
@@ -101,7 +101,7 @@
 
 > 💡 **หลักคิดง่าย ๆ:** ถ้ามีแรงดันแต่ไม่มีวงจรปิด กระแสจะไม่ไหล และถ้าความต้านทานสูงขึ้น กระแสที่ไหลในวงจรจะลดลง
 
-### 2.1.2 กฎของโอห์ม (Ohm's Law)
+### 3.1.2 กฎของโอห์ม (Ohm's Law)
 
 กฎของโอห์มเป็นสมการพื้นฐานที่เชื่อมความสัมพันธ์ระหว่างแรงดัน กระแส และความต้านทาน:
 
@@ -131,7 +131,7 @@ $$P = VI = I^2R$$
 
 > 💡 **หลักคิดง่าย ๆ:** กฎของโอห์มช่วยตอบคำถามว่า "ถ้ามีแรงดันเท่านี้และความต้านทานเท่านี้ กระแสจะไหลเท่าไร" ซึ่งเป็นพื้นฐานของการเลือกตัวต้านทานและการออกแบบวงจรอ่านค่าเซนเซอร์
 
-### 2.1.3 วงจรอนุกรมและขนาน (Series & Parallel)
+### 3.1.3 วงจรอนุกรมและขนาน (Series & Parallel)
 
 การต่อตัวต้านทานมี 2 รูปแบบพื้นฐานที่พบได้บ่อย คืออนุกรมและขนาน ซึ่งให้พฤติกรรมของแรงดันและกระแสต่างกัน
 
@@ -235,7 +235,7 @@ $$\frac{1}{R_{total}} = \frac{1}{R_1} + \frac{1}{R_2} + ...$$
 
 > 💡 **หลักคิดง่าย ๆ:** อนุกรมเหมาะกับการ "แบ่งแรงดัน" ส่วนขนานเหมาะกับการ "แบ่งกระแส" และการเข้าใจสองแบบนี้ช่วยอ่านวงจรเซนเซอร์ได้ง่ายขึ้นมาก
 
-### 2.1.4 ตัวต้านทานและตัวต้านทานพูลอัป/พูลดาวน์ (Resistor & Pull-up/Pull-down)
+### 3.1.4 ตัวต้านทานและตัวต้านทานพูลอัป/พูลดาวน์ (Resistor & Pull-up/Pull-down)
 
 **ตัวต้านทาน (Resistor)** ทำหน้าที่ควบคุมหรือจำกัดกระแส แบ่งแรงดัน และกำหนดสถานะเริ่มต้นของสัญญาณในวงจร ตัวต้านทานจริงมักมีแถบสีบอกค่า เช่น น้ำตาล-ดำ-ส้ม หมายถึง $10\text{ k}\Omega$ และในโมดูลเซนเซอร์สมัยใหม่มักพิมพ์ค่าเป็นรหัสบนตัวชิ้นส่วน เช่น `103` หมายถึง $10 \times 10^3 = 10\text{ k}\Omega$
 
@@ -340,7 +340,7 @@ $$\frac{1}{R_{total}} = \frac{1}{R_1} + \frac{1}{R_2} + ...$$
 
 > 💡 **หลักคิดง่าย ๆ:** Pull-up และ pull-down ไม่ได้มีไว้เพิ่มความซับซ้อน แต่มีไว้ทำให้ GPIO มีคำตอบชัดเจนว่าเป็น HIGH หรือ LOW เมื่อไม่มีใครขับสัญญาณอยู่
 
-### 2.1.5 ตัวเก็บประจุ (Capacitor)
+### 3.1.5 ตัวเก็บประจุ (Capacitor)
 
 **ตัวเก็บประจุ (Capacitor)** คืออุปกรณ์ที่เก็บประจุไฟฟ้าและพลังงานไว้ในรูปของสนามไฟฟ้าระหว่างแผ่นตัวนำ 2 แผ่นที่มีฉนวนคั่นกลาง เมื่อต่อกับแหล่งจ่าย แผ่นหนึ่งจะสะสมประจุบวก อีกแผ่นหนึ่งจะสะสมประจุลบ และเมื่อตัดแหล่งจ่ายหรือมีทางให้กระแสไหลกลับ ตัวเก็บประจุจะคายประจุออกมา
 
@@ -587,11 +587,11 @@ $$\tau = RC$$
 
 ---
 
-## 2.2 เซนเซอร์คืออะไร และหลักการแปลงปริมาณกายภาพเป็นสัญญาณไฟฟ้า
+## 3.2 เซนเซอร์คืออะไร และหลักการแปลงปริมาณกายภาพเป็นสัญญาณไฟฟ้า
 
 **เซนเซอร์ (Sensor)** คืออุปกรณ์ที่ตรวจจับปริมาณทางกายภาพ (Physical Quantity) แล้วแปลงให้เป็นสัญญาณไฟฟ้า (Electrical Signal) ที่ไมโครคอนโทรลเลอร์สามารถอ่านค่าได้
 
-### 2.2.1 ทรานสดิวเซอร์ (Transducer)
+### 3.2.1 ทรานสดิวเซอร์ (Transducer)
 
 คำว่า **ทรานสดิวเซอร์** หมายถึงอุปกรณ์ที่แปลงพลังงานรูปหนึ่งไปเป็นอีกรูปหนึ่ง เซนเซอร์จึงเป็นทรานสดิวเซอร์ประเภทหนึ่งที่แปลง *พลังงานทางกายภาพ → พลังงานไฟฟ้า*
 
@@ -666,7 +666,7 @@ $$\tau = RC$$
 
 > 💡 **หลักคิดง่าย ๆ:** เซนเซอร์ทุกตัวทำหน้าที่เหมือน "นักแปล" ที่แปลงภาษาของธรรมชาติ (ความร้อน แสง เสียง) ให้เป็นภาษาของไฟฟ้า (แรงดัน กระแส ความต้านทาน) ที่ไมโครคอนโทรลเลอร์เข้าใจ
 
-### 2.2.2 หลักการทางฟิสิกส์และแบบจำลองทางคณิตศาสตร์ของเซนเซอร์แบบความต้านทาน (Resistive Sensors)
+### 3.2.2 หลักการทางฟิสิกส์และแบบจำลองทางคณิตศาสตร์ของเซนเซอร์แบบความต้านทาน (Resistive Sensors)
 
 ในงานวิศวกรรม เซนเซอร์ที่พบบ่อยที่สุดประเภทหนึ่งคือ **เซนเซอร์แบบแปรผันตามความต้านทาน (Resistive Sensors)** เช่น LDR, Thermistor และ RTD อุปกรณ์เหล่านี้จะเปลี่ยนคุณสมบัติทางกายภาพเป็นความต้านทานไฟฟ้า เพื่อนำไปประมวลผลต่อ
 
@@ -680,7 +680,7 @@ $$\tau = RC$$
 
 *   **RTD PT100 (Resistance Temperature Detector):** ทำจากโลหะบริสุทธิ์อย่างแพลทินัม (Platinum) โลหะมีพฤติกรรมตรงกันข้ามกับสารกึ่งตัวนำ เมื่ออุณหภูมิสูงขึ้น อะตอมในโครงสร้างตาข่าย (Lattice) ของโลหะจะสั่นสะเทือนรุนแรงขึ้น ส่งผลให้เกิดการกระเจิง (Scattering) ของอิเล็กตรอนนำไฟฟ้า ทำให้เคลื่อนที่ได้ยากขึ้น ดังนั้น ความต้านทานไฟฟ้าของ PT100 จึงเพิ่มขึ้นเมื่ออุณหภูมิสูงขึ้นอย่างเป็นเชิงเส้นสูงมาก
 
-#### 2. วงจรแบ่งแรงดันไฟฟ้า (Voltage Divider)
+#### 3.2.3 วงจรแบ่งแรงดันไฟฟ้า (Voltage Divider)
 
 เนื่องจากไมโครคอนโทรลเลอร์อย่าง Arduino Uno หรือ ESP32 ไม่สามารถวัดค่าความต้านทานไฟฟ้า ($R$) ได้โดยตรง (อ่านค่าได้เฉพาะแรงดันไฟฟ้า $V$) เราจึงต้องใช้วงจรแบ่งแรงดันเพื่อแปลงการเปลี่ยนแปลงของค่า $R$ เป็นแรงดันไฟฟ้า $V_{out}$
 
@@ -872,11 +872,11 @@ $$T = \frac{R_{RTD} - R_0}{R_0 \cdot \alpha} = \frac{R_{RTD} - 100}{100 \cdot 0.
 
 ---
 
-## 2.3 การจำแนกประเภทเซนเซอร์
+## 3.3 การจำแนกประเภทเซนเซอร์
 
 เซนเซอร์สามารถจำแนกได้ 2 แนวทางหลัก
 
-### 2.3.1 จำแนกตามปริมาณที่วัด (Measured Quantity)
+### 3.3.1 จำแนกตามปริมาณที่วัด (Measured Quantity)
 
 | ปริมาณที่วัด / ลักษณะข้อมูล | ตัวอย่างเซนเซอร์ | การประยุกต์ใช้ |
 |---|---|---|
@@ -895,14 +895,14 @@ $$T = \frac{R_{RTD} - R_0}{R_0 \cdot \alpha} = \frac{R_{RTD} - 100}{100 \cdot 0.
 | ความเร่ง (Acceleration) | MPU6050, ADXL345 | ตรวจจับการสั่นสะเทือนเครื่องจักร, อัตราเร่งเชิงมุม |
 
 
-### 2.3.2 จำแนกตามชนิดสัญญาณ (Signal Type)
+### 3.3.2 จำแนกตามชนิดสัญญาณ (Signal Type)
 
 - **เซนเซอร์แอนะล็อก (Analog Sensor):** ให้สัญญาณแรงดันต่อเนื่อง เช่น TMP36 หรือ LM35 ที่มีแรงดันไฟฟ้าเอาต์พุตแปรผันเชิงเส้นตามอุณหภูมิ ซึ่งต้องเชื่อมต่อเข้ากับขา ADC (เช่น ขาแอนะล็อก A0–A5 ของ Arduino Uno) เพื่อแปลงค่าเป็นสัญญาณดิจิทัล
 - **เซนเซอร์ดิจิทัล (Digital Sensor):** ให้สัญญาณเป็น 2 สถานะ (HIGH/LOW) เช่น ปุ่มกด, PIR หรือส่งข้อมูลเป็นชุดบิตคอมพิวเตอร์ผ่านโปรโตคอลดิจิทัล เช่น DHT11/DHT22 ส่งผ่าน One-Wire หรือ BMP280 ส่งผ่านบัส I2C
 
 ---
 
-## 2.4 คุณลักษณะของเซนเซอร์ (Sensor Characteristics)
+## 3.4 คุณลักษณะของเซนเซอร์ (Sensor Characteristics)
 
 เมื่อเลือกเซนเซอร์มาใช้งาน ต้องพิจารณาคุณลักษณะต่อไปนี้:
 
@@ -920,424 +920,12 @@ $$T = \frac{R_{RTD} - R_0}{R_0 \cdot \alpha} = \frac{R_{RTD} - 100}{100 \cdot 0.
 
 ---
 
-## 2.5 สัญญาณดิจิทัลกับแอนะล็อก และการเชื่อมต่อกับไมโครคอนโทรลเลอร์
-
-### 2.5.1 สัญญาณแอนะล็อก (Analog Signal)
-
-- มีค่าต่อเนื่อง (Continuous) เช่น 0.00 V, 1.25 V, 2.73 V
-- Arduino Uno มี ADC (Analog-to-Digital Converter) ขนาด 10 บิต แปลงแรงดัน 0–5 V เป็นค่าดิจิทัล 0–1023
-- ขาที่ใช้ได้: ขา A0 ถึง A5 (บนบอร์ดจริง หรือในระบบจำลอง Tinkercad)
-
-<div style="text-align: center; margin: 20px 0;">
-<svg viewBox="0 0 700 120" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
-  <style>
-    .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1; rx: 8px; }
-    .mcu { fill: #faf5ff; stroke: #a78bfa; stroke-width: 2; rx: 8px; }
-    .sensor { fill: #eff6ff; stroke: #60a5fa; stroke-width: 2; rx: 8px; }
-    .wire-bg { fill: none; stroke: #cbd5e1; stroke-width: 2; }
-    .wire-flow { fill: none; stroke: #3b82f6; stroke-width: 3; stroke-dasharray: 200; stroke-linecap: round; animation: analogFlow 3s linear infinite; }
-    .pulse-dot { fill: #ef4444; }
-    .text-main { font-size: 13px; font-weight: 700; fill: #1e293b; }
-    .text-sub { font-size: 11px; fill: #64748b; }
-    .text-code { font-family: monospace; font-size: 11px; fill: #7c3aed; font-weight: bold; }
-    @keyframes analogFlow {
-      0% { stroke-dashoffset: 200; }
-      100% { stroke-dashoffset: 0; }
-    }
-  </style>
-  <rect x="5" y="5" width="690" height="110" class="bg"/>
-  <rect x="20" y="20" width="130" height="70" class="sensor"/>
-  <text x="85" y="45" class="text-main" text-anchor="middle">เซนเซอร์แอนะล็อก</text>
-  <text x="85" y="62" class="text-sub" text-anchor="middle">(เช่น LM35, LDR)</text>
-  <text x="85" y="78" class="text-sub" text-anchor="middle" fill="#2563eb" font-weight="bold">แรงดันต่อเนื่อง (V)</text>
-  <rect x="505" y="15" width="175" height="80" class="mcu"/>
-  <text x="592.5" y="37" class="text-main" text-anchor="middle">Arduino Uno (ขา A0)</text>
-  <text x="592.5" y="55" class="text-sub" text-anchor="middle">อ่านค่าแอนะล็อก 10 บิต</text>
-  <text x="592.5" y="75" class="text-code" text-anchor="middle">analogRead(A0) ➔ 0-1023</text>
-  <path d="M 150 55 C 230 15, 270 95, 340 55 C 410 15, 450 95, 505 55" class="wire-bg"/>
-  <path id="analogPath" d="M 150 55 C 230 15, 270 95, 340 55 C 410 15, 450 95, 505 55" class="wire-flow"/>
-  <circle r="5" class="pulse-dot">
-    <animateMotion dur="3s" repeatCount="indefinite">
-      <mpath href="#analogPath"/>
-    </animateMotion>
-  </circle>
-  <text x="340" y="100" class="text-sub" text-anchor="middle" fill="#475569">สัญญาณแรงดันเปลี่ยนแปลงต่อเนื่องตามปริมาณกายภาพ</text>
-</svg>
-</div>
-
-**ตัวอย่างการอ่านค่าแอนะล็อก (Tinkercad Circuits — บอร์ด Arduino Uno):**
-
-```cpp
-const int sensorPin = A0; // ขาแอนะล็อก A0
-
-void setup() {
-  Serial.begin(9600); // เริ่มต้นใช้งาน Serial Monitor (9600 bps คือความเร็วเริ่มต้นของ Tinkercad)
-}
-
-void loop() {
-  int rawValue = analogRead(sensorPin); // อ่านค่าดิบได้ในช่วง 0-1023 (10 บิต)
-  float voltage = rawValue * (5.0 / 1023.0); // แปลงเป็นแรงดันจริงโดยอิงแรงดันอ้างอิง 5V ของบอร์ด
-  Serial.print("Raw: ");
-  Serial.print(rawValue);
-  Serial.print(" | Voltage: ");
-  Serial.println(voltage, 2);
-  delay(1000);
-}
-```
-
-### 2.5.2 สัญญาณดิจิทัล (Digital Signal)
-
-สัญญาณดิจิทัลไม่มีความต่อเนื่องเหมือนสัญญาณแอนะล็อก แต่จะมีสถานะที่จำกัดและชัดเจน โดยทั่วไปในระดับลอจิก (Logic Levels) ของไมโครคอนโทรลเลอร์จะแบ่งออกเป็น 2 สถานะหลัก:
-
-*   **HIGH (ลอจิก 1):** สำหรับ Arduino Uno คือแรงดันไฟฟ้าประมาณ $5\text{ V}$ (ทางไฟฟ้ากำหนดเกณฑ์รับเข้าไว้ว่าแรงดันที่สูงกว่าประมาณ $3.0\text{ V}$ ขึ้นไป จะถือว่าเป็น HIGH)
-*   **LOW (ลอจิก 0):** สำหรับ Arduino Uno คือแรงดันไฟฟ้าประมาณ $0\text{ V}$ (ทางไฟฟ้ากำหนดเกณฑ์ไว้ว่าแรงดันที่ต่ำกว่าประมาณ $1.5\text{ V}$ ลงมา จะถือว่าเป็น LOW)
-
-การรับสัญญาณดิจิทัลจากเซนเซอร์แบ่งออกเป็น 2 รูปแบบหลักตามลักษณะของข้อมูล:
-
-#### 1. สัญญาณดิจิทัลตรง (Direct Digital High/Low Input)
-เป็นเซนเซอร์ที่ส่งระดับแรงดัน $HIGH$ หรือ $LOW$ เพื่อแจ้งเหตุการณ์หรือสถานะโดยตรง (ไม่ต้องใช้โปรโตคอลซับซ้อน) โดยไมโครคอนโทรลเลอร์ใช้คำสั่ง `digitalRead()` อ่านค่าได้เลย
-*   **เซนเซอร์ตรวจจับความเคลื่อนไหว (PIR Sensor):** ส่ง $HIGH$ เมื่อพบการเคลื่อนไหว และส่ง $LOW$ เมื่อไม่มี
-*   **เซนเซอร์ตรวจจับสิ่งกีดขวางอินฟราเรด (IR Obstacle Sensor):** ส่ง $LOW$ เมื่อตรวจพบวัตถุสะท้อนแสงกลับ และส่ง $HIGH$ เมื่อทางสะดวก
-*   **สวิตช์ปุ่มกด (Push Button Switch):** ส่งสัญญาณลอจิกเปลี่ยนไปเมื่อปุ่มโดนกด
-
-<div style="text-align: center; margin: 20px 0;">
-<svg viewBox="0 0 700 120" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
-  <style>
-    .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1; rx: 8px; }
-    .mcu { fill: #faf5ff; stroke: #a78bfa; stroke-width: 2; rx: 8px; }
-    .sensor { fill: #eff6ff; stroke: #60a5fa; stroke-width: 2; rx: 8px; }
-    .wire-bg { fill: none; stroke: #cbd5e1; stroke-width: 2; }
-    .wire-flow { fill: none; stroke: #10b981; stroke-width: 3; stroke-dasharray: 200; stroke-linecap: round; animation: digitalFlow 2s linear infinite; }
-    .pulse-square { fill: #ef4444; }
-    .text-main { font-size: 13px; font-weight: 700; fill: #1e293b; }
-    .text-sub { font-size: 11px; fill: #64748b; }
-    .text-code { font-family: monospace; font-size: 11px; fill: #7c3aed; font-weight: bold; }
-    @keyframes digitalFlow {
-      0% { stroke-dashoffset: 200; }
-      100% { stroke-dashoffset: 0; }
-    }
-  </style>
-  <rect x="5" y="5" width="690" height="110" class="bg"/>
-  <rect x="20" y="20" width="130" height="70" class="sensor"/>
-  <text x="85" y="45" class="text-main" text-anchor="middle">เซนเซอร์ดิจิทัลตรง</text>
-  <text x="85" y="62" class="text-sub" text-anchor="middle">(เช่น PIR, IR)</text>
-  <text x="85" y="78" class="text-sub" text-anchor="middle" fill="#059669" font-weight="bold">HIGH (5V) / LOW (0V)</text>
-  <rect x="505" y="15" width="175" height="80" class="mcu"/>
-  <text x="592.5" y="37" class="text-main" text-anchor="middle">Arduino Uno (Pin 2)</text>
-  <text x="592.5" y="55" class="text-sub" text-anchor="middle">อ่านค่าสถานะดิจิทัลตรง</text>
-  <text x="592.5" y="75" class="text-code" text-anchor="middle">digitalRead(2) ➔ 1 / 0</text>
-  <path d="M 150 75 L 210 75 L 210 35 L 280 35 L 280 75 L 350 75 L 350 35 L 420 35 L 420 75 L 505 75" class="wire-bg"/>
-  <path id="digitalPath" d="M 150 75 L 210 75 L 210 35 L 280 35 L 280 75 L 350 75 L 350 35 L 420 35 L 420 75 L 505 75" class="wire-flow"/>
-  <circle r="5" class="pulse-square">
-    <animateMotion dur="2s" repeatCount="indefinite">
-      <mpath href="#digitalPath"/>
-    </animateMotion>
-  </circle>
-  <text x="340" y="100" class="text-sub" text-anchor="middle" fill="#475569">สัญญาณเปลี่ยนสถานะสลับพัลส์เหลี่ยม HIGH หรือ LOW ทันทีตามสถานะ</text>
-</svg>
-</div>
-
-#### 2. สัญญาณโปรโตคอลการสื่อสารข้อมูลดิจิทัล (Digital Communication Protocols)
-เซนเซอร์สมัยใหม่จำนวนมากทำหน้าที่ประมวลผลสัญญาณและแปลงเป็นข้อมูลตัวเลขสำเร็จรูปอยู่ภายในชิป จากนั้นจึงส่งข้อมูลที่เป็นชุดบิต (Data Packet) ผ่านพอร์ตสื่อสารแบบอนุกรม (Serial Communication Bus) ไปยัง ESP32 โปรโตคอลหลักที่ใช้งานมีดังนี้:
-
-#### A. One-Wire
-โปรโตคอลการสื่อสารที่เป็นสิทธิบัตรของ Dallas Semiconductor (ปัจจุบันคือ Maxim Integrated) ออกแบบมาเพื่อเน้นการเชื่อมต่อที่ประหยัดสายสัญญาณและอุปกรณ์มีราคาประหยัด
-*   **ลักษณะทางกายภาพ:** ใช้สายสัญญาณรับส่งข้อมูลเพียง **1 เส้น** (Data Line) ร่วมกับสายกราวด์ (GND) และต้องการตัวต้านทาน Pull-up (มักใช้ $4.7\text{ k}\Omega$)
-*   **การเชื่อมต่อ:** เป็นการรับ-ส่งข้อมูลทิศทางเดียวสลับเวลา (Half-Duplex) บนสายสัญญาณเส้นเดียว
-*   **ความสามารถพิเศษ:** อุปกรณ์ One-Wire ทุกตัวมีรหัสระบุตัวตน 64 บิตที่เป็นเอกลักษณ์เฉพาะตัว (Unique ROM ID) ฝังมาจากโรงงาน ทำให้เราสามารถต่อเซนเซอร์ One-Wire ชนิดเดียวกัน เช่น เซนเซอร์วัดอุณหภูมิกันน้ำ DS18B20 หลายสิบตัวขนานกันบนสายข้อมูลเส้นเดียว และสั่งอ่านอุณหภูมิทีละตัวได้โดยใช้สายทองแดงเพียงชุดเดียวไปตามพื้นที่ต่างๆ
-*   **ตัวอย่างการประยุกต์ใช้:** เซนเซอร์ DHT22 (วัดอุณหภูมิและความชื้น) และ DS18B20 (วัดอุณหภูมิความละเอียดสูงชนิดกันน้ำ)
-
-<div style="text-align: center; margin: 20px 0;">
-<svg viewBox="0 0 700 220" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
-  <style>
-    .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1; rx: 8px; }
-    .mcu { fill: #faf5ff; stroke: #a78bfa; stroke-width: 2; rx: 8px; }
-    .sensor { fill: #eff6ff; stroke: #60a5fa; stroke-width: 2; rx: 8px; }
-    .wire-one { fill: none; stroke: #2563eb; stroke-width: 2; }
-    .wire-pullup { fill: none; stroke: #ef4444; stroke-width: 1.5; }
-    .resistor { fill: #fff; stroke: #64748b; stroke-width: 1.5; }
-    .text-main { font-size: 12px; font-weight: 700; fill: #1e293b; }
-    .text-sub { font-size: 10px; fill: #64748b; }
-    .text-bus { font-size: 10px; font-weight: bold; font-family: monospace; fill: #2563eb; }
-    .packet-cmd { fill: #6366f1; stroke: #ffffff; stroke-width: 1; }
-    .packet-reply { fill: #f59e0b; stroke: #ffffff; stroke-width: 1; }
-    .packet-label { font-size: 7px; fill: #ffffff; font-weight: bold; font-family: monospace; }
-  </style>
-  <rect x="5" y="5" width="690" height="210" class="bg"/>
-  <rect x="20" y="50" width="120" height="80" class="mcu"/>
-  <text x="80" y="85" class="text-main" text-anchor="middle">ESP32</text>
-  <text x="80" y="105" class="text-sub" text-anchor="middle">(One-Wire Master)</text>
-  <line x1="140" y1="90" x2="520" y2="90" class="wire-one"/>
-  <text x="150" y="75" class="text-bus">DQ (Single Data Line)</text>
-  <line x1="220" y1="90" x2="220" y2="30" class="wire-pullup"/>
-  <rect x="212" y="42" width="16" height="25" rx="2" class="resistor"/>
-  <line x1="212" y1="47" x2="228" y2="47" stroke="#fbbf24" stroke-width="2"/>
-  <line x1="212" y1="52" x2="228" y2="52" stroke="#a78bfa" stroke-width="2"/>
-  <line x1="212" y1="57" x2="228" y2="57" stroke="#dc2626" stroke-width="2"/>
-  <text x="235" y="48" class="text-sub" font-weight="bold">Pull-up</text>
-  <text x="235" y="58" class="text-sub">4.7 kΩ</text>
-  <text x="220" y="24" class="text-bus" fill="#dc2626" text-anchor="middle">VCC (3.3V)</text>
-  <rect x="520" y="25" width="150" height="50" class="sensor"/>
-  <text x="595" y="45" class="text-main" text-anchor="middle">DS18B20 #1</text>
-  <text x="595" y="60" class="text-sub" text-anchor="middle">ID: 0x28...12A</text>
-  <line x1="520" y1="50" x2="400" y2="50" stroke="#cbd5e1" stroke-width="1.5"/>
-  <line x1="400" y1="50" x2="400" y2="90" stroke="#cbd5e1" stroke-width="1.5"/>
-  <circle cx="400" cy="90" r="3" fill="#2563eb"/>
-  <rect x="520" y="105" width="150" height="50" class="sensor"/>
-  <text x="595" y="125" class="text-main" text-anchor="middle">DS18B20 #2</text>
-  <text x="595" y="140" class="text-sub" text-anchor="middle">ID: 0x28...98B</text>
-  <line x1="520" y1="130" x2="470" y2="130" stroke="#cbd5e1" stroke-width="1.5"/>
-  <line x1="470" y1="130" x2="470" y2="90" stroke="#cbd5e1" stroke-width="1.5"/>
-  <circle cx="470" cy="90" r="3" fill="#2563eb"/>
-
-  <!-- Packet animations addressing both sensors sequentially -->
-  <!-- DS18B20 #1 (ID: ...12A) Cycle -->
-  <g>
-    <rect x="-27.5" y="-6" width="55" height="12" rx="2" class="packet-cmd"/>
-    <text x="0" y="3" class="packet-label" text-anchor="middle">REQ #12A</text>
-    <animateMotion path="M 140 90 L 400 90 L 400 50 L 520 50" dur="8s" repeatCount="indefinite" />
-    <animate attributeName="opacity" values="1; 1; 0; 0" keyTimes="0; 0.25; 0.26; 1" dur="8s" repeatCount="indefinite" />
-  </g>
-  <g>
-    <rect x="-27.5" y="-6" width="55" height="12" rx="2" class="packet-reply"/>
-    <text x="0" y="3" class="packet-label" text-anchor="middle">TEMP: 25.4C</text>
-    <animateMotion path="M 520 50 L 400 50 L 400 90 L 140 90" dur="8s" repeatCount="indefinite" />
-    <animate attributeName="opacity" values="0; 0; 1; 1; 0; 0" keyTimes="0; 0.24; 0.25; 0.5; 0.51; 1" dur="8s" repeatCount="indefinite" />
-  </g>
-
-  <!-- DS18B20 #2 (ID: ...98B) Cycle -->
-  <g>
-    <rect x="-27.5" y="-6" width="55" height="12" rx="2" class="packet-cmd"/>
-    <text x="0" y="3" class="packet-label" text-anchor="middle">REQ #98B</text>
-    <animateMotion path="M 140 90 L 470 90 L 470 130 L 520 130" dur="8s" repeatCount="indefinite" />
-    <animate attributeName="opacity" values="0; 0; 1; 1; 0; 0" keyTimes="0; 0.49; 0.5; 0.75; 0.76; 1" dur="8s" repeatCount="indefinite" />
-  </g>
-  <g>
-    <rect x="-27.5" y="-6" width="55" height="12" rx="2" class="packet-reply"/>
-    <text x="0" y="3" class="packet-label" text-anchor="middle">TEMP: 26.8C</text>
-    <animateMotion path="M 520 130 L 470 130 L 470 90 L 140 90" dur="8s" repeatCount="indefinite" />
-    <animate attributeName="opacity" values="0; 0; 1; 1" keyTimes="0; 0.74; 0.75; 1" dur="8s" repeatCount="indefinite" />
-  </g>
-
-  <text x="350" y="202" class="text-sub" text-anchor="middle" fill="#475569">การสื่อสารแบบ Half-Duplex: ใช้สายส่งข้อมูล 1 เส้นร่วมกัน โดย Master ส่งรหัสเรียกเซนเซอร์ แล้วเซนเซอร์ส่งข้อมูลกลับในสายเดิม</text>
-</svg>
-</div>
-
-#### B. I2C (Inter-Integrated Circuit)
-โปรโตคอลแบบบัสอนุกรมที่พัฒนาโดย Philips นิยมใช้สูงมากกับเซนเซอร์ระยะใกล้บนบอร์ดเดียวกัน
-*   **ลักษณะทางกายภาพ:** ใช้สายสัญญาณเพียง 2 เส้น:
-    *   **SDA (Serial Data):** สายรับ-ส่งข้อมูลสองทิศทางแบบสลับเวลา (Half-Duplex)
-    *   **SCL (Serial Clock):** สายส่งสัญญาณนาฬิกาควบคุมจังหวะโดยตัวแม่ข่าย (Master)
-*   **การเชื่อมต่อ:** ต้องต่อตัวต้านทาน Pull-up (มักใช้ $4.7\text{ k}\Omega$ ถึง $10\text{ k}\Omega$) ไว้ที่สาย SDA และ SCL ไปยัง $V_{DD}$ เพื่อดึงระดับลอจิกขึ้นเมื่อไม่มีอุปกรณ์ใดส่งข้อมูล
-*   **ความสามารถพิเศษ:** รองรับการเชื่อมต่ออุปกรณ์เซนเซอร์หลายตัว (Multi-drop) บนบัสเดียวกัน โดยใช้รหัสแอดเดรสระบุตัวเซนเซอร์ (Device Address เช่น $0x76$ หรือ $0x68$) ขนาด 7 บิต ทำให้สามารถต่อเซนเซอร์ต่างชนิดกัน เช่น BMP280 และ MPU6050 เข้ากับขาคู่เดียวกันบน ESP32 ได้โดยไม่สับสน
-*   **ความเร็วระดับมาตรฐาน:** $100\text{ kbps}$ (Standard Mode) และ $400\text{ kbps}$ (Fast Mode)
-
-<div style="text-align: center; margin: 20px 0;">
-<svg viewBox="0 0 700 200" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
-  <style>
-    .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1; rx: 8px; }
-    .mcu { fill: #faf5ff; stroke: #a78bfa; stroke-width: 2; rx: 8px; }
-    .sensor { fill: #eff6ff; stroke: #60a5fa; stroke-width: 2; rx: 8px; }
-    .line-scl { fill: none; stroke: #f59e0b; stroke-width: 2; }
-    .line-sda { fill: none; stroke: #10b981; stroke-width: 2; }
-    .scl-pulse { fill: none; stroke: #d97706; stroke-width: 2; stroke-dasharray: 10 5; animation: clockPulse 1.5s linear infinite; }
-    .sda-packet { fill: #ef4444; stroke: #ffffff; stroke-width: 1; }
-    .packet-label { font-size: 8px; fill: #ffffff; font-weight: bold; font-family: monospace; }
-    .text-main { font-size: 12px; font-weight: 700; fill: #1e293b; }
-    .text-sub { font-size: 10px; fill: #64748b; }
-    .text-bus { font-size: 11px; font-weight: 800; font-family: monospace; }
-    @keyframes clockPulse {
-      to { stroke-dashoffset: -15; }
-    }
-  </style>
-  <rect x="5" y="5" width="690" height="190" class="bg"/>
-  <rect x="20" y="45" width="120" height="90" class="mcu"/>
-  <text x="80" y="75" class="text-main" text-anchor="middle">ESP32</text>
-  <text x="80" y="95" class="text-sub" text-anchor="middle">(I2C Master)</text>
-  <text x="80" y="115" class="text-sub" text-anchor="middle" fill="#7c3aed" font-weight="bold">GPIO 21, 22</text>
-  <line x1="140" y1="75" x2="520" y2="75" class="line-scl"/>
-  <line x1="140" y1="75" x2="520" y2="75" class="scl-pulse"/>
-  <text x="160" y="55" class="text-bus" fill="#d97706">SCL (Clock)</text>
-  <line x1="140" y1="105" x2="520" y2="105" class="line-sda"/>
-  <text x="160" y="130" class="text-bus" fill="#059669">SDA (Data)</text>
-  <rect x="520" y="20" width="150" height="60" class="sensor"/>
-  <text x="595" y="42" class="text-main" text-anchor="middle">BMP280</text>
-  <text x="595" y="58" class="text-sub" text-anchor="middle">Address: 0x76 (Sensor 1)</text>
-  <path d="M 480 75 L 480 135 L 520 135" stroke="#cbd5e1" stroke-width="1.5" fill="none"/>
-  <path d="M 450 105 L 450 45 L 520 45" stroke="#cbd5e1" stroke-width="1.5" fill="none"/>
-  <rect x="520" y="100" width="150" height="60" class="sensor"/>
-  <text x="595" y="122" class="text-main" text-anchor="middle">MPU6050</text>
-  <text x="595" y="138" class="text-sub" text-anchor="middle">Address: 0x68 (Sensor 2)</text>
-  <circle cx="450" cy="105" r="3" fill="#10b981"/>
-  <circle cx="480" cy="75" r="3" fill="#f59e0b"/>
-
-  <!-- Packet animations addressing both sensors in sequence -->
-  <!-- Sensor 1 (BMP280 @ 0x76) Cycle -->
-  <g>
-    <rect x="-22.5" y="-7" width="45" height="14" rx="3" class="sda-packet"/>
-    <text x="0" y="3" class="packet-label" text-anchor="middle">ADDR 0x76</text>
-    <animateMotion path="M 140 105 L 450 105 L 450 45 L 520 45" dur="8s" repeatCount="indefinite"/>
-    <animate attributeName="opacity" values="1; 1; 0; 0" keyTimes="0; 0.25; 0.26; 1" dur="8s" repeatCount="indefinite" />
-  </g>
-  <g>
-    <rect x="-22.5" y="-7" width="45" height="14" rx="3" fill="#3b82f6" stroke="#ffffff" stroke-width="1"/>
-    <text x="0" y="3" class="packet-label" text-anchor="middle">DATA: 25C</text>
-    <animateMotion path="M 520 45 L 450 45 L 450 105 L 140 105" dur="8s" repeatCount="indefinite"/>
-    <animate attributeName="opacity" values="0; 0; 1; 1; 0; 0" keyTimes="0; 0.24; 0.25; 0.5; 0.51; 1" dur="8s" repeatCount="indefinite" />
-  </g>
-
-  <!-- Sensor 2 (MPU6050 @ 0x68) Cycle -->
-  <g>
-    <rect x="-22.5" y="-7" width="45" height="14" rx="3" class="sda-packet"/>
-    <text x="0" y="3" class="packet-label" text-anchor="middle">ADDR 0x68</text>
-    <animateMotion path="M 140 105 L 480 105 L 480 135 L 520 135" dur="8s" repeatCount="indefinite"/>
-    <animate attributeName="opacity" values="0; 0; 1; 1; 0; 0" keyTimes="0; 0.49; 0.5; 0.75; 0.76; 1" dur="8s" repeatCount="indefinite" />
-  </g>
-  <g>
-    <rect x="-22.5" y="-7" width="45" height="14" rx="3" fill="#3b82f6" stroke="#ffffff" stroke-width="1"/>
-    <text x="0" y="3" class="packet-label" text-anchor="middle">DATA: ±2g</text>
-    <animateMotion path="M 520 135 L 480 135 L 480 105 L 140 105" dur="8s" repeatCount="indefinite"/>
-    <animate attributeName="opacity" values="0; 0; 1; 1" keyTimes="0; 0.74; 0.75; 1" dur="8s" repeatCount="indefinite" />
-  </g>
-
-  <text x="350" y="182" class="text-sub" text-anchor="middle" fill="#475569">SDA ส่งที่อยู่เพื่อเรียกเซนเซอร์ (ADDR) และเซนเซอร์จะตอบรับและส่งข้อมูล (DATA) กลับมาในสายสัญญาณเส้นเดิม</text>
-</svg>
-</div>
-
-#### C. SPI (Serial Peripheral Interface)
-โปรโตคอลการสื่อสารความเร็วสูงแบบ Synchronous พัฒนาโดย Motorola เหมาะสำหรับการส่งข้อมูลปริมาณมาก เช่น หน้าจอแสดงผลกราฟิก หรือเซนเซอร์ความละเอียดสูง
-*   **ลักษณะทางกายภาพ:** ใช้สายสัญญาณหลัก 4 เส้น:
-    *   **MOSI (Master Out Slave In):** สายส่งข้อมูลออกจาก Master ไปยัง Sensor
-    *   **MISO (Master In Slave Out):** สายรับข้อมูลเข้า Master จาก Sensor
-    *   **SCK (Serial Clock):** สายส่งสัญญาณนาฬิกาควบคุมจังหวะการรับส่งข้อมูล
-    *   **CS / SS (Chip Select / Slave Select):** สายเลือกอุปกรณ์ที่ต้องการคุยด้วย (แยกเฉพาะตัวละ 1 เส้น)
-*   **การเชื่อมต่อ:** การสื่อสารเป็นแบบสองทิศทางพร้อมกัน (Full-Duplex)
-*   **ความสามารถพิเศษ:** ทำงานได้รวดเร็วกว่า I2C มาก (ระดับความเร็วสูงสุดถึงหลักหลายสิบ MHz) เนื่องจากไม่ต้องจัดการส่งแอดเดรสบิตผ่านข้อมูลสายหลัก แต่ใช้สายฮาร์ดแวร์ CS ในการเลือกว่าจะติดต่อกับอุปกรณ์ตัวใดโดยเฉพาะแทน
-*   **ข้อจำกัด:** เมื่อจำนวนเซนเซอร์เพิ่มขึ้น จะต้องเปลืองขา GPIO ของ ESP32 เพิ่มตามจำนวนเซนเซอร์เพื่อนำไปทำเป็นขา CS ของเซนเซอร์แต่ละตัว
-
-<div style="text-align: center; margin: 20px 0;">
-<svg viewBox="0 0 700 260" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
-  <style>
-    .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1; rx: 8px; }
-    .mcu { fill: #faf5ff; stroke: #a78bfa; stroke-width: 2; rx: 8px; }
-    .sensor { fill: #eff6ff; stroke: #60a5fa; stroke-width: 2; rx: 8px; }
-    .wire { fill: none; stroke: #cbd5e1; stroke-width: 1.5; }
-    .wire-cs-low { fill: none; stroke: #ef4444; stroke-width: 2; }
-    .wire-cs-high { fill: none; stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 3 3; }
-    .text-main { font-size: 12px; font-weight: 700; fill: #1e293b; }
-    .text-sub { font-size: 10px; fill: #64748b; }
-    .text-bus { font-size: 9px; font-weight: bold; font-family: monospace; fill: #475569; }
-    .packet-mosi { fill: #ec4899; stroke: #ffffff; stroke-width: 1; }
-    .packet-miso { fill: #10b981; stroke: #ffffff; stroke-width: 1; }
-    .packet-label { font-size: 8px; fill: #ffffff; font-weight: bold; font-family: monospace; }
-
-    /* SCK Clock Animation */
-    .line-sck { fill: none; stroke: #fef08a; stroke-width: 2; }
-    .sck-pulse { fill: none; stroke: #d97706; stroke-width: 2; stroke-dasharray: 10 5; animation: sckClockPulse 1.2s linear infinite; }
-    @keyframes sckClockPulse {
-      to { stroke-dashoffset: -15; }
-    }
-
-    /* MOSI & MISO active lines */
-    .wire-mosi-active { fill: none; stroke: #db2777; stroke-width: 2; }
-    .wire-miso-active { fill: none; stroke: #059669; stroke-width: 2; }
-  </style>
-  <rect x="5" y="5" width="690" height="250" class="bg"/>
-
-  <!-- ESP32 Breakout Box -->
-  <rect x="20" y="35" width="120" height="170" class="mcu"/>
-  <text x="80" y="95" class="text-main" text-anchor="middle">ESP32</text>
-  <text x="80" y="115" class="text-sub" text-anchor="middle">(SPI Master)</text>
-  <text x="80" y="135" class="text-sub" fill="#7c3aed" font-weight="bold" text-anchor="middle">GPIO 5, 18, 23, 19, 4</text>
-
-  <!-- ESP32 Pin Labels -->
-  <text x="130" y="54" class="text-bus" text-anchor="end" fill="#dc2626">CS A</text>
-  <text x="130" y="114" class="text-bus" text-anchor="end" fill="#d97706">SCK</text>
-  <text x="130" y="129" class="text-bus" text-anchor="end" fill="#db2777">MOSI</text>
-  <text x="130" y="144" class="text-bus" text-anchor="end" fill="#059669">MISO</text>
-  <text x="130" y="189" class="text-bus" text-anchor="end" fill="#94a3b8">CS B</text>
-
-  <!-- CS A & CS B Lines -->
-  <path d="M 140 50 L 520 50" class="wire-cs-low"/>
-  <text x="150" y="45" class="text-bus" fill="#dc2626">CS A (Active LOW ➔ Enabled)</text>
-
-  <line x1="140" y1="185" x2="520" y2="185" class="wire-cs-high"/>
-  <text x="150" y="197" class="text-bus" fill="#94a3b8">CS B (Standby HIGH ➔ Disabled)</text>
-
-  <!-- SCK Bus Line (Clock) -->
-  <path d="M 140 110 L 480 110 L 480 75 L 520 75" class="line-sck"/>
-  <path d="M 140 110 L 480 110 L 480 75 L 520 75" class="sck-pulse"/>
-  <path d="M 480 110 L 480 165 L 520 165" class="wire"/>
-  <circle cx="480" cy="110" r="3" fill="#f59e0b"/>
-  <text x="150" y="103" class="text-bus" fill="#d97706">SCK (Clock)</text>
-
-  <!-- MOSI Bus Line (Master Out Slave In) -->
-  <path d="M 140 125 L 450 125 L 450 85 L 520 85" class="wire-mosi-active"/>
-  <path d="M 450 125 L 450 175 L 520 175" class="wire"/>
-  <circle cx="450" cy="125" r="3" fill="#db2777"/>
-  <text x="150" y="121" class="text-bus" fill="#db2777">MOSI (Data Out)</text>
-
-  <!-- MISO Bus Line (Master In Slave Out) -->
-  <path d="M 520 95 L 420 95 L 420 140 L 140 140" class="wire-miso-active"/>
-  <path d="M 520 195 L 420 195 L 420 140" class="wire"/>
-  <circle cx="420" cy="140" r="3" fill="#059669"/>
-  <text x="150" y="136" class="text-bus" fill="#059669">MISO (Data In)</text>
-
-  <!-- Sensor A breakout (Active) -->
-  <rect x="520" y="25" width="150" height="80" class="sensor"/>
-  <text x="610" y="60" class="text-main" text-anchor="middle">Sensor A</text>
-  <text x="610" y="78" class="text-sub" text-anchor="middle">(Active)</text>
-
-  <!-- Sensor A Pin Labels -->
-  <text x="526" y="54" class="text-bus" text-anchor="start" fill="#dc2626">CS</text>
-  <text x="526" y="79" class="text-bus" text-anchor="start" fill="#d97706">SCK</text>
-  <text x="526" y="89" class="text-bus" text-anchor="start" fill="#db2777">MOSI</text>
-  <text x="526" y="99" class="text-bus" text-anchor="start" fill="#059669">MISO</text>
-
-  <!-- Sensor B breakout (Disabled/Standby) -->
-  <rect x="520" y="150" width="150" height="70" class="sensor" style="opacity: 0.6;"/>
-  <text x="610" y="180" class="text-main" text-anchor="middle" style="opacity: 0.6;">Sensor B</text>
-  <text x="610" y="196" class="text-sub" text-anchor="middle" style="opacity: 0.6;">(Disabled)</text>
-
-  <!-- Sensor B Pin Labels -->
-  <text x="526" y="169" class="text-bus" text-anchor="start" style="opacity: 0.6;" fill="#94a3b8">SCK</text>
-  <text x="526" y="179" class="text-bus" text-anchor="start" style="opacity: 0.6;" fill="#94a3b8">MOSI</text>
-  <text x="526" y="189" class="text-bus" text-anchor="start" style="opacity: 0.6;" fill="#94a3b8">CS</text>
-  <text x="526" y="199" class="text-bus" text-anchor="start" style="opacity: 0.6;" fill="#94a3b8">MISO</text>
-
-  <!-- Packet animations -->
-  <g>
-    <rect x="-20" y="-6" width="40" height="12" rx="2" class="packet-mosi"/>
-    <text x="0" y="3" class="packet-label" text-anchor="middle">WRITE</text>
-    <animateMotion path="M 140 125 L 450 125 L 450 85 L 520 85" dur="3s" repeatCount="indefinite" />
-  </g>
-  <g>
-    <rect x="-20" y="-6" width="40" height="12" rx="2" class="packet-miso"/>
-    <text x="0" y="3" class="packet-label" text-anchor="middle">READ</text>
-    <animateMotion path="M 520 95 L 420 95 L 420 140 L 140 140" dur="3s" repeatCount="indefinite" />
-  </g>
-  <text x="350" y="242" class="text-sub" text-anchor="middle" fill="#475569">การส่งข้อมูลแบบ Full-Duplex: ข้อมูลไหลผ่าน MOSI และ MISO พร้อมกันในรอบบัสเดียว เมื่อขา CS A ถูกดึงลงต่ำ (LOW)</text>
-</svg>
-</div>
-
-### 2.5.3 เปรียบเทียบการเชื่อมต่อ
-
-| หัวข้อ | แอนะล็อก | ดิจิทัล (GPIO) | ดิจิทัล (I2C/SPI) |
-|---|---|---|---|
-| จำนวนสายข้อมูล | 1 | 1 | 2–4 |
-| ขาที่ใช้ (Uno / ESP32) | A0–A5 / ADC (GPIO 32–39) | GPIO ใดก็ได้ | SDA/SCL หรือ SPI |
-| ตัวอย่างเซนเซอร์ | Potentiometer, TMP36, LDR | Switches, PIR, HC-SR04 | BMP280, MPU6050 |
-| ข้อดี | วงจรง่าย | อ่านค่าง่าย | ต่อหลายตัวได้บน Bus เดียว |
-| ข้อจำกัด | อ่อนไหวต่อสัญญาณรบกวน | ได้แค่ 2 สถานะ | ต้องใช้ไลบรารี |
-
----
-
-## 2.6 ตัวอย่างเซนเซอร์ยอดนิยมใน IoT
+## 3.5 ตัวอย่างเซนเซอร์ยอดนิยมใน IoT
 
 
 #### A. กลุ่มเซนเซอร์และอุปกรณ์สัญญาณแอนะล็อก (Analog Inputs / Sensors)
 
-### 2.6.1 Potentiometer (ตัวต้านทานปรับค่าได้)
+### 3.5.1 Potentiometer (ตัวต้านทานปรับค่าได้)
 
 
 *   **หลักการทำงาน:** เป็นอุปกรณ์ที่มีความต้านทานรวมคงที่ (เช่น $10\text{ k}\Omega$) แต่มีขากลาง (Wiper) ที่สามารถหมุนเลื่อนขยับตำแหน่งเพื่อแบ่งค่าความต้านทานออกเป็น 2 ส่วน ทำให้ทำหน้าที่เป็น **วงจรแบ่งแรงดันไฟฟ้า (Voltage Divider) ในตัว** โดยส่งค่าเอาต์พุตแอนะล็อกแปรผันตามตำแหน่งการหมุน
@@ -1364,7 +952,7 @@ void loop() {
 }
 ```
 
-### 2.6.2 TMP36 / LM35 — วัดอุณหภูมิ (แอนะล็อก)
+### 3.5.2 TMP36 / LM35 — วัดอุณหภูมิ (แอนะล็อก)
 
 
 *   **TMP36 (มีจำลองใน Tinkercad):** ให้เอาต์พุตเป็นแรงดันไฟฟ้าแบบเชิงเส้น $10\text{ mV/}^\circ\text{C}$ แต่มี **แรงดันชดเชย (Offset) 500 mV** ที่อุณหภูมิ $0\ ^\circ\text{C}$ เพื่อให้วัดอุณหภูมิติดลบได้โดยไม่ต้องจ่ายไฟเลี้ยงลบ สูตรแปลงคือ:
@@ -1398,7 +986,7 @@ void loop() {
 }
 ```
 
-### 2.6.3 Light Sensors — Photoresistor (LDR), Photodiode และ Ambient Light Sensor [Phototransistor]
+### 3.5.3 Light Sensors — Photoresistor (LDR), Photodiode และ Ambient Light Sensor [Phototransistor]
 
 
 ใน Tinkercad มีเซนเซอร์วัดความสว่างของแสงให้ใช้งานหลัก ๆ 3 ประเภท ซึ่งใช้หลักการทางฟิสิกส์และมีคุณสมบัติการตอบสนองที่แตกต่างกัน:
@@ -1436,7 +1024,7 @@ void loop() {
 }
 ```
 
-### 2.6.4 Flex Sensor & Force Sensor — ตัวตรวจจับการโค้งงอและแรงกด
+### 3.5.4 Flex Sensor & Force Sensor — ตัวตรวจจับการโค้งงอและแรงกด
 
 
 เซนเซอร์กลุ่มนี้ทำงานด้วยความต้านทานเปลี่ยนไปตามแรงเชิงกลกระทำ (Mechanical Action) ซึ่งนิยมนำไปประยุกต์ใช้ในการวัดและควบคุมทางกลศาสตร์อย่างหลากหลาย:
@@ -1466,7 +1054,7 @@ void loop() {
 }
 ```
 
-### 2.6.5 MQ-2 — ตรวจจับแก๊สและควัน *(จำลองใน Tinkercad ด้วยอุปกรณ์ Gas Sensor)*
+### 3.5.5 MQ-2 — ตรวจจับแก๊สและควัน *(จำลองใน Tinkercad ด้วยอุปกรณ์ Gas Sensor)*
 
 
 - หลักการทำงาน: ตัวเซนเซอร์ทำจากสารกึ่งตัวนำ SnO2 (Tin dioxide) เมื่อมีแก๊สไวไฟเข้ามาทำปฏิกิริยาเคมีกับออกซิเจนที่ผิวตัวนำ จะส่งผลให้ความต้านทานลดลงอย่างรวดเร็ว
@@ -1475,7 +1063,7 @@ void loop() {
 
 #### B. กลุ่มเซนเซอร์และอุปกรณ์สัญญาณดิจิทัล (Digital Inputs / Sensors)
 
-### 2.6.6 Switches (Pushbutton, Slideswitch, DIP Switches) — อุปกรณ์ปุ่มกดและสวิตช์ควบคุม
+### 3.5.6 Switches (Pushbutton, Slideswitch, DIP Switches) — อุปกรณ์ปุ่มกดและสวิตช์ควบคุม
 
 
 *   **หลักการทำงาน:** สวิตช์ทำหน้าที่ปิดหรือเปิดวงจรไฟฟ้าเพื่อส่งข้อมูลสถานะลอจิกเป็นสัญญาณอินพุตดิจิทัลตรง:
@@ -1508,7 +1096,7 @@ void loop() {
 }
 ```
 
-### 2.6.7 PIR (HC-SR501) — ตรวจจับการเคลื่อนไหว
+### 3.5.7 PIR (HC-SR501) — ตรวจจับการเคลื่อนไหว
 
 
 - ตรวจจับรังสีอินฟราเรดจากร่างกายสิ่งมีชีวิตที่มีความร้อนเคลื่อนที่ผ่านเซนเซอร์
@@ -1542,7 +1130,7 @@ void loop() {
 }
 ```
 
-### 2.6.8 Ultrasonic Distance Sensor (3-pin & 4-pin) — วัดระยะทางด้วยอัลตราโซนิก
+### 3.5.8 Ultrasonic Distance Sensor (3-pin & 4-pin) — วัดระยะทางด้วยอัลตราโซนิก
 
 
 ใน Tinkercad มีเซนเซอร์อัลตราโซนิกให้เลือกใช้งาน 2 รูปแบบ โดยส่งคลื่นความถี่สูง $40\text{ kHz}$ ไปสะท้อนวัตถุและวัดระยะทางจากเวลาเดินทางกลับ:
@@ -1614,7 +1202,7 @@ void loop() {
 }
 ```
 
-### 2.6.9 Tilt Sensor (2-pin & 4-pin) — ตรวจจับการเอียง
+### 3.5.9 Tilt Sensor (2-pin & 4-pin) — ตรวจจับการเอียง
 
 
 *   **หลักการทำงาน:** เซนเซอร์เอียงทำหน้าที่เป็น **สวิตช์ตรวจจับมุมเอียง** ภายในโมดูลมักมีลูกโลหะนำไฟฟ้าขนาดเล็กบรรจุไว้ เมื่อเซนเซอร์เอียงทำมุมที่เหมาะสม ลูกเหล็กจะไหลมาเชื่อมต่อสัมผัสหน้าสัมผัสขั้วไฟฟ้าเข้าด้วยกัน ทำให้กระแสไหลผ่านได้ (สวิตช์ต่อ - HIGH/LOW ตามการจัดดึง) สำหรับรุ่น 4 พินสามารถให้ข้อมูลแกนแนวระนาบเอียงที่แยกละเอียดขึ้น
@@ -1641,7 +1229,7 @@ void loop() {
 }
 ```
 
-### 2.6.10 IR Sensor & IR Remote — การรับคำสั่งและตรวจจับอินฟราเรด
+### 3.5.10 IR Sensor & IR Remote — การรับคำสั่งและตรวจจับอินฟราเรด
 
 
 *   **หลักการทำงาน:** **IR Sensor (ตัวรับแสงอินฟราเรด)** จะถอดรหัสคลื่นแสงอินฟราเรดความถี่ $38\text{ kHz}$ ที่มองไม่เห็นด้วยตาเปล่า เมื่อกดปุ่มที่ **IR Remote (รีโมทคอนโทรลอินฟราเรด)** ตัวส่งจะยิงแสงกะพริบเป็นรหัสข้อมูลเฉพาะ และตัวรับจะแปลงสัญญาณกลับมาเป็นค่ารหัสตัวเลขฐานสิบหกขนาด 32 บิต
@@ -1670,7 +1258,7 @@ void loop() {
 }
 ```
 
-### 2.6.11 DHT11 / DHT22 — วัดอุณหภูมิและความชื้น
+### 3.5.11 DHT11 / DHT22 — วัดอุณหภูมิและความชื้น
 
 
 *   **DHT11 (มีให้ใช้งานใน Tinkercad):** ช่วงวัดอุณหภูมิ 0 ถึง 50 °C (ความแม่นยำ ±2 °C) ช่วงวัดความชื้น 20–90 %RH (ความแม่นยำ ±5%) เหมาะสำหรับการเรียนรู้และจำลองเบื้องต้น
@@ -1712,7 +1300,7 @@ void loop() {
 
 #### C. กลุ่มเซนเซอร์และอุปกรณ์เชื่อมต่อผ่านบัสข้อมูลดิจิทัล (Digital Bus Sensors - I2C)
 
-### 2.6.12 BMP280 — วัดความดันบรรยากาศและอุณหภูมิ *(รองรับบนบอร์ดจริง/Wokwi)*
+### 3.5.12 BMP280 — วัดความดันบรรยากาศและอุณหภูมิ *(รองรับบนบอร์ดจริง/Wokwi)*
 
 - ช่วงวัดความดัน: 300–1100 hPa (ความแม่นยำสูงถึง ±1.0 hPa)
 - อินเทอร์เฟซสื่อสาร: I2C (สาย SDA, SCL) หรือ SPI
@@ -1783,7 +1371,7 @@ void loop() {
 }
 ```
 
-### 2.6.13 การกรองสัญญาณรบกวนด้วยซอฟต์แวร์ (Software Signal Filtering)
+### 3.5.13 การกรองสัญญาณรบกวนด้วยซอฟต์แวร์ (Software Signal Filtering)
 
 สัญญาณที่ได้จากเซนเซอร์ชนิดแอนะล็อกมักจะมี **สัญญาณรบกวนทางไฟฟ้า (Electrical Noise)** หรือคลื่นความถี่สูงปนเข้ามา ส่งผลให้ค่าดิจิทัลที่อ่านได้จาก ADC มีความไม่นิ่งแกว่งไปแกว่งมา วิธีการแก้ปัญหาที่ประหยัดและยืดหยุ่นที่สุดคือการใช้ตัวกรองทางดิจิทัลด้วยโปรแกรม (Software Digital Filter)
 
@@ -1851,7 +1439,7 @@ void loop() {
 ```
 *💡 **เทคนิค:** สามารถคัดลอกรหัสนี้ไปทดสอบในโปรแกรม Tinkercad หรือ Wokwi และเปิด **Serial Plotter** (ใน Tinkercad คือปุ่มกราฟในส่วน Serial Monitor) เพื่อสังเกตความแตกต่างของการตอบสนองของเส้นสีระหว่างเส้นสีดิบที่แกว่งและเส้นที่ได้รับการกรองผ่าน Moving Average*
 
-### 2.6.14 ตารางสรุปอุปกรณ์รับเข้าและเซนเซอร์ใน Tinkercad และ Wokwi
+### 3.5.14 ตารางสรุปอุปกรณ์รับเข้าและเซนเซอร์ใน Tinkercad และ Wokwi
 
 | เซนเซอร์ / อุปกรณ์อินพุต | ปริมาณที่วัด / สถานะ | ชนิดสัญญาณ | อินเทอร์เฟซ | ช่วงวัด / ข้อมูล | Tinkercad / Wokwi |
 |---|---|---|---|---|---|
@@ -1873,7 +1461,7 @@ void loop() {
 
 ---
 
-## สรุปท้ายบท
+## 3.6 สรุปประจำบทที่ 3 (Summary)
 
 1. **เซนเซอร์** ทำหน้าที่แปลงปริมาณทางกายภาพเป็นสัญญาณไฟฟ้า ซึ่งเป็นพื้นฐานของระบบ IoT ทั้งหมด
 2. เซนเซอร์จำแนกได้ตาม **ปริมาณที่วัด** (อุณหภูมิ แสง ระยะทาง ฯลฯ) และ **ชนิดสัญญาณ** (แอนะล็อก / ดิจิทัล)
@@ -1884,7 +1472,7 @@ void loop() {
 
 ---
 
-## แบบฝึกหัดท้ายบท
+## 3.7 แบบฝึกหัดท้ายบทที่ 3 (Exercises)
 
 **ข้อ 1:** จงอธิบายความแตกต่างระหว่าง "เซนเซอร์" กับ "ทรานสดิวเซอร์" พร้อมยกตัวอย่างประกอบ
 
@@ -1894,11 +1482,10 @@ void loop() {
 
 | เซนเซอร์ | ปริมาณที่วัด | ชนิดสัญญาณ | อินเทอร์เฟซ |
 |---|---|---|---|
-| Potentiometer | ? | ? | ? |
-| TMP36 | ? | ? | ? |
-| LDR / Photoresistor | ? | ? | ? |
-| PIR (HC-SR501) | ? | ? | ? |
+| DHT22 | ? | ? | ? |
 | HC-SR04 | ? | ? | ? |
+| MQ-2 | ? | ? | ? |
+| BMP280 | ? | ? | ? |
 
 
 **ข้อ 4:** ถ้าต้องออกแบบระบบ IoT สำหรับตรวจสอบสภาพห้องเซิร์ฟเวอร์ (Server Room) จะเลือกใช้เซนเซอร์อะไรบ้าง อย่างน้อย 3 ตัว พร้อมอธิบายเหตุผลและระบุขาของบอร์ดไมโครคอนโทรลเลอร์ (เช่น Arduino Uno หรือ ESP32) ที่จะเชื่อมต่อ

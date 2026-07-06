@@ -2,7 +2,7 @@
 
 **รายวิชา:** เทคโนโลยีดิจิทัลสำหรับวิศวกรรม (Digital Technology for Engineering)  
 **หลักสูตร:** วิศวกรรมเครื่องกล ชั้นปีที่ 1  
-**เครื่องมือ:** ESP32 บน Wokwi Simulator  
+**เครื่องมือ:** Arduino Uno บน Tinkercad Circuits  
 **เวลา:** 2 ชั่วโมง
 
 ---
@@ -27,20 +27,20 @@
 
 ### ขั้นตอนปฏิบัติ
 
-1. เปิด [Wokwi Simulator](https://wokwi.com/) แล้วสร้างโปรเจกต์ใหม่ เลือกบอร์ด **ESP32**
+1. เปิด [Tinkercad Circuits](https://www.tinkercad.com/) เข้าสู่ระบบแล้วสร้างโปรเจกต์ใหม่ (Create new Circuit) เลือกบอร์ด **Arduino Uno R3** และ Breadboard
 2. ต่อวงจรตามนี้:
-   - ปุ่มกดขาหนึ่ง → **GPIO 15**
+   - ปุ่มกดขาหนึ่ง → **Pin 2**
    - ปุ่มกดอีกขา → **GND**
-   - LED ขายาว (Anode) → ตัวต้านทาน 220Ω → **GPIO 2**
+   - LED ขายาว (Anode) → ตัวต้านทาน 220Ω → **Pin 3**
    - LED ขาสั้น (Cathode) → **GND**
 3. เขียนโค้ดต่อไปนี้:
 
 ```cpp
-#define BUTTON_PIN 15
-#define LED_PIN 2
+#define BUTTON_PIN 2
+#define LED_PIN 3
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   pinMode(LED_PIN, OUTPUT);
   Serial.println("=== Lab 2: Digital Sensor ===");
@@ -61,7 +61,7 @@ void loop() {
 }
 ```
 
-4. กด **Start Simulation** แล้วเปิด Serial Monitor
+4. กด **Start Simulation** แล้วเปิด **Serial Monitor** (แถบด้านล่างของหน้าต่างโค้ด)
 5. ทดลองกดปุ่มและปล่อยปุ่ม สังเกตค่าที่แสดงบน Serial Monitor และสถานะ LED
 
 ### ตารางบันทึกผล — ส่วนที่ 1
@@ -83,21 +83,23 @@ void loop() {
 
 ### ขั้นตอนปฏิบัติ
 
-1. เพิ่มเซนเซอร์ PIR ในวงจร Wokwi (ค้นหา "PIR" ในรายการอุปกรณ์)
+1. เพิ่มเซนเซอร์ PIR (PIR Motion Sensor) ในวงจร Tinkercad (ค้นหา "PIR" ในรายการอุปกรณ์)
 2. ต่อวงจรเพิ่มเติม:
-   - PIR ขา VCC → **3.3V**
+   - PIR ขา VCC (หรือ Power) → **5V**
    - PIR ขา GND → **GND**
-   - PIR ขา OUT → **GPIO 14**
+   - PIR ขา OUT (หรือ Signal) → **Pin 4**
+   - LED สำหรับ PIR ขายาว (Anode) → ตัวต้านทาน 220Ω → **Pin 5**
+   - LED สำหรับ PIR ขาสั้น (Cathode) → **GND**
 3. แก้ไขโค้ดให้อ่านค่าทั้งปุ่มกดและ PIR พร้อมกัน:
 
 ```cpp
-#define BUTTON_PIN 15
-#define LED_PIN 2
-#define PIR_PIN 14
-#define LED_PIR_PIN 4
+#define BUTTON_PIN 2
+#define LED_PIN 3
+#define PIR_PIN 4
+#define LED_PIR_PIN 5
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   pinMode(PIR_PIN, INPUT);
   pinMode(LED_PIN, OUTPUT);
@@ -127,7 +129,7 @@ void loop() {
 }
 ```
 
-4. รันจำลองและทดสอบโดยคลิกที่เซนเซอร์ PIR ใน Wokwi เพื่อจำลองการเคลื่อนไหว
+4. รันจำลองและทดสอบโดยคลิกที่เซนเซอร์ PIR ใน Tinkercad เพื่อจำลองการเคลื่อนไหว (เลื่อนจุดวงกลมสีเขียวจำลองคนผ่านพื้นที่ตรวจจับ)
 
 ### ตารางบันทึกผล — ส่วนที่ 2
 
@@ -196,14 +198,14 @@ void loop() {
 > 📋 ส่งงานผ่าน Google Form: **(ลิงก์จากอาจารย์ผู้สอน)**
 
 สิ่งที่ต้องส่ง:
-1. ภาพหน้าจอ (Screenshot) วงจรใน Wokwi ของส่วนที่ 2
+1. ภาพหน้าจอ (Screenshot) วงจรใน Tinkercad ของส่วนที่ 2
 2. ภาพหน้าจอ Serial Monitor ขณะทดสอบ (แสดงทั้งสถานะปุ่มและ PIR)
 3. ซอร์สโค้ดส่วนที่ 3 (ระบบแจ้งเตือนอัจฉริยะ)
 4. ตารางบันทึกผลทั้ง 3 ส่วน พร้อมคำตอบแบบฝึกหัด
 
 ### Checklist ก่อนส่ง
 
-- [ ] ภาพหน้าจอวงจร Wokwi ชัดเจน เห็นการต่อสายครบถ้วน
+- [ ] ภาพหน้าจอวงจร Tinkercad ชัดเจน เห็นการต่อสายครบถ้วน
 - [ ] ภาพหน้าจอ Serial Monitor แสดงสถานะ PRESSED/RELEASED และ MOTION/NO MOTION
 - [ ] โค้ดส่วนที่ 3 คอมไพล์ผ่านและทำงานถูกต้องตามเงื่อนไข
 - [ ] กรอกตารางบันทึกผลครบทุกส่วน

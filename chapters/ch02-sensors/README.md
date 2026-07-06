@@ -1,19 +1,19 @@
 # Chapter 2: ตัวรับรู้ (Sensors)
 ## Sensors for IoT
 
-บทนี้จะพาทำความรู้จักกับ **เซนเซอร์ (Sensor)** ซึ่งเป็นอุปกรณ์สำคัญที่ทำหน้าที่เป็น "ตา หู จมูก" ของระบบ IoT ทำให้ไมโครคอนโทรลเลอร์อย่าง ESP32 สามารถรับรู้สิ่งที่เกิดขึ้นในโลกจริงได้ ไม่ว่าจะเป็นอุณหภูมิ แสงสว่าง ระยะทาง หรือแม้แต่แก๊สที่มองไม่เห็น
+บทนี้จะพาทำความรู้จักกับ **เซนเซอร์ (Sensor)** ซึ่งเป็นอุปกรณ์สำคัญที่ทำหน้าที่เป็น "ตา หู จมูก" ของระบบ IoT ทำให้ไมโครคอนโทรลเลอร์ (เช่น Arduino Uno ที่จำลองบน Tinkercad หรือ ESP32) สามารถรับรู้สิ่งที่เกิดขึ้นในโลกจริงได้ ไม่ว่าจะเป็นอุณหภูมิ แสงสว่าง ระยะทาง หรือแม้แต่แก๊สที่มองไม่เห็น
 
 ---
 
 ## 2.1 ความรู้พื้นฐานอิเล็กทรอนิกส์
 
-ก่อนเข้าสู่การอ่านค่าเซนเซอร์ด้วย ESP32 ควรเข้าใจแนวคิดพื้นฐานของวงจรไฟฟ้าเล็กน้อย เพราะเซนเซอร์จำนวนมากไม่ได้ส่ง "ตัวเลข" ออกมาโดยตรง แต่ส่งผลลัพธ์เป็นแรงดัน กระแส หรือความต้านทานที่เปลี่ยนไป จากนั้นไมโครคอนโทรลเลอร์จึงอ่านค่าและแปลงเป็นข้อมูลดิจิทัลอีกที
+ก่อนเข้าสู่การอ่านค่าเซนเซอร์ด้วยไมโครคอนโทรลเลอร์ ควรเข้าใจแนวคิดพื้นฐานของวงจรไฟฟ้าเล็กน้อย เพราะเซนเซอร์จำนวนมากไม่ได้ส่ง "ตัวเลข" ออกมาโดยตรง แต่ส่งผลลัพธ์เป็นแรงดัน กระแส หรือความต้านทานที่เปลี่ยนไป จากนั้นไมโครคอนโทรลเลอร์จึงอ่านค่าและแปลงเป็นข้อมูลดิจิทัลอีกที
 
 ### 2.1.1 แรงดัน กระแส และความต้านทาน (Voltage, Current, Resistance)
 
 ในวงจรไฟฟ้าพื้นฐาน เรามักพบปริมาณสำคัญ 3 ตัว ได้แก่ แรงดันไฟฟ้า กระแสไฟฟ้า และความต้านทาน
 
-*   **แรงดันไฟฟ้า ($V$ - Voltage):** คือ "แรงผลัก" ที่ทำให้ประจุไฟฟ้าเคลื่อนที่ หน่วยคือโวลต์ ($\text{V}$) เช่น ขา $3.3\text{ V}$ ของ ESP32 เป็นแหล่งจ่ายแรงดันที่ผลักให้กระแสไหลในวงจร
+*   **แรงดันไฟฟ้า ($V$ - Voltage):** คือ "แรงผลัก" ที่ทำให้ประจุไฟฟ้าเคลื่อนที่ หน่วยคือโวลต์ ($\text{V}$) เช่น ขา $5\text{ V}$ ของ Arduino Uno หรือ $3.3\text{ V}$ ของ ESP32 เป็นแหล่งจ่ายแรงดันที่ผลักให้กระแสไหลในวงจร
 *   **กระแสไฟฟ้า ($I$ - Current):** คืออัตราการไหลของประจุไฟฟ้าผ่านจุดหนึ่งในวงจร หน่วยคือแอมแปร์ ($\text{A}$) ในงานไมโครคอนโทรลเลอร์มักใช้หน่วยมิลลิแอมแปร์ ($\text{mA}$)
 *   **ความต้านทาน ($R$ - Resistance):** คือความยากง่ายที่กระแสจะไหลผ่านอุปกรณ์ หน่วยคือโอห์ม ($\Omega$) ยิ่งความต้านทานสูง กระแสยิ่งไหลได้น้อยลง
 
@@ -113,15 +113,15 @@ $$I = \frac{V}{R}$$
 
 $$R = \frac{V}{I}$$
 
-ตัวอย่างเช่น ถ้าต้องการต่อ LED กับขา ESP32 ที่จ่ายแรงดัน $3.3\text{ V}$ และต้องการจำกัดกระแสประมาณ $10\text{ mA}$ โดยสมมติว่า LED สีแดงมีแรงดันตกคร่อมประมาณ $2.0\text{ V}$ แรงดันที่เหลือตกคร่อมตัวต้านทานคือ:
+ตัวอย่างเช่น ถ้าต้องการต่อ LED กับขาบอร์ดไมโครคอนโทรลเลอร์ (เช่น Arduino Uno ที่จ่ายแรงดัน $5\text{ V}$) และต้องการจำกัดกระแสประมาณ $15\text{ mA}$ โดยสมมติว่า LED สีแดงมีแรงดันตกคร่อมประมาณ $2.0\text{ V}$ แรงดันที่เหลือตกคร่อมตัวต้านทานคือ:
 
-$$V_R = 3.3 - 2.0 = 1.3\text{ V}$$
+$$V_R = 5.0 - 2.0 = 3.0\text{ V}$$
 
 ดังนั้นค่าตัวต้านทานที่เหมาะสมโดยประมาณคือ:
 
-$$R = \frac{V_R}{I} = \frac{1.3}{0.01} = 130\ \Omega$$
+$$R = \frac{V_R}{I} = \frac{3.0}{0.015} = 200\ \Omega$$
 
-ในการใช้งานจริงมักเลือกค่ามาตรฐานที่ใกล้และสูงขึ้นเล็กน้อย เช่น $150\ \Omega$ หรือ $220\ \Omega$ เพื่อให้กระแสไม่สูงเกินไปและช่วยป้องกันขา GPIO
+ในการใช้งานจริงมักเลือกค่ามาตรฐานที่ใกล้และสูงขึ้นเล็กน้อย เช่น $220\ \Omega$ เพื่อจำกัดกระแสให้อยู่ในเกณฑ์ที่ปลอดภัยสำหรับขา GPIO
 
 กำลังไฟฟ้า ($P$) คืออัตราการใช้พลังงานของอุปกรณ์ในวงจร คำนวณได้จาก:
 
@@ -307,7 +307,7 @@ $$\frac{1}{R_{total}} = \frac{1}{R_1} + \frac{1}{R_2} + ...$$
   <text x="210" y="235" class="text-sub" text-anchor="middle">จุดสัญญาณ</text>
 
   <rect x="505" y="170" width="170" height="80" class="mcu"/>
-  <text x="590" y="198" class="text-main" text-anchor="middle">ESP32 GPIO</text>
+  <text x="590" y="198" class="text-main" text-anchor="middle">MCU GPIO / Pin</text>
   <text x="590" y="218" class="text-sub" text-anchor="middle">ตั้งเป็น INPUT</text>
   <text x="590" y="238" class="text-code state-high" text-anchor="middle">digitalRead() = HIGH</text>
   <text x="590" y="238" class="text-code state-low" text-anchor="middle" fill="#dc2626">digitalRead() = LOW</text>
@@ -644,9 +644,9 @@ $$\tau = RC$$
   <path d="M 490 70 C 498 55, 505 85, 513 70 C 519 58, 522 70, 525 70" class="electrical-flow"/>
   <polygon points="525,70 518,66 518,74" fill="#d97706"/>
 
-  <!-- Box 4: ADC ใน ESP32 -->
+  <!-- Box 4: ADC ใน Arduino Uno -->
   <rect x="525" y="25" width="135" height="90" rx="12" fill="#faf5ff" stroke="#7c3aed" stroke-width="1.5"/>
-  <text x="592.5" y="53" fill="#5b21b6" font-size="13" font-weight="700" text-anchor="middle">ADC ใน ESP32</text>
+  <text x="592.5" y="53" fill="#5b21b6" font-size="13" font-weight="700" text-anchor="middle">ADC ใน Arduino Uno</text>
   <text x="592.5" y="71" fill="#6d28d9" font-size="11" text-anchor="middle">(Analog-to-Digital)</text>
   <text x="592.5" y="91" fill="#8b5cf6" font-size="10" text-anchor="middle">ทำการสุ่มวัด &amp; กำหนดระดับ</text>
 
@@ -658,11 +658,11 @@ $$\tau = RC$$
   <rect x="695" y="25" width="135" height="90" rx="12" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
   <text x="762.5" y="53" fill="#065f46" font-size="13" font-weight="700" text-anchor="middle">ค่าดิจิทัล</text>
   <text x="762.5" y="71" fill="#047857" font-size="11" text-anchor="middle">(Digital Value)</text>
-  <text x="762.5" y="91" fill="#10b981" font-size="10" text-anchor="middle">ตัวเลข 0 – 4095 (12-bit)</text>
+  <text x="762.5" y="91" fill="#10b981" font-size="10" text-anchor="middle">ตัวเลข 0 – 1023 (10-bit)</text>
 </svg>
 </div>
 
-**ตัวอย่าง:** เทอร์มิสเตอร์ (Thermistor) เปลี่ยนอุณหภูมิเป็นค่าความต้านทานไฟฟ้าที่เปลี่ยนแปลง → ESP32 อ่านค่าแรงดันที่เปลี่ยนไปตามความต้านทาน → คำนวณกลับเป็นองศาเซลเซียส
+**ตัวอย่าง:** เทอร์มิสเตอร์ (Thermistor) เปลี่ยนอุณหภูมิเป็นค่าความต้านทานไฟฟ้าที่เปลี่ยนแปลง → ไมโครคอนโทรลเลอร์ (เช่น Arduino Uno) อ่านค่าแรงดันที่เปลี่ยนไปตามความต้านทาน → คำนวณกลับเป็นองศาเซลเซียส
 
 > 💡 **หลักคิดง่าย ๆ:** เซนเซอร์ทุกตัวทำหน้าที่เหมือน "นักแปล" ที่แปลงภาษาของธรรมชาติ (ความร้อน แสง เสียง) ให้เป็นภาษาของไฟฟ้า (แรงดัน กระแส ความต้านทาน) ที่ไมโครคอนโทรลเลอร์เข้าใจ
 
@@ -682,7 +682,7 @@ $$\tau = RC$$
 
 #### 2. วงจรแบ่งแรงดันไฟฟ้า (Voltage Divider)
 
-เนื่องจากไมโครคอนโทรลเลอร์อย่าง ESP32 ไม่สามารถวัดค่าความต้านทานไฟฟ้า ($R$) ได้โดยตรง (อ่านค่าได้เฉพาะแรงดันไฟฟ้า $V$) เราจึงต้องใช้วงจรแบ่งแรงดันเพื่อแปลงการเปลี่ยนแปลงของค่า $R$ เป็นแรงดันไฟฟ้า $V_{out}$
+เนื่องจากไมโครคอนโทรลเลอร์อย่าง Arduino Uno หรือ ESP32 ไม่สามารถวัดค่าความต้านทานไฟฟ้า ($R$) ได้โดยตรง (อ่านค่าได้เฉพาะแรงดันไฟฟ้า $V$) เราจึงต้องใช้วงจรแบ่งแรงดันเพื่อแปลงการเปลี่ยนแปลงของค่า $R$ เป็นแรงดันไฟฟ้า $V_{out}$
 
 <div style="text-align: center; margin: 24px 0;">
 <svg viewBox="0 0 750 250" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
@@ -734,7 +734,7 @@ $$\tau = RC$$
   <!-- Left Side: Schematic -->
   <!-- V_in Connection -->
   <line x1="120" y1="25" x2="120" y2="55" class="wire"/>
-  <text x="120" y="20" font-size="12" font-weight="bold" fill="#dc2626" text-anchor="middle">V_in (3.3V)</text>
+  <text x="120" y="20" font-size="12" font-weight="bold" fill="#dc2626" text-anchor="middle">V_in (5V)</text>
 
   <!-- R_fixed -->
   <rect x="105" y="55" width="30" height="50" class="resistor-box"/>
@@ -745,7 +745,7 @@ $$\tau = RC$$
   <line x1="120" y1="105" x2="120" y2="135" class="wire"/>
   <line x1="120" y1="120" x2="220" y2="120" class="wire"/>
   <text x="225" y="115" font-size="12" font-weight="bold" fill="#7c3aed">V_out</text>
-  <text x="225" y="130" font-size="10" fill="#6d28d9">(ไปยังขา ADC ESP32)</text>
+  <text x="225" y="130" font-size="10" fill="#6d28d9">(ไปยังขา ADC Arduino Uno)</text>
 
   <!-- R_sensor (LDR) -->
   <circle cx="120" cy="160" r="28" class="ldr-outline"/>
@@ -792,10 +792,10 @@ $$\tau = RC$$
   <text x="430" y="144" font-size="10" fill="#475569" text-anchor="end">0V</text>
 
   <line x1="520" y1="70" x2="520" y2="60" stroke="#475569" stroke-width="2"/>
-  <text x="520" y="52" font-size="10" fill="#475569" text-anchor="middle">1.65V</text>
+  <text x="520" y="52" font-size="10" fill="#475569" text-anchor="middle">2.5V</text>
 
   <line x1="590" y1="140" x2="600" y2="140" stroke="#475569" stroke-width="2"/>
-  <text x="610" y="144" font-size="10" fill="#475569" text-anchor="start">3.3V</text>
+  <text x="610" y="144" font-size="10" fill="#475569" text-anchor="start">5.0V</text>
 
   <!-- Dial pointer needle -->
   <line x1="520" y1="140" x2="520" y2="80" class="voltmeter-pointer"/>
@@ -807,14 +807,14 @@ $$\tau = RC$$
   <g class="txt-dark" transform="translate(340, 190)">
     <text x="0" y="0" class="status-text" fill="#1e293b">สภาวะ มืด (Dark)</text>
     <text x="0" y="18" class="formula-text" fill="#475569">R_sensor ≈ 10 kΩ (สูงมาก)</text>
-    <text x="0" y="34" class="formula-text" fill="#2563eb">V_out = 3.3V * (10k / (10k + 10k)) ≈ 1.65 V</text>
+    <text x="0" y="34" class="formula-text" fill="#2563eb">V_out = 5V * (10k / (10k + 10k)) = 2.5 V</text>
   </g>
 
   <!-- Case 2: Bright -->
   <g class="txt-light" transform="translate(340, 190)">
     <text x="0" y="0" class="status-text" fill="#ca8a04">สภาวะ สว่าง (Bright)</text>
     <text x="0" y="18" class="formula-text" fill="#475569">R_sensor ≈ 1 kΩ (ต่ำลง)</text>
-    <text x="0" y="34" class="formula-text" fill="#2563eb">V_out = 3.3V * (1k / (10k + 1k)) ≈ 0.30 V</text>
+    <text x="0" y="34" class="formula-text" fill="#2563eb">V_out = 5V * (1k / (10k + 1k)) ≈ 0.45 V</text>
   </g>
 </svg>
 </div>
@@ -822,14 +822,14 @@ $$\tau = RC$$
 ตามกฎของโอห์ม (Ohm's Law) แรงดันเอาต์พุต ($V_{out}$) ที่ตกคร่อมเซนเซอร์หาได้จากสมการ:
 $$V_{out} = V_{in} \cdot \left( \frac{R_{sensor}}{R_{fixed} + R_{sensor}} \right)$$
 
-เมื่อ ESP32 ทำการแปลงค่าแอนะล็อกเป็นดิจิทัล (ADC 12 บิต) จะได้ค่าดิจิทัลอ้างอิงกับ $V_{ref} = 3.3\text{ V}$ ดังนี้:
-$$ADC = \text{round}\left( \frac{V_{out}}{V_{in}} \cdot 4095 \right)$$
+เมื่อ Arduino Uno ทำการแปลงค่าแอนะล็อกเป็นดิจิทัล (ADC 10 บิต) จะได้ค่าดิจิทัลอ้างอิงกับ $V_{ref} = 5.0\text{ V}$ ดังนี้:
+$$ADC = \text{round}\left( \frac{V_{out}}{V_{in}} \cdot 1023 \right)$$
 
 ทำให้เราสามารถหาความสัมพันธ์ระหว่างค่าดิจิทัลที่อ่านได้จาก ADC กับความต้านทานของเซนเซอร์ได้โดยตรง:
-$$\frac{ADC}{4095} = \frac{R_{sensor}}{R_{fixed} + R_{sensor}}$$
+$$\frac{ADC}{1023} = \frac{R_{sensor}}{R_{fixed} + R_{sensor}}$$
 
 แก้สมการหา $R_{sensor}$:
-$$R_{sensor} = R_{fixed} \cdot \left( \frac{ADC}{4095 - ADC} \right)$$
+$$R_{sensor} = R_{fixed} \cdot \left( \frac{ADC}{1023 - ADC} \right)$$
 
 > ⚠️ **ข้อพิจารณาในการออกแบบ (Design Considerations):**
 > 1. **การเลือก $R_{fixed}$:** ควรเลือกค่า $R_{fixed}$ ให้ใกล้เคียงกับค่าเฉลี่ยหรือย่านตรงกลางที่ใช้งานของ $R_{sensor}$ เพื่อให้ได้ความไว (Sensitivity) สูงสุดและการตอบสนองต่อแรงดันเอาต์พุตที่เป็นเชิงเส้นดีที่สุด
@@ -919,8 +919,8 @@ $$T = \frac{R_{RTD} - R_0}{R_0 \cdot \alpha} = \frac{R_{RTD} - 100}{100 \cdot 0.
 ### 2.5.1 สัญญาณแอนะล็อก (Analog Signal)
 
 - มีค่าต่อเนื่อง (Continuous) เช่น 0.00 V, 1.25 V, 2.73 V
-- ESP32 มี ADC (Analog-to-Digital Converter) ขนาด 12 บิต แปลงแรงดัน 0–3.3 V เป็นค่าดิจิทัล 0–4095
-- ขาที่ใช้ได้: GPIO 32–39 (ADC1) และ GPIO 0, 2, 4, 12–15, 25–27 (ADC2)
+- Arduino Uno มี ADC (Analog-to-Digital Converter) ขนาด 10 บิต แปลงแรงดัน 0–5 V เป็นค่าดิจิทัล 0–1023
+- ขาที่ใช้ได้: ขา A0 ถึง A5 (บนบอร์ดจริง หรือในระบบจำลอง Tinkercad)
 
 <div style="text-align: center; margin: 20px 0;">
 <svg viewBox="0 0 700 120" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
@@ -945,9 +945,9 @@ $$T = \frac{R_{RTD} - R_0}{R_0 \cdot \alpha} = \frac{R_{RTD} - 100}{100 \cdot 0.
   <text x="85" y="62" class="text-sub" text-anchor="middle">(เช่น LM35, LDR)</text>
   <text x="85" y="78" class="text-sub" text-anchor="middle" fill="#2563eb" font-weight="bold">แรงดันต่อเนื่อง (V)</text>
   <rect x="505" y="15" width="175" height="80" class="mcu"/>
-  <text x="592.5" y="37" class="text-main" text-anchor="middle">ESP32 (ADC1 ขา 34)</text>
-  <text x="592.5" y="55" class="text-sub" text-anchor="middle">อ่านค่าแอนะล็อก 12 บิต</text>
-  <text x="592.5" y="75" class="text-code" text-anchor="middle">analogRead(34) ➔ 0-4095</text>
+  <text x="592.5" y="37" class="text-main" text-anchor="middle">Arduino Uno (ขา A0)</text>
+  <text x="592.5" y="55" class="text-sub" text-anchor="middle">อ่านค่าแอนะล็อก 10 บิต</text>
+  <text x="592.5" y="75" class="text-code" text-anchor="middle">analogRead(A0) ➔ 0-1023</text>
   <path d="M 150 55 C 230 15, 270 95, 340 55 C 410 15, 450 95, 505 55" class="wire-bg"/>
   <path id="analogPath" d="M 150 55 C 230 15, 270 95, 340 55 C 410 15, 450 95, 505 55" class="wire-flow"/>
   <circle r="5" class="pulse-dot">
@@ -959,18 +959,18 @@ $$T = \frac{R_{RTD} - R_0}{R_0 \cdot \alpha} = \frac{R_{RTD} - 100}{100 \cdot 0.
 </svg>
 </div>
 
-**ตัวอย่างการอ่านค่าแอนะล็อก (Wokwi):**
+**ตัวอย่างการอ่านค่าแอนะล็อก (Tinkercad Circuits — บอร์ด Arduino Uno):**
 
 ```cpp
-const int sensorPin = 34; // ขา ADC1
+const int sensorPin = A0; // ขาแอนะล็อก A0
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600); // เริ่มต้นใช้งาน Serial Monitor (9600 bps คือความเร็วเริ่มต้นของ Tinkercad)
 }
 
 void loop() {
-  int rawValue = analogRead(sensorPin);
-  float voltage = rawValue * (3.3 / 4095.0);
+  int rawValue = analogRead(sensorPin); // อ่านค่าดิบได้ในช่วง 0-1023 (10 บิต)
+  float voltage = rawValue * (5.0 / 1023.0); // แปลงเป็นแรงดันจริงโดยอิงแรงดันอ้างอิง 5V ของบอร์ด
   Serial.print("Raw: ");
   Serial.print(rawValue);
   Serial.print(" | Voltage: ");
@@ -983,8 +983,8 @@ void loop() {
 
 สัญญาณดิจิทัลไม่มีความต่อเนื่องเหมือนสัญญาณแอนะล็อก แต่จะมีสถานะที่จำกัดและชัดเจน โดยทั่วไปในระดับลอจิก (Logic Levels) ของไมโครคอนโทรลเลอร์จะแบ่งออกเป็น 2 สถานะหลัก:
 
-*   **HIGH (ลอจิก 1):** สำหรับ ESP32 คือแรงดันไฟฟ้าประมาณ $3.3\text{ V}$ (ทางไฟฟ้ามักกำหนดเกณฑ์รับเข้าไว้ว่าแรงดันที่สูงกว่า $0.75 \times V_{DD}$ หรือประมาณ $2.47\text{ V}$ ขึ้นไป จะถือว่าเป็น HIGH)
-*   **LOW (ลอจิก 0):** สำหรับ ESP32 คือแรงดันไฟฟ้าประมาณ $0\text{ V}$ (ทางไฟฟ้ากำหนดเกณฑ์ไว้ว่าแรงดันที่ต่ำกว่า $0.25 \times V_{DD}$ หรือประมาณ $0.82\text{ V}$ ลงมา จะถือว่าเป็น LOW)
+*   **HIGH (ลอจิก 1):** สำหรับ Arduino Uno คือแรงดันไฟฟ้าประมาณ $5\text{ V}$ (ทางไฟฟ้ากำหนดเกณฑ์รับเข้าไว้ว่าแรงดันที่สูงกว่าประมาณ $3.0\text{ V}$ ขึ้นไป จะถือว่าเป็น HIGH)
+*   **LOW (ลอจิก 0):** สำหรับ Arduino Uno คือแรงดันไฟฟ้าประมาณ $0\text{ V}$ (ทางไฟฟ้ากำหนดเกณฑ์ไว้ว่าแรงดันที่ต่ำกว่าประมาณ $1.5\text{ V}$ ลงมา จะถือว่าเป็น LOW)
 
 การรับสัญญาณดิจิทัลจากเซนเซอร์แบ่งออกเป็น 2 รูปแบบหลักตามลักษณะของข้อมูล:
 
@@ -1015,11 +1015,11 @@ void loop() {
   <rect x="20" y="20" width="130" height="70" class="sensor"/>
   <text x="85" y="45" class="text-main" text-anchor="middle">เซนเซอร์ดิจิทัลตรง</text>
   <text x="85" y="62" class="text-sub" text-anchor="middle">(เช่น PIR, IR)</text>
-  <text x="85" y="78" class="text-sub" text-anchor="middle" fill="#059669" font-weight="bold">HIGH (3.3V) / LOW (0V)</text>
+  <text x="85" y="78" class="text-sub" text-anchor="middle" fill="#059669" font-weight="bold">HIGH (5V) / LOW (0V)</text>
   <rect x="505" y="15" width="175" height="80" class="mcu"/>
-  <text x="592.5" y="37" class="text-main" text-anchor="middle">ESP32 (GPIO 19)</text>
+  <text x="592.5" y="37" class="text-main" text-anchor="middle">Arduino Uno (Pin 2)</text>
   <text x="592.5" y="55" class="text-sub" text-anchor="middle">อ่านค่าสถานะดิจิทัลตรง</text>
-  <text x="592.5" y="75" class="text-code" text-anchor="middle">digitalRead(19) ➔ 1 / 0</text>
+  <text x="592.5" y="75" class="text-code" text-anchor="middle">digitalRead(2) ➔ 1 / 0</text>
   <path d="M 150 75 L 210 75 L 210 35 L 280 35 L 280 75 L 350 75 L 350 35 L 420 35 L 420 75 L 505 75" class="wire-bg"/>
   <path id="digitalPath" d="M 150 75 L 210 75 L 210 35 L 280 35 L 280 75 L 350 75 L 350 35 L 420 35 L 420 75 L 505 75" class="wire-flow"/>
   <circle r="5" class="pulse-square">
@@ -1319,7 +1319,7 @@ void loop() {
 | หัวข้อ | แอนะล็อก | ดิจิทัล (GPIO) | ดิจิทัล (I2C/SPI) |
 |---|---|---|---|
 | จำนวนสายข้อมูล | 1 | 1 | 2–4 |
-| ขา ESP32 ที่ใช้ | ADC (GPIO 32–39) | GPIO ใดก็ได้ | SDA/SCL หรือ SPI |
+| ขาที่ใช้ (Uno / ESP32) | A0–A5 / ADC (GPIO 32–39) | GPIO ใดก็ได้ | SDA/SCL หรือ SPI |
 | ตัวอย่างเซนเซอร์ | LM35, LDR | PIR, HC-SR04 | BMP280, MPU6050 |
 | ข้อดี | วงจรง่าย | อ่านค่าง่าย | ต่อหลายตัวได้บน Bus เดียว |
 | ข้อจำกัด | อ่อนไหวต่อสัญญาณรบกวน | ได้แค่ 2 สถานะ | ต้องใช้ไลบรารี |
@@ -1328,128 +1328,183 @@ void loop() {
 
 ## 2.6 ตัวอย่างเซนเซอร์ยอดนิยมใน IoT
 
-### 2.6.1 DHT22 — วัดอุณหภูมิและความชื้น
+### 2.6.1 DHT11 / DHT22 — วัดอุณหภูมิและความชื้น
 
-- ช่วงวัดอุณหภูมิ: −40 ถึง +80 °C (ความแม่นยำ ±0.5 °C)
-- ช่วงวัดความชื้น: 0–100 %RH (ความแม่นยำ ±2%)
-- อินเทอร์เฟซ: One-Wire (ดิจิทัล)
+*   **DHT11 (มีให้ใช้งานใน Tinkercad):** ช่วงวัดอุณหภูมิ 0 ถึง 50 °C (ความแม่นยำ ±2 °C) ช่วงวัดความชื้น 20–90 %RH (ความแม่นยำ ±5%) เหมาะสำหรับการเรียนรู้และจำลองเบื้องต้น
+*   **DHT22 (นิยมใช้ในบอร์ดจริง / Wokwi):** ช่วงวัดอุณหภูมิ −40 ถึง +80 °C (ความแม่นยำ ±0.5 °C) ช่วงวัดความชื้น 0–100 %RH (ความแม่นยำ ±2%) มีความแม่นยำสูงกว่า
+*   **อินเทอร์เฟซ:** One-Wire (ดิจิทัล) ใช้สายสัญญาณข้อมูลเพียงเส้นเดียว
 
+**ตัวอย่างโค้ดอ่านค่าด้วยไลบรารี standard DHT (รองรับทั้ง Tinkercad และ Wokwi):**
 ```cpp
-#include "DHTesp.h"
-DHTesp dht;
+#include "DHT.h"
+
+#define DHTPIN 2      // ต่อขาข้อมูลเข้ากับ Pin 2 ของ Arduino Uno
+#define DHTTYPE DHT11 // หากทดสอบบนบอร์ดจริงหรือ Wokwi ที่เป็น DHT22 ให้เปลี่ยนเป็น DHT22
+
+DHT dht(DHTPIN, DHTTYPE);
 
 void setup() {
-  Serial.begin(115200);
-  dht.setup(15, DHTesp::DHT22); // GPIO 15
+  Serial.begin(9600);
+  dht.begin();
+  Serial.println("DHT Sensor Started");
 }
 
 void loop() {
-  float temp = dht.getTemperature();
-  float hum = dht.getHumidity();
-  Serial.printf("Temp: %.1f°C  Humidity: %.1f%%\n", temp, hum);
-  delay(2000);
+  float temp = dht.readTemperature();
+  float hum = dht.readHumidity();
+
+  // ตรวจสอบความถูกต้องในการอ่านค่า (ป้องกันค่าเป็น NaN)
+  if (isnan(temp) || isnan(hum)) {
+    Serial.println("Error: Failed to read from DHT sensor!");
+  } else {
+    Serial.print("Temp: ");
+    Serial.print(temp, 1);
+    Serial.print(" °C | Humidity: ");
+    Serial.print(hum, 1);
+    Serial.println(" %");
+  }
+  delay(2000); // DHT ต้องการเวลาอย่างน้อย 2 วินาทีในการสุ่มวัดครั้งถัดไป
 }
 ```
 
-### 2.6.2 LM35 — วัดอุณหภูมิ (แอนะล็อก)
+### 2.6.2 TMP36 / LM35 — วัดอุณหภูมิ (แอนะล็อก)
 
-- ช่วงวัด: −55 ถึง +150 °C
-- ให้เอาต์พุต 10 mV/°C (เช่น 25 °C = 250 mV)
-- อินเทอร์เฟซ: แอนะล็อก
+*   **TMP36 (มีจำลองใน Tinkercad):** ให้เอาต์พุตเป็นแรงดันไฟฟ้าแบบเชิงเส้น $10\text{ mV/}^\circ\text{C}$ แต่มี **แรงดันชดเชย (Offset) 500 mV** ที่อุณหภูมิ $0\ ^\circ\text{C}$ เพื่อให้วัดอุณหภูมิติดลบได้โดยไม่ต้องจ่ายไฟเลี้ยงลบ สูตรแปลงคือ:
+    $$T\text{ (}^\circ\text{C)} = \frac{V_{out} - 0.5}{0.01}$$
+*   **LM35 (นิยมในบอร์ดจริง / Wokwi):** ให้เอาต์พุตแรงดันสัมพันธ์โดยตรง $10\text{ mV/}^\circ\text{C}$ โดยเริ่มจาก $0\text{ V}$ ที่ $0\ ^\circ\text{C}$ สูตรแปลงคือ:
+    $$T\text{ (}^\circ\text{C)} = \frac{V_{out}}{0.01}$$
+*   **อินเทอร์เฟซ:** แอนะล็อก (ต่อเข้ากับขา ADC ของไมโครคอนโทรลเลอร์)
 
+**ตัวอย่างโค้ดอ่านค่าอุณหภูมิ (รองรับเซนเซอร์ TMP36 ใน Tinkercad):**
 ```cpp
-const int lm35Pin = 34;
+const int tempPin = A0; // ต่อขาแอนะล็อก A0 ของ Arduino Uno
 
-void setup() { Serial.begin(115200); }
+void setup() { Serial.begin(9600); }
 
 void loop() {
-  int raw = analogRead(lm35Pin);
-  float voltage = raw * (3.3 / 4095.0);
-  float tempC = voltage / 0.01; // 10 mV per °C
-  Serial.printf("Temperature: %.1f°C\n", tempC);
+  int raw = analogRead(tempPin);
+  float voltage = raw * (5.0 / 1023.0); // แปลงค่า ADC (0-1023) เป็นแรงดัน (0-5V)
+  
+  // คำนวณแบบเซนเซอร์ TMP36 (สูตรมี offset 0.5V)
+  float tempC = (voltage - 0.5) / 0.01; 
+
+  Serial.print("Raw ADC: ");
+  Serial.print(raw);
+  Serial.print(" | Voltage: ");
+  Serial.print(voltage, 3);
+  Serial.print(" V | Temp (TMP36): ");
+  Serial.print(tempC, 1);
+  Serial.println(" °C");
+  
   delay(1000);
 }
 ```
 
-### 2.6.3 LDR — วัดแสง (Light Dependent Resistor)
+### 2.6.3 Light Sensors — Photoresistor (LDR), Photodiode และ Ambient Light Sensor [Phototransistor]
 
-- ความต้านทานเปลี่ยนตามแสง: แสงมาก → ต้านทานต่ำ, แสงน้อย → ต้านทานสูง
-- ต้องต่อวงจรแบ่งแรงดัน (Voltage Divider) ร่วมกับตัวต้านทานคงที่ (แนะนำ $10\text{ k}\Omega$)
-- ขาต่อสัญญาณ: ขาแอนะล็อกของ ESP32 (เช่น GPIO 34)
+ใน Tinkercad มีเซนเซอร์วัดความสว่างของแสงให้ใช้งานหลัก ๆ 3 ประเภท ซึ่งใช้หลักการทางฟิสิกส์และมีคุณสมบัติการตอบสนองที่แตกต่างกัน:
 
-**ตัวอย่างโค้ดการอ่านค่า LDR และคำนวณสว่าง/มืด:**
+1.  **Photoresistor (LDR - Light Dependent Resistor):** เป็นตัวต้านทานแปรค่าตามความเข้มแสง (ความต้านทานต่ำลงเมื่อแสงสว่างขึ้น) ตอบสนองช้า (ประมาณหน่วยมิลลิวินาที) แต่ใช้วงจรง่ายที่สุดคือวงจรแบ่งแรงดันร่วมกับตัวต้านทาน $10\text{ k}\Omega$
+2.  **Photodiode (ไดโอดตรวจจับแสง):** ยอมให้กระแสไหลย้อนกลับ (Reverse Current) มากขึ้นเมื่อมีแสงตกกระทบ ตอบสนองเร็วมาก (หน่วยไมโครวินาทีหรือเร็วกว่า) มักใช้ในการตรวจจับสัญญาณพัลส์แสงความถี่สูง
+3.  **Ambient Light Sensor (ตัวตรวจจับแสงรอบข้าง - Phototransistor):** ใช้ทรานซิสเตอร์ไวแสงที่ทำการขยายกระแสไฟฟ้าในตัวเองตามความสว่าง ให้ผลลัพธ์ที่เป็นเชิงเส้นสูงและตอบสนองได้ใกล้เคียงกับการมองเห็นของตาคนมากที่สุด
+
+**ตัวอย่างโค้ดการอ่านค่าเซนเซอร์แสง (ต่อขาสัญญาณแอนะล็อก A1 ของ Arduino Uno):**
 ```cpp
-const int ldrPin = 34;       // ขา Vout จากวงจรแบ่งแรงดัน
-const int threshold = 2000;  // ค่าเกณฑ์ตัดสินมืด/สว่าง (ย่าน 0-4095)
+const int lightPin = A1;     // ขา A1 จากวงจรแบ่งแรงดันของเซนเซอร์แสง
+const int threshold = 500;   // เกณฑ์แบ่งความมืด/ความสว่าง (ช่วง 0-1023)
 
 void setup() {
-  Serial.begin(115200);
-  pinMode(ldrPin, INPUT);
+  Serial.begin(9600);
+  pinMode(lightPin, INPUT);
 }
 
 void loop() {
-  int rawValue = analogRead(ldrPin);
-  float voltage = rawValue * (3.3 / 4095.0);
+  int rawValue = analogRead(lightPin);
+  float voltage = rawValue * (5.0 / 1023.0); // แปลงเป็นแรงดันอ้างอิง 5V
 
-  Serial.print("ADC Raw: ");
+  Serial.print("Light ADC: ");
   Serial.print(rawValue);
   Serial.print(" | Voltage: ");
   Serial.print(voltage, 2);
 
   if (rawValue < threshold) {
-    Serial.println(" -> สภาพแวดล้อม: มืด (Dark)");
+    Serial.println(" -> Dark (มืด)");
   } else {
-    Serial.println(" -> สภาพแวดล้อม: สว่าง (Bright)");
+    Serial.println(" -> Bright (สว่าง)");
   }
 
   delay(1000);
 }
 ```
 
-### 2.6.4 HC-SR04 — วัดระยะทางด้วยคลื่นอัลตราโซนิก
+### 2.6.4 Ultrasonic Distance Sensor (3-pin & 4-pin) — วัดระยะทางด้วยอัลตราโซนิก
 
-- ช่วงวัด: 2–400 cm
-- ใช้หลักการส่งคลื่นอัลตราโซนิกความถี่ $40\text{ kHz}$ ออกไป แล้วจับเวลารอสะท้อนกลับ
-- ขาต่อสัญญาณ: Trigger (ส่งสัญญาณพัลส์ควบคุม), Echo (ส่งสัญญาณสะท้อนกลับเป็นความยาวคลื่นพัลส์ตามช่วงเวลาเดินทาง)
-- สูตรการคำนวณระยะทาง:
-  $$\text{Distance (cm)} = \frac{\text{Time (}\mu\text{s)} \times 0.0343}{2}$$
+ใน Tinkercad มีเซนเซอร์อัลตราโซนิกให้เลือกใช้งาน 2 รูปแบบ โดยส่งคลื่นความถี่สูง $40\text{ kHz}$ ไปสะท้อนวัตถุและวัดระยะทางจากเวลาเดินทางกลับ:
 
-**ตัวอย่างโค้ดอ่านค่า HC-SR04 โดยไม่ใช้ไลบรารี:**
+1.  **รุ่น 4 พิน (เช่น HC-SR04):** มีขา VCC, GND, Trigger (ขาส่งคลื่น), และ Echo (ขารับคลื่นสะท้อนกลับ) แยกกันชัดเจน
+2.  **รุ่น 3 พิน (เช่น Parallax Ping):** มีขา 5V, GND, และขา SIG (Signal) ซึ่งทำหน้าที่ส่งคลื่นทริกเกอร์และรับคลื่นสะท้อนในขาเดียวกัน ทำให้ประหยัดขาไมโครคอนโทรลเลอร์
+
+**ตัวอย่างโค้ดอ่านค่ารุ่น 4 พิน (Trigger ต่อ Pin 3, Echo ต่อ Pin 4):**
 ```cpp
-const int trigPin = 5;  // ขา Trigger ต่อ GPIO 5
-const int echoPin = 18; // ขา Echo ต่อ GPIO 18
+const int trigPin = 3;
+const int echoPin = 4;
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
 }
 
 void loop() {
-  // 1. เคลียร์สัญญาณส่งคลื่นให้ชัวร์ว่าเป็น LOW
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
-
-  // 2. ส่งพัลส์ HIGH เป็นเวลา 10 ไมโครวินาทีเพื่อกระตุ้นเซนเซอร์ให้เริ่มยิงคลื่น
   digitalWrite(trigPin, HIGH);
   delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
 
-  // 3. วัดช่วงเวลาที่ขา Echo มีสถานะเป็น HIGH (หน่วยไมโครวินาที)
-  // กำหนด timeout 30 ms (ประมาณ 5 เมตร) เพื่อไม่ให้บอร์ดค้างถ้าวัดไม่ได้
-  long duration = pulseIn(echoPin, HIGH, 30000);
-
+  long duration = pulseIn(echoPin, HIGH, 30000); // หน่วยไมโครวินาที
   if (duration == 0) {
-    Serial.println("Error: Out of range or sensor disconnected.");
+    Serial.println("Error: Out of range");
   } else {
-    // 4. คำนวณระยะทางหน่วยเซนติเมตร
-    float distanceCm = duration / 58.3;
-    Serial.print("Distance: ");
+    float distanceCm = duration / 58.3; // แปลงเวลาเป็นเซนติเมตร
+    Serial.print("4-Pin Distance: ");
     Serial.print(distanceCm, 1);
     Serial.println(" cm");
   }
+  delay(500);
+}
+```
 
-  delay(1000);
+**ตัวอย่างโค้ดอ่านค่ารุ่น 3 พิน (ขา SIG ต่อ Pin 7):**
+```cpp
+const int sigPin = 7;
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  // 1. ส่งสัญญาณพัลส์ Trigger ออกไป (ตั้ง pinMode เป็น OUTPUT)
+  pinMode(sigPin, OUTPUT);
+  digitalWrite(sigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(sigPin, HIGH);
+  delayMicroseconds(5);
+  digitalWrite(sigPin, LOW);
+
+  // 2. สลับ pinMode เป็น INPUT เพื่อดักรอจับความยาวพัลส์สะท้อนกลับ
+  pinMode(sigPin, INPUT);
+  long duration = pulseIn(sigPin, HIGH, 30000);
+  
+  if (duration == 0) {
+    Serial.println("Error: Out of range");
+  } else {
+    float distanceCm = duration / 58.3;
+    Serial.print("3-Pin Distance: ");
+    Serial.print(distanceCm, 1);
+    Serial.println(" cm");
+  }
+  delay(500);
 }
 ```
 
@@ -1459,20 +1514,20 @@ void loop() {
 - เอาต์พุต: สัญญาณดิจิทัลเอาต์พุต (HIGH เมื่อตรวจพบการเคลื่อนไหว, LOW เมื่อนิ่ง)
 - การใช้งานที่ดีควรใช้ Interrupts เพื่อตอบสนองทันทีโดยไม่ต้องหน่วงเวลาเช็คสถานะในลูปหลัก
 
-**ตัวอย่างโค้ดตรวจจับการเคลื่อนไหวโดยใช้ Hardware Interrupts:**
+**ตัวอย่างโค้ดตรวจจับการเคลื่อนไหวโดยใช้ Hardware Interrupts (บอร์ด Arduino Uno):**
 ```cpp
-const int pirPin = 19;
+const int pirPin = 2; // ขา OUT ของ PIR ต่อ Pin 2 (หนึ่งในขา Interrupt ของ Arduino Uno)
 volatile bool motionDetected = false;
 
 // ฟังก์ชัน Interrupt Service Routine (ISR) เมื่อเกิดการขัดจังหวะด้วยฮาร์ดแวร์
-void IRAM_ATTR detectMotion() {
+void detectMotion() {
   motionDetected = true;
 }
 
 void setup() {
-  Serial.begin(115200);
-  pinMode(pirPin, INPUT_PULLDOWN);
-  // ตั้งขัดจังหวะที่ขา GPIO เมื่อเกิดการเปลี่ยนผ่านจาก LOW เป็น HIGH (RISING)
+  Serial.begin(9600);
+  pinMode(pirPin, INPUT);
+  // ตั้งขัดจังหวะที่ขาบอร์ดเมื่อเกิดการเปลี่ยนผ่านจาก LOW เป็น HIGH (RISING)
   attachInterrupt(digitalPinToInterrupt(pirPin), detectMotion, RISING);
   Serial.println("PIR Sensor Active. Monitoring motion...");
 }
@@ -1486,13 +1541,13 @@ void loop() {
 }
 ```
 
-### 2.6.6 MQ-2 — ตรวจจับแก๊สและควัน
+### 2.6.6 MQ-2 — ตรวจจับแก๊สและควัน *(จำลองใน Tinkercad ด้วยอุปกรณ์ Gas Sensor)*
 
 - หลักการทำงาน: ตัวเซนเซอร์ทำจากสารกึ่งตัวนำ SnO2 (Tin dioxide) เมื่อมีแก๊สไวไฟเข้ามาทำปฏิกิริยาเคมีกับออกซิเจนที่ผิวตัวนำ จะส่งผลให้ความต้านทานลดลงอย่างรวดเร็ว
 - ตรวจจับได้หลากหลาย: แก๊สหุงต้ม (LPG), ควันไฟ, แอลกอฮอล์, โพรเพน, มีเทน, ไฮโดรเจน
 - เอาต์พุตมีทั้งช่องสัญญาณแอนะล็อก (A0) เพื่ออ่านระดับความเข้มข้น และดิจิทัล (D0) ที่สามารถปรับความไวในการทริกเกอร์เอาต์พุตได้โดยตรงบนโมดูลผ่านตัวต้านทานปรับค่าได้ (Potentiometer)
 
-### 2.6.7 BMP280 — วัดความดันบรรยากาศและอุณหภูมิ
+### 2.6.7 BMP280 — วัดความดันบรรยากาศและอุณหภูมิ *(รองรับบนบอร์ดจริง/Wokwi)*
 
 - ช่วงวัดความดัน: 300–1100 hPa (ความแม่นยำสูงถึง ±1.0 hPa)
 - อินเทอร์เฟซสื่อสาร: I2C (สาย SDA, SCL) หรือ SPI
@@ -1507,10 +1562,10 @@ void loop() {
 Adafruit_BMP280 bmp; // สร้างออบเจกต์สำหรับใช้งาน
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
   Serial.println("Initializing BMP280 sensor...");
 
-  // เปิดใช้งานบัส I2C (ESP32 ใช้ SDA=GPIO 21, SCL=GPIO 22 เป็นค่าเริ่มต้น)
+  // เปิดใช้งานบัส I2C (Arduino Uno ใช้ A4=SDA, A5=SCL เป็นค่าเริ่มต้น)
   Wire.begin();
 
   // กำหนดแอดเดรสของชิปส่วนใหญ่จะเป็น 0x76 หรือ 0x77
@@ -1563,7 +1618,148 @@ void loop() {
 }
 ```
 
-### 2.6.8 การกรองสัญญาณรบกวนด้วยซอฟต์แวร์ (Software Signal Filtering)
+### 2.6.8 Potentiometer (ตัวต้านทานปรับค่าได้)
+
+*   **หลักการทำงาน:** เป็นอุปกรณ์ที่มีความต้านทานรวมคงที่ (เช่น $10\text{ k}\Omega$) แต่มีขากลาง (Wiper) ที่สามารถหมุนเลื่อนขยับตำแหน่งเพื่อแบ่งค่าความต้านทานออกเป็น 2 ส่วน ทำให้ทำหน้าที่เป็น **วงจรแบ่งแรงดันไฟฟ้า (Voltage Divider) ในตัว** โดยส่งค่าเอาต์พุตแอนะล็อกแปรผันตามตำแหน่งการหมุน
+*   **อินเทอร์เฟซ:** แอนะล็อก (ขาริมต่อ 5V และ GND, ขากลางต่อเข้ากับขา ADC ของ Arduino Uno เช่น A0)
+
+**ตัวอย่างโค้ดการอ่านค่า Potentiometer เพื่อเปลี่ยนค่าดิบเป็นเปอร์เซ็นต์:**
+```cpp
+const int potPin = A0; // ต่อขากลางของโพเทนชิออมิเตอร์เข้ากับขา A0
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  int raw = analogRead(potPin); // อ่านค่า ADC (0-1023)
+  float percentage = (raw / 1023.0) * 100.0; // แปลงช่วงข้อมูลเป็นเปอร์เซ็นต์ (0-100%)
+
+  Serial.print("Pot ADC: ");
+  Serial.print(raw);
+  Serial.print(" | Percent: ");
+  Serial.print(percentage, 1);
+  Serial.println(" %");
+  delay(200);
+}
+```
+
+### 2.6.9 Flex Sensor & Force Sensor — ตัวตรวจจับการโค้งงอและแรงกด
+
+เซนเซอร์กลุ่มนี้ทำงานด้วยความต้านทานเปลี่ยนไปตามแรงเชิงกลกระทำ (Mechanical Action) ซึ่งนิยมนำไปประยุกต์ใช้ในการวัดและควบคุมทางกลศาสตร์อย่างหลากหลาย:
+
+1.  **Flex Sensor (เซนเซอร์วัดการโค้งงอ):** ความต้านทานภายในจะเปลี่ยนแปลงเป็นเชิงเส้นกับระดับความงอของแผ่นเซนเซอร์ (ยิ่งงอมาก ความต้านทานแปรผันสูงขึ้นจากค่าเริ่มต้น เช่น $10\text{ k}\Omega$ ขึ้นไปถึง $100\text{ k}\Omega$) ต้องเชื่อมต่อร่วมกับวงจรแบ่งแรงดันโดยใช้ตัวต้านทานดึงลง $10\text{ k}\Omega$
+2.  **Force Sensor (FSR - Force Sensitive Resistor):** ความต้านทานภายในจะลดลงอย่างเป็นคาบไม่เชิงเส้นเมื่อได้รับแรงกดกระทำที่ผิวสัมผัส (สภาวะปกติไม่มีแรงกดความต้านทานจะสูงมากเป็นเมกะโอห์ม และเมื่อถูกกดจะลดลงต่ำสุดถึงต่ำกว่า $100\ \Omega$) ต่อร่วมกับวงจรแบ่งแรงดันเพื่อแปลงค่าเป็นระดับแรงดันไฟฟ้า
+
+**ตัวอย่างโค้ดอ่านค่าเซนเซอร์วัดการโค้งงอหรือแรงกด (ต่อขาสัญญาณแอนะล็อก A2):**
+```cpp
+const int sensorPin = A2; // ขา Vout จากวงจรแบ่งแรงดันของ Flex/Force Sensor
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  int raw = analogRead(sensorPin);
+  float voltage = raw * (5.0 / 1023.0);
+
+  Serial.print("Sensor ADC: ");
+  Serial.print(raw);
+  Serial.print(" | Vout: ");
+  Serial.print(voltage, 2);
+  Serial.println(" V");
+  
+  delay(300);
+}
+```
+
+### 2.6.10 Tilt Sensor (2-pin & 4-pin) — ตรวจจับการเอียง
+
+*   **หลักการทำงาน:** เซนเซอร์เอียงทำหน้าที่เป็น **สวิตช์ตรวจจับมุมเอียง** ภายในโมดูลมักมีลูกโลหะนำไฟฟ้าขนาดเล็กบรรจุไว้ เมื่อเซนเซอร์เอียงทำมุมที่เหมาะสม ลูกเหล็กจะไหลมาเชื่อมต่อสัมผัสหน้าสัมผัสขั้วไฟฟ้าเข้าด้วยกัน ทำให้กระแสไหลผ่านได้ (สวิตช์ต่อ - HIGH/LOW ตามการจัดดึง) สำหรับรุ่น 4 พินสามารถให้ข้อมูลแกนแนวระนาบเอียงที่แยกละเอียดขึ้น
+*   **อินเทอร์เฟซ:** ดิจิทัล (ต่อร่วมกับขา GPIO ของบอร์ด)
+
+**ตัวอย่างโค้ดตรวจจับระดับเอียงโดยใช้ INPUT_PULLUP (ต่อกับ Pin 8):**
+```cpp
+const int tiltPin = 8; // ขาสัญญาณต่อ Pin 8 ของ Arduino Uno
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(tiltPin, INPUT_PULLUP); // ใช้ Pull-up ภายในบอร์ด
+}
+
+void loop() {
+  int tiltState = digitalRead(tiltPin);
+
+  if (tiltState == LOW) { // ลูกเหล็กกลิ้งมาแตะ GND ทำให้เกิดการลง LOW
+    Serial.println("⚠️ Warning: Tilt Detected (วงจรเอียง!)");
+  } else {
+    Serial.println("System Stable (ปกติ)");
+  }
+  delay(300);
+}
+```
+
+### 2.6.11 IR Sensor & IR Remote — การรับคำสั่งและตรวจจับอินฟราเรด
+
+*   **หลักการทำงาน:** **IR Sensor (ตัวรับแสงอินฟราเรด)** จะถอดรหัสคลื่นแสงอินฟราเรดความถี่ $38\text{ kHz}$ ที่มองไม่เห็นด้วยตาเปล่า เมื่อกดปุ่มที่ **IR Remote (รีโมทคอนโทรลอินฟราเรด)** ตัวส่งจะยิงแสงกะพริบเป็นรหัสข้อมูลเฉพาะ และตัวรับจะแปลงสัญญาณกลับมาเป็นค่ารหัสตัวเลขฐานสิบหกขนาด 32 บิต
+*   **อินเทอร์เฟซ:** ดิจิทัล (ขาสัญญาณต่อขา GPIO ทั่วไปของไมโครคอนโทรลเลอร์)
+
+**ตัวอย่างโค้ดรับสัญญาณถอดรหัสรีโมทอินฟราเรดใน Tinkercad (ต่อสัญญาณเข้ากับ Pin 11):**
+```cpp
+#include <IRremote.h>
+
+const int irReceiverPin = 11; // ต่อขา OUT ของตัวรับอินฟราเรดเข้ากับ Pin 11
+
+void setup() {
+  Serial.begin(9600);
+  IrReceiver.begin(irReceiverPin, ENABLE_LED_FEEDBACK); // เริ่มรับสัญญาณอินฟราเรด
+  Serial.println("IR Receiver Ready.");
+}
+
+void loop() {
+  if (IrReceiver.decode()) {
+    // แสดงรหัสปุ่มกดที่ถอดได้ในรูปแบบเลขฐานสิบหก
+    Serial.print("Button Pressed. Hex Code: 0x");
+    Serial.println(IrReceiver.decodedIRData.decodedRawData, HEX);
+    
+    IrReceiver.resume(); // เตรียมพร้อมรับรหัสสัญญาณอินฟราเรดถัดไป
+  }
+}
+```
+
+### 2.6.12 Switches (Pushbutton, Slideswitch, DIP Switches) — อุปกรณ์ปุ่มกดและสวิตช์ควบคุม
+
+*   **หลักการทำงาน:** สวิตช์ทำหน้าที่ปิดหรือเปิดวงจรไฟฟ้าเพื่อส่งข้อมูลสถานะลอจิกเป็นสัญญาณอินพุตดิจิทัลตรง:
+    *   **Pushbutton (สวิตช์ปุ่มกด):** หน้าสัมผัสเชื่อมต่อชั่วขณะระหว่างปุ่มถูกกดค้าง (กดติด-ปล่อยดับ)
+    *   **Slideswitch (สวิตช์เลื่อน):** เลื่อนก้านนำไฟฟ้าสลับตำแหน่งต่อวงจรค้างไว้ (มักต่อ GND หรือ 5V)
+    *   **DIP Switches (DPST / SPST x 4 / SPST x 6):** ชุดสวิตช์ขนาดเล็กเรียงแถวคู่ มักใช้กำหนดที่อยู่ฮาร์ดแวร์ กำหนดค่าโหมดเริ่มต้นในแผงวงจรควบคุมอุตสาหกรรม
+*   **อินเทอร์เฟซ:** ดิจิทัลตรงต่อร่วมกับตัวต้านทาน Pull-up/Pull-down หรือใช้โหมด `INPUT_PULLUP`
+
+**ตัวอย่างโค้ดอ่านค่าสวิตช์เลื่อนและปุ่มกดเพื่อประมวลผล:**
+```cpp
+const int slideSwitchPin = 12; // ขาสัญญาณสวิตช์เลื่อนต่อ Pin 12
+const int buttonPin = 2;       // ขาสัญญาณปุ่มกดต่อ Pin 2
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(slideSwitchPin, INPUT);
+  pinMode(buttonPin, INPUT_PULLUP);
+}
+
+void loop() {
+  int switchVal = digitalRead(slideSwitchPin);
+  int buttonVal = digitalRead(buttonPin);
+
+  Serial.print("Switch: ");
+  Serial.print(switchVal == HIGH ? "ON (5V)" : "OFF (0V)");
+  Serial.print(" | Button: ");
+  Serial.println(buttonVal == LOW ? "PRESSED" : "RELEASED");
+  
+  delay(300);
+}
+```
+
+### 2.6.13 การกรองสัญญาณรบกวนด้วยซอฟต์แวร์ (Software Signal Filtering)
 
 สัญญาณที่ได้จากเซนเซอร์ชนิดแอนะล็อกมักจะมี **สัญญาณรบกวนทางไฟฟ้า (Electrical Noise)** หรือคลื่นความถี่สูงปนเข้ามา ส่งผลให้ค่าดิจิทัลที่อ่านได้จาก ADC มีความไม่นิ่งแกว่งไปแกว่งมา วิธีการแก้ปัญหาที่ประหยัดและยืดหยุ่นที่สุดคือการใช้ตัวกรองทางดิจิทัลด้วยโปรแกรม (Software Digital Filter)
 
@@ -1578,9 +1774,9 @@ $$y[n] = \frac{1}{M} \sum_{i=0}^{M-1} x[n-i]$$
 - $M$ คือ ขนาดของหน้าต่างเวลา (Window Size) ที่ต้องการเฉลี่ย (ยิ่ง $M$ มีค่ามาก สัญญาณจะยิ่งเรียบ แต่จะมีการหน่วงเวลา หรือ Time Delay ของสัญญาณมากขึ้น)
 - $y[n]$ คือ ผลลัพธ์จากการกรองที่นำไปใช้งาน (Filtered Output)
 
-**ตัวอย่างโค้ด C++ ใน ESP32 สำหรับกรองข้อมูลแอนะล็อกด้วยเทคนิค Moving Average:**
+**ตัวอย่างโค้ด C++ สำหรับกรองข้อมูลแอนะล็อกด้วยเทคนิค Moving Average (บอร์ด Arduino Uno):**
 ```cpp
-const int sensorPin = 34;       // ขา ADC
+const int sensorPin = A0;       // ขาแอนะล็อก A0
 const int WINDOW_SIZE = 10;     // ขนาดของหน้าต่างข้อมูลเฉลี่ย (M)
 int readings[WINDOW_SIZE];      // อาร์เรย์เก็บข้อมูลประวัติการวัด
 int readIndex = 0;              // ตำแหน่งดัชนีของอาร์เรย์ปัจจุบัน
@@ -1588,7 +1784,7 @@ long total = 0;                 // ผลรวมทั้งหมดในอ
 int average = 0;                // ผลลัพธ์ค่าเฉลี่ยที่กรองแล้ว
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
   pinMode(sensorPin, INPUT);
 
   // กำหนดค่าเริ่มต้นให้อาร์เรย์เป็น 0 ทั้งหมด
@@ -1629,19 +1825,27 @@ void loop() {
   delay(50); // สุ่มอ่านค่าทุก 50 มิลลิวินาที
 }
 ```
-*💡 **เทคนิค:** สามารถคัดลอกรหัสนี้ไปทดสอบในโปรแกรม Wokwi และเปิด **Serial Plotter** เพื่อสังเกตความแตกต่างของการตอบสนองของเส้นสีระหว่างเส้นสีดิบที่แกว่งและเส้นที่ได้รับการกรองผ่าน Moving Average*
+*💡 **เทคนิค:** สามารถคัดลอกรหัสนี้ไปทดสอบในโปรแกรม Tinkercad หรือ Wokwi และเปิด **Serial Plotter** (ใน Tinkercad คือปุ่มกราฟในส่วน Serial Monitor) เพื่อสังเกตความแตกต่างของการตอบสนองของเส้นสีระหว่างเส้นสีดิบที่แกว่งและเส้นที่ได้รับการกรองผ่าน Moving Average*
 
-### 2.6.9 ตารางสรุปเซนเซอร์ยอดนิยม
+### 2.6.14 ตารางสรุปอุปกรณ์รับเข้าและเซนเซอร์ใน Tinkercad และ Wokwi
 
-| เซนเซอร์ | วัดปริมาณ | ชนิดสัญญาณ | อินเทอร์เฟซ | ช่วงวัด | ใช้งานกับ Wokwi |
+| เซนเซอร์ / อุปกรณ์อินพุต | ปริมาณที่วัด / สถานะ | ชนิดสัญญาณ | อินเทอร์เฟซ | ช่วงวัด / ข้อมูล | Tinkercad / Wokwi |
 |---|---|---|---|---|---|
-| DHT22 | อุณหภูมิ + ความชื้น | ดิจิทัล | One-Wire | −40 ถึง +80 °C, 0–100 %RH | ✅ |
-| LM35 | อุณหภูมิ | แอนะล็อก | Analog | −55 ถึง +150 °C | ✅ |
-| LDR | แสงสว่าง | แอนะล็อก | Analog (Voltage Divider) | ขึ้นกับวงจร | ✅ |
-| HC-SR04 | ระยะทาง | ดิจิทัล | Trigger/Echo | 2–400 cm | ✅ |
-| PIR (HC-SR501) | การเคลื่อนไหว | ดิจิทัล | GPIO | — | ✅ |
-| MQ-2 | แก๊ส/ควัน | แอนะล็อก + ดิจิทัล | Analog / GPIO | 200–10000 ppm | ✅ |
-| BMP280 | ความดัน + อุณหภูมิ | ดิจิทัล | I2C / SPI | 300–1100 hPa | ✅ |
+| **DHT11 / DHT22** | อุณหภูมิ + ความชื้น | ดิจิทัล | One-Wire | DHT11: 0 ถึง 50 °C, DHT22: −40 ถึง +80 °C | ✅ / ✅ |
+| **TMP36 / LM35** | อุณหภูมิ | แอนะล็อก | Analog | TMP36: −40 ถึง +125 °C, LM35: −55 ถึง +150 °C | ✅ / ✅ |
+| **LDR / Photoresistor** | แสงสว่าง | แอนะล็อก | Analog (Voltage Divider) | ขึ้นกับความเข้มแสง (ความต้านทานเปลี่ยน) | ✅ / ✅ |
+| **Photodiode** | สัญญาณแสงความถี่สูง | แอนะล็อก | Analog | ยอมให้กระแสไหลย้อนกลับตามระดับแสง | ✅ / ✅ |
+| **Ambient Light Sensor** | แสงสว่างรอบข้าง | แอนะล็อก | Analog (Phototransistor) | ตอบสนองใกล้เคียงสายตามนุษย์ | ✅ / ✅ |
+| **HC-SR04 / Ping Sensor** | ระยะทาง | ดิจิทัล | Trigger/Echo หรือ SIG | 2–400 cm (ยิงคลื่นสะท้อน 40 kHz) | ✅ / ✅ |
+| **PIR (HC-SR501)** | การเคลื่อนไหวของสิ่งมีชีวิต | ดิจิทัล | GPIO (HIGH / LOW) | ตรวจจับรังสีอินฟราเรดจากความร้อน | ✅ / ✅ |
+| **MQ-2 / Gas Sensor** | แก๊สและควัน | แอนะล็อก + ดิจิทัล | Analog / GPIO | 200–10000 ppm | ✅ / ✅ |
+| **BMP280** | ความดันบรรยากาศ + อุณหภูมิ | ดิจิทัล | I2C / SPI | ความดัน 300–1100 hPa | ❌ / ✅ |
+| **Potentiometer** | ตรรกะแรงดันแปรผันตามการหมุน | แอนะล็อก | Analog (ขากลางแบ่งแรงดัน) | ค่าเอาต์พุตดิบ 0–1023 (0–100%) | ✅ / ✅ |
+| **Flex Sensor** | การโค้งงอเชิงกล | แอนะล็อก | Analog (Voltage Divider) | ความต้านทานเพิ่มขึ้นเมื่อแผ่นโค้งงอ | ✅ / ❌ |
+| **Force Sensor (FSR)** | แรงกด/น้ำหนักสัมผัส | แอนะล็อก | Analog (Voltage Divider) | ความต้านทานลดลงเมื่อมีแรงกดมากขึ้น | ✅ / ❌ |
+| **Tilt Sensor** | มุมเอียง / ระนาบการเอียง | ดิจิทัล | GPIO (HIGH / LOW) | ลูกเหล็กสัมผัสขั้วเชื่อมต่อวงจรภายใน | ✅ / ✅ |
+| **IR Receiver & Remote** | รหัสปุ่มกดอินฟราเรด | ดิจิทัล | GPIO (IR Library) | รับแสงกะพริบถอดรหัสความถี่ 38 kHz | ✅ / ✅ |
+| **Pushbutton / Switches** | การต่อหรือตัดวงจรไฟฟ้า | ดิจิทัล | GPIO (HIGH / LOW) | สัญญาณเข้าลอจิกตามสถานะเปิด/ปิดสวิตช์ | ✅ / ✅ |
 
 ---
 
@@ -1650,8 +1854,8 @@ void loop() {
 1. **เซนเซอร์** ทำหน้าที่แปลงปริมาณทางกายภาพเป็นสัญญาณไฟฟ้า ซึ่งเป็นพื้นฐานของระบบ IoT ทั้งหมด
 2. เซนเซอร์จำแนกได้ตาม **ปริมาณที่วัด** (อุณหภูมิ แสง ระยะทาง ฯลฯ) และ **ชนิดสัญญาณ** (แอนะล็อก / ดิจิทัล)
 3. การเลือกเซนเซอร์ต้องพิจารณา **คุณลักษณะ** ที่เหมาะสม ได้แก่ ช่วงวัด ความไว ความละเอียด ความแม่นยำ และเวลาตอบสนอง
-4. ESP32 รองรับทั้ง **สัญญาณแอนะล็อก** (ผ่าน ADC 12 บิต) และ **สัญญาณดิจิทัล** (GPIO, I2C, SPI, One-Wire)
-5. **Wokwi** รองรับเซนเซอร์ยอดนิยมหลายตัว ทำให้ฝึกปฏิบัติได้โดยไม่ต้องซื้ออุปกรณ์จริง
+4. บอร์ดไมโครคอนโทรลเลอร์ (เช่น Arduino Uno, ESP32) รองรับทั้ง **สัญญาณแอนะล็อก** (ผ่าน ADC) และ **สัญญาณดิจิทัล** (GPIO, I2C, SPI, One-Wire)
+5. **Tinkercad และ Wokwi** รองรับเซนเซอร์ยอดนิยมหลายตัว ทำให้ฝึกปฏิบัติในโปรแกรมจำลองได้โดยไม่ต้องซื้ออุปกรณ์จริง
 6. เซนเซอร์มีบทบาทสำคัญในงานวิศวกรรมเครื่องกล ตั้งแต่การตรวจสอบสภาพเครื่องจักรไปจนถึงระบบหุ่นยนต์
 
 ---
@@ -1660,7 +1864,7 @@ void loop() {
 
 **ข้อ 1:** จงอธิบายความแตกต่างระหว่าง "เซนเซอร์" กับ "ทรานสดิวเซอร์" พร้อมยกตัวอย่างประกอบ
 
-**ข้อ 2:** เซนเซอร์ LM35 ให้เอาต์พุต 10 mV/°C ถ้า ESP32 (ADC 12 บิต, อ้างอิง 3.3 V) อ่านค่า raw = 310 จงคำนวณหาอุณหภูมิที่วัดได้ (แสดงวิธีคิด)
+**ข้อ 2:** เซนเซอร์ LM35 ให้เอาต์พุต 10 mV/°C ถ้าบอร์ด Arduino Uno (ADC 10 บิต, อ้างอิง 5 V) อ่านค่า raw = 51 จงคำนวณหาอุณหภูมิที่วัดได้ (แสดงวิธีคิด)
 
 **ข้อ 3:** จงเติมตารางต่อไปนี้ให้สมบูรณ์:
 
@@ -1671,7 +1875,7 @@ void loop() {
 | MQ-2 | ? | ? | ? |
 | BMP280 | ? | ? | ? |
 
-**ข้อ 4:** ถ้าต้องออกแบบระบบ IoT สำหรับตรวจสอบสภาพห้องเซิร์ฟเวอร์ (Server Room) จะเลือกใช้เซนเซอร์อะไรบ้าง อย่างน้อย 3 ตัว พร้อมอธิบายเหตุผลและระบุขา ESP32 ที่จะเชื่อมต่อ
+**ข้อ 4:** ถ้าต้องออกแบบระบบ IoT สำหรับตรวจสอบสภาพห้องเซิร์ฟเวอร์ (Server Room) จะเลือกใช้เซนเซอร์อะไรบ้าง อย่างน้อย 3 ตัว พร้อมอธิบายเหตุผลและระบุขาของบอร์ดไมโครคอนโทรลเลอร์ (เช่น Arduino Uno หรือ ESP32) ที่จะเชื่อมต่อ
 
 **ข้อ 5:** จงอธิบายความแตกต่างระหว่าง "ความแม่นยำ (Accuracy)" และ "ความเที่ยง (Precision)" พร้อมอธิบายเปรียบเทียบในเชิงวิศวกรรมการวัด
 

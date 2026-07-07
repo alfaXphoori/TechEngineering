@@ -20,9 +20,9 @@ assignments:
     form: "https://docs.google.com/forms/d/e/1FAIpQLSf_bkxS4_olqkOLAbNeRFFi268O45LSLKM8OkFM4a6_NpHOgQ/viewform?usp=dialog"
   - n: 3
     topic: ตัวกระทำและการเชื่อมต่อ
-    work: ใบงานที่ 3 — ตัวกระทำและการขับโหลด
+    work: ใบงานที่ 3 — ตัวรับรู้ (Sensors)
     due: ก่อนคาบสัปดาห์ที่ 4
-    form: "#"
+    form: "https://docs.google.com/forms/d/e/1FAIpQLSeM-A4CrqjK6DUEvCuNAP7I_5rUgSHogC-Bv6GbmPdXB25_Yg/viewform?usp=dialog"
   - n: 4
     topic: ไมโครคอนโทรลเลอร์เบื้องต้น (ESP32/Arduino)
     work: ใบงานที่ 4 — ไมโครคอนโทรลเลอร์และเครื่องมือจำลอง Wokwi

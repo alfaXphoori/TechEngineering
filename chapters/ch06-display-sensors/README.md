@@ -214,10 +214,95 @@
 ## 6.3 การอ่านค่าเซนเซอร์แบบสื่อสารโปรโตคอล (Sensor Communication)
 
 ### 6.3.1 เซนเซอร์อุณหภูมิและความชื้น DHT22
-DHT22 เป็นเซนเซอร์วัดอุณหภูมิและความชื้นแบบสายสัญญาณเส้นเดียว (Single-Bus Custom Protocol) ที่ส่งสัญญาณแบบดิจิทัลเพื่อป้องกันการรบกวนสัญญาณในระยะสายทางไกล
+DHT22 เป็นเซนเซอร์วัดอุณหภูมิและความชื้นแบบดิจิทัลที่ใช้สายสัญญาณส่งข้อมูลเส้นเดียว (Single-Bus Custom Protocol) มีการส่งสัญญาณแบบเฟรมข้อมูลความยาว 40 บิต ช่วยลดการรบกวนสัญญาณในระยะสายส่งข้อมูลยาว
+*   **การเชื่อมต่อ:** VCC (3.3V/5V), GND, SDA/DATA (เชื่อมเข้ากับขา GPIO ของ MCU เช่น Pin 23)
+*   **ตัวอย่างโค้ด (DHT sensor library):**
+    ```cpp
+    #include <DHT.h>
+
+    #define DHTPIN 23       // ขาสัญญาณ Data ของ DHT22 ต่อเข้ากับ GPIO23
+    #define DHTTYPE DHT22   // ชนิดเซนเซอร์ DHT22
+
+    DHT dht(DHTPIN, DHTTYPE);
+
+    void setup() {
+      Serial.begin(115200);
+      Serial.println(F("DHT22 Temperature & Humidity Sensor Test"));
+      dht.begin(); // เริ่มต้นทำงานเซนเซอร์
+    }
+
+    void loop() {
+      delay(2000); // พักการทำงาน 2 วินาที (เซนเซอร์ต้องการคาบเวลาการอ่านห่างอย่างน้อย 2 วินาที)
+
+      float h = dht.readHumidity();    // อ่านค่าความชื้นสัมพัทธ์ (%)
+      float t = dht.readTemperature(); // อ่านค่าอุณหภูมิ (องศาเซลเซียส)
+
+      // ตรวจสอบความถูกต้องของการอ่านค่า (หากอ่านไม่ได้ค่าจะเป็น NaN)
+      if (isnan(h) || isnan(t)) {
+        Serial.println(F("Failed to read from DHT sensor!"));
+        return;
+      }
+
+      Serial.print(F("Humidity: "));
+      Serial.print(h);
+      Serial.print(F(" %t | Temperature: "));
+      Serial.print(t);
+      Serial.println(F(" *C"));
+    }
+    ```
 
 ### 6.3.2 เซนเซอร์วัดความดันอากาศและอุณหภูมิ BMP280
-BMP280 เป็นเซนเซอร์ความแม่นยำสูง วัดความดันบรรยากาศและอุณหภูมิ เชื่อมต่อผ่าน I2C/SPI นิยมนำมาใช้ในการคำนวณความสูง (Altitude) และตรวจจับสภาพแวดล้อมทางวิศวกรรม
+BMP280 เป็นเซนเซอร์วัดความกดอากาศและอุณหภูมิที่มีความแม่นยำสูง ออกแบบโดย Bosch สื่อสารผ่านโปรโตคอล I2C หรือ SPI นิยมนำไปใช้ในงานวัดความกดอากาศเพื่อระบุระดับความสูง (Altitude/Altimeter) หรือระบบควบคุมสิ่งแวดล้อมทางวิศวกรรม
+*   **การเชื่อมต่อ (I2C):** VCC (3.3V/5V), GND, SDA (เชื่อมกับขา SDA ของ MCU เช่น Pin 21), SCL (เชื่อมกับขา SCL ของ MCU เช่น Pin 22)
+*   **ตัวอย่างโค้ด (Adafruit BMP280 Library):**
+    ```cpp
+    #include <Wire.h>
+    #include <Adafruit_BMP280.h>
+
+    // ประกาศออบเจกต์ BMP280 แบบสื่อสาร I2C
+    Adafruit_BMP280 bmp;
+
+    void setup() {
+      Serial.begin(115200);
+      Serial.println(F("BMP280 Pressure & Temperature Sensor Test"));
+
+      // เริ่มต้นทำงานเซนเซอร์ด้วยแอดเดรส I2C 0x76 (หรือ 0x77 ขึ้นอยู่กับฮาร์ดแวร์โมดูล)
+      if (!bmp.begin(0x76)) {
+        Serial.println(F("Could not find a valid BMP280 sensor, check wiring!"));
+        while (1);
+      }
+
+      /* การกำหนดโหมด Over-sampling และตัวกรองความถี่ต่ำเพื่อลดสัญญาณรบกวน */
+      bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* โหมดการทำงาน */
+                      Adafruit_BMP280::SAMPLING_X2,     /* ค่าโอเวอร์แซมป์อุณหภูมิ */
+                      Adafruit_BMP280::SAMPLING_X16,    /* ค่าโอเวอร์แซมป์ความดัน */
+                      Adafruit_BMP280::FILTER_X16,      /* ตัวกรองค่ารบกวน (IIR Filter) */
+                      Adafruit_BMP280::STANDBY_MS_500); /* ระยะเวลารอบสแตนด์บาย */
+    }
+
+    void loop() {
+      float temp = bmp.readTemperature(); // อ่านค่าอุณหภูมิ (°C)
+      float pressure = bmp.readPressure(); // อ่านค่าความดันบรรยากาศ (Pa)
+      
+      // คำนวณความสูงสัมพัทธ์โดยเทียบกับระดับความดันมาตรฐานที่ระดับน้ำทะเล 1013.25 hPa
+      float altitude = bmp.readAltitude(1013.25);
+
+      Serial.print(F("Temperature = "));
+      Serial.print(temp);
+      Serial.println(F(" *C"));
+
+      Serial.print(F("Pressure = "));
+      Serial.print(pressure / 100.0F); // แปลงหน่วยจาก Pascal เป็น hPascal (hPa)
+      Serial.println(F(" hPa"));
+
+      Serial.print(F("Approx altitude = "));
+      Serial.print(altitude);
+      Serial.println(F(" m"));
+      Serial.println("--------------------");
+
+      delay(2000);
+    }
+    ```
 
 ---
 

@@ -350,7 +350,7 @@ $$R_B = \frac{3.3 - 0.7}{3\text{ mA}} = \frac{2.6}{0.003} \approx 867\ \Omega \;
 โมดูลรีเลย์สำเร็จรูปภายในมี: ทรานซิสเตอร์ขับ + LED แสดงสถานะ + ไดโอดป้องกัน + หน้าสัมผัส COM/NO/NC ต่อใช้งานง่าย เพียงต่อ GPIO → IN, VCC → 5 V, GND → GND
 
 <div style="text-align: center; margin: 20px 0;">
-  <img src="https://down-th.img.susercontent.com/file/355551069e8518d672648f4d72a2e423.webp" alt="Relay Module" style="max-width: 300px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;"/>
+  <img src="../../assets/images/relay_module.webp" alt="Relay Module" style="max-width: 300px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;"/>
   <div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 4.3 แผนผังและโมดูลรีเลย์อิเล็กทรอนิกส์ (Relay Module) สำหรับควบคุมโหลดกระแสสูง</div>
 </div>
 
@@ -368,7 +368,7 @@ $$R_B = \frac{3.3 - 0.7}{3\text{ mA}} = \frac{2.6}{0.003} \approx 867\ \Omega \;
 | L298N | 2 | 2 A | 3 A | 5–46 V | ไม่มีไดโอดในตัว ต้องต่อเพิ่ม |
 
 <div style="text-align: center; margin: 20px 0;">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/1/18/Dosmotorsl298n.jpg" alt="L298N Motor Driver Setup" style="max-width: 320px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;"/>
+  <img src="../../assets/images/l298n_driver.jpg" alt="L298N Motor Driver Setup" style="max-width: 320px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;"/>
   <div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 4.4 โมดูลมอเตอร์ไดรเวอร์ L298N เชื่อมต่อเข้ากับมอเตอร์กระแสตรง 2 ตัว (Dual DC Motor Driver Setup)</div>
 </div>
 
@@ -993,7 +993,7 @@ $$\theta \approx \left( \frac{t_p - 1.0}{2.0 - 1.0} \right) \times 180^\circ$$
 - สายไฟ: **น้ำตาล** = GND, **แดง** = +5V, **ส้ม/เหลือง** = สัญญาณ
 
 <div style="text-align: center; margin: 20px 0;">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/d/d3/Micro_servo.jpg" alt="SG90 Micro Servo Motor" style="max-width: 260px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;"/>
+  <img src="../../assets/images/sg90_servo.jpg" alt="SG90 Micro Servo Motor" style="max-width: 260px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;"/>
   <div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 4.9 ไมโครเซอร์โวมอเตอร์รุ่นยอดนิยม SG90 (Micro Servo Motor) ขนาดเล็ก น้ำหนักเบา</div>
 </div>
 
@@ -1133,7 +1133,7 @@ $$\text{สเต็ปต่อรอบ} = \frac{360^\circ}{\text{Step Angle}}
 | Bipolar | NEMA 17 | A4988 / DRV8825 | แรงบิดสูง รองรับ Microstepping |
 
 <div style="text-align: center; margin: 20px 0;">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Nema_17_Stepper_Motor.jpg" alt="NEMA 17 Stepper Motor" style="max-width: 250px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;"/>
+  <img src="../../assets/images/nema17_stepper.jpg" alt="NEMA 17 Stepper Motor" style="max-width: 250px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;"/>
   <div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 4.11 สเต็ปเปอร์มอเตอร์มาตรฐานขนาด NEMA 17 (NEMA 17 Stepper Motor) สำหรับเครื่องพิมพ์สามมิติและเครื่อง CNC</div>
 </div>
 

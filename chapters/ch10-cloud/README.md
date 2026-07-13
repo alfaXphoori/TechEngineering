@@ -8,6 +8,8 @@
 
 ---
 
+<div class="chapter-tab-content" data-tab-name="Concept" data-tab-icon="💡" id="concept" markdown="1">
+
 ## 9.1 คลาวด์คอมพิวติงคืออะไรและประโยชน์สำหรับ IoT
 
 **คลาวด์คอมพิวติง (Cloud Computing)** คือการให้บริการทรัพยากรระบบคอมพิวเตอร์ผ่านเครือข่ายอินเทอร์เน็ตตามความต้องการของผู้ใช้ (On-demand) โดยผู้ใช้ไม่จำเป็นต้องบริหารจัดการทรัพยากรฮาร์ดแวร์เหล่านั้นโดยตรง ทรัพยากรเหล่านี้ครอบคลุมตั้งแต่ หน่วยประมวลผล (Compute), พื้นที่จัดเก็บข้อมูล (Storage), ระบบฐานข้อมูล (Databases), โครงข่ายเครือข่าย (Networking) ไปจนถึงซอฟต์แวร์สำเร็จรูป โดยคิดค่าใช้จ่ายตามปริมาณการใช้งานจริง (Pay-as-you-go)
@@ -214,6 +216,10 @@ $$\text{Physical Sensor} \rightarrow \text{Edge MCU (ESP32)} \rightarrow \text{L
 | **ความเหมาะสมในวิชานี้** | **เหมาะสมที่สุดในการศึกษาสถาปัตยกรรมระดับอุตสาหกรรม** | เหมาะสำหรับการประยุกต์ใช้งานจริงในอนาคตระดับสูง | เหมาะสำหรับการทำงานระดับโรงงานขนาดใหญ่ในอนาคต |
 
 ---
+
+</div>
+
+<div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
 
 ## 9.6 การเขียนโปรแกรมเชื่อมต่อ ESP32 เข้ากับ ThingsBoard Cloud
 
@@ -880,6 +886,10 @@ void loop() {
 
 ---
 
+</div>
+
+<div class="chapter-tab-content" data-tab-name="Reference / Summary" data-tab-icon="📊" id="waveform" markdown="1">
+
 ## สรุปท้ายบท
 
 เทคโนโลยีคลาวด์และแพลตฟอร์ม IoT ทำหน้าที่เป็นสะพานและคลังจัดเก็บข้อมูลส่วนกลาง ช่วยให้วิศวกรเครื่องกลยุคปัจจุบันเปลี่ยนกระบวนการมอนิเตอร์ในสถานที่ผลิตเป็นการดูสถานะเครื่องจักรร่วมควบคุมระยะไกลได้จากทุกที่ทั่วโลก การเข้าใจจุดสมดุลของการประมวลผลข้อมูลระหว่าง Edge Computing ที่ให้การตอบสนองที่ฉับไวและความทนทานเชิงควบคุม กับ Cloud Computing ที่เด่นในการบันทึกประวัติระยะยาวและการวิเคราะห์เชิงลึก เป็นหัวใจสำคัญของวิศวกร
@@ -978,6 +988,10 @@ Serverless Computing (เช่น AWS Lambda, Google Cloud Functions) กำล
 
 ---
 
+</div>
+
+<div class="chapter-tab-content" data-tab-name="Challenge" data-tab-icon="🏆" id="challenge" markdown="1">
+
 ## แบบฝึกหัดท้ายบท
 
 **ข้อ 1:** จงอธิบายบทบาทและหน้าที่สำคัญของ IoT Cloud Platform ในการจัดการอุปกรณ์ (Device Management) และการจัดการโทรมาตร (Telemetry Data Ingestion) พร้อมระบุว่า ThingsBoard ต่างจากระบบ Cloud ทั่วไป (เช่น AWS หรือ Azure) อย่างไร
@@ -989,3 +1003,5 @@ Serverless Computing (เช่น AWS Lambda, Google Cloud Functions) กำล
 **ข้อ 4:** จาก **ใบงานที่ 8.2 (ระบบ Dynamic Telemetry Rate Controller)** จงอธิบายกลไกของบอร์ดในการหลีกเลี่ยงข้อผิดพลาด Flood Error จาก Broker เมื่อมีค่าความร้อนเข้าสู่สภาวะวิกฤต (Critical State) และความหมายของ Hysteresis ในกรณีนี้
 
 **ข้อ 5:** จงเขียนรูปแบบโครงสร้าง JSON Payload ที่แสดงค่าอุณหภูมิน้ำหล่อเย็น อัตราการไหล และความดันของปั๊มน้ำอุตสาหกรรม เพื่อเตรียมส่งขึ้นไปยัง ThingsBoard Cloud
+
+</div>

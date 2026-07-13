@@ -5,6 +5,8 @@
 
 ---
 
+<div class="chapter-tab-content" data-tab-name="Concept" data-tab-icon="💡" id="concept" markdown="1">
+
 ## 3.1 ความรู้พื้นฐานอิเล็กทรอนิกส์
 
 ก่อนเข้าสู่การอ่านค่าเซนเซอร์ด้วยไมโครคอนโทรลเลอร์ ควรเข้าใจแนวคิดพื้นฐานของวงจรไฟฟ้าเล็กน้อย เพราะเซนเซอร์จำนวนมากไม่ได้ส่ง "ตัวเลข" ออกมาโดยตรง แต่ส่งผลลัพธ์เป็นแรงดัน กระแส หรือความต้านทานที่เปลี่ยนไป จากนั้นไมโครคอนโทรลเลอร์จึงอ่านค่าและแปลงเป็นข้อมูลดิจิทัลอีกที
@@ -920,6 +922,10 @@ $$T = \frac{R_{RTD} - R_0}{R_0 \cdot \alpha} = \frac{R_{RTD} - 100}{100 \cdot 0.
 
 ---
 
+</div>
+
+<div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
+
 ## 3.5 ตัวอย่างเซนเซอร์ยอดนิยมใน IoT
 
 
@@ -1461,6 +1467,10 @@ void loop() {
 
 ---
 
+</div>
+
+<div class="chapter-tab-content" data-tab-name="Reference / Summary" data-tab-icon="📊" id="waveform" markdown="1">
+
 ## 3.6 สรุปประจำบทที่ 3 (Summary)
 
 1. **เซนเซอร์** ทำหน้าที่แปลงปริมาณทางกายภาพเป็นสัญญาณไฟฟ้า ซึ่งเป็นพื้นฐานของระบบ IoT ทั้งหมด
@@ -1471,6 +1481,10 @@ void loop() {
 6. เซนเซอร์มีบทบาทสำคัญในงานวิศวกรรมเครื่องกล ตั้งแต่การตรวจสอบสภาพเครื่องจักรไปจนถึงระบบหุ่นยนต์
 
 ---
+
+</div>
+
+<div class="chapter-tab-content" data-tab-name="Challenge" data-tab-icon="🏆" id="challenge" markdown="1">
 
 ## 3.7 แบบฝึกหัดท้ายบทที่ 3 (Exercises)
 
@@ -1492,3 +1506,5 @@ void loop() {
 
 **ข้อ 5:** จงอธิบายความแตกต่างระหว่าง "ความแม่นยำ (Accuracy)" และ "ความเที่ยง (Precision)" พร้อมอธิบายเปรียบเทียบในเชิงวิศวกรรมการวัด
 
+
+</div>

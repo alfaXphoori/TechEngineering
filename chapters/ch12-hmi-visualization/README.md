@@ -4,6 +4,8 @@
 
 ---
 
+<div class="chapter-tab-content" data-tab-name="Concept" data-tab-icon="💡" id="concept" markdown="1">
+
 ## 11.1 ความสำคัญของการแสดงผลข้อมูลใน IoT
 
 ระบบ IoT เก็บข้อมูลจากเซนเซอร์จำนวนมหาศาล — อุณหภูมิ ความชื้น แรงสั่นสะเทือน ค่ากระแสไฟฟ้า ฯลฯ ข้อมูลดิบ (Raw Data) เหล่านี้เป็นเพียงตัวเลขที่ไหลเข้ามาไม่หยุด หากไม่มี **การแสดงผลข้อมูล (Data Visualization)** ที่ดี ผู้ใช้จะไม่สามารถแปลงตัวเลขเหล่านั้นเป็น **ความเข้าใจ (Insight)** ได้
@@ -170,6 +172,10 @@ GROUP BY time(5m) fill(linear)
 | ตั้ง Alert ได้ | ✅ (ผ่าน Flow) | ✅ (Built-in) | ✅ (Built-in Alarms) |
 
 ---
+
+</div>
+
+<div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
 
 ## 11.7 การเชื่อมต่อกับโปรแกรมของผู้ใช้ (User Interface)
 
@@ -716,6 +722,10 @@ void loop() {
 
 ---
 
+</div>
+
+<div class="chapter-tab-content" data-tab-name="Reference / Summary" data-tab-icon="📊" id="waveform" markdown="1">
+
 ## 11.9 สรุปประจำบทที่ 11 (Summary)
 
 1.  **การแสดงผลข้อมูลที่ดี** ต้องให้ลำดับความสำคัญของตัวชี้วัด (KPIs) ชัดเจน สามารถสื่อสารถึงความผิดปกติของสภาวะเครื่องจักรให้กับทีมช่างเทคนิคได้ใน 3 วินาทีแรก
@@ -725,8 +735,14 @@ void loop() {
 
 ---
 
+</div>
+
+<div class="chapter-tab-content" data-tab-name="Challenge" data-tab-icon="🏆" id="challenge" markdown="1">
+
 ## 11.10 แบบฝึกหัดท้ายบทที่ 11 (Exercises)
 
 **ข้อ 1:** จงอธิบายความสำคัญของการคำนึงถึงทฤษฎีสีในการออกแบบแดชบอร์ดระดับอุตสาหกรรมในห้องควบคุมกลาง
 **ข้อ 2:** ทฤษฎีอัตราส่วนข้อมูลต่อหมึกพิมพ์ (Data-Ink Ratio) มีกฎเหล็กสำคัญอย่างไรในการพล็อตและแสดงผลกราฟสถิติ?
 **ข้อ 3:** สถาปัตยกรรมแบบการควบคุมย้อนกลับ (RPC - Remote Procedure Call) ในคลาวด์ ThingsBoard มีความสำคัญอย่างไรในการควบคุมอุปกรณ์ตัวกระทำภายนอกผ่านหน้าแดชบอร์ด?
+
+</div>

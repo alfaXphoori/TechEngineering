@@ -3,6 +3,8 @@
 
 ---
 
+<div class="chapter-tab-content" data-tab-name="Concept" data-tab-icon="💡" id="concept" markdown="1">
+
 ## 4.1 ตัวกระทำคืออะไร (What is an Actuator?)
 
 ในระบบ IoT เราแบ่งอุปกรณ์ปลายทางออกเป็น 2 กลุ่มหลัก:
@@ -1152,6 +1154,10 @@ void loop() {
 ---
 
 
+</div>
+
+<div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
+
 ## 4.9 อุปกรณ์เอาต์พุตและระบบขับกำลังที่ใช้งานบน Tinkercad (Tinkercad Actuators & Power Control)
 
 ในการเรียนรู้การจำลองสถานการณ์ทางอิเล็กทรอนิกส์และระบบสมองกลฝังตัวบน Tinkercad Circuits จะมีอุปกรณ์แสดงผล ตัวขับเชิงกล และตัวควบคุมกำลังไฟฟ้า ให้ใช้งานหลากหลายชิ้น ดังนี้:
@@ -1500,6 +1506,10 @@ void loop() {
 
 ---
 
+</div>
+
+<div class="chapter-tab-content" data-tab-name="Reference / Summary" data-tab-icon="📊" id="waveform" markdown="1">
+
 ## สรุปบทที่ 4 (Summary)
 
 - ตัวกระทำ (Actuator) แปลงสัญญาณไฟฟ้าเป็นการกระทำทางกายภาพ: แสง เสียง การหมุน การเคลื่อนที่เชิงเส้น
@@ -1515,6 +1525,10 @@ void loop() {
 
 ---
 
+</div>
+
+<div class="chapter-tab-content" data-tab-name="Challenge" data-tab-icon="🏆" id="challenge" markdown="1">
+
 ## แบบฝึกหัดท้ายบทที่ 4 (Exercises)
 
 **ข้อ 1:** จงอธิบายความแตกต่างระหว่าง Sensor กับ Actuator พร้อมยกตัวอย่างอย่างละ 3 ชนิดที่ใช้ในงานวิศวกรรมเครื่องกล
@@ -1527,3 +1541,5 @@ void loop() {
 
 **ข้อ 5:** เซอร์โว SG90 ใช้สัญญาณ PWM ความถี่เท่าไร? ความกว้างพัลส์ 1 ms, 1.5 ms, 2 ms ให้มุมประมาณเท่าไร?
 
+
+</div>

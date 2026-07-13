@@ -4,6 +4,8 @@
 
 ---
 
+<div class="chapter-tab-content" data-tab-name="Concept" data-tab-icon="💡" id="concept" markdown="1">
+
 ## 7.1 ทำไม IoT ต้องมีโพรโทคอลระดับแอป
 
 ในบทก่อนหน้า เราเรียนรู้การเชื่อมต่อ ESP32 เข้ากับเครือข่าย Wi-Fi ซึ่งทำให้บอร์ดสามารถ "พูดคุย" ในระดับเครือข่าย (Network Layer) ได้แล้ว แต่การจะส่งข้อมูลเซ็นเซอร์ไปยังเซิร์ฟเวอร์ หรือสั่งงานอุปกรณ์จากระยะไกล เราต้องการ **โพรโทคอลระดับแอปพลิเคชัน (Application-Layer Protocol)** ที่กำหนดรูปแบบและกฎเกณฑ์ในการแลกเปลี่ยนข้อมูล
@@ -207,6 +209,10 @@
 ---
 
 
+</div>
+
+<div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
+
 ## 7.8 ตัวอย่างโค้ด ESP32
 
 ### 7.8.1 ส่งข้อมูลผ่าน HTTP POST
@@ -286,6 +292,10 @@ void loop() {
 
 ---
 
+</div>
+
+<div class="chapter-tab-content" data-tab-name="Reference / Summary" data-tab-icon="📊" id="waveform" markdown="1">
+
 ## 7.9 สรุปประจำบทที่ 7 (Summary)
 
 1. **สถาปัตยกรรม Client-Server** เป็นรูปแบบดั้งเดิมที่อุปกรณ์ (Client) ส่งคำขอร้อง HTTP Request ไปยังจุดปลายทาง (Server) และรับการตอบกลับ HTTP Response กลับมาในเวลาอันสั้น
@@ -295,9 +305,15 @@ void loop() {
 
 ---
 
+</div>
+
+<div class="chapter-tab-content" data-tab-name="Challenge" data-tab-icon="🏆" id="challenge" markdown="1">
+
 ## 7.10 แบบฝึกหัดท้ายบทที่ 7 (Exercises)
 
 **ข้อ 1:** จงอธิบายความหมายของสถานะตอบกลับ HTTP Status Code ต่อไปนี้: `200 OK`, `201 Created`, `400 Bad Request`, `404 Not Found` และ `500 Internal Server Error`
 **ข้อ 2:** ในระบบวิศวกรรมการผลิต หากต้องการสั่งส่งระดับอุณหภูมิของเตาอบทุก 1 วินาทีต่อเนื่อง ทำไมการใช้ HTTP/REST API จึงอาจสร้างปัญหาโหลดข้อมูลแบนด์วิดท์สูงเกินไป?
 **ข้อ 3:** จงเขียนโครงสร้างข้อความรูปแบบ JSON ที่จำลองการเก็บค่าพารามิเตอร์เซนเซอร์ตรวจจับลมของเครื่องจักร 3 ชิ้น ประกอบด้วย รหัสเครื่อง (string), ทิศทางลม (string), และความเร็วลม (float)
 **ข้อ 4:** จงอธิบายความสำคัญของการเรียกคำสั่ง `http.end()` หลังจากการรันคำขอ http บนไมโครคอนโทรลเลอร์ ESP32
+
+</div>

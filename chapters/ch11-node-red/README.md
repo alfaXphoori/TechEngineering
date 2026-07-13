@@ -4,6 +4,8 @@
 
 ---
 
+<div class="chapter-tab-content" data-tab-name="Concept" data-tab-icon="💡" id="concept" markdown="1">
+
 ## 10.1 โดเมนการเขียนโฟลว์ดักข้อมูล Node-RED
 
 **Node-RED** เป็นเครื่องมือเขียนโปรแกรมในลักษณะ **Flow-Based Programming (FBP)** ที่ออกแบบมาสำหรับยุค IoT และ Web Services โดยเฉพาะ พัฒนาขึ้นโดย IBM ทำงานบนแพลตฟอร์ม Node.js ทำให้นักพัฒนาสามารถเชื่อมโยงอุปกรณ์ฮาร์ดแวร์, API และบริการออนไลน์เข้าด้วยกันได้อย่างรวดเร็วผ่านตัวแก้ไขแบบลากวาง (Flow Editor) บนเว็บเบราว์เซอร์
@@ -244,6 +246,10 @@
 
 ---
 
+</div>
+
+<div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
+
 ## 10.3 โครงสร้างการเชื่อมต่อแดชบอร์ดท้องถิ่น (Local Data Orchestration)
 
 การเชื่อมต่อของข้อมูลในระบบท้องถิ่น (Local Area Network - LAN) โดยทั่วไปมีขั้นตอนดังภาพ:
@@ -263,6 +269,10 @@
 
 ---
 
+</div>
+
+<div class="chapter-tab-content" data-tab-name="Reference / Summary" data-tab-icon="📊" id="waveform" markdown="1">
+
 ## 10.4 สรุปประจำบทที่ 10 (Summary)
 
 1.  **Node-RED** ทำงานภายใต้สถาปัตยกรรมแบบ Flow-Based Programming ช่วยให้ออกแบบเส้นทางการไหลของข้อมูล (Data Pipelines) ได้ง่ายและรวดเร็ว
@@ -271,8 +281,14 @@
 
 ---
 
+</div>
+
+<div class="chapter-tab-content" data-tab-name="Challenge" data-tab-icon="🏆" id="challenge" markdown="1">
+
 ## 10.5 แบบฝึกหัดท้ายบทที่ 10 (Exercises)
 
 **ข้อ 1:** จงอธิบายความแตกต่างระหว่างฐานข้อมูลอนุกรมเวลา (เช่น InfluxDB) และฐานข้อมูลเชิงสัมพันธ์ทั่วไป (เช่น MySQL/PostgreSQL) ในแง่การรองรับข้อมูลเซนเซอร์ปริมาณสูง
 **ข้อ 2:** ในโฟลว์ของ Node-RED หากเราได้รับ Payload เป็นข้อความตัวอักษรธรรมดา เช่น `"25.5"` จาก MQTT แต่หน้าจอ Widget เกจต้องการตัวเลข (Number) เราต้องใช้โหนดใดหรือเขียนคำสั่งสคริปต์อย่างไรเพื่อแปลงประเภทตัวแปร?
 **ข้อ 3:** โหนดประเภท Inject Node และ Debug Node มีบทบาทอย่างไรต่อนักพัฒนาในการทดสอบระบบและแก้ปัญหา (Debugging) โฟลว์การควบคุมข้อมูล?
+
+</div>

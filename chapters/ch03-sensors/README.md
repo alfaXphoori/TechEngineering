@@ -576,7 +576,7 @@ $$\tau = RC$$
     <text x="612.5" y="286" class="text-code text-muted" text-anchor="middle">แรงดันเหลือใกล้ 0V ก่อนเริ่มชาร์จรอบถัดไป</text>
   </g>
 </svg>
-<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 2.4 วงจร RC ชาร์จและคายประจุแบบ exponential โดยกระแสจะมากตอนเริ่มและลดลงเมื่อแรงดันคร่อมตัวเก็บประจุเข้าใกล้ค่าสุดท้าย</div>
+<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 3.4 วงจร RC ชาร์จและคายประจุแบบ exponential โดยกระแสจะมากตอนเริ่มและลดลงเมื่อแรงดันคร่อมตัวเก็บประจุเข้าใกล้ค่าสุดท้าย</div>
 </div>
 
 ในงาน IoT และเซนเซอร์ ตัวเก็บประจุไม่ได้มีไว้เก็บพลังงานอย่างเดียว แต่ช่วยให้สัญญาณและไฟเลี้ยงนิ่งขึ้นด้วย ตัวอย่างที่พบบ่อย ได้แก่
@@ -994,6 +994,11 @@ void loop() {
 
 ### 3.5.3 Light Sensors — Photoresistor (LDR), Photodiode และ Ambient Light Sensor [Phototransistor]
 
+<div style="text-align: center; margin: 20px 0;">
+  <img src="../../assets/images/ldr_photoresistor.jpg" alt="LDR Photoresistor" style="max-width: 250px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;"/>
+  <div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 3.5 ตัวตรวจจับความเข้มแสงแปรค่าตามความต้านทาน LDR (Light Dependent Resistor)</div>
+</div>
+
 
 ใน Tinkercad มีเซนเซอร์วัดความสว่างของแสงให้ใช้งานหลัก ๆ 3 ประเภท ซึ่งใช้หลักการทางฟิสิกส์และมีคุณสมบัติการตอบสนองที่แตกต่างกัน:
 
@@ -1104,6 +1109,11 @@ void loop() {
 
 ### 3.5.7 PIR (HC-SR501) — ตรวจจับการเคลื่อนไหว
 
+<div style="text-align: center; margin: 20px 0;">
+  <img src="../../assets/images/pir_motion.jpg" alt="PIR Motion Sensor" style="max-width: 250px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;"/>
+  <div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 3.6 เซนเซอร์ตรวจจับรังสีอินฟราเรดแผ่จากสิ่งมีชีวิตเคลื่อนไหว PIR (Passive Infrared Sensor) รุ่น HC-SR501</div>
+</div>
+
 
 - ตรวจจับรังสีอินฟราเรดจากร่างกายสิ่งมีชีวิตที่มีความร้อนเคลื่อนที่ผ่านเซนเซอร์
 - เอาต์พุต: สัญญาณดิจิทัลเอาต์พุต (HIGH เมื่อตรวจพบการเคลื่อนไหว, LOW เมื่อนิ่ง)
@@ -1137,6 +1147,11 @@ void loop() {
 ```
 
 ### 3.5.8 Ultrasonic Distance Sensor (3-pin & 4-pin) — วัดระยะทางด้วยอัลตราโซนิก
+
+<div style="text-align: center; margin: 20px 0;">
+  <img src="../../assets/images/hcsr04_ultrasonic.jpg" alt="HC-SR04 Ultrasonic Distance Sensor" style="max-width: 280px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;"/>
+  <div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 3.7 เซนเซอร์ตรวจวัดระยะทางด้วยคลื่นความถี่อัลตราโซนิกสะท้อนกลับ HC-SR04</div>
+</div>
 
 
 ใน Tinkercad มีเซนเซอร์อัลตราโซนิกให้เลือกใช้งาน 2 รูปแบบ โดยส่งคลื่นความถี่สูง $40\text{ kHz}$ ไปสะท้อนวัตถุและวัดระยะทางจากเวลาเดินทางกลับ:
@@ -1266,6 +1281,11 @@ void loop() {
 
 ### 3.5.11 DHT11 / DHT22 — วัดอุณหภูมิและความชื้น
 
+<div style="text-align: center; margin: 20px 0;">
+  <img src="../../assets/images/dht22_sensor.jpg" alt="DHT22 Temperature and Humidity Sensor" style="max-width: 240px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;"/>
+  <div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 3.8 เซนเซอร์สำหรับตรวจสอบสภาพอุณหภูมิและความชื้นในสัมพัทธ์อากาศชนิดดิจิทัลความไวสูง DHT22</div>
+</div>
+
 
 *   **DHT11 (มีให้ใช้งานใน Tinkercad):** ช่วงวัดอุณหภูมิ 0 ถึง 50 °C (ความแม่นยำ ±2 °C) ช่วงวัดความชื้น 20–90 %RH (ความแม่นยำ ±5%) เหมาะสำหรับการเรียนรู้และจำลองเบื้องต้น
 *   **DHT22 (นิยมใช้ในบอร์ดจริง / Wokwi):** ช่วงวัดอุณหภูมิ −40 ถึง +80 °C (ความแม่นยำ ±0.5 °C) ช่วงวัดความชื้น 0–100 %RH (ความแม่นยำ ±2%) มีความแม่นยำสูงกว่า
@@ -1307,6 +1327,11 @@ void loop() {
 #### C. กลุ่มเซนเซอร์และอุปกรณ์เชื่อมต่อผ่านบัสข้อมูลดิจิทัล (Digital Bus Sensors - I2C)
 
 ### 3.5.12 BMP280 — วัดความดันบรรยากาศและอุณหภูมิ *(รองรับบนบอร์ดจริง/Wokwi)*
+
+<div style="text-align: center; margin: 20px 0;">
+  <img src="../../assets/images/bmp280_pressure.jpg" alt="BMP280 Barometric Pressure and Temperature Sensor" style="max-width: 250px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;"/>
+  <div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 3.9 เซนเซอร์วัดแรงดันชั้นบรรยากาศอ้างอิงความดันระดับน้ำทะเล BMP280 เชื่อมต่อแบบอนุกรมบัสข้อมูล I2C</div>
+</div>
 
 - ช่วงวัดความดัน: 300–1100 hPa (ความแม่นยำสูงถึง ±1.0 hPa)
 - อินเทอร์เฟซสื่อสาร: I2C (สาย SDA, SCL) หรือ SPI

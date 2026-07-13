@@ -44,6 +44,11 @@
 
 #### 1) LCD 1602 (Liquid Crystal Display 16x2)
 หน้าจอ LCD ยอดนิยม แสดงผลเฉพาะตัวอักษรและสัญลักษณ์ทั่วไปจำนวน 2 บรรทัด บรรทัดละ 16 ตัวอักษร เมื่อติดตั้งโมดูลแปลง I2C Backpack (ชิป PCF8574) จะทำให้เชื่อมต่อสายสัญญาณเพียง 4 เส้น
+
+<div style="text-align: center; margin: 20px 0;">
+  <img src="../../assets/images/lcd1602_display.jpg" alt="LCD1602 Display Module" style="max-width: 280px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;"/>
+  <div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 6.1 หน้าจอแสดงผลผลึกเหลวตัวอักษร LCD1602 พร้อมบัฟเฟอร์แปลงสายสัญญาณ I2C Backpack</div>
+</div>
 *   **การเชื่อมต่อ:** VCC (5V), GND, SDA, SCL
 *   **ตัวอย่างโค้ด (LiquidCrystal_I2C Library):**
     ```cpp
@@ -90,6 +95,11 @@
 
 #### 3) SSD1306 OLED (Monochrome 128x64 OLED)
 จอภาพเทคโนโลยี OLED แสดงผลกราฟิกและอักษรสีเดียวขนาด 0.96 นิ้ว มีความละเอียด 128x64 พิกเซล เปล่งแสงได้เองโดยไม่ต้องมีไฟหลัง (Backlight) คอนทราสต์สูงและประหยัดพลังงาน
+
+<div style="text-align: center; margin: 20px 0;">
+  <img src="../../assets/images/oled_ssd1306.jpg" alt="OLED SSD1306 0.96 inch" style="max-width: 280px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;"/>
+  <div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 6.2 หน้าจอแสดงผลกราฟิกขนาด 0.96 นิ้ว ชนิด OLED ความละเอียด 128x64 พิกเซล ขับเคลื่อนด้วยไอซี SSD1306</div>
+</div>
 *   **การเชื่อมต่อ:** VCC (3.3V/5V), GND, SDA, SCL
 *   **ตัวอย่างโค้ด (Adafruit SSD1306 Library):**
     ```cpp

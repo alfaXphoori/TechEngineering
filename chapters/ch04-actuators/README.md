@@ -94,7 +94,7 @@
   <text x="265" y="90" class="text-title" fill="#7c3aed" text-anchor="middle">สัญญาณดิจิทัล / PWM</text>
   <text x="535" y="90" class="text-title" fill="#c55a11" text-anchor="middle">การกระทำทางกายภาพ</text>
 </svg>
-<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 3.1 แผนผังแสดงการเปลี่ยนสัญญาณไฟฟ้าขนาดเล็กจากไมโครคอนโทรลเลอร์เป็นการกระทำทางกายภาพในโลกจริงผ่านตัวกระทำ (Actuator)</div>
+<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 4.1 แผนผังแสดงการเปลี่ยนสัญญาณไฟฟ้าขนาดเล็กจากไมโครคอนโทรลเลอร์เป็นการกระทำทางกายภาพในโลกจริงผ่านตัวกระทำ (Actuator)</div>
 </div>
 
 ในบทนี้เราจะเรียนรู้ประเภทของตัวกระทำ ฟิสิกส์พื้นฐานของมอเตอร์ไฟฟ้า วงจรขับ (Driver Circuit) พร้อมการคำนวณค่าอุปกรณ์ หลักการป้องกันวงจร การควบคุมด้วย PWM ตลอดจนเจาะลึกเซอร์โวและสเต็ปเปอร์มอเตอร์ การประเมินกำลัง/ความร้อน และปิดท้ายด้วยตัวอย่างการออกแบบระบบจริง ซึ่งเป็นพื้นฐานสำคัญก่อนนำไปใช้ในโปรเจกต์ IoT จริง
@@ -314,7 +314,7 @@ $$P_{in} = V I \qquad P_{mech} = \tau \, \omega$$
     <text x="615" y="202" class="text-code" fill="#10b981" text-anchor="middle">โหลดทำงาน (ON)</text>
   </g>
 </svg>
-<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 3.2 วงจรทรานซิสเตอร์ NPN ทำงานเสมือนสวิตช์เปิด-ปิดโหลดไฟฟ้ากระแสสูงด้วยกระแสควบคุมขนาดเล็กจากขา GPIO</div>
+<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 4.2 วงจรทรานซิสเตอร์ NPN ทำงานเสมือนสวิตช์เปิด-ปิดโหลดไฟฟ้ากระแสสูงด้วยกระแสควบคุมขนาดเล็กจากขา GPIO</div>
 </div>
 
 **การคำนวณค่าตัวต้านทาน Base ($R_B$):** เพื่อให้ทรานซิสเตอร์ทำงานในสภาวะ "อิ่มตัว (Saturation)" คือเป็นสวิตช์ที่นำกระแสเต็มที่ ต้องป้อนกระแส Base ให้เพียงพอ ขั้นตอนคำนวณมีดังนี้
@@ -331,7 +331,7 @@ $$I_{B(min)} = \frac{100\text{ mA}}{100} = 1\text{ mA} \;\Rightarrow\; I_B = 3 \
 
 $$R_B = \frac{3.3 - 0.7}{3\text{ mA}} = \frac{2.6}{0.003} \approx 867\ \Omega \;\rightarrow\; \text{เลือกค่ามาตรฐาน } 1\ \text{k}\Omega$$
 
-นี่คือเหตุผลที่ในภาพที่ 3.2 ใช้ตัวต้านทาน Base ขนาด 1 kΩ
+นี่คือเหตุผลที่ในภาพที่ 4.2 ใช้ตัวต้านทาน Base ขนาด 1 kΩ
 
 **MOSFET (เช่น IRLZ44N, logic-level)** — ใช้แรงดัน Gate สั่งเปิด-ปิด ข้อดีคือ Gate แทบไม่กินกระแส ทนกระแส Drain ได้สูง (หลายสิบแอมป์) เหมาะกับโหลดใหญ่ การนำกระแสของ MOSFET ถูกควบคุมด้วยแรงดัน Gate-Source ($V_{GS}$) เทียบกับแรงดันขีดเริ่ม (Threshold, $V_{GS(th)}$)
 
@@ -349,6 +349,11 @@ $$R_B = \frac{3.3 - 0.7}{3\text{ mA}} = \frac{2.6}{0.003} \approx 867\ \Omega \;
 
 โมดูลรีเลย์สำเร็จรูปภายในมี: ทรานซิสเตอร์ขับ + LED แสดงสถานะ + ไดโอดป้องกัน + หน้าสัมผัส COM/NO/NC ต่อใช้งานง่าย เพียงต่อ GPIO → IN, VCC → 5 V, GND → GND
 
+<div style="text-align: center; margin: 20px 0;">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/2/26/Relay_module.svg" alt="Relay Module" style="max-width: 300px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; background-color: white; padding: 10px;"/>
+  <div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 4.3 แผนผังและโมดูลรีเลย์อิเล็กทรอนิกส์ (Relay Module) สำหรับควบคุมโหลดกระแสสูง</div>
+</div>
+
 - **NO (Normally Open)** — ปกติวงจรเปิด สั่ง ON แล้ววงจรจึงปิด
 - **NC (Normally Closed)** — ปกติวงจรปิด สั่ง ON แล้ววงจรจึงเปิด
 - **COM (Common)** — ขาร่วม
@@ -361,6 +366,11 @@ $$R_B = \frac{3.3 - 0.7}{3\text{ mA}} = \frac{2.6}{0.003} \approx 867\ \Omega \;
 |---|---|---|---|---|---|
 | L293D | 2 | 600 mA | 1.2 A | 4.5–36 V | มีไดโอดป้องกันในตัว |
 | L298N | 2 | 2 A | 3 A | 5–46 V | ไม่มีไดโอดในตัว ต้องต่อเพิ่ม |
+
+<div style="text-align: center; margin: 20px 0;">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/1/18/Dosmotorsl298n.jpg" alt="L298N Motor Driver Setup" style="max-width: 320px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;"/>
+  <div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 4.4 โมดูลมอเตอร์ไดรเวอร์ L298N เชื่อมต่อเข้ากับมอเตอร์กระแสตรง 2 ตัว (Dual DC Motor Driver Setup)</div>
+</div>
 
 **หลักการ H-Bridge:** สวิตช์ 4 ตัวจัดเป็นรูป H ที่มอเตอร์อยู่ตรงกลาง สลับทิศกระแสผ่านมอเตอร์ได้ → มอเตอร์หมุนได้ 2 ทิศ
 
@@ -526,7 +536,7 @@ $$R_B = \frac{3.3 - 0.7}{3\text{ mA}} = \frac{2.6}{0.003} \approx 867\ \Omega \;
     <text x="657.5" y="185" class="text-sub" fill="#475569" text-anchor="middle">ไม่มีกระแสไหลผ่าน</text>
   </g>
 </svg>
-<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 3.3 สะพานเอชควบคุมทิศทางการหมุนของมอเตอร์โดยการสลับเปิด-ปิดสวิตช์คู่ทะแยงเพื่อสลับทิศทางของกระแสไฟฟ้า</div>
+<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 4.5 สะพานเอชควบคุมทิศทางการหมุนของมอเตอร์โดยการสลับเปิด-ปิดสวิตช์คู่ทะแยงเพื่อสลับทิศทางของกระแสไฟฟ้า</div>
 </div>
 
 **การต่อ L298N กับ Arduino Uno (จำลองใน Tinkercad Circuits):**
@@ -696,7 +706,7 @@ void loop() {
     <text x="440" y="188" class="text-sub" fill="#1e40af">• กระแสไหลวนกลับไปสลายตัวในคอยล์ ปลอดภัยสำหรับวงจร</text>
   </g>
 </svg>
-<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 3.4 ไดโอด Flyback ต่อขนานคร่อมโหลดเหนี่ยวนำเพื่อจำกัดกระแสแรงดันย้อนกลับเหนี่ยวนำไม่ให้ย้อนกลับไปทำลายไมโครคอนโทรลเลอร์หรือตัวทรานซิสเตอร์สวิตช์</div>
+<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 4.6 ไดโอด Flyback ต่อขนานคร่อมโหลดเหนี่ยวนำเพื่อจำกัดกระแสแรงดันย้อนกลับเหนี่ยวนำไม่ให้ย้อนกลับไปทำลายไมโครคอนโทรลเลอร์หรือตัวทรานซิสเตอร์สวิตช์</div>
 </div>
 
 > 💡 **เรื่อง Flyback Diode สำคัญมาก:** ทุกครั้งที่ต่อโหลดเหนี่ยวนำ (Inductive Load) เช่น รีเลย์ มอเตอร์ โซลินอยด์ **ต้องมีไดโอด flyback เสมอ** ไม่ว่าจะเล็กแค่ไหน ถ้าลืมต่อ แรงดันย้อนอาจทำลายทรานซิสเตอร์และ MCU ในทันที นี่คือสาเหตุวงจรพังที่พบบ่อยที่สุดในงาน IoT สำหรับผู้เริ่มต้น
@@ -815,7 +825,7 @@ $$V_{avg} = D \times V_{supply}$$
   <circle cx="560" cy="235" r="14" class="lamp"/>
   <text x="560" y="265" class="text-sub" text-anchor="middle">หลอดจำลอง (วนค่า)</text>
 </svg>
-<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 3.5 ยิ่ง Duty Cycle สูง สัดส่วนเวลาที่สัญญาณเป็น HIGH ยิ่งมาก ทำให้แรงดันเฉลี่ย (เส้นประแดง) สูงขึ้น โหลดจึงสว่างขึ้นหรือหมุนเร็วขึ้น</div>
+<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 4.7 ยิ่ง Duty Cycle สูง สัดส่วนเวลาที่สัญญาณเป็น HIGH ยิ่งมาก ทำให้แรงดันเฉลี่ย (เส้นประแดง) สูงขึ้น โหลดจึงสว่างขึ้นหรือหมุนเร็วขึ้น</div>
 </div>
 
 **การใช้งานกับตัวกระทำ:**
@@ -972,7 +982,7 @@ $$\theta \approx \left( \frac{t_p - 1.0}{2.0 - 1.0} \right) \times 180^\circ$$
   <text x="250" y="240" class="text-sub" text-anchor="middle">วงจรภายในเปรียบเทียบมุมที่สั่งกับมุมจริงจากโพเทนชิออมิเตอร์</text>
   <text x="250" y="258" class="text-sub" text-anchor="middle">แล้วขับมอเตอร์จนกระทั่งแกนหมุนไปอยู่ตำแหน่งที่ถูกต้อง</text>
 </svg>
-<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 3.6 เซอร์โวอ่าน "ความกว้างพัลส์" ในแต่ละคาบ 20 ms (1.0–2.0 ms) แล้วหมุนแกนเอาต์พุตไปยังมุม 0°–180° ที่สอดคล้องกัน</div>
+<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 4.8 เซอร์โวอ่าน "ความกว้างพัลส์" ในแต่ละคาบ 20 ms (1.0–2.0 ms) แล้วหมุนแกนเอาต์พุตไปยังมุม 0°–180° ที่สอดคล้องกัน</div>
 </div>
 
 ### 4.7.3 ข้อมูลจำเพาะ SG90 และการต่อใช้งาน
@@ -981,6 +991,11 @@ $$\theta \approx \left( \frac{t_p - 1.0}{2.0 - 1.0} \right) \times 180^\circ$$
 - แรงบิด: ~1.8 kg·cm ที่ 4.8 V
 - ช่วงมุม: ~180° • กระแสพีคขณะเคลื่อน: 100–500 mA
 - สายไฟ: **น้ำตาล** = GND, **แดง** = +5V, **ส้ม/เหลือง** = สัญญาณ
+
+<div style="text-align: center; margin: 20px 0;">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/d/d3/Micro_servo.jpg" alt="SG90 Micro Servo Motor" style="max-width: 260px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;"/>
+  <div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 4.9 ไมโครเซอร์โวมอเตอร์รุ่นยอดนิยม SG90 (Micro Servo Motor) ขนาดเล็ก น้ำหนักเบา</div>
+</div>
 
 > ⚠️ **ข้อควรระวังเรื่องแหล่งจ่ายไฟ:** เซอร์โวมอเตอร์ดึงกระแสพีคค่อนข้างสูงตอนเริ่มเคลื่อนที่หรือเมื่อมีแรงต้าน (Stall Current 500 mA ขึ้นไป) หากดึงจากขา 5V หรือ 3.3V ของบอร์ดไมโครคอนโทรลเลอร์โดยตรง อาจทำให้แรงดันตกชั่วขณะส่งผลให้บอร์ดรีเซ็ตตัวเองได้ ในระบบจริงจึงแนะนำให้จ่ายไฟบวกให้กับเซอร์โวจากแหล่งจ่ายไฟภายนอก 5–6 V แยกต่างหาก และ **ต่อกราวด์ร่วมกัน (Common Ground)** เสมอ
 
@@ -1107,7 +1122,7 @@ $$\text{สเต็ปต่อรอบ} = \frac{360^\circ}{\text{Step Angle}}
   <text x="495" y="230" class="text-code" fill="#16a34a">สเต็ป 4 : กระตุ้น D</text>
   <text x="495" y="262" class="text-sub">วนกลับสเต็ป 1 → หมุนต่อเนื่อง</text>
 </svg>
-<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 3.7 การกระตุ้นขดลวดเรียงลำดับ A→B→C→D ทำให้สนามแม่เหล็กหมุนรอบ โรเตอร์จึงถูกดึงให้หมุนตามทีละสเต็ป (ภาพแสดงแบบเฟสเดียวเพื่อให้เห็นทิศทางชัดเจน)</div>
+<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 4.10 การกระตุ้นขดลวดเรียงลำดับ A→B→C→D ทำให้สนามแม่เหล็กหมุนรอบ โรเตอร์จึงถูกดึงให้หมุนตามทีละสเต็ป (ภาพแสดงแบบเฟสเดียวเพื่อให้เห็นทิศทางชัดเจน)</div>
 </div>
 
 ### 4.8.3 ชนิดของสเต็ปเปอร์และไดรเวอร์ที่ใช้คู่กัน
@@ -1116,6 +1131,11 @@ $$\text{สเต็ปต่อรอบ} = \frac{360^\circ}{\text{Step Angle}}
 |---|---|---|---|
 | Unipolar | 28BYJ-48 (5V) | ULN2003 | ราคาถูก กระแสต่ำ เหมาะฝึกหัด |
 | Bipolar | NEMA 17 | A4988 / DRV8825 | แรงบิดสูง รองรับ Microstepping |
+
+<div style="text-align: center; margin: 20px 0;">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Nema_17_Stepper_Motor.jpg" alt="NEMA 17 Stepper Motor" style="max-width: 250px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;"/>
+  <div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 4.11 สเต็ปเปอร์มอเตอร์มาตรฐานขนาด NEMA 17 (NEMA 17 Stepper Motor) สำหรับเครื่องพิมพ์สามมิติและเครื่อง CNC</div>
+</div>
 
 > 💡 **A4988/DRV8825 ใช้แค่ 2 ขา:** ไดรเวอร์รุ่นนี้รับสัญญาณเพียง **STEP** (ส่ง 1 พัลส์เท่ากับหมุน 1 สเต็ป) และ **DIR** (กำหนดทิศทางลอจิกหมุนซ้าย/ขวา) ทำให้เขียนโปรแกรมสั่งงานด้วยบอร์ด Arduino Uno ได้ง่ายและประหยัดขาสัญญาณมาก
 

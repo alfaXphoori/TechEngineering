@@ -1,4 +1,4 @@
-# Chapter 8: โปรโตคอล MQTT สำหรับงานด้านไอโอที (MQTT Messaging Protocol)
+# Chapter 9: โปรโตคอล MQTT สำหรับงานด้านไอโอที (MQTT Messaging Protocol)
 
 > บทนี้จะอธิบายสถาปัตยกรรมการสื่อสารแบบกระจายข้อความ Publish-Subscribe ผ่านโปรโตคอล MQTT ซึ่งออกแบบมาสำหรับอุปกรณ์ฝังตัวที่มีหน่วยความจำจำกัดและแบนด์วิดท์เครือข่ายต่ำ รวมถึงอธิบายระดับคุณภาพความมั่นคงในการรับส่ง (QoS) และการเขียนโปรแกรม MQTT Client บนบอร์ดไมโครคอนโทรลเลอร์
 
@@ -6,11 +6,11 @@
 
 <div class="chapter-tab-content" data-tab-name="Concept" data-tab-icon="💡" id="concept" markdown="1">
 
-## 8.1 MQTT: รูปแบบ Publish/Subscribe
+## 9.1 MQTT: รูปแบบ Publish/Subscribe
 
 **MQTT (Message Queuing Telemetry Transport)** ถูกออกแบบมาเพื่ออุปกรณ์ IoT โดยเฉพาะ มีขนาดเล็ก (Lightweight) และใช้แบนด์วิดท์ต่ำ
 
-### 8.1.1 องค์ประกอบหลัก
+### 9.1.1 องค์ประกอบหลัก
 
 MQTT ทำงานแบบ **Publish/Subscribe (Pub/Sub)** ซึ่งต่างจาก HTTP ตรงที่ไม่ต้องร้องขอโดยตรง:
 
@@ -138,7 +138,7 @@ MQTT ทำงานแบบ **Publish/Subscribe (Pub/Sub)** ซึ่งต่
 </svg>
 </div>
 
-### 8.1.2 โครงสร้าง Topic
+### 9.1.2 โครงสร้าง Topic
 
 Topic ใน MQTT จัดเป็นลำดับชั้น (Hierarchy) คล้ายโครงสร้างโฟลเดอร์:
 
@@ -152,7 +152,7 @@ building/floor2/room201/temperature
 - `+` แทนระดับเดียว — `building/+/room101/temperature` จะรับข้อมูลจากทุกชั้น
 - `#` แทนหลายระดับ — `building/floor1/#` จะรับข้อมูลทั้งหมดของชั้น 1
 
-### 8.1.3 ระดับ QoS (Quality of Service)
+### 9.1.3 ระดับ QoS (Quality of Service)
 
 MQTT มีกลไกการรับประกันการรับส่งข้อมูลผ่านระดับ **QoS (Quality of Service)** 3 ระดับ เพื่อรองรับเสถียรภาพเครือข่ายและข้อจำกัดของอุปกรณ์ที่แตกต่างกัน:
 
@@ -368,7 +368,7 @@ MQTT มีกลไกการรับประกันการรับส
   3. **PUBREL (แจ้งลบสถานะตัวส่ง):** เมื่อผู้ส่งได้รับ `PUBREC` จะตอบกลับด้วย `PUBREL` (Publish Release) เพื่อบอกให้ผู้รับเตรียมเผยแพร่ข้อความและลบเลขแพ็กเก็ตที่บันทึกไว้ได้
   4. **PUBCOMP (ยืนยันสิ้นสุดงาน):** ผู้รับกระจายข้อความเสร็จแล้ว ส่งสัญญาณ `PUBCOMP` (Publish Complete) กลับไปเพื่อบอกผู้ส่งว่าเสร็จสมบูรณ์ร้อยเปอร์เซ็นต์
 
-### 8.1.4 คุณสมบัติพิเศษ
+### 9.1.4 คุณสมบัติพิเศษ
 
 - **Retained Message** — Broker เก็บข้อความล่าสุดไว้ เมื่อมี Subscriber ใหม่จะได้รับข้อมูลทันทีโดยไม่ต้องรอ Publisher ส่งใหม่
 - **Last Will and Testament (LWT)** — ข้อความที่ Client ฝากไว้กับ Broker ตั้งแต่ตอนเชื่อมต่อ หาก Client หลุดโดยไม่ปกติ Broker จะส่งข้อความนี้แจ้งเตือน เช่น `"ESP32-001 offline"`
@@ -378,7 +378,7 @@ MQTT มีกลไกการรับประกันการรับส
 ---
 
 
-## 8.2 ตารางเปรียบเทียบแบบเจาะลึก: HTTP/REST ปะทะ MQTT
+## 9.2 ตารางเปรียบเทียบแบบเจาะลึก: HTTP/REST ปะทะ MQTT
 
 การเลือกโพรโทคอลที่เหมาะสมมีผลโดยตรงต่อการเลือกแบตเตอรี่ ขนาดหน่วยความจำบอร์ด และค่าใช้จ่ายอินเทอร์เน็ตของโครงการ IoT ตารางด้านล่างเป็นการเปรียบเทียบเชิงวิศวกรรมระหว่าง HTTP/REST และ MQTT:
 
@@ -402,7 +402,7 @@ MQTT มีกลไกการรับประกันการรับส
 
 <div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
 
-## 8.3 Publish/Subscribe ผ่าน MQTT
+## 9.3 Publish/Subscribe ผ่าน MQTT
 
 โค้ดนี้เชื่อมต่อ MQTT Broker แบบสาธารณะ ส่งค่าอุณหภูมิ (Publish) และรับคำสั่งเปิด-ปิด LED (Subscribe) — ใช้ได้กับ Wokwi
 
@@ -515,7 +515,7 @@ void loop() {
 
 <div class="chapter-tab-content" data-tab-name="Reference / Summary" data-tab-icon="📊" id="waveform" markdown="1">
 
-## 8.4 สรุปประจำบทที่ 8 (Summary)
+## 9.4 สรุปประจำบทที่ 9 (Summary)
 
 1. **สถาปัตยกรรม Publish-Subscribe** มีจุดเด่นคือการลดการผูกติดกัน (Decoupling) ของอุปกรณ์ส่งและรับข้อมูล โดยทำงานร่วมกันผ่านตัวกลางประสานข้อมูลกลางที่เรียกว่า **MQTT Broker**
 2. **Topic (หัวข้อ)** เป็นกลไกหลักในการจำแนกเส้นทางการไหลของข้อความ มีรูปแบบโครงสร้างเป็นลำดับชั้นแบ่งระดับด้วยเครื่องหมายทับ `/` และรองรับการใช้สัญลักษณ์ Wildcard (`+` และ `#`) ในการฟิลเตอร์ดักจับหลายหัวข้อพร้อมกัน
@@ -528,7 +528,7 @@ void loop() {
 
 <div class="chapter-tab-content" data-tab-name="Challenge" data-tab-icon="🏆" id="challenge" markdown="1">
 
-## 8.5 แบบฝึกหัดท้ายบทที่ 8 (Exercises)
+## 9.5 แบบฝึกหัดท้ายบทที่ 9 (Exercises)
 
 **ข้อ 1:** จงอธิบายกลไกการทำหน้าที่ของ **MQTT Broker** ในการประมวลผลข้อความและส่งต่อให้กับ **Subscribers**
 **ข้อ 2:** หากท่านกำหนด Topic การส่งสัญญาณเป็น `factory/buildingA/line1/sensor/temp` จงหาว่าหัวข้อดักสัญญาณ (Subscribed Topic) ต่อไปนี้สามารถดักจับข้อความได้หรือไม่ (ตอบ ได้ / ไม่ได้):

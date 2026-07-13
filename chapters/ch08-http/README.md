@@ -1,4 +1,4 @@
-# Chapter 7: สถาปัตยกรรมเว็บและโปรโตคอล HTTP (Web Architecture & HTTP/REST APIs)
+# Chapter 8: สถาปัตยกรรมเว็บและโปรโตคอล HTTP (Web Architecture & HTTP/REST APIs)
 
 > บทนี้จะอธิบายหลักการทำงานของโพรโทคอล HTTP ซึ่งเป็นสถาปัตยกรรมสื่อสารในรูปแบบ Request-Response ที่ใช้กันแพร่หลายในบริการเว็บทั่วไป การจัดรูปแบบข้อมูลโครงสร้าง JSON และแนวทางการเขียนโปรแกรมเชื่อมต่อ RESTful API บนไมโครคอนโทรลเลอร์
 
@@ -6,7 +6,7 @@
 
 <div class="chapter-tab-content" data-tab-name="Concept" data-tab-icon="💡" id="concept" markdown="1">
 
-## 7.1 ทำไม IoT ต้องมีโพรโทคอลระดับแอป
+## 8.1 ทำไม IoT ต้องมีโพรโทคอลระดับแอป
 
 ในบทก่อนหน้า เราเรียนรู้การเชื่อมต่อ ESP32 เข้ากับเครือข่าย Wi-Fi ซึ่งทำให้บอร์ดสามารถ "พูดคุย" ในระดับเครือข่าย (Network Layer) ได้แล้ว แต่การจะส่งข้อมูลเซ็นเซอร์ไปยังเซิร์ฟเวอร์ หรือสั่งงานอุปกรณ์จากระยะไกล เราต้องการ **โพรโทคอลระดับแอปพลิเคชัน (Application-Layer Protocol)** ที่กำหนดรูปแบบและกฎเกณฑ์ในการแลกเปลี่ยนข้อมูล
 
@@ -19,7 +19,7 @@
 
 ---
 
-## 7.2 สถาปัตยกรรม Client/Server
+## 8.2 สถาปัตยกรรม Client/Server
 
 ก่อนลงรายละเอียดโพรโทคอล ต้องเข้าใจแนวคิดพื้นฐานของสถาปัตยกรรม **ไคลเอนต์/เซิร์ฟเวอร์ (Client/Server)**:
 
@@ -32,11 +32,11 @@
 
 ---
 
-## 7.3 HTTP: Request/Response
+## 8.3 HTTP: Request/Response
 
 **HTTP (HyperText Transfer Protocol)** เป็นโพรโทคอลพื้นฐานของเว็บ ทำงานแบบ **Request/Response** — ไคลเอนต์ส่งคำร้อง (Request) ไปยังเซิร์ฟเวอร์ แล้วเซิร์ฟเวอร์ตอบกลับ (Response)
 
-### 7.3.1 HTTP Methods (เมธอดของ HTTP)
+### 8.3.1 HTTP Methods (เมธอดของ HTTP)
 
 | Method | ความหมาย | ตัวอย่างการใช้งาน IoT |
 |--------|----------|----------------------|
@@ -45,7 +45,7 @@
 | **PUT** | อัปเดตข้อมูลทั้งหมด (Update) | แก้ไขการตั้งค่าอุปกรณ์ |
 | **DELETE** | ลบข้อมูล (Delete) | ลบล็อกข้อมูลเก่า |
 
-### 7.3.2 HTTP Status Codes (รหัสสถานะ)
+### 8.3.2 HTTP Status Codes (รหัสสถานะ)
 
 | กลุ่มรหัส | ความหมาย | ตัวอย่าง |
 |----------|----------|---------|
@@ -54,7 +54,7 @@
 | **4xx** | ข้อผิดพลาดฝั่งไคลเอนต์ | `400 Bad Request`, `404 Not Found` |
 | **5xx** | ข้อผิดพลาดฝั่งเซิร์ฟเวอร์ | `500 Internal Server Error` |
 
-### 7.3.3 โครงสร้างของ HTTP Message
+### 8.3.3 โครงสร้างของ HTTP Message
 
 **Request** ประกอบด้วย:
 - **Request Line** — ระบุ Method, URL และเวอร์ชัน เช่น `POST /api/sensor HTTP/1.1`
@@ -66,7 +66,7 @@
 - **Headers** — เช่น `Content-Length: 128`
 - **Body** — ข้อมูลที่เซิร์ฟเวอร์ตอบกลับ
 
-### 7.3.4 แผนภาพการส่ง HTTP Request และ Response
+### 8.3.4 แผนภาพการส่ง HTTP Request และ Response
 เพื่อให้เห็นภาพลำดับการทำงานที่ชัดเจน แผนภาพเคลื่อนไหวด้านล่างนี้แสดงขั้นตอนการส่งข้อมูลจาก ESP32 Client ไปยัง Web Server และการตอบกลับ
 
 <div style="text-align: center; margin: 20px 0;">
@@ -160,7 +160,7 @@
 
 ---
 
-## 7.4 REST API และหลักการ
+## 8.4 REST API และหลักการ
 
 **REST (Representational State Transfer)** เป็นแนวทางในการออกแบบ API บนพื้นฐาน HTTP โดยมีหลักการสำคัญ:
 
@@ -180,7 +180,7 @@
 
 ---
 
-## 7.5 รูปแบบข้อมูล JSON
+## 8.5 รูปแบบข้อมูล JSON
 
 **JSON (JavaScript Object Notation)** เป็นรูปแบบข้อมูลที่นิยมใช้ใน REST API เพราะอ่านง่ายทั้งคนและเครื่อง
 
@@ -213,9 +213,9 @@
 
 <div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
 
-## 7.8 ตัวอย่างโค้ด ESP32
+## 8.8 ตัวอย่างโค้ด ESP32
 
-### 7.8.1 ส่งข้อมูลผ่าน HTTP POST
+### 8.8.1 ส่งข้อมูลผ่าน HTTP POST
 
 โค้ดนี้อ่านค่าจากเซ็นเซอร์ DHT22 แล้วส่งเป็น JSON ไปยังเซิร์ฟเวอร์ด้วย HTTP POST — ทดสอบบน Wokwi ได้โดยใช้ `httpbin.org` เป็นเซิร์ฟเวอร์ปลายทาง
 
@@ -296,7 +296,7 @@ void loop() {
 
 <div class="chapter-tab-content" data-tab-name="Reference / Summary" data-tab-icon="📊" id="waveform" markdown="1">
 
-## 7.9 สรุปประจำบทที่ 7 (Summary)
+## 8.9 สรุปประจำบทที่ 8 (Summary)
 
 1. **สถาปัตยกรรม Client-Server** เป็นรูปแบบดั้งเดิมที่อุปกรณ์ (Client) ส่งคำขอร้อง HTTP Request ไปยังจุดปลายทาง (Server) และรับการตอบกลับ HTTP Response กลับมาในเวลาอันสั้น
 2. **โปรโตคอล HTTP** ทำงานเป็นแบบไร้สถานะ (Stateless) โดยมีเมธอดหลักในการระบุความต้องการของข้อมูล ได้แก่ GET (ร้องขอข้อมูล), POST (ส่งข้อมูลขึ้นบันทึก), PUT (อัปเดตข้อมูล) และ DELETE (ลบข้อมูล)
@@ -309,7 +309,7 @@ void loop() {
 
 <div class="chapter-tab-content" data-tab-name="Challenge" data-tab-icon="🏆" id="challenge" markdown="1">
 
-## 7.10 แบบฝึกหัดท้ายบทที่ 7 (Exercises)
+## 8.10 แบบฝึกหัดท้ายบทที่ 8 (Exercises)
 
 **ข้อ 1:** จงอธิบายความหมายของสถานะตอบกลับ HTTP Status Code ต่อไปนี้: `200 OK`, `201 Created`, `400 Bad Request`, `404 Not Found` และ `500 Internal Server Error`
 **ข้อ 2:** ในระบบวิศวกรรมการผลิต หากต้องการสั่งส่งระดับอุณหภูมิของเตาอบทุก 1 วินาทีต่อเนื่อง ทำไมการใช้ HTTP/REST API จึงอาจสร้างปัญหาโหลดข้อมูลแบนด์วิดท์สูงเกินไป?

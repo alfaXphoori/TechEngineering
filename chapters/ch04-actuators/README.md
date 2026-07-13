@@ -1,4 +1,4 @@
-# Chapter 3: ตัวกระทำและการเชื่อมต่อ (Actuators & Interfacing)
+# Chapter 4: ตัวกระทำและการเชื่อมต่อ (Actuators & Interfacing)
 ## Actuators & Interfacing
 
 ---

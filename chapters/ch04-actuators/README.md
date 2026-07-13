@@ -350,7 +350,7 @@ $$R_B = \frac{3.3 - 0.7}{3\text{ mA}} = \frac{2.6}{0.003} \approx 867\ \Omega \;
 โมดูลรีเลย์สำเร็จรูปภายในมี: ทรานซิสเตอร์ขับ + LED แสดงสถานะ + ไดโอดป้องกัน + หน้าสัมผัส COM/NO/NC ต่อใช้งานง่าย เพียงต่อ GPIO → IN, VCC → 5 V, GND → GND
 
 <div style="text-align: center; margin: 20px 0;">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/2/26/Relay_module.svg" alt="Relay Module" style="max-width: 300px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; background-color: white; padding: 10px;"/>
+  <img src="https://down-th.img.susercontent.com/file/355551069e8518d672648f4d72a2e423.webp" alt="Relay Module" style="max-width: 300px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;"/>
   <div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 4.3 แผนผังและโมดูลรีเลย์อิเล็กทรอนิกส์ (Relay Module) สำหรับควบคุมโหลดกระแสสูง</div>
 </div>
 

@@ -27,7 +27,7 @@ assignments:
     topic: ไมโครคอนโทรลเลอร์เบื้องต้น (ESP32/Arduino)
     work: ใบงานที่ 4 — ไมโครคอนโทรลเลอร์และเครื่องมือจำลอง Wokwi
     due: ก่อนคาบสัปดาห์ที่ 5
-    form: "#"
+    form: "https://docs.google.com/forms/d/e/1FAIpQLSe4QVBxgVPojJfilJrzy-p89adz9l3XFd6PqhWAQ2B-zkWJKg/viewform?usp=dialog"
   - n: 5
     topic: การเชื่อมต่อสัญญาณดิจิทัลและแอนะล็อก
     work: ใบงานที่ 5 — การเชื่อมต่อสัญญาณดิจิทัลและแอนะล็อก (GPIO/ADC/PWM)

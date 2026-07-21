@@ -29,10 +29,10 @@ assignments:
     due: ก่อนคาบสัปดาห์ที่ 5
     form: "https://docs.google.com/forms/d/e/1FAIpQLSe4QVBxgVPojJfilJrzy-p89adz9l3XFd6PqhWAQ2B-zkWJKg/viewform?usp=dialog"
   - n: 5
-    topic: การเชื่อมต่อสัญญาณดิจิทัลและแอนะล็อก
-    work: ใบงานที่ 5 — การเชื่อมต่อสัญญาณดิจิทัลและแอนะล็อก (GPIO/ADC/PWM)
+    topic: การเชื่อมต่อและสั่งงาน Motor
+    work: ใบงานที่ 5 — Motor
     due: ก่อนคาบสัปดาห์ที่ 6
-    form: "#"
+    form: "https://docs.google.com/forms/d/e/1FAIpQLSeQB2q--x2vMY8taE8dA_mme0QrINyKLCn91GaEUta2ErKGcQ/viewform?usp=dialog"
   - n: 6
     topic: การแสดงผลข้อมูลผ่าน จอ
     work: ใบงานที่ 6 — การใช้โพรโทคอลสื่อสารอุปกรณ์ (I2C/SPI/UART)

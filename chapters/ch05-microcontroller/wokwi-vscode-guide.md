@@ -11,7 +11,7 @@ title: คู่มือการติดตั้งและใช้งา�
 
 ## 📋 สิ่งที่ต้องเตรียม (Prerequisites)
 
-1. โปรแกรม **Visual Studio Code (VS Code)** ติดตั้งเรียบร้อยแล้ว
+1. โปรแกรม **Visual Studio Code (VS Code)** ติดตั้งเรียบร้อยแล้ว (ดาวน์โหลดได้ที่: [https://code.visualstudio.com/Download](https://code.visualstudio.com/Download))
 2. การเชื่อมต่ออินเทอร์เน็ต (สำหรับการดาวน์โหลด Extension และขอรับ License ในครั้งแรก)
 
 ---

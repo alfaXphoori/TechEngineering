@@ -5,7 +5,7 @@ title: คู่มือการติดตั้งและใช้งา�
 
 # คู่มือการติดตั้งและใช้งาน Wokwi Simulator บน Visual Studio Code (VS Code)
 
-เอกสารนี้รวบรวมขั้นตอนการติดตั้งและตั้งค่า **Wokwi Simulator** บน **VS Code** เพื่อจำลองการทำงานของไมโครคอนโทรลเลอร์ **ESP32** ร่วมกับ **PlatformIO** โดยอ้างอิงจากวิดีโอสอน: [Install and Use Wokwi in V S Code (YouTube)](https://www.youtube.com/watch?v=ECNTyMm_5PE)
+เอกสารนี้รวบรวมขั้นตอนการติดตั้งและตั้งค่า **Wokwi Simulator** บน **VS Code** เพื่อจำลองการทำงานของไมโครคอนโทรลเลอร์ **ESP32** ร่วมกับ **PlatformIO**
 
 ---
 

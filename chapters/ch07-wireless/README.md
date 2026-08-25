@@ -1319,164 +1319,153 @@ $$\text{Link Margin (dB)} = \text{Received Power (dBm)} - \text{Sensitivity (dBm
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
+## 7.6 ปฏิบัติการ Wokwi Lab 7 & 8: การเชื่อมต่อ Wi-Fi Web Server และ Bluetooth Low Energy
 
-## 7.8 กรณีศึกษาทางวิศวกรรม (Engineering Case Studies)
-
-### กรณีศึกษาที่ 1: ระบบวัดการสั่นสะเทือนมอเตอร์ (Predictive Maintenance)
-*   **บริบท:** มอเตอร์ 250 kW ขับพัดลมเตาหลอมเหล็ก จำเป็นต้องตรวจจับสัญญาณเตือนเริ่มแรกของ Bearing Defects
-*   **ข้อมูล:** Sampling Rate 5 kHz, FFT 4096 ค่า = ~8 KB / 10 วินาที
-*   **เทคโนโลยีที่เลือก:** **Wi-Fi 4 (ESP32)** — เนื่องจากต้องส่งข้อมูลขนาดใหญ่บ่อยครั้ง มีไฟ 220V เลี้ยงอยู่แล้ว และมี AP อุตสาหกรรมรองรับอยู่แล้ว
-
-### กรณีศึกษาที่ 2: ระบบตรวจจับสายพานลำเลียงคลังสินค้า (Conveyor Automation)
-*   **บริบท:** สายพาน 400 เมตร ติดตั้งเซ็นเซอร์และปุ่ม E-Stop 120 จุด ในคลังสินค้าเหล็ก
-*   **ข้อมูล:** สัญญาณ Digital I/O ขนาดเล็ก ต้องการความน่าเชื่อถือสูงมาก
-*   **เทคโนโลยีที่เลือก:** **Zigbee Mesh** — โครงสร้างเหล็กบล็อกสัญญาณ Mesh ทำให้ครอบคลุมทุกจุดโดยไม่มีจุดบอด Self-Healing รองรับสิ่งกีดขวางชั่วคราว
-
-### กรณีศึกษาที่ 3: ระบบชลประทานอัจฉริยะฟาร์มปาล์ม 200 เอเคอร์ (Smart Irrigation)
-*   **บริบท:** ฟาร์มปาล์มน้ำมัน 500 ไร่ ติดตั้งเซ็นเซอร์ดิน 80 จุด วาล์วน้ำ 20 จุด
-*   **ข้อมูล:** ข้อมูลสั้น ~10 bytes ส่งทุก 15 นาที อุปกรณ์ใช้แบตเตอรี่/โซลาร์
-*   **เทคโนโลยีที่เลือก:** **LoRaWAN (AS923-1)** — คลื่น Sub-GHz ทะลุต้นปาล์มได้ดี Class A สำหรับเซ็นเซอร์ดิน Class B สำหรับวาล์วน้ำที่ต้องตอบสนองคำสั่งรวดเร็ว
+**รหัสปฏิบัติการ:** LAB-07 | **เวลาปฏิบัติการ:** 2 ชั่วโมง  
+**เป้าหมายการเรียนรู้:** LLO7.1, LLO7.2, LLO8.1, LLO8.2 (CLO2, CLO3, CLO4)  
+**เครื่องมือที่ใช้:** Wokwi Simulator, ESP32, DHT22, รีเลย์, LED แสดงสถานะ Wi-Fi
 
 ---
 
-## 7.9 เกณฑ์การเลือกเทคโนโลยีวิศวกรรมไร้สาย
+### 7.6.1 วัตถุประสงค์เชิงปฏิบัติการ
+1. เชื่อมต่อ ESP32 เข้ากับเครือข่าย Wi-Fi (โหมด STA) และตั้งค่าโหมด Access Point (AP)
+2. สร้างเว็บเซิร์ฟเวอร์ (Embedded HTTP Web Server) เพื่อรายงานค่าเซนเซอร์แบบ Real-time และมีปุ่มกดเปิด-ปิด Relay ผ่านเว็บเบราว์เซอร์
+3. ศึกษาโครงสร้างการส่งข้อมูลแบบกระจายสัญญาณ Bluetooth Low Energy (BLE GATT Server)
 
-### 7.9.1 ปัจจัยสำคัญ (Key Design Factors)
+---
 
-1.  **ขีดจำกัดปริมาณข้อมูล:** ต้องการส่งภาพ/วิดีโอ หรือเพียงค่าตัวเลข?
-2.  **ระยะทางและสภาพแวดล้อม:** มีผนังเหล็ก คอนกรีต หรือพื้นที่โล่ง?
-3.  **แหล่งพลังงาน:** ไฟ 220V หรือแบตเตอรี่?
-4.  **ความจุโหนด:** 10 หรือ 5,000 อุปกรณ์?
-5.  **ต้นทุน CapEx & OpEx:** ซื้อ Gateway เอง หรือจ่ายค่าซิมรายปี?
+### 7.6.2 แผนผังการต่อวงจร (Wiring Table)
 
-### 7.9.2 ผังตัดสินใจ (Decision Flowchart)
+| อุปกรณ์ | ขาของอุปกรณ์ | ขาบนบอร์ด ESP32 DevKit | หน้าที่ / หมายเหตุ |
+|---|---|---|---|
+| **DHT22 Climate Sensor** | DATA | **GPIO 15** | สัญญาณอุณหภูมิและความชื้น |
+| **Relay Module (Fan Control)** | IN | **GPIO 13** | สั่งเปิด-ปิดพัดลมจากหน้าเว็บ |
+| **Wi-Fi Status LED** | Anode (+) | **GPIO 12** (ผ่าน R 330Ω) | ติดสว่างเมื่อต่อ Wi-Fi สำเร็จ |
 
-<div style="text-align: center; margin: 25px 0;">
-<svg viewBox="0 0 760 420" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
-  <title>ผังการตัดสินใจเลือกเทคโนโลยีสื่อสารไร้สาย (Decision Flowchart)</title>
-  <style>
-    .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1.5; rx: 12px; }
-    
-    .node-start { fill: #e2e8f0; stroke: #94a3b8; stroke-width: 2; rx: 18px; }
-    .node-question { fill: #eff6ff; stroke: #3b82f6; stroke-width: 1.5; rx: 6px; }
-    
-    .node-result { stroke-width: 2; rx: 20px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.04)); }
-    .res-cellular { fill: #fee2e2; stroke: #ef4444; }
-    .res-lora { fill: #fffbeb; stroke: #f59e0b; }
-    .res-wifi { fill: #ecfdf5; stroke: #10b981; }
-    .res-zigbee { fill: #f0fdf4; stroke: #22c55e; }
-    .res-ble { fill: #f0f9ff; stroke: #0ea5e9; }
-    
-    .txt-start { font-size: 13.5px; font-weight: bold; fill: #334155; }
-    .txt-question { font-size: 11.5px; font-weight: bold; fill: #1e3a8a; }
-    .txt-q-sub { font-size: 9.5px; fill: #1d4ed8; font-weight: normal; }
-    .txt-result { font-size: 13px; font-weight: bold; fill: #0f172a; }
-    .txt-res-sub { font-size: 10.5px; fill: #475569; }
-    
-    .path-line { fill: none; stroke: #cbd5e1; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .path-flow { fill: none; stroke: #94a3b8; stroke-width: 2; stroke-dasharray: 4 6; stroke-linecap: round; stroke-linejoin: round; animation: march 1.5s linear infinite; }
-    
-    @keyframes march {
-      to { stroke-dashoffset: -10; }
-    }
-  </style>
+---
 
-  <rect x="5" y="5" width="750" height="410" class="bg"/>
-  
-  <defs>
-    <marker id="arrow-flow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-      <path d="M 0 1.5 L 7 5 L 0 8.5 z" fill="#cbd5e1"/>
-    </marker>
-  </defs>
+### 7.6.3 ไฟล์โครงสร้างวงจร `diagram.json` สำหรับ Wokwi
 
-  <!-- Level 0: Start -->
-  <rect x="270" y="15" width="220" height="36" class="node-start"/>
-  <text x="380" y="37" text-anchor="middle" class="txt-start">เริ่มต้นออกแบบระบบไร้สาย</text>
+```json
+{
+  "version": 1,
+  "author": "KSU TechEngineering",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-dht22", "id": "dht1", "top": -140, "left": 120, "attrs": { "temperature": "31.2", "humidity": "58" } },
+    { "type": "wokwi-relay-module", "id": "relay1", "top": 120, "left": 120, "attrs": {} },
+    { "type": "wokwi-led", "id": "led_wifi", "top": 120, "left": -80, "attrs": { "color": "green" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 170, "left": -80, "attrs": { "value": "330" } }
+  ],
+  "connections": [
+    [ "esp:3V3", "dht1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "dht1:GND", "black", [ "v0" ] ],
+    [ "esp:15", "dht1:SDA", "blue", [ "v0" ] ],
 
-  <!-- Connection: Start -> Level 1 Questions -->
-  <path d="M 380 51 L 380 70 L 190 70 L 190 90" class="path-line" marker-end="url(#arrow-flow)"/>
-  <path d="M 380 51 L 380 70 L 570 70 L 570 90" class="path-line" marker-end="url(#arrow-flow)"/>
-  
-  <!-- Level 1 Questions -->
-  <!-- Left: Long Distance -->
-  <rect x="90" y="90" width="200" height="45" class="node-question"/>
-  <text x="190" y="116" text-anchor="middle" class="txt-question">ระยะทางไกล (&gt; 1 km)?</text>
-  
-  <!-- Right: Short Distance -->
-  <rect x="470" y="90" width="200" height="45" class="node-question"/>
-  <text x="570" y="116" text-anchor="middle" class="txt-question">ระยะทางใกล้ (&lt; 100 m)?</text>
+    [ "esp:5V", "relay1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "relay1:GND", "black", [ "v0" ] ],
+    [ "esp:13", "relay1:IN", "purple", [ "v0" ] ],
 
-  <!-- Connection: Level 1 -> Level 2 Questions -->
-  <!-- Left Side Splits -->
-  <path d="M 190 135 L 190 155 L 95 155 L 95 180" class="path-line" marker-end="url(#arrow-flow)"/>
-  <path d="M 190 135 L 190 155 L 285 155 L 285 180" class="path-line" marker-end="url(#arrow-flow)"/>
-  <!-- Right Side Splits -->
-  <path d="M 570 135 L 570 155 L 455 155 L 455 180" class="path-line" marker-end="url(#arrow-flow)"/>
-  <path d="M 570 135 L 570 155 L 655 155 L 655 180" class="path-line" marker-end="url(#arrow-flow)"/>
+    [ "esp:12", "led_wifi:A", "orange", [ "v0" ] ],
+    [ "led_wifi:C", "r1:1", "black", [ "v0" ] ],
+    [ "r1:2", "esp:GND", "black", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}
+```
 
-  <!-- Level 2 Questions -->
-  <!-- LL -->
-  <rect x="20" y="180" width="150" height="50" class="node-question"/>
-  <text x="95" y="202" text-anchor="middle" class="txt-question">แบนด์วิดท์สูง?</text>
-  <text x="95" y="217" text-anchor="middle" class="txt-q-sub">(&gt; 100 kbps)</text>
-  
-  <!-- LR -->
-  <rect x="210" y="180" width="150" height="50" class="node-question"/>
-  <text x="285" y="202" text-anchor="middle" class="txt-question">แบนด์วิดท์ต่ำ?</text>
-  <text x="285" y="217" text-anchor="middle" class="txt-q-sub">(&lt; 10 kbps)</text>
-  
-  <!-- RL -->
-  <rect x="380" y="180" width="150" height="50" class="node-question"/>
-  <text x="455" y="202" text-anchor="middle" class="txt-question">แบนด์วิดท์สูง?</text>
-  <text x="455" y="217" text-anchor="middle" class="txt-q-sub">(&gt; 1 Mbps)</text>
-  
-  <!-- RR -->
-  <rect x="570" y="180" width="170" height="50" class="node-question"/>
-  <text x="655" y="202" text-anchor="middle" class="txt-question">แบนด์วิดท์ต่ำ?</text>
-  <text x="655" y="217" text-anchor="middle" class="txt-q-sub">(&lt; 250 kbps)</text>
+---
 
-  <!-- Connection: Level 2 -> Level 3 Results -->
-  <line x1="95" y1="230" x2="95" y2="270" class="path-line" marker-end="url(#arrow-flow)"/>
-  <line x1="285" y1="230" x2="285" y2="270" class="path-line" marker-end="url(#arrow-flow)"/>
-  <line x1="455" y1="230" x2="455" y2="270" class="path-line" marker-end="url(#arrow-flow)"/>
-  
-  <!-- Connection: RR Split into sub-questions -->
-  <path d="M 655 230 L 655 248 L 577.5 248 L 577.5 270" class="path-line" marker-end="url(#arrow-flow)"/>
-  <path d="M 655 230 L 655 248 L 692.5 248 L 692.5 270" class="path-line" marker-end="url(#arrow-flow)"/>
+### 7.6.4 ซอร์สโค้ดภาษา C++ (Interactive Web Server)
 
-  <!-- Level 3 Results / Sub-questions -->
-  <!-- Result LL (Cellular) -->
-  <rect x="20" y="270" width="150" height="40" class="node-result res-cellular"/>
-  <text x="95" y="287" text-anchor="middle" class="txt-result">Cellular</text>
-  <text x="95" y="301" text-anchor="middle" class="txt-res-sub">(NB-IoT / 5G)</text>
+```cpp
+/**
+ * LAB 07: ESP32 Interactive Web Server for Machine Monitoring & Control
+ * Course: Digital Technology for Engineering, KSU
+ */
 
-  <!-- Result LR (LoRa) -->
-  <rect x="210" y="270" width="150" height="40" class="node-result res-lora"/>
-  <text x="285" y="287" text-anchor="middle" class="txt-result">LoRa / LoRaWAN</text>
-  <text x="285" y="301" text-anchor="middle" class="txt-res-sub">(สำหรับระยะไกลพิเศษ)</text>
+#include <WiFi.h>
+#include <WebServer.h>
+#include <DHT.h>
 
-  <!-- Result RL (Wi-Fi) -->
-  <rect x="380" y="270" width="150" height="40" class="node-result res-wifi"/>
-  <text x="455" y="295" text-anchor="middle" class="txt-result">Wi-Fi</text>
+const char* SSID = "Wokwi-GUEST";
+const char* PASS = "";
 
-  <!-- Sub-questions under RR -->
-  <rect x="525" y="270" width="105" height="45" class="node-question"/>
-  <text x="577.5" y="296" text-anchor="middle" class="txt-question">ต้องการ Mesh?</text>
+#define DHTPIN 15
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
 
-  <rect x="640" y="270" width="105" height="45" class="node-question"/>
-  <text x="692.5" y="296" text-anchor="middle" class="txt-question">ต่อตรงมือถือ?</text>
+#define RELAY_PIN 13
+#define LED_WIFI_PIN 12
 
-  <!-- Connection: Sub-questions -> Final Results -->
-  <line x1="577.5" y1="315" x2="577.5" y2="355" class="path-line" marker-end="url(#arrow-flow)"/>
-  <line x1="692.5" y1="315" x2="692.5" y2="355" class="path-line" marker-end="url(#arrow-flow)"/>
+WebServer server(80);
+bool relayState = false;
 
-  <!-- Final Results from sub-questions -->
-  <rect x="525" y="355" width="105" height="40" class="node-result res-zigbee"/>
-  <text x="577.5" y="380" text-anchor="middle" class="txt-result">Zigbee</text>
+// สร้างหน้าเว็บ HTML / CSS แบบ Responsive
+String sendHTML(float temperature, float humidity, bool isRelayOn) {
+  String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>";
+  html += "<title>KSU IoT Machine Portal</title>";
+  html += "<style>body{font-family:Arial,sans-serif;text-align:center;margin-top:40px;background:#f1f5f9;}";
+  html += ".card{background:#fff;padding:25px;border-radius:12px;box-shadow:0 4px 6px rgba(0,0,0,0.1);max-width:400px;margin:auto;}";
+  html += ".btn{display:inline-block;padding:12px 24px;color:#fff;text-decoration:none;border-radius:6px;font-size:18px;margin-top:15px;}";
+  html += ".btn-on{background:#22c55e;} .btn-off{background:#ef4444;} .val{font-size:24px;font-weight:bold;color:#1e293b;}</style></head>";
+  html += "<body><div class='card'><h2>🏭 Factory Node 01</h2>";
+  html += "<p>🌡️ Temperature: <span class='val'>" + String(temperature, 1) + " &deg;C</span></p>";
+  html += "<p>💧 Humidity: <span class='val'>" + String(humidity, 1) + " %</span></p>";
+  html += "<p>⚙️ Cooling Fan: <b>" + String(isRelayOn ? "<span style='color:#22c55e;'>RUNNING</span>" : "<span style='color:#64748b;'>STOPPED</span>") + "</b></p>";
+  if (isRelayOn) {
+    html += "<a href='/toggle' class='btn btn-off'>Turn OFF Fan</a>";
+  } else {
+    html += "<a href='/toggle' class='btn btn-on'>Turn ON Fan</a>";
+  }
+  html += "</div></body></html>";
+  return html;
+}
 
-  <rect x="640" y="355" width="105" height="40" class="node-result res-ble"/>
-  <text x="692.5" y="380" text-anchor="middle" class="txt-result">BLE</text>
-</svg>
+void handleRoot() {
+  float t = dht.readTemperature();
+  float h = dht.readHumidity();
+  server.send(200, "text/html", sendHTML(t, h, relayState));
+}
+
+void handleToggle() {
+  relayState = !relayState;
+  digitalWrite(RELAY_PIN, relayState ? HIGH : LOW);
+  server.sendHeader("Location", "/");
+  server.send(303);
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(RELAY_PIN, OUTPUT);
+  pinMode(LED_WIFI_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, LOW);
+  digitalWrite(LED_WIFI_PIN, LOW);
+
+  dht.begin();
+
+  Serial.print("[WIFI] Connecting to network...");
+  WiFi.begin(SSID, PASS);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  digitalWrite(LED_WIFI_PIN, HIGH);
+  Serial.println("\n[WIFI] Connected!");
+  Serial.print("[WIFI] Open Browser at: http://");
+  Serial.println(WiFi.localIP());
+
+  server.on("/", handleRoot);
+  server.on("/toggle", handleToggle);
+  server.begin();
+}
+
+void loop() {
+  server.handleClient();
+}
+```
 </div>
 
 ---

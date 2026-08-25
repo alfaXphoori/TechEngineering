@@ -120,14 +120,24 @@ ightarrow 0.0-100.0\%$
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
+## 11.6 ปฏิบัติการ Wokwi Lab 13: ระบบเกตเวย์ท้องถิ่นและแดชบอร์ด Node-RED Real-time
 
-## 11.6 การทดลองและจำลองวงจรบน Wokwi + Node-RED
+**รหัสปฏิบัติการ:** LAB-11 | **เวลาปฏิบัติการ:** 2 ชั่วโมง  
+**เป้าหมายการเรียนรู้:** LLO13.1, LLO13.2 (CLO3, CLO4)  
+**เครื่องมือที่ใช้:** Wokwi Simulator, Node-RED Runtime, ESP32, DHT22, Potentiometer, Relay
 
-การทดลองนี้จำลองบอร์ด ESP32 อ่านค่าเซนเซอร์และส่งข้อมูลผ่าน MQTT ไปแสดงผลบน Node-RED Dashboard พร้อมรับคำสั่งควบคุมสวิตช์จากหน้าจอ Node-RED
+---
 
-### 11.6.1 แผนผังการเชื่อมต่อวงจร (Wiring Table)
+### 11.6.1 วัตถุประสงค์เชิงปฏิบัติการ
+1. ติดตั้งและเขียน Flow ภาษา Node-RED เพื่อรับ-ส่งข้อมูลผ่านโพรโทคอล MQTT
+2. ออกแบบ Dashboard แสดงผลตัวแปรทางวิศวกรรมด้วยเกจ (Gauge) และกราฟเส้นแนวโน้ม (Trend Chart)
+3. ส่งคำสั่งควบคุมสวิตช์เปิด-ปิดปั๊มน้ำจากหน้าจอ Node-RED กลับมายังบอร์ด ESP32
 
-| อุปกรณ์ | ขาอุปกรณ์ | ขาบนบอร์ด ESP32 | หน้าที่ / หมายเหตุ |
+---
+
+### 11.6.2 แผนผังการต่อวงจร (Wiring Table)
+
+| อุปกรณ์ | ขาของอุปกรณ์ | ขาบนบอร์ด ESP32 | หน้าที่ / หมายเหตุ |
 |---|---|---|---|
 | **DHT22** | DATA | **GPIO 15** | อุณหภูมิและความชื้น |
 | **Potentiometer (Speed)** | SIG | **GPIO 34** | จำลองความเร็วรอบปั๊ม (0-3000 RPM) |
@@ -136,7 +146,45 @@ ightarrow 0.0-100.0\%$
 
 ---
 
-### 11.6.2 โค้ดโปรแกรม Arduino C++ สำหรับ ESP32 Node
+### 11.6.3 ไฟล์โครงสร้างวงจร `diagram.json` สำหรับ Wokwi
+
+```json
+{
+  "version": 1,
+  "author": "KSU TechEngineering",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-dht22", "id": "dht1", "top": -140, "left": 120, "attrs": { "temperature": "28.5", "humidity": "60" } },
+    { "type": "wokwi-potentiometer", "id": "pot1", "top": -140, "left": -100, "attrs": { "value": "1500" } },
+    { "type": "wokwi-relay-module", "id": "relay1", "top": 120, "left": 120, "attrs": {} },
+    { "type": "wokwi-led", "id": "led1", "top": 120, "left": -80, "attrs": { "color": "red" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 170, "left": -80, "attrs": { "value": "330" } }
+  ],
+  "connections": [
+    [ "esp:3V3", "dht1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "dht1:GND", "black", [ "v0" ] ],
+    [ "esp:15", "dht1:SDA", "blue", [ "v0" ] ],
+
+    [ "esp:3V3", "pot1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "pot1:GND", "black", [ "v0" ] ],
+    [ "esp:34", "pot1:SIG", "green", [ "v0" ] ],
+
+    [ "esp:5V", "relay1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "relay1:GND", "black", [ "v0" ] ],
+    [ "esp:13", "relay1:IN", "purple", [ "v0" ] ],
+
+    [ "esp:12", "led1:A", "orange", [ "v0" ] ],
+    [ "led1:C", "r1:1", "black", [ "v0" ] ],
+    [ "r1:2", "esp:GND", "black", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}
+```
+
+---
+
+### 11.6.4 ซอร์สโค้ดภาษา C++ สำหรับ ESP32 Node
 
 ```cpp
 /**
@@ -155,7 +203,6 @@ const char* WIFI_PASS = "";
 const char* MQTT_BROKER = "broker.hivemq.com";
 const int   MQTT_PORT   = 1883;
 
-// กำหนด Topics สำหรับคุยกับ Node-RED
 const char* TOPIC_TELEMETRY = "ksu/nodered/telemetry";
 const char* TOPIC_CONTROL   = "ksu/nodered/control";
 
@@ -176,16 +223,14 @@ void callback(char* topic, byte* payload, unsigned int length) {
   String message = "";
   for (unsigned int i = 0; i < length; i++) message += (char)payload[i];
   
-  Serial.printf("[COMMAND FROM NODE-RED] Topic: %s | Payload: %s
-", topic, message.c_str());
+  Serial.printf("[COMMAND FROM NODE-RED] Topic: %s | Payload: %s\n", topic, message.c_str());
 
   JsonDocument doc;
   if (!deserializeJson(doc, message)) {
     if (doc.containsKey("pump")) {
       bool pumpState = doc["pump"];
       digitalWrite(RELAY_PIN, pumpState ? HIGH : LOW);
-      Serial.printf("[ACTUATOR] Pump Relay set to: %s
-", pumpState ? "ON" : "OFF");
+      Serial.printf("[ACTUATOR] Pump Relay set to: %s\n", pumpState ? "ON" : "OFF");
     }
   }
 }
@@ -247,7 +292,7 @@ void loop() {
 
 ---
 
-### 11.6.3 ไฟล์ Exportable Node-RED Flow JSON (พร้อม Import ใช้งานได้ทันที)
+### 11.6.5 ไฟล์ Exportable Node-RED Flow JSON (พร้อม Import ใช้งานได้ทันที)
 
 คัดลอก JSON ด้านล่างนี้ไปที่เมนู **Import** บนโปรแกรม Node-RED เพื่อสร้างแดชบอร์ดทันที:
 
@@ -281,11 +326,7 @@ void loop() {
     "type": "function",
     "z": "tab_ch11_dashboard",
     "name": "Parse Sensor Metrics",
-    "func": "var tempMsg = { payload: msg.payload.temp };
-var humidMsg = { payload: msg.payload.humid };
-var rpmMsg = { payload: msg.payload.rpm };
-var pumpMsg = { payload: msg.payload.pump_running ? 'RUNNING' : 'STOPPED' };
-return [tempMsg, humidMsg, rpmMsg, pumpMsg];",
+    "func": "var tempMsg = { payload: msg.payload.temp };\nvar humidMsg = { payload: msg.payload.humid };\nvar rpmMsg = { payload: msg.payload.rpm };\nvar pumpMsg = { payload: msg.payload.pump_running ? 'RUNNING' : 'STOPPED' };\nreturn [tempMsg, humidMsg, rpmMsg, pumpMsg];",
     "outputs": 4,
     "noerr": 0,
     "initialize": "",
@@ -354,7 +395,6 @@ return [tempMsg, humidMsg, rpmMsg, pumpMsg];",
   }
 ]
 ```
-
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Reference / Summary" data-tab-icon="📊" id="waveform" markdown="1">

@@ -163,152 +163,155 @@ ML ให้คอมพิวเตอร์ **เรียนรู้รู�
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
+## 13.6 ปฏิบัติการ Wokwi Lab 15: การตรวจจับความผิดปกติของแรงสั่นสะเทือนมอเตอร์ด้วยการเรียนรู้ของเครื่อง (TinyML / Edge AI)
 
-## 13.6 TinyML และ Edge AI (TinyML and Edge AI)
-
-แนวคิดดั้งเดิมของการเรียนรู้ของเครื่อง (Machine Learning) คือการส่งข้อมูลดิบจากเซนเซอร์บนอุปกรณ์ IoT ขึ้นไปประมวลผลบนคลาวด์หรือเซิร์ฟเวอร์ขนาดใหญ่ เนื่องจากข้อจำกัดด้านหน่วยประมวลผลและหน่วยความจำของอุปกรณ์ปลายทาง (Edge Devices) อย่างไรก็ตาม แนวทางนี้ก่อให้เกิดปัญหาความล่าช้าในการรับส่งข้อมูล (Latency) ปัญหาความเป็นส่วนตัวและความปลอดภัยของข้อมูล (Data Privacy) และปัญหาความจำเป็นในการเชื่อมต่ออินเทอร์เน็ตตลอดเวลา
-
-**TinyML (Tiny Machine Learning)** เป็นเทคโนโลยีที่เกิดขึ้นเพื่อแก้ปัญหาเหล่านี้ โดยมุ่งเน้นการย่อขนาดโมเดลการเรียนรู้ของเครื่องเพื่อให้สามารถนำไปรันบนอุปกรณ์ไมโครคอนโทรลเลอร์ที่มีทรัพยากรจำกัดมาก (เช่น RAM ขนาดหลักกิโลไบต์ และ Flash ขนาดหลักเมกะไบต์) ได้โดยตรงแบบออฟไลน์ 100%
-
-### 13.6.1 เทคนิคการเพิ่มประสิทธิภาพโมเดลสำหรับ TinyML (Model Optimization Techniques)
-
-การจะนำโมเดล Deep Learning หรือโมเดลอื่น ๆ ที่มีขนาดหลายร้อยเมกะไบต์มารันบนชิปขนาดเล็ก เช่น ESP32 จำเป็นต้องใช้เทคนิคการบีบอัดและปรับแต่งโมเดลดังนี้:
-
-1. **Model Quantization (การแปลงระดับข้อมูลควอนไทเซชัน)**:
-   - โดยปกติ น้ำหนัก (Weights) และค่า Bias ของโมเดลประสาทเทียมจะถูกเก็บในรูปแบบทศนิยมแบบความละเอียดเดี่ยว (Float32 - 32 บิต)
-   - Quantization คือการแปลงค่าเหล่านี้ให้เป็นจำนวนเต็มที่มีขนาดเล็กลง เช่น จำนวนเต็มแบบมีเครื่องหมาย 8 บิต (Int8)
-   - **ผลลัพธ์**: ขนาดโมเดลลดลงถึง 4 เท่าทันที (เช่น จาก 4 MB เหลือ 1 MB) และช่วยเร่งความเร็วในการประมวลผล เนื่องจากไมโครคอนโทรลเลอร์ส่วนใหญ่ไม่มีหน่วยคำนวณทศนิยม (FPU) ที่รวดเร็วเท่ากับการคำนวณจำนวนเต็ม
-2. **Model Pruning (การตัดแต่งกิ่งโครงข่าย)**:
-   - เป็นการตรวจสอบค่าน้ำหนัก (Weights) ในโมเดลประสาทเทียม แล้วทำการสลัดหรือเปลี่ยนค่าความเชื่อมโยงที่ใกล้เคียงศูนย์ หรือไม่มีความสำคัญต่อผลการตัดสินใจให้กลายเป็นศูนย์โดยสิ้นเชิง
-   - **ผลลัพธ์**: ลดจำนวนการคำนวณเชิงคณิตศาสตร์ลง ทำให้บีบอัดไฟล์โมเดลลงได้มากขึ้นและใช้เวลาในการอินเฟอเรนซ์ (Inference) น้อยลง
-3. **Operator Fusion (การยุบรวมขั้นตอนคำนวณ)**:
-   - การยุบรวมเลเยอร์ทางคณิตศาสตร์ที่ทำงานเรียงต่อกัน เช่น เลเยอร์ Activation (เช่น ReLU) ยุบรวมเข้ากับเลเยอร์ Convolution เพื่อให้ทำประมวลผลเสร็จในขั้นตอนเดียวโดยไม่ต้องจองหน่วยความจำชั่วคราวซ้ำซ้อน
+**รหัสปฏิบัติการ:** LAB-13 | **เวลาปฏิบัติการ:** 2 ชั่วโมง  
+**เป้าหมายการเรียนรู้:** LLO15.1, LLO15.2 (CLO1, CLO4)  
+**เครื่องมือที่ใช้:** Wokwi Simulator, Google Colab (Python ML), ESP32, Potentiometer (Vibration sensor sim), Relay, LEDs (Normal/Anomaly)
 
 ---
 
-### 13.6.2 กระบวนการทำงานของ Edge Impulse (Edge Impulse Pipeline)
+### 13.6.1 วัตถุประสงค์เชิงปฏิบัติการ
+1. รวบรวมชุดข้อมูลอนุกรมเวลาและเขียนฟังก์ชันสกัดฟีเจอร์ทางสถิติ (Mean, RMS, Peak-to-Peak, Variance) บน ESP32
+2. พัฒนาและทดสอบแบบจำลองตรวจจับความผิดปกติ (Anomaly Detection / Threshold-Classifier) บน Google Colab
+3. ฝังแบบจำลองลงบนชิปไมโครคอนโทรลเลอร์ (On-Device Inference) เพื่อตัดสินใจสั่งตัดการทำงานของเครื่องจักรภายใน $50\text{ ms}$
 
-**Edge Impulse** เป็นแพลตฟอร์มการพัฒนา TinyML แบบ End-to-End ที่ช่วยให้นักพัฒนาสามารถสร้าง สเปค และนำโมเดลไปปรับใช้บนไมโครคอนโทรลเลอร์ได้ง่ายขึ้น โดยมีกระบวนการหลัก 4 ขั้นตอนดังนี้:
+---
 
-1. **Data Acquisition (การเก็บรวบรวมข้อมูล)**: การสตรีมหรืออัปโหลดสัญญาณดิบจากเซนเซอร์จริง (เช่น อุณหภูมิ, เสียง, แรงสั่นสะเทือน) เข้าสู่ระบบพร้อมป้ายกำกับสภาพการณ์ (Labels) เช่น ปกติ (Normal) หรือ ผิดปกติ (Anomaly) เพื่อใช้เป็นฐานข้อมูล
-2. **DSP / Feature Extraction (การประมวลผลสัญญาณดั้งเดิม)**: แปลงข้อมูลสัญญาณดิบแบบอนุกรมเวลา (Time-series) ให้เป็นคุณลักษณะสำคัญ เช่น ใช้ Spectral Analysis หรือ Fast Fourier Transform (FFT) เพื่อสกัดข้อมูลย่านความถี่ ช่วยให้โมเดลแยกแยะความแตกต่างได้ง่ายขึ้นและลดมิติของข้อมูลขาเข้า
-3. **Model Training (การฝึกฝนโมเดล)**: นำฟีเจอร์ที่ได้ไปฝึกสอนโมเดล เช่น โครงข่ายประสาทเทียมขนาดเล็ก (Dense/CNN) หรืออัลกอริทึม Anomaly Detection แบบไม่มีผู้สอน (Unsupervised Learning) เพื่อตรวจหาความผิดปกติของสัญญาณที่ไม่อยู่ในกลุ่มปกติ
-4. **Deployment & Target Build (การแปลงรหัสและปรับใช้)**: ทำการทดสอบประสิทธิภาพ (Latency, RAM/Flash Usage) จากนั้นคอมไพล์และแปลงโมเดลให้ออกมาอยู่ในรูปของไลบรารีภาษา C++ (เช่น Arduino Library หรือ ESP-IDF Component) โดยใช้ **EON Compiler** ของ Edge Impulse ซึ่งไม่ใช้ Dynamic memory allocation (ไม่มีการจอง RAM ขณะรัน) ช่วยให้ทำงานเสถียรบนชิป
+### 13.6.2 แผนผังการต่อวงจร (Wiring Table)
 
-<div style="text-align: center; margin: 25px 0;">
-<svg viewBox="0 0 820 380" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
-  <title>TinyML Pipeline: จากคลาวด์สู่ไมโครคอนโทรลเลอร์</title>
-  <style>
-    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; rx: 12px; }
-    .box { fill: #faf5ff; stroke: #7c3aed; stroke-width: 2; rx: 8px; }
-    .component { fill: #ffffff; stroke: #334155; stroke-width: 2; rx: 4px; }
-    .conn-line { fill: none; stroke: #334155; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 8 8; }
-    .conn-flow1 { animation: flowDash1 4s linear infinite; }
-    .conn-flow2 { animation: flowDash2 3s linear infinite; }
-    .text-main { font-size: 14px; font-weight: 700; fill: #1e293b; }
-    .text-sub { font-size: 12px; fill: #64748b; }
-    .text-code { font-size: 11px; font-weight: 700; fill: #7c3aed; font-family: monospace; }
-    .node-active { fill: #7c3aed; stroke: #ffffff; stroke-width: 1.5; animation: pulseNode 2s infinite alternate; }
-    .node-pruned { fill: #cbd5e1; stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 2 2; }
-    .net-link-active { stroke: #7c3aed; stroke-width: 1.5; stroke-linecap: round; }
-    .net-link-pruned { stroke: #cbd5e1; stroke-width: 1.5; stroke-dasharray: 2 2; stroke-linecap: round; }
-    @keyframes flowDash1 {
-      to { stroke-dashoffset: -40; }
-    }
-    @keyframes flowDash2 {
-      to { stroke-dashoffset: -40; }
-    }
-    @keyframes pulseNode {
-      0% { r: 5px; }
-      100% { r: 7px; }
-    }
-  </style>
-  <rect x="5" y="5" width="810" height="370" class="bg"/>
-  
-  <!-- Title -->
-  <text x="410" y="42" font-size="16" font-weight="700" fill="#1e293b" text-anchor="middle">ภาพที่ 10.1: กระบวนการพัฒนาและบีบอัดโมเดล TinyML (Pipeline)</text>
-  
-  <!-- 1. Cloud Block -->
-  <rect x="40" y="80" width="200" height="230" class="box"/>
-  <path d="M 140 120 C 130 120, 125 125, 120 130 C 110 125, 95 130, 95 145 C 95 155, 105 165, 120 165 L 160 165 C 175 165, 185 155, 185 145 C 185 135, 175 125, 165 120 C 165 110, 150 110, 140 120 Z" class="component"/>
-  <text x="140" y="195" class="text-main" text-anchor="middle">1. ฝึกโมเดลบน Cloud</text>
-  <text x="140" y="218" class="text-sub" text-anchor="middle">ฝึกโมเดลขนาดใหญ่แบบทศนิยม</text>
-  <text x="140" y="238" class="text-code" text-anchor="middle">Precision: Float32</text>
-  <text x="140" y="260" class="text-sub" text-anchor="middle">• RAM/Flash เหลือเฟือ</text>
-  <text x="140" y="280" class="text-sub" text-anchor="middle">• พลังคำนวณสูง (GPU)</text>
-  <text x="140" y="300" class="text-code" fill="#7c3aed" text-anchor="middle">ขนาดโมเดล: ~10MB - 100MB</text>
-  
-  <!-- Arrow 1 -->
-  <path d="M 240 195 L 320 195" class="conn-line conn-flow1" id="flow1"/>
-  <circle r="5" fill="#f59e0b">
-    <animateMotion dur="4s" repeatCount="indefinite">
-      <mpath href="#flow1"/>
-    </animateMotion>
-  </circle>
+| อุปกรณ์ | ขาของอุปกรณ์ | ขาบนบอร์ด ESP32 | หน้าที่ในระบบ TinyML |
+|---|---|---|---|
+| **Vibration Sensor Sim (Potentiometer)** | SIG | **GPIO 34** (ADC1) | สัญญาณความเร่งการสั่นสะเทือนต่อเนื่อง |
+| **Normal Status LED (สีเขียว)** | Anode (+) | **GPIO 18** (ผ่าน R 330Ω) | ติดเมื่อโมเดลทำนายสถานะ: NORMAL |
+| **Anomaly Alarm LED (สีแดง)** | Anode (+) | **GPIO 19** (ผ่าน R 330Ω) | ติดเมื่อโมเดลทำนายสถานะ: ANOMALY |
+| **Safety Trip Relay** | IN | **GPIO 13** | สั่งตัดกระแสไฟเมื่อเครื่องจักรผิดปกติ |
 
-  <!-- 2. Optimization Block -->
-  <rect x="320" y="80" width="220" height="230" class="box"/>
-  
-  <!-- Neural Net showing Pruning inside Opt Block -->
-  <!-- Layer 1 -->
-  <circle cx="360" cy="130" r="5" class="node-active"/>
-  <circle cx="360" cy="160" r="5" class="node-active"/>
-  <circle cx="360" cy="190" r="5" class="node-active"/>
-  <!-- Layer 2 -->
-  <circle cx="410" cy="115" r="5" class="node-active"/>
-  <circle cx="410" cy="145" r="5" class="node-pruned"/> <!-- Pruned -->
-  <circle cx="410" cy="175" r="5" class="node-active"/>
-  <circle cx="410" cy="205" r="5" class="node-pruned"/> <!-- Pruned -->
-  <!-- Layer 3 -->
-  <circle cx="460" cy="130" r="5" class="node-active"/>
-  <circle cx="460" cy="160" r="5" class="node-active"/>
-  <circle cx="460" cy="190" r="5" class="node-active"/>
-  
-  <!-- Connections -->
-  <line x1="360" y1="130" x2="410" y2="115" class="net-link-active"/>
-  <line x1="360" y1="130" x2="410" y2="145" class="net-link-pruned"/>
-  <line x1="360" y1="160" x2="410" y2="175" class="net-link-active"/>
-  <line x1="360" y1="190" x2="410" y2="175" class="net-link-active"/>
-  <line x1="410" y1="115" x2="460" y2="130" class="net-link-active"/>
-  <line x1="410" y1="175" x2="460" y2="160" class="net-link-active"/>
-  <line x1="410" y1="175" x2="460" y2="190" class="net-link-active"/>
+---
 
-  <text x="430" y="235" class="text-main" text-anchor="middle">2. ลดรูป &amp; บีบอัดโมเดล</text>
-  <text x="430" y="255" class="text-sub" text-anchor="middle">Quantize (Float32 → Int8)</text>
-  <text x="430" y="275" class="text-sub" text-anchor="middle">Prune (ตัดน้ำหนักใกล้ศูนย์)</text>
-  <text x="430" y="295" class="text-code" text-anchor="middle">ขนาดลดลง 4x - 10x</text>
+### 13.6.3 ไฟล์โครงสร้างวงจร `diagram.json` สำหรับ Wokwi
 
-  <!-- Arrow 2 -->
-  <path d="M 540 195 L 590 195" class="conn-line conn-flow2" id="flow2"/>
-  <circle r="5" fill="#f59e0b">
-    <animateMotion dur="3s" repeatCount="indefinite">
-      <mpath href="#flow2"/>
-    </animateMotion>
-  </circle>
+```json
+{
+  "version": 1,
+  "author": "KSU TechEngineering",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-potentiometer", "id": "pot1", "top": -140, "left": -100, "attrs": { "value": "2048" } },
+    { "type": "wokwi-led", "id": "led_norm", "top": -140, "left": 80, "attrs": { "color": "green" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": -90, "left": 80, "attrs": { "value": "330" } },
+    { "type": "wokwi-led", "id": "led_anom", "top": -140, "left": 140, "attrs": { "color": "red" } },
+    { "type": "wokwi-resistor", "id": "r2", "top": -90, "left": 140, "attrs": { "value": "330" } },
+    { "type": "wokwi-relay-module", "id": "relay1", "top": 120, "left": 100, "attrs": {} }
+  ],
+  "connections": [
+    [ "esp:3V3", "pot1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "pot1:GND", "black", [ "v0" ] ],
+    [ "esp:34", "pot1:SIG", "green", [ "v0" ] ],
 
-  <!-- 3. Edge MCU Block -->
-  <rect x="590" y="80" width="190" height="230" class="box"/>
-  <!-- MCU representation -->
-  <rect x="655" y="120" width="60" height="50" class="component"/>
-  <!-- MCU pins -->
-  <line x1="655" y1="130" x2="648" y2="130" stroke="#334155" stroke-width="2"/>
-  <line x1="655" y1="140" x2="648" y2="140" stroke="#334155" stroke-width="2"/>
-  <line x1="655" y1="150" x2="648" y2="150" stroke="#334155" stroke-width="2"/>
-  <line x1="655" y1="160" x2="648" y2="160" stroke="#334155" stroke-width="2"/>
-  <line x1="715" y1="130" x2="722" y2="130" stroke="#334155" stroke-width="2"/>
-  <line x1="715" y1="140" x2="722" y2="140" stroke="#334155" stroke-width="2"/>
-  <line x1="715" y1="150" x2="722" y2="150" stroke="#334155" stroke-width="2"/>
-  <line x1="715" y1="160" x2="722" y2="160" stroke="#334155" stroke-width="2"/>
-  <text x="685" y="148" font-size="10" font-weight="700" fill="#334155" text-anchor="middle">ESP32</text>
-  
-  <text x="685" y="195" class="text-main" text-anchor="middle">3. รันบน Edge MCU</text>
-  <text x="685" y="218" class="text-sub" text-anchor="middle">คอมไพล์เป็นไลบรารี C++</text>
-  <text x="685" y="238" class="text-code" fill="#16a34a" text-anchor="middle">Precision: Int8</text>
-  <text x="685" y="260" class="text-sub" text-anchor="middle">• ออฟไลน์ 100% (No Net)</text>
-  <text x="685" y="280" class="text-sub" text-anchor="middle">• ดีเลย์ต่ำ &amp; ปลอดภัย</text>
-  <text x="685" y="300" class="text-code" fill="#16a34a" text-anchor="middle">ขนาดโมเดล: &lt; 100KB</text>
-</svg>
-<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 10.1 แสดงขั้นตอนการนำโมเดลการเรียนรู้ของเครื่องจากระบบคลาวด์มาย่อขนาดและปรับให้เหมาะสมก่อนนำไปรันบนหน่วยประมวลผลขนาดเล็ก</div>
+    [ "esp:18", "r1:1", "orange", [ "v0" ] ],
+    [ "r1:2", "led_norm:A", "orange", [ "v0" ] ],
+    [ "led_norm:C", "esp:GND", "black", [ "v0" ] ],
+
+    [ "esp:19", "r2:1", "orange", [ "v0" ] ],
+    [ "r2:2", "led_anom:A", "orange", [ "v0" ] ],
+    [ "led_anom:C", "esp:GND", "black", [ "v0" ] ],
+
+    [ "esp:5V", "relay1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "relay1:GND", "black", [ "v0" ] ],
+    [ "esp:13", "relay1:IN", "purple", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}
+```
+
+---
+
+### 13.6.4 ซอร์สโค้ดภาษา C++ (On-Device Feature Extraction & TinyML Inference)
+
+```cpp
+/**
+ * LAB 13: Edge AI / TinyML Motor Vibration Anomaly Detection
+ * Course: Digital Technology for Engineering, KSU
+ */
+
+#include <math.h>
+
+const int VIB_SENSOR_PIN = 34;
+const int LED_NORMAL_PIN = 18;
+const int LED_ANOMALY_PIN = 19;
+const int RELAY_TRIP_PIN = 13;
+
+const int SAMPLE_WINDOW = 64; // สุ่มเก็บข้อมูล 64 จุดต่อรอบการวิเคราะห์
+float rawBuffer[SAMPLE_WINDOW];
+
+const float RMS_ANOMALY_THRESHOLD = 2.85; // ค่าเกิน 2.85 G ถือว่าผิดปกติ
+const float P2P_ANOMALY_THRESHOLD = 4.20; // Peak-to-Peak เกิน 4.20 G
+
+void extractFeatures(float* buffer, int size, float& mean, float& rms, float& p2p) {
+  float sum = 0;
+  float sumSq = 0;
+  float minVal = 999.0;
+  float maxVal = -999.0;
+
+  for (int i = 0; i < size; i++) {
+    sum += buffer[i];
+    sumSq += (buffer[i] * buffer[i]);
+    if (buffer[i] < minVal) minVal = buffer[i];
+    if (buffer[i] > maxVal) maxVal = buffer[i];
+  }
+
+  mean = sum / size;
+  rms = sqrt(sumSq / size);
+  p2p = maxVal - minVal;
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(LED_NORMAL_PIN, OUTPUT);
+  pinMode(LED_ANOMALY_PIN, OUTPUT);
+  pinMode(RELAY_TRIP_PIN, OUTPUT);
+
+  digitalWrite(RELAY_TRIP_PIN, HIGH); // เริ่มต้นจ่ายไฟให้มอเตอร์
+  digitalWrite(LED_NORMAL_PIN, HIGH);
+  digitalWrite(LED_ANOMALY_PIN, LOW);
+
+  Serial.println("\n--- LAB 13: TinyML On-Device Vibration Inference Engine Initialized ---");
+}
+
+void loop() {
+  // 1. สุ่มเก็บข้อมูลการสั่นสะเทือนที่ความถี่ 500 Hz
+  for (int i = 0; i < SAMPLE_WINDOW; i++) {
+    int raw = analogRead(VIB_SENSOR_PIN);
+    rawBuffer[i] = ((raw - 2048) / 2048.0) * 5.0; // แปลงเป็นค่าความเร่ง -5.0 ถึง +5.0 G
+    delayMicroseconds(2000); // Sampling interval 2ms
+  }
+
+  // 2. สกัดฟีเจอร์ในหน่วยความจำของ MCU
+  float mean, rms, p2p;
+  extractFeatures(rawBuffer, SAMPLE_WINDOW, mean, rms, p2p);
+
+  // 3. ทำการอนุมาน (Edge Inference)
+  bool isAnomaly = (rms > RMS_ANOMALY_THRESHOLD) || (p2p > P2P_ANOMALY_THRESHOLD);
+
+  // 4. แสดงผลและตัดการทำงานเพื่อความปลอดภัย
+  if (isAnomaly) {
+    digitalWrite(LED_NORMAL_PIN, LOW);
+    digitalWrite(LED_ANOMALY_PIN, HIGH);
+    digitalWrite(RELAY_TRIP_PIN, LOW); // ตัดไฟมอเตอร์ฉุกเฉิน
+    Serial.printf("[EDGE AI ALERT] *** ANOMALY DETECTED! *** | RMS: %4.2f G | P2P: %4.2f G -> Motor TRIPPED\n", rms, p2p);
+  } else {
+    digitalWrite(LED_NORMAL_PIN, HIGH);
+    digitalWrite(LED_ANOMALY_PIN, LOW);
+    digitalWrite(RELAY_TRIP_PIN, HIGH);
+    Serial.printf("[EDGE AI STATUS] NORMAL OPERATION | Mean: %+4.2f | RMS: %4.2f G | P2P: %4.2f G\n", mean, rms, p2p);
+  }
+
+  delay(500);
+}
+```
+</div>
 </div>
 
 ---

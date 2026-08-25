@@ -713,273 +713,116 @@ IoT มีบทบาทสำคัญอย่างยิ่งในวง�
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
+## 1.5 ปฏิบัติการ Wokwi Lab 1: รู้จักระบบ IoT และการจำลองบอร์ด ESP32
 
-## 1.8 การเขียนโปรแกรมและประมวลผลข้อมูลในระบบ IoT (Programming and Data Processing in IoT)
-
-การเชื่อมต่อและสั่งงานอุปกรณ์ในระบบ IoT จำเป็นต้องอาศัยทักษะการพัฒนาโปรแกรม ทั้งในส่วนของอุปกรณ์ปลายทาง (Edge Devices) ที่มักทำงานอยู่บนฮาร์ดแวร์ขนาดเล็ก และในส่วนของระบบจัดการข้อมูล/คลาวด์ (Cloud/Server-side) ที่ทำหน้าที่รวบรวมและวิเคราะห์ข้อมูล
-
-### 1.8.1 พื้นฐานการพัฒนาโปรแกรมด้วยภาษา C++ สำหรับไมโครคอนโทรลเลอร์ (C++ Programming Foundations for IoT)
-
-เพื่อเตรียมความพร้อมสำหรับผู้เริ่มต้นในการเขียนโค้ดควบคุมไมโครคอนโทรลเลอร์ (เช่น ESP32 หรือ Arduino) ต่อไปนี้คือโครงสร้างพื้นฐานของภาษา C++ ที่สำคัญและพบเจอได้บ่อยที่สุดในงานด้าน IoT:
-
-#### 1) ชนิดข้อมูลจำนวนเต็ม (`int`) และตัวแปรเบื้องต้น
-การทำงานกับตัวแปรใน C++ จะต้องประกาศชนิดข้อมูล (Data Type) ก่อนเสมอ ตัวแปรประเภทจำนวนเต็ม (`int`) ใช้ในการเก็บข้อมูลตัวเลขที่ไม่มีเศษส่วน เช่น หมายเลขขาพินควบคุม อัตราสุ่มสัญญาณ หรือลำดับของข้อความส่งออก
-
-```cpp
-int sensorPin = 34;      // ประกาศตัวแปรจำนวนเต็มสำหรับขาเชื่อมต่อเซนเซอร์
-int baudRate = 115200;   // อัตราบอดเรตสำหรับการสื่อสารแบบอนุกรม
-int readInterval = 1000; // รอบเวลาการอ่านค่าเซนเซอร์ (มิลลิวินาที)
-```
-
-นอกจากจำนวนเต็ม `int` แล้ว ในงาน IoT ยังใช้ชนิดข้อมูลประเภทอื่นควบคู่ไปด้วย ได้แก่ `float` (ตัวเลขทศนิยม เช่น อุณหภูมิ 25.4) และ `bool` (สถานะลอจิกจริง/เท็จ เช่น `true` เพื่อสั่งเปิดรีเลย์)
-
-#### 2) โครงสร้างการทำงานแบบทำซ้ำ `for` loop
-ใช้สำหรับสั่งให้บล็อกคำสั่งวนทำงานซ้ำเป็นจำนวนรอบที่ทราบเงื่อนไขชัดเจนล่วงหน้า ตัวอย่างเช่น การหาค่าเฉลี่ยของเซนเซอร์โดยการสุ่มอ่านค่า 10 ครั้ง
-
-```cpp
-float totalValue = 0;
-int readCount = 10; // จำนวนรอบที่ต้องการทำซ้ำ
-
-for (int i = 0; i < readCount; i++) {
-  // เริ่มต้น i = 0, ทำซ้ำจนกว่า i < 10, โดยบวกค่า i เพิ่มทีละ 1 ทุกครั้งที่จบรอบ (i++)
-  totalValue += analogRead(sensorPin); // อ่านสัญญาณแอนะล็อกและนำมาบวกสะสม
-  delay(10); // หน่วงเวลาสั้น ๆ ระหว่างการอ่านแต่ละครั้ง
-}
-
-float averageValue = totalValue / readCount; // คำนวณหาค่าเฉลี่ย
-```
-
-#### 3) โครงสร้างการทำงานแบบทำซ้ำ `while` loop
-ใช้สำหรับสั่งให้วนลูปทำงานซ้ำตราบใดที่เงื่อนไขยังคงเป็นจริง และจะหลุดออกจากลูปเมื่อเงื่อนไขกลายเป็นเท็จ เหมาะสมอย่างยิ่งกับการรอคอยสถานะเหตุการณ์ที่ระบุเวลาเสร็จสิ้นไม่ได้ล่วงหน้า เช่น การรอคอยสัญญาณการเชื่อมต่อเครือข่าย Wi-Fi
-
-```cpp
-// สมมติ WiFi.status() เป็นฟังก์ชันตรวจสอบสถานะของ Wi-Fi
-// และ WL_CONNECTED เป็นค่าคงที่แสดงสถานะว่าเชื่อมต่อสำเร็จแล้ว
-while (WiFi.status() != WL_CONNECTED) {
-  Serial.print(".");
-  delay(500); // วนทำงานซ้ำทุก 0.5 วินาทีจนกว่าจะเชื่อมต่อสำเร็จ
-}
-Serial.println("เชื่อมต่ออินเทอร์เน็ตสำเร็จ!");
-```
-
-#### 4) การสร้างและเรียกใช้งานฟังก์ชัน (Function)
-ฟังก์ชันคือการรวบรวมกลุ่มคำสั่งเข้าด้วยกันเป็นกลุ่มบล็อกย่อยที่มีชื่อเรียกชัดเจน ทำให้เราเรียกใช้งานซ้ำเพื่อประมวลผลข้อมูลเดิมได้สะดวกโดยไม่ต้องเขียนโค้ดซ้ำ
-
-**ตัวอย่างฟังก์ชันคำนวณและประเมินผล:**
-```cpp
-// ฟังก์ชันตรวจสอบขีดจำกัดอุณหภูมิ (มีพารามิเตอร์ 2 ตัว และคืนค่าเป็น Boolean)
-bool checkTemperatureAlarm(float temperature, float limit) {
-  if (temperature > limit) {
-    return true;  // ส่งค่ากลับเป็น true หากพบว่าค่าสูงเกินกว่าขีดจำกัด
-  }
-  return false;   // ส่งค่ากลับเป็น false หากอุณหภูมิยังปลอดภัย
-}
-
-void setup() {
-  Serial.begin(115200);
-  
-  float currentTemp = 76.5;
-  float maxLimit = 75.0;
-  
-  // เรียกใช้งานฟังก์ชัน
-  bool isAlert = checkTemperatureAlarm(currentTemp, maxLimit);
-  
-  if (isAlert) {
-    Serial.println("🔥 Warning: Over-Temperature detected!");
-  } else {
-    Serial.println("✅ Temperature status normal.");
-  }
-}
-
-void loop() {
-  // ละว่างไว้
-}
-```
-
-### 1.8.2 โค้ดตัวอย่างการถอดรหัสและการประมวลผลข้อมูล (JSON Parsing Scripts)
-
-เมื่อข้อมูล JSON ถูกส่งมาถึงระบบเครือข่ายหรือเซิร์ฟเวอร์ โปรแกรมเมอร์จะใช้ภาษาคอมพิวเตอร์ในการแปลงข้อความตัวอักษรกลับมาเป็นวัตถุ (Parsing) และวิเคราะห์เงื่อนไขขีดจำกัดความปลอดภัย (Threshold Checking) โดยเทียบระหว่างฝั่งผู้รับข้อมูลบนเซิร์ฟเวอร์ (เช่น การรันสคริปต์วิเคราะห์ด้วย Python) และฝั่งอุปกรณ์ปลายทาง/ไมโครคอนโทรลเลอร์ (เช่น การใช้ภาษา C++ บน ESP32)
-
-#### ก) สคริปต์ฝั่งเซิร์ฟเวอร์ด้วยภาษา Python (Python Parsing Script)
-
-```python
-import json
-
-# สมมติว่าได้รับข้อความดิบผ่านโปรโตคอล MQTT (ข้อมูลอยู่ในรูปแบบ String)
-raw_mqtt_payload = """
-{
-  "device_id": "VIB-SENS-PUMP003",
-  "timestamp": "2026-06-22T12:59:47.125Z",
-  "sequence_number": 10452,
-  "telemetry": {
-    "vibration_x_rms": 2.45,
-    "vibration_y_rms": 1.89,
-    "vibration_z_rms": 4.12,
-    "peak_acceleration_g": 1.25,
-    "temperature_celsius": 68.30
-  },
-  "diagnostics": {
-    "battery_percent": 94.5,
-    "wifi_rssi_dbm": -67,
-    "system_status": "NORMAL"
-  }
-}
-"""
-
-def process_sensor_data(raw_payload):
-    try:
-        # 1. แปลงโครงสร้างข้อความ JSON String ให้เป็น Python Dictionary (Parsing)
-        data = json.loads(raw_payload)
-        
-        # 2. ดึงค่าตัวแปรวิศวกรรมที่ต้องการตรวจสอบ
-        device_id = data["device_id"]
-        timestamp = data["timestamp"]
-        vib_z = data["telemetry"]["vibration_z_rms"]
-        temp = data["telemetry"]["temperature_celsius"]
-        
-        print(f"📊 ได้รับข้อมูลจากอุปกรณ์: {device_id} ณ เวลา: {timestamp}")
-        print(f"   > ความสั่นแนวแกน Z: {vib_z} mm/s | อุณหภูมิ: {temp} °C")
-        
-        # 3. กำหนดขีดจำกัดความปลอดภัยเพื่อแจ้งเตือน (Threshold Rules)
-        # อ้างอิงตามมาตรฐาน ISO 10816 (ความสั่นปั๊มไม่ควรเกิน 4.5 mm/s)
-        VIBRATION_LIMIT = 4.5
-        TEMPERATURE_LIMIT = 75.0
-        
-        # 4. การตัดสินใจเชิงตรรกะ (Logic Processing)
-        if vib_z > VIBRATION_LIMIT:
-            print(f"⚠️ [WARNING] อุปกรณ์ {device_id} สั่นสะเวือนสูงผิดปกติ: {vib_z} mm/s (ขีดจำกัด {VIBRATION_LIMIT} mm/s)")
-            # ในระบบจริง จะส่ง API ไปยัง LINE Notify หรือระบบแจ้งซ่อมต่อที่นี่
-            
-        if temp > TEMPERATURE_LIMIT:
-            print(f"🔥 [CRITICAL] อุณหภูมิตลับลูกปืนสูงเกินเกณฑ์: {temp} °C (ขีดจำกัด {TEMPERATURE_LIMIT} °C)")
-            
-        if vib_z <= VIBRATION_LIMIT and temp <= TEMPERATURE_LIMIT:
-            print("✅ Status: Normal")
-            
-    except json.JSONDecodeError as e:
-        print(f"❌ รูปแบบข้อมูล JSON ผิดพลาด: {e}")
-    except KeyError as e:
-        print(f"❌ ไม่พบฟิลด์ข้อมูลที่ต้องการ: {e}")
-
-# เรียกใช้งานฟังก์ชัน
-process_sensor_data(raw_mqtt_payload)
-```
-
-#### ข) โค้ดฝั่งอุปกรณ์ปลายทางด้วยภาษา C++ (C++ ArduinoJson Parsing Script)
-
-ในฝั่งอุปกรณ์เครือข่ายปลายทาง (Edge Devices) เช่น ไมโครคอนโทรลเลอร์ ESP32 หรือระบบสมองกลฝังตัวที่พัฒนาด้วยภาษา C++ เมื่อได้รับข้อความ JSON (เช่น ผ่านโปรโตคอล MQTT) จะนิยมถอดรหัสโดยใช้ไลบรารี **ArduinoJson** ซึ่งเป็นไลบรารีที่ออกแบบมาสำหรับการทำงานบนอุปกรณ์ที่มีหน่วยความจำจำกัดได้อย่างรวดเร็วและมีประสิทธิภาพสูง
-
-```cpp
-#include <ArduinoJson.h>
-
-// สมมติว่าได้รับข้อความดิบผ่านโปรโตคอล MQTT (ข้อมูลอยู่ในรูปแบบ String/char array)
-const char* raw_mqtt_payload = R"({
-  "device_id": "VIB-SENS-PUMP003",
-  "timestamp": "2026-06-22T12:59:47.125Z",
-  "sequence_number": 10452,
-  "telemetry": {
-    "vibration_x_rms": 2.45,
-    "vibration_y_rms": 1.89,
-    "vibration_z_rms": 4.12,
-    "peak_acceleration_g": 1.25,
-    "temperature_celsius": 68.30
-  },
-  "diagnostics": {
-    "battery_percent": 94.5,
-    "wifi_rssi_dbm": -67,
-    "system_status": "NORMAL"
-  }
-})";
-
-void processSensorData(const char* raw_payload) {
-  // 1. กำหนดขนาดของ JsonDocument (คำนวณตามโครงสร้าง JSON)
-  // ใช้ StaticJsonDocument สำหรับเก็บค่าบน Stack โดยไม่ต้องใช้ Dynamic Memory Heap
-  StaticJsonDocument<512> doc;
-  
-  // 2. แปลงข้อความ JSON String ให้เป็นออบเจกต์ (Deserialization / Parsing)
-  DeserializationError error = deserializeJson(doc, raw_payload);
-  
-  // ตรวจสอบความถูกต้องของรูปแบบข้อมูล (Error Handling)
-  if (error) {
-    Serial.print(F("❌ รูปแบบข้อมูล JSON ผิดพลาด: "));
-    Serial.println(error.f_str());
-    return;
-  }
-  
-  // ตรวจสอบความมีอยู่ของฟิลด์หลักก่อนใช้งานเพื่อความปลอดภัย (Key Validation)
-  if (!doc.containsKey("device_id") || !doc.containsKey("telemetry")) {
-    Serial.println(F("❌ ไม่พบฟิลด์ข้อมูลที่ต้องการ (device_id หรือ telemetry)"));
-    return;
-  }
-  
-  // 3. ดึงค่าตัวแปรวิศวกรรมที่ต้องการตรวจสอบ
-  const char* device_id = doc["device_id"];
-  const char* timestamp = doc["timestamp"];
-  float vib_z = doc["telemetry"]["vibration_z_rms"];
-  float temp = doc["telemetry"]["temperature_celsius"];
-  
-  Serial.print(F("📊 ได้รับข้อมูลจากอุปกรณ์: "));
-  Serial.println(device_id);
-  Serial.print(F("   ณ เวลา: "));
-  Serial.println(timestamp);
-  Serial.print(F("   > ความสั่นแนวแกน Z: "));
-  Serial.print(vib_z);
-  Serial.print(F(" mm/s | อุณหภูมิ: "));
-  Serial.print(temp);
-  Serial.println(F(" °C"));
-  
-  // 4. กำหนดขีดจำกัดความปลอดภัยเพื่อแจ้งเตือน (Threshold Rules)
-  // อ้างอิงตามมาตรฐาน ISO 10816 (ความสั่นปั๊มไม่ควรเกิน 4.5 mm/s)
-  const float VIBRATION_LIMIT = 4.5;
-  const float TEMPERATURE_LIMIT = 75.0;
-  
-  // 5. การตัดสินใจเชิงตรรกะ (Logic Processing)
-  if (vib_z > VIBRATION_LIMIT) {
-    Serial.print(F("⚠️ [WARNING] อุปกรณ์ "));
-    Serial.print(device_id);
-    Serial.print(F(" สั่นสะเทือนสูงผิดปกติ: "));
-    Serial.print(vib_z);
-    Serial.print(F(" mm/s (ขีดจำกัด "));
-    Serial.print(VIBRATION_LIMIT);
-    Serial.println(F(" mm/s)"));
-  }
-  
-  if (temp > TEMPERATURE_LIMIT) {
-    Serial.print(F("🔥 [CRITICAL] อุณหภูมิตลับลูกปืนสูงเกินเกณฑ์: "));
-    Serial.print(temp);
-    Serial.print(F(" °C (ขีดจำกัด "));
-    Serial.print(TEMPERATURE_LIMIT);
-    Serial.println(F(" °C)"));
-  }
-  
-  if (vib_z <= VIBRATION_LIMIT && temp <= TEMPERATURE_LIMIT) {
-    Serial.println(F("✅ สถานะเครื่องจักร: ปกติ"));
-  }
-}
-
-void setup() {
-  Serial.begin(115200);
-  while (!Serial) continue; // รอพอร์ตซีเรียลเชื่อมต่อ
-  
-  Serial.println(F("--- เริ่มต้นโปรแกรมประมวลผลข้อมูล IoT (C++) ---"));
-  
-  // เรียกใช้งานฟังก์ชัน
-  processSensorData(raw_mqtt_payload);
-}
-
-void loop() {
-  // ไม่ทำซ้ำในรอบวงรอบหลัก
-}
-```
-
-#### ค) การเปรียบเทียบความแตกต่างระหว่าง Python และ C++ (สำหรับอุปกรณ์ฝังตัว)
-
-1. **การบริหารจัดการหน่วยความจำ (Memory Management):** Python ใช้กลไก Garbage Collector คืนพื้นที่หน่วยความจำให้อัตโนมัติ (แต่ใช้ RAM สูง) ส่วน C++ (ผ่านไลบรารี ArduinoJson) สามารถเลือกเก็บออบเจกต์ไว้บน Stack (ใช้ `StaticJsonDocument`) ได้โดยตรง ช่วยป้องกันปัญหาหน่วยความจำรั่วไหล (Memory Leak) และความหน่วงของการประมวลผลแบบไม่แน่นอน (Deterministic Latency)
-2. **การป้องกันปัญหา RAM ไม่พอ (Flash Optimization):** ใน C++ มีการใช้มาโคร `F()` ครอบข้อความคงที่ (Literal Strings) เช่น `F("✅ สถานะเครื่องจักร: ปกติ")` เพื่อระบุให้คอมไพเลอร์จัดเก็บข้อความเหล่านี้ไว้ในหน่วยความจำโปรแกรม (Flash) แทนการย้ายขึ้นไปทำงานบนหน่วยความจำชั่วคราว (RAM) ทำให้ระบบเสถียรยิ่งขึ้น
-3. **การเข้าถึงและการจัดการคีย์ (Key Access):** ทั้งสองภาษามีระบบป้องกันที่ดีเยี่ยม โดย Python สามารถจับโครงสร้างที่ไม่ถูกต้องผ่าน `KeyError` ส่วน C++ ใช้ฟังก์ชัน `containsKey()` หรือตรวจสอบประเภทข้อมูลจากตัวแปรปลายทางเพื่อป้องกันปัญหา Pointer ชี้ตำแหน่งว่างเปล่า (Null Pointer Dereference)
+**รหัสปฏิบัติการ:** LAB-01 | **เวลาปฏิบัติการ:** 2 ชั่วโมง  
+**เป้าหมายการเรียนรู้:** LLO1.1, LLO1.2, LLO1.3 (CLO1)  
+**เครื่องมือที่ใช้:** Wokwi Simulator, บอร์ด ESP32 DevKit V1, LED, ตัวต้านทาน 330Ω, สวิตช์ปุ่มกด
 
 ---
 
+### 1.5.1 วัตถุประสงค์เชิงปฏิบัติการ
+1. ประกอบวงจรดิจิทัลเอาต์พุต (LED) และดิจิทัลอินพุต (Pushbutton) บน Wokwi Simulator ได้อย่างถูกต้อง
+2. เขียนโปรแกรมภาษา C++ บน Arduino Framework เพื่อสั่งงานขา GPIO และส่งข้อมูล Telemetry ออกทาง Serial Monitor
+3. ทดลองปรับเปลี่ยนความถี่การกะพริบ (Duty Cycle / Frequency) และวิเคราะห์สถาปัตยกรรม 4 ชั้นของ IoT ผ่านวงจรจริง
+
+---
+
+### 1.5.2 แผนผังการต่อวงจร (Wiring Table)
+
+| ลำดับ | อุปกรณ์ | ขาของอุปกรณ์ | ขาบนบอร์ด ESP32 DevKit | หน้าที่ในระบบ IoT |
+|:---:|---|---|---|---|
+| 1 | **Status LED (สีแดง)** | Anode (+) ขายาว | **GPIO 2** (ต่อผ่านตัวต้านทาน R1 330Ω) | Perception Layer (Actuator) |
+| 2 | | Cathode (-) ขาสั้น | **GND** | กราวด์ร่วม |
+| 3 | **Pushbutton (สวิตช์กดติด-ปล่อยดับ)** | ขา 1.L / 1.R | **GPIO 4** | Perception Layer (Sensor) |
+| 4 | | ขา 2.L / 2.R | **GND** (ใช้วงจร Internal Pull-up) | กราวด์อ้างอิง |
+
+---
+
+### 1.5.3 ไฟล์โครงสร้างวงจร `diagram.json` สำหรับ Wokwi
+
+```json
+{
+  "version": 1,
+  "author": "KSU Digital Technology",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-led", "id": "led1", "top": -80, "left": 100, "attrs": { "color": "red" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": -30, "left": 100, "attrs": { "value": "330" } },
+    { "type": "wokwi-pushbutton", "id": "btn1", "top": 100, "left": 100, "attrs": { "color": "green", "xray": "1" } }
+  ],
+  "connections": [
+    [ "esp:2", "r1:1", "orange", [ "v0" ] ],
+    [ "r1:2", "led1:A", "orange", [ "v0" ] ],
+    [ "led1:C", "esp:GND", "black", [ "v0" ] ],
+    [ "esp:4", "btn1:1.L", "blue", [ "v0" ] ],
+    [ "btn1:2.L", "esp:GND", "black", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}
+```
+
+---
+
+### 1.5.4 ซอร์สโค้ดภาษา C++ (Arduino Framework)
+
+```cpp
+/**
+ * LAB 01: ESP32 IoT Basic Telemetry & Digital Control
+ * Course: Digital Technology for Engineering, KSU
+ */
+
+const int LED_PIN = 2;
+const int BUTTON_PIN = 4;
+
+int loopCount = 0;
+unsigned long lastTelemetryTime = 0;
+const unsigned long TELEMETRY_INTERVAL = 1000; // 1000 ms
+
+void setup() {
+  Serial.begin(115200);
+  delay(500);
+
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+
+  Serial.println("\n==============================================");
+  Serial.println("   KSU TECH ENGINEERING - IoT LAB 01 STARTED  ");
+  Serial.println("==============================================");
+  Serial.printf("MCU: ESP32 Tensilica Dual-Core @ 240MHz\n");
+  Serial.printf("Telemetry Interval: %lu ms\n\n", TELEMETRY_INTERVAL);
+}
+
+void loop() {
+  unsigned long currentMillis = millis();
+  int btnState = digitalRead(BUTTON_PIN);
+
+  if (btnState == LOW) {
+    digitalWrite(LED_PIN, HIGH);
+    Serial.println("[EVENT] Emergency Pushbutton PRESSED! Override -> ON");
+    delay(200);
+  } else {
+    if (currentMillis - lastTelemetryTime >= TELEMETRY_INTERVAL) {
+      lastTelemetryTime = currentMillis;
+      loopCount++;
+
+      bool currentLedState = (loopCount % 2 != 0);
+      digitalWrite(LED_PIN, currentLedState ? HIGH : LOW);
+
+      Serial.printf("[TELEMETRY #%04d] Timestamp: %lu ms | LED_Status: %s | Button: RELEASED\n",
+                    loopCount, currentMillis, currentLedState ? "ACTIVE (HIGH)" : "IDLE (LOW)");
+    }
+  }
+}
+```
+
+---
+
+### 1.5.5 ขั้นตอนการทดลองและบันทึกผล (Procedures & Results)
+1. **การสร้างโปรเจกต์:** สร้างโปรเจกต์ใหม่บน Wokwi คัดลอก `diagram.json` และโค้ด C++ ไปวางแล้วกด Start Simulation
+2. **การสังเกต Telemetry:** สังเกต Serial Monitor จะส่งค่าสถานะทุก 1 วินาที และหลอด LED สีแดงจะกะพริบ
+3. **การทดสอบ Override:** คลิกปุ่มกด Pushbutton ค้างไว้ หลอด LED จะติดสว่างค้างทันที และมี Event แจ้งเตือน
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Reference / Summary" data-tab-icon="📊" id="waveform" markdown="1">

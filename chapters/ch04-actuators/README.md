@@ -1214,355 +1214,120 @@ void loop() {
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
+## 4.6 ปฏิบัติการ Wokwi Lab 4: การขับโหลดกำลังและตัวกระทำ (Actuators & Driver Interfacing)
 
-## 4.9 อุปกรณ์เอาต์พุตและระบบขับกำลังที่ใช้งานบน Tinkercad (Tinkercad Actuators & Power Control)
+**รหัสปฏิบัติการ:** LAB-04 | **เวลาปฏิบัติการ:** 2 ชั่วโมง  
+**เป้าหมายการเรียนรู้:** LLO4.1, LLO4.2 (CLO1, CLO3)  
+**เครื่องมือที่ใช้:** Wokwi Simulator, ESP32, โมดูลรีเลย์ (Relay Module), เซอร์โวมอเตอร์ SG90, ลำโพงบัซเซอร์ (Buzzer)
 
-ในการเรียนรู้การจำลองสถานการณ์ทางอิเล็กทรอนิกส์และระบบสมองกลฝังตัวบน Tinkercad Circuits จะมีอุปกรณ์แสดงผล ตัวขับเชิงกล และตัวควบคุมกำลังไฟฟ้า ให้ใช้งานหลากหลายชิ้น ดังนี้:
+---
 
-### 4.9.1 อุปกรณ์แสดงผลและไฟแสงสว่าง (Displays & Lighting)
+### 4.6.1 วัตถุประสงค์เชิงปฏิบัติการ
+1. ควบคุมการตัด-ต่อโหลดไฟฟ้าแรงดันสูงด้วยโมดูลรีเลย์พร้อมระบบแยกสัญญาณแบบ Optocoupler
+2. ขับตำแหน่งเซอร์โวมอเตอร์ (SG90) ในช่วงมุม $0^\circ$ ถึง $180^\circ$ ด้วยสัญญาณ PWM ความถี่ 50 Hz
+3. สร้างสัญญาณเสียงแจ้งเตือนสถานะความถี่ต่าง ๆ ผ่านลำโพงบัซเซอร์
 
-#### 1) LED RGB
-เป็นหลอด LED ที่บรรจุชิปสี แดง (Red), เขียว (Green), และ น้ำเงิน (Blue) ไว้ในตัวเครื่องเดียวกัน ทำให้สามารถผสมแสงสีต่าง ๆ ได้ตามต้องการ
-*   **โครงสร้างทางฮาร์ดแวร์:**
-    *   **Common Cathode (ขาร่วมลบ):** ขาแคโทดร่วมจะต่อลง GND และต้องส่งลอจิก HIGH ผ่านตัวต้านทานจำกัดกระแสไปยังขาสีแดง (R), เขียว (G), น้ำเงิน (B) เพื่อให้สีสว่าง
-    *   **Common Anode (ขาร่วมบวก):** ขาแอโนดร่วมจะต่อเข้า 5V และต้องส่งสถานะลอจิก LOW (หรือ GND) ไปยังขาสีเดี่ยวเพื่อเปิดสีนั้น ๆ
-*   **การเชื่อมต่อ:** ต่อขาสัญญาณสีเดี่ยวผ่านตัวต้านทาน $220\ \Omega$ ไปยังพิน PWM (เช่น Pin 9, 10, 11 ของ Arduino Uno) เพื่อปรับระดับความสว่างผสมสีผ่านฟังก์ชัน `analogWrite()`
+---
 
-**ตัวอย่างโค้ดผสมสีไล่ระดับ RGB (แบบ Common Cathode):**
-```cpp
-const int redPin = 9;   // ขาสีแดงต่อ Pin 9 (PWM)
-const int greenPin = 10; // ขาสีเขียวต่อ Pin 10 (PWM)
-const int bluePin = 11;  // ขาสีน้ำเงินต่อ Pin 11 (PWM)
+### 4.6.2 แผนผังการต่อวงจร (Wiring Table)
 
-void setup() {
-  pinMode(redPin, OUTPUT);
-  pinMode(greenPin, OUTPUT);
-  pinMode(bluePin, OUTPUT);
-}
+| ลำดับ | อุปกรณ์ | ขาของอุปกรณ์ | ขาบนบอร์ด ESP32 DevKit | สัญญาณ / หน้าที่ |
+|:---:|---|---|---|---|
+| 1 | **Relay Module (ขับโหลด AC/DC)** | VCC / GND / IN | 5V / GND / **GPIO 13** | สั่งตัด-ต่อหน้าสัมผัส COM-NO |
+| 2 | **SG90 Micro Servo** | VCC (แดง) / GND (น้ำตาล) | 5V / GND | ไฟเลี้ยงมอเตอร์ |
+| 3 | | PWM SIG (ส้ม) | **GPIO 18** | พัลส์ควบคุมมุม (1.0 - 2.0 ms) |
+| 4 | **Piezo Buzzer** | (+) / (-) | **GPIO 19** / GND | สัญญาณเสียงเตือนภัย |
 
-void setColor(int r, int g, int b) {
-  analogWrite(redPin, r);
-  analogWrite(greenPin, g);
-  analogWrite(bluePin, b);
-}
+---
 
-void loop() {
-  setColor(255, 0, 0);     // แดงล้วน
-  delay(1000);
-  setColor(0, 255, 0);     // เขียวล้วน
-  delay(1000);
-  setColor(0, 0, 255);     // น้ำเงินล้วน
-  delay(1000);
-  setColor(255, 255, 0);   // เหลือง (ผสม แดง + เขียว)
-  delay(1000);
-  setColor(255, 0, 255);   // ชมพู/ม่วง (ผสม แดง + น้ำเงิน)
-  delay(1000);
-  setColor(255, 255, 255); // ขาว (ผสมครบทุกสี)
-  delay(1000);
-}
-```
+### 4.6.3 ไฟล์โครงสร้างวงจร `diagram.json` สำหรับ Wokwi
 
-#### 2) NeoPixel (Jewel, Ring, Strip)
-เป็นโมดูลไฟ RGB อัจฉริยะที่ใช้ชิปควบคุมภายใน (เช่น WS2812B) ทำให้สามารถรับ-ส่งข้อมูลดิจิทัลผ่านสายสัญญาณข้อมูลเพียง **1 เส้น** (Data In) เพื่อควบคุมสีและความสว่างของ LED แต่ละดวงแยกอิสระจากกันได้เป็นร้อยดวงบนสายแถวขนาน
-*   **การต่อใช้งาน:** ขา VCC ต่อ 5V, ขา GND ต่อกราวด์บอร์ด, ขา DIN (Data In) ต่อเข้ากับขา GPIO ดิจิทัล (เช่น Pin 6 ของ Arduino Uno)
-*   **ไลบรารีที่จำเป็น:** ใช้ไลบรารี `<Adafruit_NeoPixel.h>` ซึ่งรองรับทั้งใน Tinkercad และบอร์ดจริง
+```json
+{
+  "version": 1,
+  "author": "KSU TechEngineering",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-relay-module", "id": "relay1", "top": -140, "left": 140, "attrs": {} },
+    { "type": "wokwi-servo", "id": "servo1", "top": -140, "left": -120, "attrs": {} },
+    { "type": "wokwi-buzzer", "id": "buzz1", "top": 120, "left": 140, "attrs": { "hasVolume": "1" } }
+  ],
+  "connections": [
+    [ "esp:5V", "relay1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "relay1:GND", "black", [ "v0" ] ],
+    [ "esp:13", "relay1:IN", "purple", [ "v0" ] ],
 
-**ตัวอย่างโค้ดสั่งงาน NeoPixel สว่างเรียงสี (จำนวน 8 ดวง ต่อ Pin 6):**
-```cpp
-#include <Adafruit_NeoPixel.h>
+    [ "esp:5V", "servo1:V+", "red", [ "v0" ] ],
+    [ "esp:GND", "servo1:GND", "black", [ "v0" ] ],
+    [ "esp:18", "servo1:PWM", "orange", [ "v0" ] ],
 
-#define PIN        6 // พินส่งข้อมูลดิจิทัล
-#define NUMPIXELS 8 // จำนวนดวงไฟ NeoPixel ที่ใช้
-
-Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
-
-void setup() {
-  pixels.begin(); // เริ่มต้น NeoPixel
-}
-
-void loop() {
-  pixels.clear(); // สั่งปิดไฟทุกดวงก่อน
-
-  for(int i=0; i<NUMPIXELS; i++) {
-    // กำหนดสีแดง (R=255, G=0, B=0) ให้ทีละดวงตามลูป
-    pixels.setPixelColor(i, pixels.Color(255, 0, 0));
-    pixels.show(); // ส่งรหัสข้อมูลเพื่อแสดงสีจริง
-    delay(200);
-  }
-  delay(1000);
-}
-```
-
-#### 3) Light bulb (หลอดไฟไส้จำลอง)
-หลอดไฟร้อนชื้นไม่มีขั้ว เป็นโหลดแบบต้านทานกระแสสลับหรือกระแสตรงกำลังสูงที่ต้องการกระแสไฟฟ้ามากกว่า $100\text{ mA}$ ในการทอดสว่าง
-*   **ข้อกำหนดการต่อใช้งาน:** ไม่สามารถต่อกับขา GPIO ของ Arduino Uno โดยตรงได้เนื่องจากกินกระแสเกินลิมิต ปลอดภัยที่สุดคือใช้ **ทรานซิสเตอร์ NPN** หรือ **รีเลย์** ร่วมกับการจ่ายไฟ 9V/12V จากภายนอกเป็นวงจรตัด-ต่อกำลัง
-
-#### 4) จอแสดงผล 7-Segment และไอซีถอดรหัส (7-Segment Decoder - CD4511)
-ตัวแสดงตัวเลข 0–9 ประกอบด้วยหลอด LED จำนวน 7 ดวงวางตัวในกรอบเฉพาะ (A, B, C, D, E, F, G)
-*   **ไอซีถอดรหัส CD4511 (BCD-to-7 Segment):** ช่วยประหยัดขาของไมโครคอนโทรลเลอร์ โดยเราสามารถส่งรหัสฐานสองเพียง 4 เส้น (แทนตัวเลข 0–9) เข้าไอซี CD4511 แล้วไอซีจะประมวลผลเอาต์พุตขับพิน A–G สว่างเป็นตัวเลขได้โดยอัตโนมัติ
-
-**ตัวอย่างโค้ด Arduino Uno ส่งข้อมูล BCD ควบคุมจอ 7-Segment ผ่านไอซี CD4511:**
-```cpp
-// กำหนดขาควบคุมรหัส BCD (A, B, C, D) ต่อเข้า Pin 8, 9, 10, 11
-const int pinA = 8;
-const int pinB = 9;
-const int pinC = 10;
-const int pinD = 11;
-
-void setup() {
-  pinMode(pinA, OUTPUT);
-  pinMode(pinB, OUTPUT);
-  pinMode(pinC, OUTPUT);
-  pinMode(pinD, OUTPUT);
-}
-
-// ฟังก์ชันเขียนบิตข้อมูลดิจิทัลแสดงผลตัวเลข 0-9
-void displayDigit(int num) {
-  digitalWrite(pinA, (num & 1) ? HIGH : LOW);
-  digitalWrite(pinB, (num & 2) ? HIGH : LOW);
-  digitalWrite(pinC, (num & 4) ? HIGH : LOW);
-  digitalWrite(pinD, (num & 8) ? HIGH : LOW);
-}
-
-void loop() {
-  for (int i = 0; i <= 9; i++) {
-    displayDigit(i);
-    delay(1000); // เปลี่ยนตัวเลขแสดงผลทุก ๆ 1 วินาที
-  }
-}
-```
-
-#### 5) หน้าจอแสดงผลตัวอักษร LCD (LCD 16 x 2)
-หน้าจอแสดงข้อความขนาด 2 แถว แถวละ 16 ตัวอักษร เป็นจอแสดงข้อมูลการทำงานของเครื่องกลที่มีประโยชน์สูง
-*   **การเชื่อมต่อ:** ใช้สายสัญญาณในการควบคุม เช่น โหมด 4 บิต (ใช้สาย RS, EN, D4, D5, D6, D7 รวม 6 พินข้อมูล) และการปรับความเข้มหน้าจอโดยใช้ตัวต้านทานปรับค่าได้ (Potentiometer) จ่ายไฟเลี้ยงที่ขาคอนทราสต์ (VO)
-
-**ตัวอย่างโค้ดการแสดงผลข้อความบนจอ LCD 16x2 (โหมด 4 บิตมาตรฐาน):**
-```cpp
-#include <LiquidCrystal.h>
-
-// เชื่อมพินข้อมูล: RS=12, EN=11, D4=5, D5=4, D6=3, D7=2
-LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
-
-void setup() {
-  lcd.begin(16, 2); // เริ่มต้นใช้งานจอ LCD ขนาด 16 หลัก 2 แถว
-  lcd.print("Tech Engineering"); // แสดงข้อความที่แถวแรก
-}
-
-void loop() {
-  lcd.setCursor(0, 1); // ย้ายเคอร์เซอร์ไปแถวที่ 2 หลักแรก
-  lcd.print("Secs: ");
-  lcd.print(millis() / 1000); // อัปเดตแสดงเวลาหน่วยวินาที
-  delay(500);
+    [ "esp:19", "buzz1:2", "yellow", [ "v0" ] ],
+    [ "esp:GND", "buzz1:1", "black", [ "v0" ] ]
+  ],
+  "dependencies": { "ESP32Servo": "1.1.0" }
 }
 ```
 
 ---
 
-### 4.9.2 มอเตอร์และตัวขับเคลื่อนเชิงกล (Motors & Mechanical Actuators)
+### 4.6.4 ซอร์สโค้ดภาษา C++ (Arduino Framework)
 
-#### 1) Vibration Motor (มอเตอร์สั่น)
-มอเตอร์ดีซีขนาดเล็กที่มีแผ่นตุ้มน้ำหนักเยื้องศูนย์ยึดติดอยู่ปลายแกนหมุน ส่งผลให้เกิดแรงสั่นเมื่อได้รับแรงดันไฟ
-*   **พิกัดกำลัง:** ดึงกระแสต่ำ (ประมาณ $20\text{–}60\text{ mA}$) แต่ไม่แนะนำให้ต่อกับขา GPIO ตรง ๆ เพื่อหลีกเลี่ยงกระแสกระชากสะท้อนกลับ ควรต่อผ่านทรานซิสเตอร์หรือตัวขับที่ปลอดภัย
-
-#### 2) Hobby Gearmotor (มอเตอร์เกียร์)
-มอเตอร์กระแสตรงขนาดเล็กที่ประกอบร่วมกับชุดเฟืองทดเพื่อลดความเร็วรอบและเพิ่มแรงบิดในการเคลื่อนที่ล้อของรถหุ่นยนต์หรือสายพานลำเลียงขนาดเล็ก
-*   **การควบคุม:** นิยมต่อควบคุมความเร็วรอบผ่านทรานซิสเตอร์ NPN (ควบคุมทางเดียว) หรือใช้ไอซี H-bridge เช่น L293D (ควบคุมสองทิศทางเดินหน้า/ถอยหลัง)
-
-#### 3) DC Motor with encoder
-มอเตอร์ดีซีคุณภาพสูงที่มีวงจรเข้ารหัสข้อมูลเชิงมุม (Encoder) ฝังร่วมที่เพลามอเตอร์ เพื่อยิงพัลส์สถานะสัญญาณดิจิทัลกลับมายัง Arduino ทำให้อ่านความเร็วรอบและคำนวณระยะมุมเคลื่อนได้อย่างแม่นยำ (ระบบวงปิดควบคุม - Closed-loop Feedback System)
-
-**ตัวอย่างโค้ด Arduino Uno อ่านจำนวนพัลส์ของ Encoder มอเตอร์โดยใช้ Hardware Interrupt:**
 ```cpp
-const int encoderPinA = 2; // ขาสัญญาณ Encoder ขา A ต่อพินขัดจังหวะ Pin 2 ของ Arduino Uno
-volatile long pulseCount = 0;
+/**
+ * LAB 04: Industrial Actuator Control (Relay, Servo, Buzzer)
+ * Course: Digital Technology for Engineering, KSU
+ */
 
-void countPulse() {
-  pulseCount++; // นับจำนวนพัลส์สะสมเมื่อจานเข้ารหัสหมุนผ่านเซนเซอร์
+#include <ESP32Servo.h>
+
+const int RELAY_PIN = 13;
+const int SERVO_PIN = 18;
+const int BUZZER_PIN = 19;
+
+Servo valveServo;
+
+void triggerAlarmBeep() {
+  tone(BUZZER_PIN, 2000, 100); // เสียงบี๊บ 2 kHz นาน 100ms
 }
 
 void setup() {
-  Serial.begin(9600);
-  pinMode(encoderPinA, INPUT_PULLUP);
-  
-  // ตั้งค่า Hardware Interrupt ที่ขา 2 (รองรับเฉพาะ Pin 2, 3 บนบอร์ด Uno)
-  // ให้ทำงานฟังก์ชัน countPulse เมื่อเกิดการเปลี่ยนแปลงลอจิกจาก LOW เป็น HIGH (RISING)
-  attachInterrupt(digitalPinToInterrupt(encoderPinA), countPulse, RISING);
+  Serial.begin(115200);
+  pinMode(RELAY_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, LOW);
+
+  // ตั้งค่า Servo Timer และต่อขา
+  ESP32PWM::allocateTimer(0);
+  valveServo.setPeriodHertz(50);
+  valveServo.attach(SERVO_PIN, 500, 2400);
+
+  Serial.println("\n--- LAB 04: Industrial Actuator Sequence Ready ---");
 }
 
 void loop() {
-  // พิมพ์แสดงจำนวนพัลส์สะสมของแกนมอเตอร์ทาง Serial Monitor ทุก 1 วินาที
-  Serial.print("Encoder Pulses: ");
-  Serial.println(pulseCount);
+  // สภาวะที่ 1: เปิดวาล์วน้ำ (Servo 0 องศา) และเริ่มเดินปั๊ม (Relay ON)
+  Serial.println("[CYCLE START] Opening Valve (0 deg) & Starting Pump...");
+  valveServo.write(0);
+  triggerAlarmBeep();
   delay(1000);
+
+  digitalWrite(RELAY_PIN, HIGH);
+  Serial.println("[STATUS] Pump Relay is ACTIVE");
+  delay(3000);
+
+  // สภาวะที่ 2: หรี่วาล์วลงครึ่งหนึ่ง (Servo 90 องศา)
+  Serial.println("[MODULATION] Throttling Valve to 90 deg...");
+  valveServo.write(90);
+  delay(2000);
+
+  // สภาวะที่ 3: ปิดปั๊มและปิดวาล์วสนิท (Servo 180 องศา)
+  Serial.println("[CYCLE STOP] Stopping Pump & Closing Valve (180 deg)...");
+  digitalWrite(RELAY_PIN, LOW);
+  valveServo.write(180);
+  triggerAlarmBeep();
+  delay(3000);
 }
 ```
-
-#### 4) Piezo (บัซเซอร์ส่งสัญญาณเสียง)
-อุปกรณ์ส่งสัญญาณเสียงโดยอาศัยปรากฏการณ์เพรียโซอิเล็กทริก (Piezoelectric) สั่นสะเทือนตามสัญญาณไฟฟ้าความถี่ต่าง ๆ
-*   **การเชื่อมต่อ:** ขาบวกต่อผ่านตัวต้านทานป้องกันกระแสเกินประมาณ $100\ \Omega$ ไปยังพินเอาต์พุตของ Arduino (เช่น Pin 8) ขาลบต่อลง GND
-
-**ตัวอย่างโค้ด Arduino Uno สั่งเล่นเสียงไซเรนเตือนภัยสลับความถี่:**
-```cpp
-const int piezoPin = 8; // ต่อขาบวกของบัซเซอร์ Piezo เข้ากับ Pin 8 ของ Arduino Uno
-
-void setup() {
-  pinMode(piezoPin, OUTPUT);
-}
-
-void loop() {
-  // เสียงเตือนสูง-ต่ำ สลับกัน
-  tone(piezoPin, 600);  // ส่งความถี่เสียง 600 Hz ออกพิน 8
-  delay(500);
-  tone(piezoPin, 950);  // ส่งความถี่เสียง 950 Hz ออกพิน 8
-  delay(500);
-  noTone(piezoPin);     // สั่งหยุดส่งความถี่เสียงชั่วคราว
-  delay(1000);
-}
-```
-
----
-
-### 4.9.3 อุปกรณ์ควบคุมและวงจรขับกำลัง (Power Control & Regulators)
-
-#### 1) TIP120 (ทรานซิสเตอร์ Darlington NPN)
-ทรานซิสเตอร์แบบกำลังชนิดดาร์ลิงตัน เป็นการต่อเชื่อมทรานซิสเตอร์ NPN สองตัวซ้อนกันภายในเพื่อให้มี **อัตราขยายกระแสไฟฟ้าสูงมาก ($h_{FE} > 1000$)**
-*   **จุดประสงค์การใช้งาน:** สำหรับขับโหลดกำลังสูง เช่น มอเตอร์ขนาดกลาง โซลินอยด์ หรือปั๊มน้ำ ที่ดึงกระแสสูงระดับ 1–5 A โดยใช้กระแสทริกสัญญาณ Base ขนาดเล็กมากจากขาไมโครคอนโทรลเลอร์ (ต่อผ่านตัวต้านทาน $1\ \text{k}\Omega$ ได้อย่างปลอดภัย)
-
-**ตัวอย่างโค้ด Arduino Uno สั่งงานควบคุมความเร็วมอเตอร์หรือปั๊มผ่านทรานซิสเตอร์ขับกำลัง (PWM):**
-```cpp
-const int driverPin = 5; // ต่อขาควบคุม Base ของ TIP120 เข้ากับ Pin 5 (PWM)
-
-void setup() {
-  pinMode(driverPin, OUTPUT);
-}
-
-void loop() {
-  // สั่งเพิ่มความเร็วมอเตอร์ขึ้นทีละนิด (Duty Cycle 0 ถึง 100%)
-  for (int pwmVal = 0; pwmVal <= 255; pwmVal += 5) {
-    analogWrite(driverPin, pwmVal);
-    delay(30);
-  }
-  delay(1000); // ทำงานสูงสุด 1 วินาที
-  
-  // สั่งหรี่ความเร็วมอเตอร์ลงจนหยุดหมุน
-  for (int pwmVal = 255; pwmVal >= 0; pwmVal -= 5) {
-    analogWrite(driverPin, pwmVal);
-    delay(30);
-  }
-  delay(2000); // หยุดพักเครื่อง 2 วินาที
-}
-```
-
-#### 2) Relay SPDT และ Relay DPDT
-*   **SPDT (Single Pole Double Throw):** รีเลย์สวิตช์แบบ 1 หน้าสัมผัส มี 5 พิน (2 ขดลวดทริก, 1 COM, 1 NO, 1 NC) สามารถต่อเลือกสลับทิศทางพลังงานได้ 1 เส้นทาง
-*   **DPDT (Double Pole Double Throw):** รีเลย์สวิตช์แบบ 2 หน้าสัมผัสที่แยกเป็นอิสระต่อกัน ทริกทำงานพร้อมกันผ่านขดลวดชุดเดียวกัน ช่วยให้สลับเปลี่ยนทิศทางกระแสไฟฟ้าหรือขั้วแหล่งจ่ายไฟของมอเตอร์กระแสตรงได้
-
-#### 3) Optocoupler (ไอซีออปโตแยกสัญญาณไฟฟ้าด้วยแสง)
-ชิปขนาดเล็กภายในประกอบด้วย LED อินฟราเรด และตัวรับแสงทรานซิสเตอร์ไวแสง (Phototransistor)
-*   **การประยุกต์ใช้:** ใช้เพื่อตัดการเชื่อมโยงวงจรไฟฟ้ากันโดยสิ้นเชิง (Galvanic Isolation) ระหว่างวงจรไฟฟ้าแรงสูงฝั่งโหลดเชิงกลกับบอร์ดประมวลผลแรงดันต่ำ เพื่อบล็อกคลื่นสัญญาณรบกวนทางแม่เหล็กไฟฟ้าและการกระชากกลับของกระแสไฟฟ้าเหนี่ยวนำป้องแก่นชิปไมโครคอนโทรลเลอร์ไม่ให้เกิดการรีเซ็ตหรือเสียหาย
-
-#### 4) 5V Regulator [LM7805] และ 3.3V Regulator [LD1117V33]
-ไอซีรักษาระดับแรงดันคงที่แบบเชิงเส้น (Linear Voltage Regulator)
-*   **LM7805:** รับแรงดันขาเข้าสูง (เช่น 7V–18V) และลดแรงดันควบคุมเอาต์พุตคงที่ที่ 5.0 V
-*   **LD1117V33:** รับแรงดันขาเข้าและจ่ายแรงดันเอาต์พุตคงที่ที่ 3.3 V
-*   *ข้อพึงระวัง:* พลังงานที่แตกต่างระหว่างแรงดันขาเข้าและขาออกจะถูกสูญเสียเป็นความร้อนสะสมบนตัวชิป จึงต้องพิจารณาติดตั้งแผ่นระบายความร้อน (Heatsink) หากโหลดดึงกระแสมาก
-
----
-
-## 4.10 การคำนวณกำลังและการระบายความร้อน (Power & Thermal Considerations)
-
-อุปกรณ์ขับโหลด (ทรานซิสเตอร์/MOSFET/ไดรเวอร์) จะร้อนขึ้นเพราะมีกำลังสูญเสียภายใน หากออกแบบไม่ดีอาจร้อนจนพัง การประเมินความร้อนจึงสำคัญ
-
-**กำลังสูญเสียในอุปกรณ์สวิตช์:**
-
-- **BJT (ขณะ ON):** $P = V_{CE(sat)} \times I_C$ — เช่น $V_{CE(sat)} = 0.3\text{ V}$, $I_C = 1\text{ A}$ → $P = 0.3\text{ W}$
-- **MOSFET (ขณะ ON):** $P = I_D^2 \times R_{DS(on)}$ — เช่น $R_{DS(on)} = 0.02\ \Omega$, $I_D = 3\text{ A}$ → $P = 0.18\text{ W}$ (จะเห็นว่า MOSFET ที่ $R_{DS(on)}$ ต่ำสูญเสียน้อยกว่า BJT มากในกระแสสูง)
-
-**การประเมินอุณหภูมิจุดต่อ (Junction Temperature):**
-
-$$T_j = T_a + P \times R_{\theta JA}$$
-
-โดย $T_a$ = อุณหภูมิอากาศโดยรอบ, $R_{\theta JA}$ = ความต้านทานความร้อนจากจุดต่อสู่อากาศ (°C/W จากดาต้าชีต) ถ้าผลลัพธ์ $T_j$ เข้าใกล้พิกัดสูงสุด (มัก ~150 °C) **ต้องติดฮีตซิงก์ (Heat Sink)** เพื่อลด $R_{\theta JA}$
-
-**การจัดงบกระแสและแหล่งจ่าย:**
-
-1. รวมกระแสสูงสุดของโหลดทุกตัว แล้ว **เผื่อ 20–30%** เลือกแหล่งจ่ายให้จ่ายได้เกินค่านี้
-2. เผื่อกระแสพีคขณะสตาร์ตมอเตอร์ (Inrush) ซึ่งสูงกว่ากระแสปกติหลายเท่า
-3. เลือกขนาดสายไฟ (Wire Gauge) ให้รับกระแสได้ และเดินสายโหลดกระแสสูงให้สั้นเพื่อลดแรงดันตก
-4. เพิ่มตัวเก็บประจุ (เช่น 470–1000 µF) คร่อมแหล่งจ่ายมอเตอร์ เพื่อรองรับกระแสกระชากและลดสัญญาณรบกวนกลับเข้า Arduino Uno
-
----
-
-## 4.11 ตัวอย่างการออกแบบระบบจริง: ระบบรดน้ำอัตโนมัติ (Design Walkthrough)
-
-โจทย์: ออกแบบส่วนขับของระบบรดน้ำอัตโนมัติที่ควบคุมด้วย Arduino Uno (จำลองใน Tinkercad Circuits) ประกอบด้วย **ปั๊มน้ำ 12 V / 2 A**, **วาล์วโซลินอยด์ 12 V / 0.5 A** และ **LED แสดงสถานะ 3 ดวง**
-
-**ขั้นที่ 1 — วิเคราะห์โหลดแต่ละตัว**
-
-| อุปกรณ์ | กระแส | ชนิดโหลด | ต่อ GPIO ตรงได้? |
-|---|---|---|---|
-| ปั๊มน้ำ 12V | 2 A (พีคสูงกว่านี้) | เหนี่ยวนำ (มอเตอร์) | ❌ |
-| โซลินอยด์ 12V | 0.5 A | เหนี่ยวนำ (ขดลวด) | ❌ |
-| LED ×3 | 10–15 mA ต่อดวง | ไม่เหนี่ยวนำ | ✅ (ผ่าน R จำกัดกระแส) |
-
-**ขั้นที่ 2 — เลือกวงจรขับ**
-
-- **ปั๊มน้ำ:** กระแสสูง 2 A → ใช้ **MOSFET logic-level (IRLZ44N)** หรือโมดูลรีเลย์ที่ทนกระแสพอ + **ไดโอด Flyback (1N4007 หรือ Schottky)**
-- **โซลินอยด์:** 0.5 A → **MOSFET หรือทรานซิสเตอร์ NPN (เช่น TIP120)** + **ไดโอด Flyback**
-- **LED:** ต่อ GPIO โดยตรงผ่านตัวต้านทานจำกัดกระแส (~220 Ω ต่อดวง)
-
-**ขั้นที่ 3 — การป้องกันและกราวด์**
-
-- ทั้งปั๊มและโซลินอยด์เป็นโหลดเหนี่ยวนำ → **ต้องมีไดโอด Flyback ทั้งคู่**
-- ใช้แหล่งจ่าย 2 ชุด (สาย USB สำหรับบอร์ด Arduino Uno + อะแดปเตอร์ 12V สำหรับปั๊ม/วาล์ว) → **ต้องต่อ GND ร่วมกัน**
-- เพิ่มคาปาซิเตอร์ 1000 µF คร่อมไฟ 12V ใกล้ปั๊ม เพื่อรองรับกระแสกระชาก
-- (แนะนำ) ใช้ออปโตคัปเปลอร์หรือโมดูลรีเลย์แบบแยกไฟ เพื่อกันสัญญาณรบกวนจากปั๊มกลับเข้าบอร์ด Arduino Uno
-
-**ขั้นที่ 4 — งบกระแสรวม:** $2 + 0.5 + 0.045 \approx 2.55\text{ A}$ → เผื่อ 30% และเผื่อ inrush ปั๊ม → เลือกอะแดปเตอร์ **12 V อย่างน้อย 4–5 A**
-
-**ขั้นที่ 5 — โครงสร้างโค้ด (Skeleton)**
-
-```cpp
-const int PUMP = 5;             // ขาเอาต์พุตขับ MOSFET ปั๊มน้ำ ต่อ Pin 5
-const int VALVE = 6;            // ขาเอาต์พุตขับ MOSFET วาล์วน้ำ ต่อ Pin 6
-const int LED_OK = 2;           // LED แสดงสถานะพร้อมทำงาน ต่อ Pin 2
-const int LED_WATERING = 3;     // LED แสดงสถานะขณะกำลังรดน้ำ ต่อ Pin 3
-const int LED_ERR = 4;          // LED แสดงสถานะข้อผิดพลาด ต่อ Pin 4
-
-void setup() {
-  pinMode(PUMP, OUTPUT);  
-  pinMode(VALVE, OUTPUT);
-  pinMode(LED_OK, OUTPUT); 
-  pinMode(LED_WATERING, OUTPUT); 
-  pinMode(LED_ERR, OUTPUT);
-  
-  digitalWrite(LED_OK, HIGH);   // แจ้งสถานะระบบพร้อมทำงาน
-}
-
-void startWatering() {
-  digitalWrite(VALVE, HIGH);  
-  delay(200);                   // สั่งเปิดโซลินอยด์วาล์วก่อน 200ms
-  digitalWrite(PUMP, HIGH);     // จากนั้นจึงเปิดปั๊มตามเพื่อป้องกันแรงดันอัดสะสม
-  digitalWrite(LED_WATERING, HIGH);
-}
-
-void stopWatering() {
-  digitalWrite(PUMP, LOW);   
-  delay(200);                   // ปิดปั๊มน้ำก่อนเพื่อลดการกระชากของท่อน้ำ
-  digitalWrite(VALVE, LOW);     // จากนั้นจึงสั่งปิดโซลินอยด์วาล์ว
-  digitalWrite(LED_WATERING, LOW);
-}
-
-void loop() {
-  startWatering();  delay(5000);   // รดน้ำต่อเนื่องเป็นเวลา 5 วินาที
-  stopWatering();   delay(10000);  // หยุดพัก 10 วินาที
-}
-```
-
-> 💡 **ลำดับการเปิด-ปิดสำคัญ:** เปิดวาล์วก่อนเปิดปั๊ม และปิดปั๊มก่อนปิดวาล์ว เพื่อลดการกระแทกของแรงดันน้ำ (Water Hammer) ที่อาจทำให้ท่อหรือข้อต่อเสียหาย — เป็นหลักการเดียวกับงานระบบท่อในงานวิศวกรรมเครื่องกล
-
----
-
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Reference / Summary" data-tab-icon="📊" id="waveform" markdown="1">

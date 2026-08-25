@@ -960,78 +960,128 @@ $$T = \frac{R_{RTD} - R_0}{R_0 \cdot \alpha} = \frac{R_{RTD} - 100}{100 \cdot 0.
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
+## 3.6 ปฏิบัติการ Wokwi Lab 3: ตัวรับรู้และการตรวจวัดในงานวิศวกรรม
 
-## 3.5 ตัวอย่างเซนเซอร์ยอดนิยมใน IoT
+**รหัสปฏิบัติการ:** LAB-03 | **เวลาปฏิบัติการ:** 2 ชั่วโมง  
+**เป้าหมายการเรียนรู้:** LLO3.1, LLO3.2, LLO3.3 (CLO1)  
+**เครื่องมือที่ใช้:** Wokwi Simulator, บอร์ด ESP32, เซนเซอร์ DHT22, เซนเซอร์อัลตราโซนิก HC-SR04, ตัวต้านทานไวแสง LDR
 
+---
 
-#### A. กลุ่มเซนเซอร์และอุปกรณ์สัญญาณแอนะล็อก (Analog Inputs / Sensors)
+### 3.6.1 วัตถุประสงค์เชิงปฏิบัติการ
+1. เชื่อมต่อและอ่านค่าจากเซนเซอร์ดิจิทัลโปรโตคอลเฉพาะ (DHT22) และเซนเซอร์วัดระยะทางคลื่นเสียง (HC-SR04)
+2. ต่อวงจรแบ่งแรงดัน (Voltage Divider) เพื่ออ่านค่าความเข้มแสงจากเซนเซอร์แอนะล็อก LDR
+3. วิเคราะห์ความถูกต้อง (Accuracy), ความละเอียด (Resolution) และข้อจำกัดในการสุ่มวัด (Sampling Rate)
 
-### 3.5.1 Potentiometer (ตัวต้านทานปรับค่าได้)
+---
 
+### 3.6.2 แผนผังการต่อวงจร (Wiring Table)
 
-*   **หลักการทำงาน:** เป็นอุปกรณ์ที่มีความต้านทานรวมคงที่ (เช่น $10\text{ k}\Omega$) แต่มีขากลาง (Wiper) ที่สามารถหมุนเลื่อนขยับตำแหน่งเพื่อแบ่งค่าความต้านทานออกเป็น 2 ส่วน ทำให้ทำหน้าที่เป็น **วงจรแบ่งแรงดันไฟฟ้า (Voltage Divider) ในตัว** โดยส่งค่าเอาต์พุตแอนะล็อกแปรผันตามตำแหน่งการหมุน
-*   **อินเทอร์เฟซ:** แอนะล็อก (ขาริมต่อ 5V และ GND, ขากลางต่อเข้ากับขา ADC ของ Arduino Uno เช่น A0)
+| อุปกรณ์ | ขาของอุปกรณ์ | ขาบนบอร์ด ESP32 DevKit | หน้าที่ / โหมดสัญญาณ |
+|---|---|---|---|
+| **DHT22 Climate Sensor** | VCC / GND | 3V3 / GND | ไฟเลี้ยง 3.3V และกราวด์ |
+| | DATA | **GPIO 15** | สัญญาณดิจิทัล Single-Wire |
+| **HC-SR04 Ultrasonic** | VCC / GND | 5V / GND | ไฟเลี้ยง 5V และกราวด์ |
+| | TRIG | **GPIO 5** | สัญญาณพัลส์สั่งยิงคลื่นเสียง (Output) |
+| | ECHO | **GPIO 18** | สัญญาณสะท้อนกลับ (Input) |
+| **LDR (Photoresistor)** | ขา 1 | 3V3 | แหล่งจ่ายไฟ |
+| | ขา 2 (จุดต่อร่วม R 10kΩ) | **GPIO 34** (ADC1) | แรงดันแอนะล็อกแปรผันตามความเข้มแสง |
 
-**ตัวอย่างโค้ดการอ่านค่า Potentiometer เพื่อเปลี่ยนค่าดิบเป็นเปอร์เซ็นต์:**
+---
+
+### 3.6.3 ไฟล์โครงสร้างวงจร `diagram.json` สำหรับ Wokwi
+
+```json
+{
+  "version": 1,
+  "author": "KSU TechEngineering",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-dht22", "id": "dht1", "top": -140, "left": 140, "attrs": { "temperature": "27.5", "humidity": "60" } },
+    { "type": "wokwi-hc-sr04", "id": "sonar1", "top": -140, "left": -120, "attrs": { "distance": "35" } },
+    { "type": "wokwi-photoresistor-sensor", "id": "ldr1", "top": 120, "left": -100, "attrs": {} }
+  ],
+  "connections": [
+    [ "esp:3V3", "dht1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "dht1:GND", "black", [ "v0" ] ],
+    [ "esp:15", "dht1:SDA", "blue", [ "v0" ] ],
+
+    [ "esp:5V", "sonar1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "sonar1:GND", "black", [ "v0" ] ],
+    [ "esp:5", "sonar1:TRIG", "purple", [ "v0" ] ],
+    [ "esp:18", "sonar1:ECHO", "yellow", [ "v0" ] ],
+
+    [ "esp:3V3", "ldr1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "ldr1:GND", "black", [ "v0" ] ],
+    [ "esp:34", "ldr1:AO", "green", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}
+```
+
+---
+
+### 3.6.4 ซอร์สโค้ดภาษา C++ (Arduino Framework)
+
 ```cpp
-const int potPin = A0; // ต่อขากลางของโพเทนชิออมิเตอร์เข้ากับขา A0
+/**
+ * LAB 03: Multi-Sensor Data Acquisition (DHT22, HC-SR04, LDR)
+ * Course: Digital Technology for Engineering, KSU
+ */
+
+#include <DHT.h>
+
+#define DHTPIN 15
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
+
+const int TRIG_PIN = 5;
+const int ECHO_PIN = 18;
+const int LDR_PIN = 34;
+
+unsigned long lastReadTime = 0;
+
+float measureDistanceCM() {
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  // วัดระยะเวลาพัลส์สะท้อนกลับ (Microseconds)
+  long duration = pulseIn(ECHO_PIN, HIGH, 30000); // Timeout 30ms (~500cm)
+  if (duration == 0) return -1.0;
+
+  // ระยะทาง (cm) = (ระยะเวลา * ความเร็วเสียงในอากาศ 0.0343 cm/us) / 2
+  return (duration * 0.0343) / 2.0;
+}
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+  dht.begin();
+
+  Serial.println("\n--- LAB 03: Multi-Sensor Telemetry Active ---");
 }
 
 void loop() {
-  int raw = analogRead(potPin); // อ่านค่า ADC (0-1023)
-  float percentage = (raw / 1023.0) * 100.0; // แปลงช่วงข้อมูลเป็นเปอร์เซ็นต์ (0-100%)
+  if (millis() - lastReadTime >= 2000) {
+    lastReadTime = millis();
 
-  Serial.print("Pot ADC: ");
-  Serial.print(raw);
-  Serial.print(" | Percent: ");
-  Serial.print(percentage, 1);
-  Serial.println(" %");
-  delay(200);
+    float temp = dht.readTemperature();
+    float humid = dht.readHumidity();
+    float distance = measureDistanceCM();
+    int rawLDR = analogRead(LDR_PIN);
+    float lightPercent = (1.0 - (rawLDR / 4095.0)) * 100.0;
+
+    Serial.printf("[SENSOR TELEMETRY] Temp: %4.1f C | Humid: %4.1f %% | Dist: %5.1f cm | Light: %4.1f %%\n",
+                  temp, humid, distance, lightPercent);
+  }
 }
 ```
-
-### 3.5.2 TMP36 / LM35 — วัดอุณหภูมิ (แอนะล็อก)
-
-
-*   **TMP36 (มีจำลองใน Tinkercad):** ให้เอาต์พุตเป็นแรงดันไฟฟ้าแบบเชิงเส้น $10\text{ mV/}^\circ\text{C}$ แต่มี **แรงดันชดเชย (Offset) 500 mV** ที่อุณหภูมิ $0\ ^\circ\text{C}$ เพื่อให้วัดอุณหภูมิติดลบได้โดยไม่ต้องจ่ายไฟเลี้ยงลบ สูตรแปลงคือ:
-    $$T\text{ (}^\circ\text{C)} = \frac{V_{out} - 0.5}{0.01}$$
-*   **LM35 (นิยมในบอร์ดจริง / Wokwi):** ให้เอาต์พุตแรงดันสัมพันธ์โดยตรง $10\text{ mV/}^\circ\text{C}$ โดยเริ่มจาก $0\text{ V}$ ที่ $0\ ^\circ\text{C}$ สูตรแปลงคือ:
-    $$T\text{ (}^\circ\text{C)} = \frac{V_{out}}{0.01}$$
-*   **อินเทอร์เฟซ:** แอนะล็อก (ต่อเข้ากับขา ADC ของไมโครคอนโทรลเลอร์)
-
-**ตัวอย่างโค้ดอ่านค่าอุณหภูมิ (รองรับเซนเซอร์ TMP36 ใน Tinkercad):**
-```cpp
-const int tempPin = A0; // ต่อขาแอนะล็อก A0 ของ Arduino Uno
-
-void setup() { Serial.begin(9600); }
-
-void loop() {
-  int raw = analogRead(tempPin);
-  float voltage = raw * (5.0 / 1023.0); // แปลงค่า ADC (0-1023) เป็นแรงดัน (0-5V)
-  
-  // คำนวณแบบเซนเซอร์ TMP36 (สูตรมี offset 0.5V)
-  float tempC = (voltage - 0.5) / 0.01; 
-
-  Serial.print("Raw ADC: ");
-  Serial.print(raw);
-  Serial.print(" | Voltage: ");
-  Serial.print(voltage, 3);
-  Serial.print(" V | Temp (TMP36): ");
-  Serial.print(tempC, 1);
-  Serial.println(" °C");
-  
-  delay(1000);
-}
-```
-
-### 3.5.3 Light Sensors — Photoresistor (LDR), Photodiode และ Ambient Light Sensor [Phototransistor]
-
-<div style="text-align: center; margin: 20px 0;">
-  <img src="../../assets/images/ldr_photoresistor.jpg" alt="LDR Photoresistor" style="max-width: 250px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;"/>
-  <div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 3.5 ตัวตรวจจับความเข้มแสงแปรค่าตามความต้านทาน LDR (Light Dependent Resistor)</div>
+</div>
 </div>
 
 

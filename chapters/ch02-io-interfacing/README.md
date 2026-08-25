@@ -1193,70 +1193,143 @@ int pwmVal = map(adcVal, 0, 1023, 0, 255); // แปลงเป็น 0–255 �
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
+## 2.6 ปฏิบัติการ Wokwi Lab 2: การเชื่อมต่อสัญญาณ Digital I/O, ADC และการขับสัญญาณ PWM
 
-## 2.9 ตัวอย่างรวม: อ่าน LDR ปรับความสว่าง LED อัตโนมัติ
+**รหัสปฏิบัติการ:** LAB-02 | **เวลาปฏิบัติการ:** 2 ชั่วโมง  
+**เป้าหมายการเรียนรู้:** LLO2.1, LLO2.2 (CLO3, CLO4)  
+**เครื่องมือที่ใช้:** Wokwi Simulator, บอร์ด ESP32, โพเทนชิออมิเตอร์ (Potentiometer), LED 2 หลอด, ปุ่มกด, ตัวต้านทาน 330Ω
 
-โจทย์: ใช้ **LDR (Light Dependent Resistor)** ตรวจวัดแสง แล้วปรับความสว่าง LED ให้ **สว่างขึ้นเมื่อแสงน้อย** และ **หรี่ลงเมื่อแสงมาก** (เหมือนไฟถนนอัตโนมัติ)
+---
 
-### วงจรบน Tinkercad
+### 2.6.1 วัตถุประสงค์เชิงปฏิบัติการ
+1. ต่อวงจรและเขียนโปรแกรมอ่านค่าแรงดันอนาล็อก 12-bit ADC (0–4095) และคำนวณแปลงเป็นแรงดันจริง ($0.0 - 3.3\text{ V}$)
+2. ควบคุมความสว่างหลอดไฟ LED หรือความเร็วมอเตอร์ด้วยสัญญาณ PWM ผ่านโมดูล LEDC ของ ESP32
+3. อ่านสถานะปุ่มกดดิจิทัลพร้อมจัดการแก้ปัญหาสัญญาณกระดอน (Debounce Logic)
 
-- LDR + ตัวต้านทาน 10 kΩ ต่อแบบ Voltage Divider ที่ขา **A0**
-- LED ต่อผ่านตัวต้านทาน 220 Ω ที่ขา **Pin 9**
+---
 
-### โค้ดเต็ม (Tinkercad Circuits)
+### 2.6.2 แผนผังการต่อวงจร (Wiring Table)
 
-```cpp
-// ระบบปรับแสง LED อัตโนมัติตามแสงแวดล้อม
-// จำลองบน Tinkercad: Arduino Uno + LDR (Voltage Divider) + LED ต่อพิน 9
+| ลำดับ | อุปกรณ์ | ขาของอุปกรณ์ | ขาบนบอร์ด ESP32 DevKit | หน้าที่ / สัญญาณ |
+|:---:|---|---|---|---|
+| 1 | **Potentiometer 10kΩ** | ขา 1 (VCC) / ขา 3 (GND) | 3V3 / GND | แหล่งจ่ายไฟอ้างอิง |
+| 2 | | ขา 2 (SIG - ขากลาง) | **GPIO 34** (ADC1_CH6) | สัญญาณอนาล็อก 0–3.3V |
+| 3 | **PWM LED (สีเขียว)** | Anode (+) / Cathode (-) | **GPIO 18** (ผ่าน R 330Ω) / GND | เอาต์พุตสัญญาณ PWM |
+| 4 | **Indicator LED (สีแดง)**| Anode (+) / Cathode (-) | **GPIO 19** (ผ่าน R 330Ω) / GND | เอาต์พุตดิจิทัลแจ้งเตือน |
+| 5 | **Pushbutton** | ขา 1.L / ขา 2.L | **GPIO 4** / GND | อินพุตดิจิทัล (INPUT_PULLUP) |
 
-const int LDR_PIN = A0;   // ขาอินพุตอ่านค่า LDR (Analog Pin A0)
-const int LED_PIN = 9;    // ขาเอาต์พุตจ่ายสัญญาณ PWM ไปยัง LED (Pin 9)
+---
 
-// ค่า Calibration (สำหรับ Tinkercad LDR ช่วงประมาณ 200 ถึง 900)
-const int LDR_MIN = 200;   // ค่า ADC ที่วัดได้เมื่อความสว่างน้อยที่สุด (มืด)
-const int LDR_MAX = 900;   // ค่า ADC ที่วัดได้เมื่อความสว่างมากที่สุด (สว่างจ้า)
+### 2.6.3 ไฟล์โครงสร้างวงจร `diagram.json` สำหรับ Wokwi
 
-void setup() {
-  Serial.begin(9600); // เริ่มต้น Serial Monitor ที่ความเร็ว 9600 bps
-  pinMode(LED_PIN, OUTPUT);
-  Serial.println("=== Arduino Uno Auto Light System ===");
-}
+```json
+{
+  "version": 1,
+  "author": "KSU TechEngineering",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-potentiometer", "id": "pot1", "top": -120, "left": -80, "attrs": { "value": "2048" } },
+    { "type": "wokwi-led", "id": "led_pwm", "top": -120, "left": 100, "attrs": { "color": "green" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": -70, "left": 100, "attrs": { "value": "330" } },
+    { "type": "wokwi-led", "id": "led_alert", "top": -120, "left": 160, "attrs": { "color": "red" } },
+    { "type": "wokwi-resistor", "id": "r2", "top": -70, "left": 160, "attrs": { "value": "330" } },
+    { "type": "wokwi-pushbutton", "id": "btn1", "top": 100, "left": 100, "attrs": { "color": "blue" } }
+  ],
+  "connections": [
+    [ "esp:3V3", "pot1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "pot1:GND", "black", [ "v0" ] ],
+    [ "esp:34", "pot1:SIG", "green", [ "v0" ] ],
 
-void loop() {
-  int ldrValue = analogRead(LDR_PIN); // อ่านค่า ADC 10 บิต (0-1023)
+    [ "esp:18", "r1:1", "orange", [ "v0" ] ],
+    [ "r1:2", "led_pwm:A", "orange", [ "v0" ] ],
+    [ "led_pwm:C", "esp:GND", "black", [ "v0" ] ],
 
-  // แปลงค่า LDR -> เอาต์พุตสว่าง LED (กลับด้าน: แสงน้อย = ค่า ADC ต่ำ -> ให้ LED สว่างมาก)
-  int brightness = map(ldrValue, LDR_MIN, LDR_MAX, 255, 0);
-  brightness = constrain(brightness, 0, 255);  // บังคับช่วงไม่ให้เกิน 0-255
+    [ "esp:19", "r2:1", "orange", [ "v0" ] ],
+    [ "r2:2", "led_alert:A", "orange", [ "v0" ] ],
+    [ "led_alert:C", "esp:GND", "black", [ "v0" ] ],
 
-  analogWrite(LED_PIN, brightness); // ส่งค่าเอาต์พุต PWM หรี่/เร่งไฟ LED
-
-  // แปลงค่าดิบ ADC เป็นระดับแรงดันไฟฟ้า (5.0V อ้างอิง)
-  float voltage = (ldrValue / 1023.0) * 5.0;
-
-  Serial.print("LDR Raw: ");
-  Serial.print(ldrValue);
-  Serial.print(" | Voltage: ");
-  Serial.print(voltage, 2);
-  Serial.print(" V | LED Brightness: ");
-  Serial.print(brightness);
-  Serial.print("/255 (");
-  Serial.print((brightness * 100) / 255);
-  Serial.println("%)");
-
-  delay(200);
+    [ "esp:4", "btn1:1.L", "blue", [ "v0" ] ],
+    [ "btn1:2.L", "esp:GND", "black", [ "v0" ] ]
+  ],
+  "dependencies": {}
 }
 ```
 
-**อธิบายการทำงาน:**
+---
 
-1. `analogRead()` อ่านระดับศักย์แบ่งแรงดันของ LDR ออกมาเป็นค่าดิจิทัล 10 บิต
-2. `map()` แปลงค่าจากช่วง calibrate ของเซนเซอร์ (200-900) เป็นความละเอียด 8 บิตของ PWM (0-255) ในทิศทางกลับกัน
-3. `constrain()` ปรับค่าล้นขอบนอกเขตให้อยู่ในขีดจำกัดช่วง 0 ถึง 255
-4. `analogWrite()` ส่งสัญญาณ Duty Cycle ไปสั่งงานไฟหรี่หลอด LED
+### 2.6.4 ซอร์สโค้ดภาษา C++ (Arduino Framework)
 
-> 💡 **ลองเล่นบน Tinkercad:** กดคลิกที่ตัวอุปกรณ์ LDR ในหน้ารันระบบจำลอง แล้วเลื่อนแถบควบคุมความเข้มแสง ท่านจะพบการเปลี่ยนความสว่างของ LED สลับความสว่างอัตโนมัติตามแบบเรียลไทม์
+```cpp
+/**
+ * LAB 02: Digital I/O, 12-Bit ADC Scaling & Hardware PWM (LEDC)
+ * Course: Digital Technology for Engineering, KSU
+ */
 
+const int POT_PIN = 34;      // ขาอนาล็อก ADC
+const int PWM_LED_PIN = 18;  // ขาต่อหลอดไฟหรี่ PWM
+const int ALERT_LED_PIN = 19;// ขาต่อหลอดแจ้งเตือนดิจิทัล
+const int BTN_PIN = 4;       // ขาปุ่มกด
+
+// กำหนดพารามิเตอร์ของ ESP32 LEDC PWM
+const int PWM_CHANNEL = 0;
+const int PWM_FREQ = 5000;    // ความถี่ 5 kHz
+const int PWM_RESOLUTION = 8; // ความละเอียด 8-bit (Duty Cycle 0 - 255)
+
+unsigned long lastPrintTime = 0;
+
+void setup() {
+  Serial.begin(115200);
+
+  pinMode(ALERT_LED_PIN, OUTPUT);
+  pinMode(BTN_PIN, INPUT_PULLUP);
+
+  // ตั้งค่าช่องสัญญาณ PWM ด้วย LEDC API
+  ledcSetup(PWM_CHANNEL, PWM_FREQ, PWM_RESOLUTION);
+  ledcAttachPin(PWM_LED_PIN, PWM_CHANNEL);
+
+  Serial.println("\n--- LAB 02: ADC & PWM Interfacing Ready ---");
+}
+
+void loop() {
+  // 1. อ่านค่า ADC จาก Potentiometer (ขนาด 12-bit: 0 - 4095)
+  int rawADC = analogRead(POT_PIN);
+
+  // 2. คำนวณแรงดันไฟฟ้าที่แท้จริง: V = (ADC / 4095) * 3.3V
+  float voltage = (rawADC / 4095.0) * 3.3;
+
+  // 3. แปลงค่า ADC (0-4095) เป็นค่า Duty Cycle ของ PWM (0-255)
+  int dutyCycle = map(rawADC, 0, 4095, 0, 255);
+  float dutyPercent = (dutyCycle / 255.0) * 100.0;
+
+  // สั่งจ่ายสัญญาณ PWM
+  ledcWrite(PWM_CHANNEL, dutyCycle);
+
+  // 4. ตรรกะเตือนภัย: หากแรงดัน > 2.5V ให้เปิดหลอดไฟสีแดง
+  if (voltage >= 2.5) {
+    digitalWrite(ALERT_LED_PIN, HIGH);
+  } else {
+    digitalWrite(ALERT_LED_PIN, LOW);
+  }
+
+  // 5. พิมพ์ข้อมูลออกทาง Serial Monitor ทุก 500 ms
+  if (millis() - lastPrintTime >= 500) {
+    lastPrintTime = millis();
+    Serial.printf("[ADC] Raw: %4d | Volt: %4.2f V | PWM Duty: %3d (%5.1f %%) | Alert: %s\n",
+                  rawADC, voltage, dutyCycle, dutyPercent, (voltage >= 2.5) ? "OVER-VOLTAGE!" : "NORMAL");
+  }
+}
+```
+
+---
+
+### 2.6.5 ตารางบันทึกผลการทดลอง (Experiment Data Sheet)
+
+| ตำแหน่งหมุน Potentiometer | ค่าดิบ ADC (0–4095) | แรงดันคำนวณ ($V$) | ค่า PWM Duty (0–255) | ความสว่าง LED สีเขียว | สถานะ LED สีแดง |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| **หมุนซ้ายสุด (0%)** | 0 | 0.00 V | 0 | ดับสนิท | ดับ |
+| **หมุนตรงกลาง (50%)** | ~2048 | ~1.65 V | ~128 | สว่างปานกลาง | ดับ |
+| **หมุนขวาสุด (100%)** | 4095 | 3.30 V | 255 | สว่างสูงสุด | ติดสว่าง |
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Reference / Summary" data-tab-icon="📊" id="waveform" markdown="1">

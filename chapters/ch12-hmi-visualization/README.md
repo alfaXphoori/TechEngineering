@@ -200,208 +200,142 @@ GROUP BY time(5m) fill(linear)
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
+## 12.6 ปฏิบัติการ Wokwi Lab 14: การสร้าง HMI อุตสาหกรรม และการควบคุมสองทาง 2-Way RPC บน ThingsBoard
 
-## 12.7 การเชื่อมต่อกับโปรแกรมของผู้ใช้ (User Interface)
+**รหัสปฏิบัติการ:** LAB-12 | **เวลาปฏิบัติการ:** 2 ชั่วโมง  
+**เป้าหมายการเรียนรู้:** LLO14.1, LLO14.2 (CLO3, CLO4)  
+**เครื่องมือที่ใช้:** Wokwi Simulator, ThingsBoard Dashboard Builder, ESP32, Relay, OLED SSD1306
 
-### 12.7.1 หลักการ UI/UX สำหรับ IoT
+---
 
-**UI (User Interface)** คือหน้าตาที่ผู้ใช้เห็นและสัมผัส **UX (User Experience)** คือประสบการณ์โดยรวมในการใช้งาน
+### 12.6.1 วัตถุประสงค์เชิงปฏิบัติการ
+1. ออกแบบส่วนต่อประสานผู้ใช้ (Industrial HMI Dashboard) ตามมาตรฐานความปลอดภัยและสรีรศาสตร์ทางการมองเห็น (ISA 101)
+2. พัฒนาระบบรับคำสั่งสั่งการสองทางระยะไกล (Two-Way Remote Procedure Calls: RPC) จากหน้าเว็บ ThingsBoard ไปยังอุปกรณ์จริง
+3. แสดงผลสถานะหน้าเครื่องจักรแบบ Local HMI ผ่านจอ OLED ไปพร้อมกับการแสดงผลบนคลาวด์
 
-หลักการสำคัญ:
+---
 
-- **เรียบง่าย (Simple):** แสดงเฉพาะสิ่งจำเป็น ผู้ใช้ไม่ควรต้องคิดว่าจะกดตรงไหน
-- **ตอบสนองทันที (Responsive Feedback):** เมื่อกดปุ่มเปิดไฟ ต้องมีตอบกลับทันทีว่า "กำลังสั่ง..." หรือ "เปิดแล้ว"
-- **ป้องกันข้อผิดพลาด (Error Prevention):** ปุ่มหยุดเครื่องจักรฉุกเฉินต้องมีการยืนยันก่อนทำงาน
-- **สอดคล้องกัน (Consistency):** ใช้สีและตำแหน่งปุ่มเหมือนกันทุกหน้า
+### 12.6.2 แผนผังการต่อวงจร (Wiring Table)
 
-### 12.7.2 ส่วนควบคุม (Control Widgets)
+| อุปกรณ์ | ขาของอุปกรณ์ | ขาบนบอร์ด ESP32 DevKit | หน้าที่ / หมายเหตุ |
+|---|---|---|---|
+| **SSD1306 OLED (Local HMI)** | SDA / SCL | **GPIO 21 / GPIO 22** | แสดงผลหน้าเครื่องจักร (I2C) |
+| **Relay Module (Fan Driver)** | IN | **GPIO 13** | สั่งงานพัดลมจาก 2-Way RPC |
+| **Status LED** | Anode (+) | **GPIO 12** (ผ่าน R 330Ω) | ไฟแสดงสถานะ RPC Active |
 
-| ส่วนควบคุม | ใช้สำหรับ | ตัวอย่าง |
-|-----------|----------|---------|
-| ปุ่ม (Button) | เปิด/ปิด หรือสั่งงานครั้งเดียว | เปิดปั๊มน้ำ, รีเซ็ตระบบ |
-| สวิตช์ (Toggle Switch) | เปิด/ปิด แบบมีสถานะค้าง | เปิด/ปิดไฟ, เปิด/ปิดพัดลม |
-| สไลเดอร์ (Slider) | ปรับค่าในช่วงต่อเนื่อง | ปรับความเร็วมอเตอร์ 0-100% |
-| ช่องป้อนข้อมูล (Input Field) | ป้อนค่าตัวเลขที่แม่นยำ | ตั้งค่าอุณหภูมิเป้าหมาย 37.5°C |
-| Dropdown | เลือกจากตัวเลือก | เลือกโหมดทำงาน: Auto/Manual |
+---
 
-### 12.7.3 โมบายแอป vs. เว็บแอป
+### 12.6.3 ไฟล์โครงสร้างวงจร `diagram.json` สำหรับ Wokwi
 
-- **เว็บแอป (Web App):** เปิดผ่านเบราว์เซอร์ ไม่ต้องติดตั้ง อัปเดตง่าย ใช้ได้ทุกอุปกรณ์ เหมาะกับแดชบอร์ดในโรงงาน
-- **โมบายแอป (Mobile App):** ติดตั้งบนมือถือ รับ Push Notification ได้ ใช้งาน Offline บางส่วน เหมาะกับการแจ้งเตือนฉุกเฉิน
+```json
+{
+  "version": 1,
+  "author": "KSU TechEngineering",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-ssd1306", "id": "oled1", "top": -140, "left": 80, "attrs": { "i2cAddress": "0x3c" } },
+    { "type": "wokwi-relay-module", "id": "relay1", "top": 120, "left": 120, "attrs": {} },
+    { "type": "wokwi-led", "id": "led1", "top": 120, "left": -80, "attrs": { "color": "blue" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 170, "left": -80, "attrs": { "value": "330" } }
+  ],
+  "connections": [
+    [ "esp:3V3", "oled1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "oled1:GND", "black", [ "v0" ] ],
+    [ "esp:21", "oled1:SDA", "green", [ "v0" ] ],
+    [ "esp:22", "oled1:SCL", "yellow", [ "v0" ] ],
 
-### 12.7.4 การใช้ ThingsBoard และสถาปัตยกรรม Telemetry / RPC
+    [ "esp:5V", "relay1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "relay1:GND", "black", [ "v0" ] ],
+    [ "esp:13", "relay1:IN", "purple", [ "v0" ] ],
 
-แพลตฟอร์ม **ThingsBoard** ออกแบบการสื่อสารระหว่างอุปกรณ์ไมโครคอนโทรลเลอร์กับผู้ใช้งานบนหลักการ **คีย์สตริง (String Key)** แทนการอ้างอิงพินทางกายภาพโดยตรง ทำให้โค้ดบนบอร์ดเป็นอิสระจากขา GPIO และสามารถปรับเปลี่ยนฮาร์ดแวร์ได้โดยไม่กระทบต่อการตั้งค่าแดชบอร์ด
+    [ "esp:12", "led1:A", "orange", [ "v0" ] ],
+    [ "led1:C", "r1:1", "black", [ "v0" ] ],
+    [ "r1:2", "esp:GND", "black", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}
+```
 
-#### 1. คีย์โทรมาตรและ RPC Method (Telemetry Keys & RPC Methods)
-ThingsBoard ไม่มีแนวคิด "พินเสมือน" แต่ใช้สองกลไกหลัก:
-- **Telemetry Keys (คีย์โทรมาตร):** สตริงชื่อตัวแปรที่บอร์ดส่งขึ้นคลาวด์ เช่น `"temperature"`, `"humidity"` ซึ่งแดชบอร์ดจะผูก Widget เข้ากับคีย์เหล่านี้โดยตรง
-- **RPC Methods (เมธอด RPC):** ชื่อคำสั่งในรูปแบบสตริง เช่น `"setLed"`, `"setSpeed"` ที่แดชบอร์ดส่งลงมาควบคุมฮาร์ดแวร์ บอร์ดจะระบุแอคชันเฉพาะผ่านชื่อเมธอดนี้และนำค่าพารามิเตอร์ไปสั่งงาน GPIO
-- **ข้อดี:** เปลี่ยนพิน GPIO ในวงจร (เช่น จาก GPIO2 เป็น GPIO5) โดยแก้โค้ดฝั่งบอร์ดเพียงจุดเดียว แดชบอร์ดไม่ต้องเปลี่ยนแปลงใด ๆ
+---
 
-#### 2. กลไกการอัปโหลดข้อมูลเซนเซอร์ (Uplink — publish Telemetry)
-เมื่อ ESP32 ต้องการส่งอุณหภูมิขึ้นแสดงผลบนแดชบอร์ด:
-- บอร์ดจัดเตรียมข้อมูลในรูปแบบ JSON เช่น `{"temperature": 28.5}`
-- เรียกใช้ `client.publish("v1/devices/me/telemetry", payload)` ผ่านโปรโตคอล MQTT ไปยัง ThingsBoard Cloud ที่ `thingsboard.cloud:1883`
-- ThingsBoard จะบันทึกค่าลงฐานข้อมูลอนุกรมเวลา (Time-series Storage) และอัปเดต Widget ทุกตัวที่ผูกกับคีย์ `"temperature"` บนแดชบอร์ดในทันที
+### 12.6.4 ซอร์สโค้ดภาษา C++ รองรับการสั่งการ Two-Way RPC
 
-#### 3. กลไกการรับคำสั่งควบคุมอุปกรณ์ (Downlink — RPC Command)
-เมื่อผู้ใช้กดสวิตช์ Toggle บนแดชบอร์ดเพื่อสั่งเปิด-ปิด LED:
-- แดชบอร์ดส่ง RPC Request มาในรูป JSON เช่น `{"method": "setLed", "params": true}` ลงมาที่ Topic `v1/devices/me/rpc/request/{id}`
-- บอร์ดที่ Subscribe Topic `v1/devices/me/rpc/request/+` ไว้จะได้รับข้อความนี้ผ่านฟังก์ชัน Callback `onRpcCommand()`
-- ภายใน Callback บอร์ดแยกค่า `method` และ `params` ออกมาสั่งงาน `digitalWrite(LED_PIN, params)` แล้วตอบกลับ (RPC Response) บน Topic `v1/devices/me/rpc/response/{id}` ด้วย `{"success": true}`
+```cpp
+/**
+ * LAB 12: Industrial HMI & 2-Way RPC Control over ThingsBoard
+ * Course: Digital Technology for Engineering, KSU
+ */
 
-#### 4. การซิงโครไนซ์สถานะอุปกรณ์ด้วย Shared Attributes
-**ปัญหา:** เมื่อ ESP32 รีบูตหลังไฟดับ ค่าตัวแปรในหน่วยความจำ RAM จะหายทั้งหมด (LED กลับเป็น OFF) แต่แดชบอร์ดยังแสดงสวิตช์เป็น ON เนื่องจากคลาวด์เก็บสถานะล่าสุดไว้ สถานะจึงไม่ตรงกัน
+#include <WiFi.h>
+#include <PubSubClient.h>
+#include <ArduinoJson.h>
 
-**วิธีแก้ด้วย ThingsBoard Shared Attributes:**
-- เมื่อบอร์ดเชื่อมต่อคลาวด์สำเร็จ บอร์ดจะส่งคำขอดึงสถานะล่าสุดไปยัง Topic `v1/devices/me/attributes/request/1`
-- ThingsBoard จะตอบกลับด้วยค่าคุณลักษณะ (Attribute) ที่บันทึกไว้บนคลาวด์ เช่น `{"ledState": true}`
-- บอร์ดอ่านค่านี้มาตั้งสถานะฮาร์ดแวร์ให้ตรงกับแดชบอร์ดโดยอัตโนมัติทันที
-- กลไกนี้เรียกว่า **Digital Twin** — ThingsBoard เก็บ "ภาพจำลองดิจิทัล" ของสถานะอุปกรณ์ทุกตัวบนคลาวด์ตลอดเวลา
+const char* WIFI_SSID = "Wokwi-GUEST";
+const char* WIFI_PASS = "";
 
-<div style="text-align: center; margin: 25px 0;">
-<svg viewBox="0 0 820 400" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
-  <title>สถาปัตยกรรม ThingsBoard Telemetry และ RPC สองทิศทาง</title>
-  <style>
-    #tb9-svg .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
-    #tb9-svg .box-esp { fill: #faf5ff; stroke: #7c3aed; stroke-width: 2; }
-    #tb9-svg .box-cloud { fill: #eff6ff; stroke: #2563eb; stroke-width: 2; }
-    #tb9-svg .box-dash { fill: #f0fdf4; stroke: #16a34a; stroke-width: 2; }
-    #tb9-svg .code-box { fill: #f1f5f9; stroke: #e2e8f0; stroke-width: 1; }
+const char* TB_SERVER = "thingsboard.cloud";
+const char* TB_TOKEN  = "YOUR_ACCESS_TOKEN_HERE";
 
-    #tb9-svg .lbl-title { font-size: 13px; font-weight: 700; fill: #0f172a; }
-    #tb9-svg .lbl-sub { font-size: 9px; fill: #64748b; font-weight: 500; }
-    #tb9-svg .lbl-code-p { font-size: 9px; font-family: monospace; fill: #7c3aed; font-weight: bold; }
-    #tb9-svg .lbl-code-g { font-size: 9px; font-family: monospace; fill: #059669; font-weight: bold; }
-    #tb9-svg .lbl-code-r { font-size: 9px; font-family: monospace; fill: #dc2626; font-weight: bold; }
-    #tb9-svg .lbl-key { font-size: 9px; font-weight: 700; fill: #ffffff; }
+#define RELAY_FAN_PIN 13
+#define LED_STATUS_PIN 12
 
-    #tb9-svg .flow-up { fill: none; stroke: #10b981; stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 6 7; animation: tb9-right 1.8s linear infinite; }
-    #tb9-svg .flow-down { fill: none; stroke: #ef4444; stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 6 7; animation: tb9-left 1.8s linear infinite; }
-    #tb9-svg .flow-sync { fill: none; stroke: #6366f1; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 4 5; animation: tb9-left 2.2s linear infinite; }
+WiFiClient espClient;
+PubSubClient client(espClient);
 
-    @keyframes tb9-right { to { stroke-dashoffset: -26; } }
-    @keyframes tb9-left  { to { stroke-dashoffset:  26; } }
+void onRpcMessage(char* topic, byte* payload, unsigned int length) {
+  String responseTopic = String(topic);
+  responseTopic.replace("request", "response");
 
-    #tb9-svg .pill-g { fill: #10b981; }
-    #tb9-svg .pill-r { fill: #ef4444; }
-    #tb9-svg .pill-i { fill: #6366f1; }
-    #tb9-svg .widget-box { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; }
-    #tb9-svg .btn-glow { animation: tb9-pulse 2s infinite ease-in-out; }
-    @keyframes tb9-pulse { 0%,100% { opacity: 0.8; } 50% { opacity: 1; } }
-  </style>
+  String msg = "";
+  for (unsigned int i = 0; i < length; i++) msg += (char)payload[i];
 
-  <g id="tb9-svg">
-    <rect x="5" y="5" width="810" height="390" rx="10" class="bg"/>
+  Serial.printf("\n[RPC RECEIVED] Topic: %s | Payload: %s\n", topic, msg.c_str());
 
-    <!-- Main Title -->
-    <text x="410" y="30" text-anchor="middle" font-size="14" font-weight="700" fill="#1e293b">สถาปัตยกรรม ThingsBoard: Telemetry Keys + RPC Methods (สองทิศทาง)</text>
+  JsonDocument doc;
+  if (!deserializeJson(doc, msg)) {
+    const char* method = doc["method"];
 
-    <!-- ========== LEFT: ESP32 ========== -->
-    <rect x="20" y="50" width="215" height="320" rx="8" class="box-esp"/>
-    <text x="127" y="73" text-anchor="middle" class="lbl-title" fill="#7c3aed">ESP32 (บอร์ดควบคุม)</text>
-    <text x="127" y="88" text-anchor="middle" class="lbl-sub">WiFi: Wokwi-GUEST | Auth: Access Token</text>
+    if (String(method) == "setFanState") {
+      bool state = doc["params"];
+      digitalWrite(RELAY_FAN_PIN, state ? HIGH : LOW);
+      digitalWrite(LED_STATUS_PIN, state ? HIGH : LOW);
+      Serial.printf("[ACTION] Fan Relay set to: %s\n", state ? "ON" : "OFF");
 
-    <!-- Code block: Telemetry publish -->
-    <rect x="32" y="100" width="191" height="72" rx="4" class="code-box"/>
-    <text x="42" y="115" class="lbl-sub">ส่งข้อมูลอุณหภูมิขึ้นคลาวด์ (ทุก 3 วินาที)</text>
-    <text x="42" y="132" class="lbl-code-g">StaticJsonDocument&lt;128&gt; doc;</text>
-    <text x="42" y="147" class="lbl-code-g">doc["temperature"] = temp;</text>
-    <text x="42" y="162" class="lbl-code-g">client.publish(</text>
-    <text x="52" y="175" class="lbl-code-g">"v1/devices/me/telemetry", buf);</text>
-    <circle cx="223" cy="110" r="5" fill="#10b981"/>
+      client.publish(responseTopic.c_str(), "{\"status\":\"SUCCESS\"}");
+    }
+  }
+}
 
-    <!-- Code block: RPC handler -->
-    <rect x="32" y="186" width="191" height="88" rx="4" class="code-box"/>
-    <text x="42" y="201" class="lbl-sub">รับคำสั่ง RPC ควบคุม LED (GPIO2)</text>
-    <text x="42" y="217" class="lbl-code-r">void onRpcCommand(char* topic,</text>
-    <text x="52" y="230" class="lbl-code-r">  byte* payload, uint len) {</text>
-    <text x="52" y="243" class="lbl-code-r">  const char* m = doc["method"];</text>
-    <text x="52" y="256" class="lbl-code-r">  if (!strcmp(m,"setLed"))</text>
-    <text x="62" y="269" class="lbl-code-r">    digitalWrite(2, doc["params"]);</text>
-    <text x="42" y="269" class="lbl-code-r">}</text>
-    <circle cx="223" cy="230" r="5" fill="#ef4444"/>
+void setup() {
+  Serial.begin(115200);
+  pinMode(RELAY_FAN_PIN, OUTPUT);
+  pinMode(LED_STATUS_PIN, OUTPUT);
+  digitalWrite(RELAY_FAN_PIN, LOW);
+  digitalWrite(LED_STATUS_PIN, LOW);
 
-    <!-- Code block: Shared Attr sync -->
-    <rect x="32" y="288" width="191" height="65" rx="4" class="code-box"/>
-    <text x="42" y="303" class="lbl-sub">ร้องขอสถานะล่าสุดเมื่อเชื่อมต่อใหม่</text>
-    <text x="42" y="319" class="lbl-code-p">client.publish(</text>
-    <text x="52" y="332" class="lbl-code-p">"v1/devices/me/</text>
-    <text x="52" y="345" class="lbl-code-p">  attributes/request/1", "{}");</text>
-    <circle cx="223" cy="318" r="5" fill="#6366f1"/>
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+  while (WiFi.status() != WL_CONNECTED) delay(500);
 
-    <!-- ========== MIDDLE: ThingsBoard Cloud ========== -->
-    <rect x="305" y="50" width="210" height="320" rx="8" class="box-cloud"/>
-    <text x="410" y="73" text-anchor="middle" class="lbl-title" fill="#2563eb">ThingsBoard Cloud</text>
-    <text x="410" y="88" text-anchor="middle" class="lbl-sub">thingsboard.cloud:1883 | Access Token Auth</text>
+  client.setServer(TB_SERVER, 1883);
+  client.setCallback(onRpcMessage);
+}
 
-    <!-- Telemetry Key pill -->
-    <rect x="330" y="105" width="160" height="32" rx="6" class="pill-g"/>
-    <text x="410" y="125" text-anchor="middle" class="lbl-key">"temperature" (Telemetry Key)</text>
-
-    <!-- RPC Method pill -->
-    <rect x="330" y="195" width="160" height="32" rx="6" class="pill-r"/>
-    <text x="410" y="215" text-anchor="middle" class="lbl-key">"setLed" (RPC Method)</text>
-
-    <!-- Shared Attribute pill -->
-    <rect x="330" y="295" width="160" height="32" rx="6" class="pill-i"/>
-    <text x="410" y="315" text-anchor="middle" class="lbl-key">ledState (Shared Attribute)</text>
-
-    <!-- Digital Twin label -->
-    <rect x="325" y="345" width="170" height="18" rx="4" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
-    <text x="410" y="358" text-anchor="middle" font-size="9" font-weight="700" fill="#1e40af">Digital Twin: เก็บสถานะล่าสุดบนคลาวด์</text>
-
-    <!-- ========== RIGHT: Dashboard ========== -->
-    <rect x="585" y="50" width="210" height="320" rx="8" class="box-dash"/>
-    <text x="690" y="73" text-anchor="middle" class="lbl-title" fill="#16a34a">แดชบอร์ด (Web / App)</text>
-    <text x="690" y="88" text-anchor="middle" class="lbl-sub">ThingsBoard Dashboard</text>
-
-    <!-- Widget: Gauge -->
-    <rect x="605" y="105" width="170" height="38" rx="4" class="widget-box"/>
-    <text x="615" y="120" font-size="9" font-weight="700" fill="#475569">Gauge: อุณหภูมิ</text>
-    <text x="770" y="132" text-anchor="end" font-size="9" font-weight="700" fill="#10b981">"temperature"</text>
-    <path d="M 615,135 A 16,16 0 0 1 647,135" fill="none" stroke="#cbd5e1" stroke-width="3" stroke-linecap="round"/>
-    <path d="M 615,135 A 16,16 0 0 1 638,120" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round"/>
-    <circle cx="631" cy="135" r="3" fill="#334155"/>
-
-    <!-- Widget: Switch -->
-    <rect x="605" y="195" width="170" height="38" rx="4" class="widget-box"/>
-    <text x="615" y="210" font-size="9" font-weight="700" fill="#475569">Switch: เปิด/ปิด LED</text>
-    <rect x="735" y="203" width="26" height="14" rx="7" fill="#ef4444"/>
-    <circle cx="741" cy="210" r="5" fill="#ffffff" class="btn-glow"/>
-    <text x="770" y="222" text-anchor="end" font-size="9" font-weight="700" fill="#ef4444">"setLed" RPC</text>
-
-    <!-- Widget: Shared Attr display -->
-    <rect x="605" y="295" width="170" height="38" rx="4" class="widget-box"/>
-    <text x="615" y="310" font-size="9" font-weight="700" fill="#475569">Value: สถานะ LED</text>
-    <text x="770" y="322" text-anchor="end" font-size="9" font-weight="700" fill="#6366f1">ledState (Attr)</text>
-    <circle cx="745" cy="316" r="6" fill="#6366f1" opacity="0.8"/>
-
-    <!-- ========== FLOW LINES ========== -->
-    <!-- Telemetry up: ESP32 -> Cloud -->
-    <path d="M 235 121 H 299" class="flow-up"/>
-    <!-- Telemetry up: Cloud -> Dashboard -->
-    <path d="M 515 121 H 579" class="flow-up"/>
-    <text x="267" y="113" font-size="8" fill="#10b981" font-weight="bold" text-anchor="middle">Telemetry</text>
-    <text x="547" y="113" font-size="8" fill="#10b981" font-weight="bold" text-anchor="middle">push ขึ้นหน้าจอ</text>
-
-    <!-- RPC down: Dashboard -> Cloud -->
-    <path d="M 579 211 H 515" class="flow-down"/>
-    <!-- RPC down: Cloud -> ESP32 -->
-    <path d="M 299 211 H 235" class="flow-down"/>
-    <text x="547" y="205" font-size="8" fill="#ef4444" font-weight="bold" text-anchor="middle">RPC Request</text>
-    <text x="267" y="205" font-size="8" fill="#ef4444" font-weight="bold" text-anchor="middle">RPC Response</text>
-
-    <!-- Sync: ESP32 -> Cloud (curved) -->
-    <path d="M 235 311 C 267 350 299 350 305 311" class="flow-sync"/>
-    <text x="267" y="368" font-size="8" fill="#6366f1" font-weight="bold" text-anchor="middle">Attr Request / Response</text>
-    <!-- Sync: Cloud -> Dashboard -->
-    <path d="M 515 311 H 579" class="flow-sync"/>
-    <text x="547" y="305" font-size="8" fill="#6366f1" font-weight="bold" text-anchor="middle">Attr sync</text>
-  </g>
-</svg>
-<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 9.2 สถาปัตยกรรม ThingsBoard: Telemetry Key "temperature" (สีเขียว, ขาขึ้น), RPC Method "setLed" (สีแดง, ขาลง) และ Shared Attribute Sync (สีม่วง, ซิงค์สถานะ)</div>
+void loop() {
+  if (!client.connected()) {
+    while (!client.connected()) {
+      if (client.connect("ESP32_HMI", TB_TOKEN, NULL)) {
+        Serial.println("[ThingsBoard] Connected & Subscribing to RPC Commands...");
+        client.subscribe("v1/devices/me/rpc/request/+");
+      } else {
+        delay(2000);
+      }
+    }
+  }
+  client.loop();
+}
+```
+</div>
 </div>
 
 ---

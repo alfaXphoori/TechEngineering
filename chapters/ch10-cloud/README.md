@@ -243,253 +243,172 @@ $$\text{Physical Sensor} \rightarrow \text{Edge MCU (ESP32)} \rightarrow \text{L
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
+## 10.6 ปฏิบัติการ Wokwi Lab 11 & 12: การส่งข้อมูลขึ้นคลาวด์ ThingsBoard และระบบประมวลผลกฎ
 
-## 10.6 การเขียนโปรแกรมเชื่อมต่อ ESP32 เข้ากับ ThingsBoard Cloud
+**รหัสปฏิบัติการ:** LAB-10 | **เวลาปฏิบัติการ:** 2 ชั่วโมง  
+**เป้าหมายการเรียนรู้:** LLO11.1, LLO11.2, LLO12.1, LLO12.2 (CLO2, CLO3, CLO4)  
+**เครื่องมือที่ใช้:** Wokwi Simulator, ThingsBoard Cloud Account, ESP32, DHT22, Potentiometer, Relay
 
-การทำให้อุปกรณ์ฮาร์ดแวร์เชื่อมต่อกับแพลตฟอร์ม ThingsBoard คลาวด์ได้อย่างปลอดภัยและมีเสถียรภาพ ต้องเข้าใจการไหลของข้อมูลการเชื่อมต่อและโครงสร้างซอฟต์แวร์ดังต่อไปนี้:
+---
 
-<div style="text-align: center; margin: 25px 0;">
-<svg viewBox="0 0 850 460" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
-  <title>แผนภาพแสดงสถาปัตยกรรมการเชื่อมต่อของระบบ ThingsBoard IoT</title>
-  <style>
-    #tb-conn-svg .bg-main { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; rx: 12px; }
-    #tb-conn-svg .box-esp32 { fill: #faf5ff; stroke: #7c3aed; stroke-width: 2; rx: 8px; }
-    #tb-conn-svg .box-cloud { fill: #eff6ff; stroke: #2563eb; stroke-width: 2; rx: 8px; }
-    #tb-conn-svg .box-app { fill: #f0fdf4; stroke: #16a34a; stroke-width: 2; rx: 8px; }
-    #tb-conn-svg .box-sensor { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; rx: 4px; }
-    
-    #tb-conn-svg .lbl-main-title { font-size: 15px; font-weight: 700; fill: #1e293b; }
-    #tb-conn-svg .lbl-title { font-size: 11px; font-weight: 700; fill: #0f172a; }
-    #tb-conn-svg .lbl-sub { font-size: 8.5px; fill: #475569; font-weight: 500; }
-    #tb-conn-svg .lbl-vpin { font-size: 9px; font-weight: bold; fill: #ffffff; }
-    
-    #tb-conn-svg .path-data-up { fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2.5; stroke-dasharray: 6 8; animation: tb-flowRight 2.5s linear infinite; }
-    #tb-conn-svg .path-data-down { fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2.5; stroke-dasharray: 6 8; animation: tb-flowLeft 2.5s linear infinite; }
-    
-    @keyframes tb-flowRight {
-      to { stroke-dashoffset: -28; }
+### 10.6.1 วัตถุประสงค์เชิงปฏิบัติการ
+1. สร้างอุปกรณ์ (Device Profile) บน ThingsBoard Cloud และรับ Access Token ประจำอุปกรณ์
+2. ส่งข้อมูล Telemetry (อุณหภูมิ, ความชื้น, การสั่นสะเทือน) และ Client Attributes ผ่านโพรโทคอล MQTT
+3. ออกแบบ Rule Engine บน ThingsBoard เพื่อสร้างการแจ้งเตือน (Create Alarm) อัตโนมัติเมื่อค่าเกินเกณฑ์วิกฤต
+
+---
+
+### 10.6.2 แผนผังการต่อวงจร (Wiring Table)
+
+| อุปกรณ์ | ขาของอุปกรณ์ | ขาบนบอร์ด ESP32 DevKit | หน้าที่ / หมายเหตุ |
+|---|---|---|---|
+| **DHT22 Climate Sensor** | DATA | **GPIO 15** | สัญญาณอุณหภูมิและความชื้น |
+| **Potentiometer (Vibration Sim)** | SIG | **GPIO 34** (ADC1) | จำลองแรงสั่นสะเทือน (0.0 - 5.0 G) |
+| **Relay Module (Cooling Fan)** | IN | **GPIO 13** | สั่งเปิด-ปิดพัดลมระบายความร้อน |
+| **Status LED** | Anode (+) | **GPIO 12** (ผ่าน R 330Ω) | แสดงสถานะเชื่อมต่อคลาวด์ |
+
+---
+
+### 10.6.3 ไฟล์โครงสร้างวงจร `diagram.json` สำหรับ Wokwi
+
+```json
+{
+  "version": 1,
+  "author": "KSU TechEngineering",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-dht22", "id": "dht1", "top": -140, "left": 120, "attrs": { "temperature": "32.4", "humidity": "64" } },
+    { "type": "wokwi-potentiometer", "id": "pot1", "top": -140, "left": -100, "attrs": { "value": "1800" } },
+    { "type": "wokwi-relay-module", "id": "relay1", "top": 120, "left": 120, "attrs": {} },
+    { "type": "wokwi-led", "id": "led1", "top": 120, "left": -80, "attrs": { "color": "green" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 170, "left": -80, "attrs": { "value": "330" } }
+  ],
+  "connections": [
+    [ "esp:3V3", "dht1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "dht1:GND", "black", [ "v0" ] ],
+    [ "esp:15", "dht1:SDA", "blue", [ "v0" ] ],
+
+    [ "esp:3V3", "pot1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "pot1:GND", "black", [ "v0" ] ],
+    [ "esp:34", "pot1:SIG", "green", [ "v0" ] ],
+
+    [ "esp:5V", "relay1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "relay1:GND", "black", [ "v0" ] ],
+    [ "esp:13", "relay1:IN", "purple", [ "v0" ] ],
+
+    [ "esp:12", "led1:A", "orange", [ "v0" ] ],
+    [ "led1:C", "r1:1", "black", [ "v0" ] ],
+    [ "r1:2", "esp:GND", "black", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}
+```
+
+---
+
+### 10.6.4 ซอร์สโค้ดภาษา C++ สำหรับเชื่อมต่อ ThingsBoard Cloud
+
+```cpp
+/**
+ * LAB 10: ThingsBoard IoT Cloud Telemetry & Attributes Client
+ * Course: Digital Technology for Engineering, KSU
+ */
+
+#include <WiFi.h>
+#include <PubSubClient.h>
+#include <ArduinoJson.h>
+#include <DHT.h>
+
+const char* WIFI_SSID = "Wokwi-GUEST";
+const char* WIFI_PASS = "";
+
+const char* TB_SERVER = "thingsboard.cloud";
+const int   TB_PORT   = 1883;
+const char* TB_TOKEN  = "YOUR_ACCESS_TOKEN_HERE";
+
+const char* TB_TELEMETRY_TOPIC = "v1/devices/me/telemetry";
+const char* TB_ATTRIBUTES_TOPIC = "v1/devices/me/attributes";
+
+#define DHTPIN 15
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
+
+#define POT_VIB_PIN 34
+#define RELAY_PIN 13
+#define LED_PIN 12
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+unsigned long lastSend = 0;
+
+void reconnectThingsBoard() {
+  while (!client.connected()) {
+    Serial.print("[ThingsBoard] Connecting with Access Token...");
+    if (client.connect("ESP32_Device", TB_TOKEN, NULL)) {
+      Serial.println("CONNECTED!");
+      digitalWrite(LED_PIN, HIGH);
+
+      JsonDocument attrDoc;
+      attrDoc["firmware_version"] = "v2.1.0";
+      attrDoc["machine_model"] = "CNC-SPINDLE-4500";
+      attrDoc["ip_address"] = WiFi.localIP().toString();
+
+      String attrPayload;
+      serializeJson(attrDoc, attrPayload);
+      client.publish(TB_ATTRIBUTES_TOPIC, attrPayload.c_str());
+    } else {
+      digitalWrite(LED_PIN, LOW);
+      Serial.printf("FAILED, rc=%d. Retrying in 3s...\n", client.state());
+      delay(3000);
     }
-    @keyframes tb-flowLeft {
-      to { stroke-dashoffset: 28; }
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(RELAY_PIN, OUTPUT);
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, LOW);
+  digitalWrite(LED_PIN, LOW);
+
+  dht.begin();
+
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+  while (WiFi.status() != WL_CONNECTED) delay(500);
+
+  client.setServer(TB_SERVER, TB_PORT);
+}
+
+void loop() {
+  if (!client.connected()) reconnectThingsBoard();
+  client.loop();
+
+  if (millis() - lastSend >= 3000) {
+    lastSend = millis();
+
+    float t = dht.readTemperature();
+    float h = dht.readHumidity();
+    int rawVib = analogRead(POT_VIB_PIN);
+    float vibG = (rawVib / 4095.0) * 5.0; // 0.0 - 5.0 G
+
+    if (!isnan(t) && !isnan(h)) {
+      JsonDocument doc;
+      doc["temperature"] = t;
+      doc["humidity"] = h;
+      doc["vibration"] = vibG;
+      doc["fan_running"] = digitalRead(RELAY_PIN) == HIGH;
+
+      String payload;
+      serializeJson(doc, payload);
+
+      client.publish(TB_TELEMETRY_TOPIC, payload.c_str());
+      Serial.printf("[TELEMETRY -> ThingsBoard] %s\n", payload.c_str());
     }
-    
-    #tb-conn-svg .btn-glow { animation: tb-pulseGlow 2s infinite ease-in-out; }
-    @keyframes tb-pulseGlow {
-      0%, 100% { filter: drop-shadow(0 0 1px #eab30844); }
-      50% { filter: drop-shadow(0 0 6px #eab308aa); }
-    }
-  </style>
-
-  <defs>
-    <marker id="arr-r" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#ef4444"/></marker>
-    <marker id="arr-g" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#10b981"/></marker>
-    <marker id="arr-y" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#eab308"/></marker>
-    <marker id="arr-i" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#6366f1"/></marker>
-  </defs>
-
-  <g id="tb-conn-svg">
-    <!-- Background -->
-    <rect x="5" y="5" width="840" height="450" class="bg-main"/>
-
-    <!-- Main Title -->
-    <text x="425" y="32" text-anchor="middle" class="lbl-main-title">แผนภาพแสดงสถาปัตยกรรมการเชื่อมต่อของระบบ ThingsBoard IoT (Two-way MQTT/RPC)</text>
-
-    <!-- ==================== LEFT: HARDWARE & SENSORS ==================== -->
-    <!-- Sensors & Actuators -->
-    <g>
-      <!-- Temp Sensor -->
-      <rect x="15" y="80" width="105" height="44" class="box-sensor"/>
-      <text x="67.5" y="98" font-size="9.5" font-weight="700" fill="#334155" text-anchor="middle">Thermocouple K</text>
-      <text x="67.5" y="112" font-size="8" fill="#64748b" text-anchor="middle">(MAX6675 SPI)</text>
-      <path d="M 120 102 H 150" stroke="#475569" stroke-width="1.5" fill="none"/>
-      <text x="135" y="97" font-size="7.5" fill="#64748b" text-anchor="middle">SPI</text>
-      
-      <!-- Pressure Sensor -->
-      <rect x="15" y="150" width="105" height="44" class="box-sensor"/>
-      <text x="67.5" y="168" font-size="9.5" font-weight="700" fill="#334155" text-anchor="middle">Pressure Sens</text>
-      <text x="67.5" y="182" font-size="8" fill="#64748b" text-anchor="middle">(Analog 0-5V)</text>
-      <path d="M 120 172 H 150" stroke="#475569" stroke-width="1.5" fill="none"/>
-      <text x="135" y="167" font-size="7.5" fill="#64748b" text-anchor="middle">ADC1</text>
-      
-      <!-- Burner Relay -->
-      <rect x="15" y="270" width="105" height="44" class="box-sensor"/>
-      <text x="67.5" y="288" font-size="9.5" font-weight="700" fill="#334155" text-anchor="middle">Burner Relay</text>
-      <text x="67.5" y="302" font-size="8" fill="#64748b" text-anchor="middle">(Control Valve)</text>
-      <path d="M 120 292 H 150" stroke="#475569" stroke-width="1.5" fill="none"/>
-      <text x="135" y="287" font-size="7.5" fill="#64748b" text-anchor="middle">GPIO25</text>
-      
-      <!-- Alarm LED -->
-      <rect x="15" y="340" width="105" height="44" class="box-sensor"/>
-      <text x="67.5" y="358" font-size="9.5" font-weight="700" fill="#334155" text-anchor="middle">Alarm LED</text>
-      <text x="67.5" y="372" font-size="8" fill="#64748b" text-anchor="middle">(Local Warning)</text>
-      <path d="M 120 362 H 150" stroke="#475569" stroke-width="1.5" fill="none"/>
-      <text x="135" y="357" font-size="7.5" fill="#64748b" text-anchor="middle">GPIO26</text>
-    </g>
-
-    <!-- ESP32 Board Outer Box -->
-    <g>
-      <rect x="150" y="60" width="180" height="360" class="box-esp32"/>
-      <text x="240" y="82" class="lbl-title" text-anchor="middle" fill="#7c3aed">บอร์ด ESP32 (Edge MCU)</text>
-      
-      <!-- ESP32 Graphic representation -->
-      <rect x="170" y="100" width="140" height="190" rx="4" fill="#1e293b" stroke="#4c1d95" stroke-width="2"/>
-      <!-- Chip -->
-      <rect x="210" y="125" width="60" height="50" rx="2" fill="#334155" stroke="#94a3b8" stroke-width="1"/>
-      <text x="240" y="155" font-size="8.5" fill="#ffffff" font-weight="bold" text-anchor="middle">ESP32-WROOM</text>
-      <!-- Wi-Fi Antenna -->
-      <rect x="220" y="108" width="40" height="15" fill="#0f172a" stroke="#cbd5e1" stroke-width="0.5"/>
-      <line x1="225" y1="113" x2="255" y2="113" stroke="#cbd5e1" stroke-width="1"/>
-      <line x1="225" y1="118" x2="255" y2="118" stroke="#cbd5e1" stroke-width="1"/>
-      
-      <!-- Code logic labels inside ESP32 board -->
-      <rect x="175" y="195" width="130" height="85" rx="3" fill="#0f172a" stroke="#6d28d9" stroke-width="1"/>
-      <text x="240" y="210" font-size="8.5" fill="#a78bfa" font-weight="bold" text-anchor="middle">Software Logic</text>
-      <text x="182" y="228" font-size="8" fill="#e2e8f0">• Millis Timer (Non-blocking)</text>
-      <text x="182" y="243" font-size="8" fill="#e2e8f0">• Local Safety Interlock</text>
-      <text x="182" y="258" font-size="8" fill="#e2e8f0">• client.loop() &amp; Telemetry</text>
-
-      <!-- Wi-Fi SSID Status text -->
-      <text x="240" y="325" font-size="9" fill="#7c3aed" font-weight="bold" text-anchor="middle">📶 Wi-Fi: Wokwi-GUEST</text>
-      <text x="240" y="342" font-size="8" fill="#64748b" text-anchor="middle">Auth: Access Token over MQTT</text>
-      <rect x="170" y="360" width="140" height="42" rx="4" fill="#faf5ff" stroke="#ddd6fe" stroke-width="1"/>
-      <text x="240" y="375" font-size="8" fill="#5b21b6" text-anchor="middle" font-weight="bold">Edge-Cloud Hybrid</text>
-      <text x="240" y="388" font-size="7.5" fill="#6d28d9" text-anchor="middle">ควบคุมคีย์หลักได้แม้ออฟไลน์</text>
-      
-      <!-- Pins markers -->
-      <circle cx="150" cy="102" r="3" fill="#cbd5e1"/>
-      <circle cx="150" cy="172" r="3" fill="#cbd5e1"/>
-      <circle cx="150" cy="292" r="3" fill="#cbd5e1"/>
-      <circle cx="150" cy="362" r="3" fill="#cbd5e1"/>
-    </g>
-
-    <!-- ==================== MIDDLE: THINGSBOARD CLOUD ==================== -->
-    <!-- ThingsBoard Cloud Box -->
-    <g>
-      <rect x="420" y="60" width="180" height="360" class="box-cloud"/>
-      <text x="510" y="82" class="lbl-title" text-anchor="middle" fill="#2563eb">เซิร์ฟเวอร์ ThingsBoard Cloud</text>
-      <text x="510" y="97" class="lbl-sub" text-anchor="middle">(Access Token &amp; MQTT Broker)</text>
-      
-      <!-- Telemetry Data Capsules -->
-      <!-- Capsule V1 -->
-      <rect x="445" y="115" width="130" height="32" rx="6" fill="#10b981"/>
-      <text x="510" y="135" text-anchor="middle" class="lbl-vpin">"pressure" (Telemetry)</text>
-      
-      <!-- Capsule V2 -->
-      <rect x="445" y="165" width="130" height="32" rx="6" fill="#10b981"/>
-      <text x="510" y="185" text-anchor="middle" class="lbl-vpin">"temperature" (Telemetry)</text>
-      
-      <!-- Capsule V3 -->
-      <rect x="445" y="215" width="130" height="32" rx="6" fill="#eab308"/>
-      <text x="510" y="235" text-anchor="middle" class="lbl-vpin">"alarmLED" (Telemetry)</text>
-      
-      <!-- Capsule V4 -->
-      <rect x="445" y="265" width="130" height="32" rx="6" fill="#ef4444"/>
-      <text x="510" y="285" text-anchor="middle" class="lbl-vpin">"setBurner" (RPC Req)</text>
-      
-      <!-- Capsule V5 -->
-      <rect x="445" y="315" width="130" height="32" rx="6" fill="#6366f1"/>
-      <text x="510" y="335" text-anchor="middle" class="lbl-vpin">"statusMsg" (Telemetry)</text>
-      
-      <rect x="440" y="362" width="140" height="42" rx="4" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
-      <text x="510" y="377" font-size="8.5" fill="#1e40af" text-anchor="middle" font-weight="bold">Digital Twin (Shadow)</text>
-      <text x="510" y="390" font-size="7.5" fill="#1e3a8a" text-anchor="middle">เก็บสถานะล่าสุดบนคลาวด์ตลอดเวลา</text>
-    </g>
-
-    <!-- ==================== RIGHT: DASHBOARD WIDGETS ==================== -->
-    <!-- ThingsBoard Dashboard -->
-    <g>
-      <rect x="660" y="60" width="165" height="360" class="box-app"/>
-      <text x="742.5" y="82" class="lbl-title" text-anchor="middle" fill="#16a34a">หน้าจอแผงควบคุม (Web/App)</text>
-      <text x="742.5" y="97" class="lbl-sub" text-anchor="middle">(ThingsBoard Dashboard)</text>
-      
-      <!-- Gauge Widget for V1 -->
-      <rect x="680" y="115" width="125" height="32" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
-      <text x="686" y="129" font-size="9" fill="#475569" font-weight="700">Gauge: ความดัน</text>
-      <text x="798" y="135" font-size="8" fill="#10b981" text-anchor="end" font-weight="bold">"pressure"</text>
-      
-      <!-- Value Display for V2 -->
-      <rect x="680" y="165" width="125" height="32" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
-      <text x="686" y="179" font-size="9" fill="#475569" font-weight="700">Value: อุณหภูมิ</text>
-      <text x="798" y="185" font-size="8" fill="#10b981" text-anchor="end" font-weight="bold">"temperature"</text>
-      
-      <!-- LED for V3 -->
-      <rect x="680" y="215" width="125" height="32" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
-      <text x="686" y="229" font-size="9" fill="#475569" font-weight="700">LED: เตือนภัย</text>
-      <circle cx="770" cy="231" r="5" fill="#eab308" class="btn-glow"/>
-      <text x="798" y="235" font-size="8" fill="#eab308" text-anchor="end" font-weight="bold">"alarmLED"</text>
-      
-      <!-- Switch for V4 -->
-      <rect x="680" y="265" width="125" height="32" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
-      <text x="686" y="279" font-size="9" fill="#475569" font-weight="700">Switch: เปิด/ปิด</text>
-      <rect x="755" y="273" width="22" height="12" rx="6" fill="#ef4444"/>
-      <circle cx="761" cy="279" r="4" fill="#ffffff"/>
-      <text x="798" y="285" font-size="8" fill="#ef4444" text-anchor="end" font-weight="bold">"setBurner"</text>
-      
-      <!-- Terminal for V5 -->
-      <rect x="680" y="315" width="125" height="42" rx="4" fill="#1e293b" stroke="#cbd5e1" stroke-width="1"/>
-      <text x="686" y="329" font-size="8.5" fill="#38bdf8" font-weight="700">Terminal: สถานะ</text>
-      <text x="686" y="341" font-size="7.5" fill="#94a3b8">Log: Boiler Running</text>
-      <text x="798" y="350" font-size="8" fill="#6366f1" text-anchor="end" font-weight="bold">"statusMsg"</text>
-      
-      <!-- Users mobile phone display layout -->
-      <rect x="680" y="368" width="125" height="38" rx="4" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
-      <text x="742.5" y="382" font-size="8.5" fill="#166534" text-anchor="middle" font-weight="bold">ThingsBoard App</text>
-      <text x="742.5" y="394" font-size="7.5" fill="#15803d" text-anchor="middle">แสดงผลและสั่งงานบนสมาร์ทโฟน</text>
-    </g>
-
-    <!-- ==================== CONNECTIONS AND DATA FLOWS ==================== -->
-    <!-- ESP32 to ThingsBoard Cloud lines -->
-    <g>
-      <!-- V1 Telemetry (Pressure) -->
-      <path d="M 330 131 H 439" class="path-data-up" stroke="#10b981"/>
-      <path d="M 330 131 H 445" fill="none" stroke="#10b981" stroke-width="1.5" opacity="0.3" marker-end="url(#arr-g)"/>
-      <text x="375" y="124" font-size="7px" fill="#10b981" text-anchor="middle" font-weight="bold">"pressure"</text>
-
-      <!-- V2 Telemetry (Temp) -->
-      <path d="M 330 181 H 439" class="path-data-up" stroke="#10b981"/>
-      <path d="M 330 181 H 445" fill="none" stroke="#10b981" stroke-width="1.5" opacity="0.3" marker-end="url(#arr-g)"/>
-      <text x="375" y="174" font-size="7px" fill="#10b981" text-anchor="middle" font-weight="bold">"temperature"</text>
-
-      <!-- V3 Alarm State -->
-      <path d="M 330 231 H 439" class="path-data-up" stroke="#eab308"/>
-      <path d="M 330 231 H 445" fill="none" stroke="#eab308" stroke-width="1.5" opacity="0.3" marker-end="url(#arr-y)"/>
-      <text x="375" y="224" font-size="7px" fill="#ca8a04" text-anchor="middle" font-weight="bold">"alarmLED"</text>
-
-      <!-- V4 Command (Switch) -->
-      <path d="M 445 281 H 336" class="path-data-down" stroke="#ef4444"/>
-      <path d="M 445 281 H 330" fill="none" stroke="#ef4444" stroke-width="1.5" opacity="0.3" marker-end="url(#arr-r)"/>
-      <text x="375" y="274" font-size="7px" fill="#ef4444" text-anchor="middle" font-weight="bold">"setBurner"</text>
-
-      <!-- V5 Status Msg -->
-      <path d="M 330 331 H 439" class="path-data-up" stroke="#6366f1"/>
-      <path d="M 330 331 H 445" fill="none" stroke="#6366f1" stroke-width="1.5" opacity="0.3" marker-end="url(#arr-i)"/>
-      <text x="375" y="324" font-size="7px" fill="#6366f1" text-anchor="middle" font-weight="bold">"statusMsg"</text>
-    </g>
-
-    <!-- ThingsBoard Cloud to Dashboard lines -->
-    <g>
-      <!-- V1 Gauge -->
-      <path d="M 575 131 H 674" class="path-data-up" stroke="#10b981"/>
-      <path d="M 575 131 H 680" fill="none" stroke="#10b981" stroke-width="1.5" opacity="0.3" marker-end="url(#arr-g)"/>
-
-      <!-- V2 Value -->
-      <path d="M 575 181 H 674" class="path-data-up" stroke="#10b981"/>
-      <path d="M 575 181 H 680" fill="none" stroke="#10b981" stroke-width="1.5" opacity="0.3" marker-end="url(#arr-g)"/>
-
-      <!-- V3 LED -->
-      <path d="M 575 231 H 674" class="path-data-up" stroke="#eab308"/>
-      <path d="M 575 231 H 680" fill="none" stroke="#eab308" stroke-width="1.5" opacity="0.3" marker-end="url(#arr-y)"/>
-
-      <!-- V4 Switch (Dashboard -> Cloud) -->
-      <path d="M 680 281 H 581" class="path-data-down" stroke="#ef4444"/>
-      <path d="M 680 281 H 575" fill="none" stroke="#ef4444" stroke-width="1.5" opacity="0.3" marker-end="url(#arr-r)"/>
-
-      <!-- V5 Terminal -->
-      <path d="M 575 331 H 674" class="path-data-up" stroke="#6366f1"/>
-      <path d="M 575 331 H 680" fill="none" stroke="#6366f1" stroke-width="1.5" opacity="0.3" marker-end="url(#arr-i)"/>
-    </g>
-  </g>
-</svg>
+  }
+}
+```
 </div>
 
 ### 10.6.1 กุญแจยืนยันตัวตน (Authentication Token) และแนวปฏิบัติความปลอดภัย

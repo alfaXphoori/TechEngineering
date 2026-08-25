@@ -974,590 +974,135 @@ void loop() {
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
+## 5.6 ปฏิบัติการ Wokwi Lab 5: สถาปัตยกรรม ESP32, Interrupt และ FreeRTOS Dual-Core
 
-## 5.5 การติดตั้งเครื่องมือ
-
-### วิธีที่ 1: Arduino IDE + ESP32 Core
-
-1. **ดาวน์โหลด Arduino IDE** จาก [arduino.cc](https://www.arduino.cc/en/software) แล้วติดตั้ง
-2. **เพิ่ม ESP32 Board Manager URL:**
-   - ไปที่ `File → Preferences`
-   - ในช่อง *Additional Boards Manager URLs* เพิ่ม:
-     ```
-     https://espressif.github.io/arduino-esp32/package_esp32_index.json
-     ```
-3. **ติดตั้ง ESP32 Core:**
-   - ไปที่ `Tools → Board → Boards Manager`
-   - ค้นหา `esp32` แล้วกด **Install** (by Espressif Systems)
-4. **เลือกบอร์ด:**
-   - ไปที่ `Tools → Board → esp32` → เลือก **ESP32 Dev Module**
-5. **เลือกพอร์ต:**
-   - ไปที่ `Tools → Port` → เลือกพอร์ตที่แสดง (เช่น COM3 หรือ /dev/ttyUSB0)
-6. กด **Upload** เพื่ออัปโหลดโปรแกรมเข้าบอร์ด
-
-### วิธีที่ 2: Wokwi Simulator (แนะนำสำหรับผู้เริ่มต้น)
-
-**Wokwi** คือเว็บแอปจำลองวงจรอิเล็กทรอนิกส์ที่รองรับ ESP32 และ Arduino ใช้งานผ่านเบราว์เซอร์ได้ทันทีโดยไม่ต้องซื้อบอร์ดจริง
-
-1. เปิดเว็บ [wokwi.com](https://wokwi.com)
-2. กด **Start a new project** → เลือก **ESP32**
-3. เขียนโค้ดในหน้าต่างซ้าย (Editor)
-4. ลากวางอุปกรณ์ (LED, เซ็นเซอร์ ฯลฯ) ในหน้าต่างขวา (Diagram)
-5. กดปุ่ม **▶ Start Simulation** เพื่อรันโปรแกรม
-6. ดูผลลัพธ์ใน Serial Monitor ด้านล่าง
-
-> 💡 **ทำไมต้อง Wokwi?** นักศึกษาสามารถทดลองวงจรได้ทุกที่ทุกเวลาโดยไม่ต้องมีบอร์ดจริง ไม่ต้องกลัวต่อผิดแล้วอุปกรณ์พัง เหมาะกับการเรียนรู้และทำการบ้านมาก
+**รหัสปฏิบัติการ:** LAB-05 | **เวลาปฏิบัติการ:** 2 ชั่วโมง  
+**เป้าหมายการเรียนรู้:** LLO5.1, LLO5.2 (CLO1, CLO4)  
+**เครื่องมือที่ใช้:** Wokwi Simulator, บอร์ด ESP32, ไฟ LED 2 หลอด, ปุ่มกด Hardware Interrupt, ตัวต้านทาน 330Ω
 
 ---
 
-## 5.6 ฟังก์ชันพื้นฐาน Arduino
+### 5.6.1 วัตถุประสงค์เชิงปฏิบัติการ
+1. กำหนดและใช้งานระบบขัดจังหวะการทำงานของฮาร์ดแวร์ (Hardware Interrupts: ISR) ด้วย `attachInterrupt`
+2. พัฒนาระบบประมวลผลหลายงานพร้อมกัน (Multitasking) โดยแยกการทำงานลงบน Core 0 และ Core 1 ของ ESP32 ด้วย FreeRTOS
+3. สังเกตการแบ่งทรัพยากรหน่วยความจำและ Stack Size ในระบบปฏิบัติการเวลาจริง (RTOS)
 
-### ตารางสรุปฟังก์ชันที่ใช้บ่อย
+---
 
-| ฟังก์ชัน | รูปแบบ | คำอธิบาย |
-|---|---|---|
-| `pinMode()` | `pinMode(pin, mode)` | ตั้งโหมดขา: `INPUT`, `OUTPUT`, `INPUT_PULLUP` |
-| `digitalWrite()` | `digitalWrite(pin, value)` | ส่งค่า `HIGH` (3.3V) หรือ `LOW` (0V) ไปที่ขา |
-| `digitalRead()` | `digitalRead(pin)` | อ่านค่าดิจิทัล: คืนค่า `HIGH` หรือ `LOW` |
-| `analogRead()` | `analogRead(pin)` | อ่านค่าอะนาล็อก: คืนค่า 0–4095 (12-bit) |
-| `analogWrite()` | `ledcWrite(ch, duty)` | ESP32 ใช้ LEDC API แทน analogWrite |
-| `delay()` | `delay(ms)` | หยุดรอ (มิลลิวินาที) — **บล็อกโปรแกรม** |
-| `millis()` | `millis()` | คืนเวลาที่ผ่านไป (ms) ตั้งแต่เริ่มทำงาน |
-| `Serial.begin()` | `Serial.begin(baud)` | เริ่ม Serial ที่ baud rate ที่กำหนด |
-| `Serial.print()` | `Serial.print(data)` | พิมพ์ข้อมูลไปยัง Serial Monitor (ไม่ขึ้นบรรทัดใหม่) |
-| `Serial.println()` | `Serial.println(data)` | พิมพ์ข้อมูล + ขึ้นบรรทัดใหม่ |
+### 5.6.2 แผนผังการต่อวงจร (Wiring Table)
 
-### ตัวอย่างที่ 2: อ่านค่าเซ็นเซอร์แสง (LDR) และควบคุม LED
+| อุปกรณ์ | ขาของอุปกรณ์ | ขาบนบอร์ด ESP32 | หน้าที่ / วัตถุประสงค์ |
+|---|---|---|---|
+| **Core 0 Task LED (สีเขียว)** | Anode (+) / Cathode (-) | **GPIO 18** (ผ่าน R 330Ω) / GND | แสดงการทำงานของ Task บน Core 0 |
+| **Core 1 Task LED (สีน้ำเงิน)**| Anode (+) / Cathode (-) | **GPIO 19** (ผ่าน R 330Ω) / GND | แสดงการทำงานของ Task บน Core 1 |
+| **Emergency Interrupt Button** | ขา 1.L / ขา 2.L | **GPIO 4** / GND | ปุ่ม Interrupt (FALLING Edge) |
+
+---
+
+### 5.6.3 ไฟล์โครงสร้างวงจร `diagram.json` สำหรับ Wokwi
+
+```json
+{
+  "version": 1,
+  "author": "KSU TechEngineering",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-led", "id": "led_core0", "top": -100, "left": 80, "attrs": { "color": "green" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": -50, "left": 80, "attrs": { "value": "330" } },
+    { "type": "wokwi-led", "id": "led_core1", "top": -100, "left": 140, "attrs": { "color": "blue" } },
+    { "type": "wokwi-resistor", "id": "r2", "top": -50, "left": 140, "attrs": { "value": "330" } },
+    { "type": "wokwi-pushbutton", "id": "btn_isr", "top": 100, "left": 100, "attrs": { "color": "red" } }
+  ],
+  "connections": [
+    [ "esp:18", "r1:1", "orange", [ "v0" ] ],
+    [ "r1:2", "led_core0:A", "orange", [ "v0" ] ],
+    [ "led_core0:C", "esp:GND", "black", [ "v0" ] ],
+
+    [ "esp:19", "r2:1", "orange", [ "v0" ] ],
+    [ "r2:2", "led_core1:A", "orange", [ "v0" ] ],
+    [ "led_core1:C", "esp:GND", "black", [ "v0" ] ],
+
+    [ "esp:4", "btn_isr:1.L", "blue", [ "v0" ] ],
+    [ "btn_isr:2.L", "esp:GND", "black", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}
+```
+
+---
+
+### 5.6.4 ซอร์สโค้ดภาษา C++ (FreeRTOS Dual-Core Architecture)
 
 ```cpp
-// อ่านค่า LDR (Light Dependent Resistor) ผ่านขา ADC
-// ถ้ามืด (ค่า ADC ต่ำ) → เปิด LED / ถ้าสว่าง → ปิด LED
+/**
+ * LAB 05: ESP32 Hardware Interrupts & FreeRTOS Dual-Core Execution
+ * Course: Digital Technology for Engineering, KSU
+ */
 
-#define LDR_PIN   34   // ขา ADC (Input only)
-#define LED_PIN    2   // ขา LED
+const int LED_CORE0 = 18;
+const int LED_CORE1 = 19;
+const int BTN_INTERRUPT = 4;
 
-const int THRESHOLD = 1000;  // ค่าเกณฑ์แบ่งมืด/สว่าง
+volatile int interruptCounter = 0;
+volatile bool emergencyFlag = false;
+
+// ฟังก์ชันตอบสนองการขัดจังหวะ (Interrupt Service Routine - ISR) อยู่ใน IRAM
+void IRAM_ATTR handleEmergencyButton() {
+  interruptCounter++;
+  emergencyFlag = true;
+}
+
+// งานที่รันบน Core 0: งานจำลองอ่านเซนเซอร์และวิเคราะห์
+void taskSensorCore0(void * pvParameters) {
+  for (;;) {
+    digitalWrite(LED_CORE0, HIGH);
+    vTaskDelay(pdMS_TO_TICKS(200));
+    digitalWrite(LED_CORE0, LOW);
+    vTaskDelay(pdMS_TO_TICKS(800));
+
+    Serial.printf("[Core %d] Sensor Task Running | Free Stack: %d bytes\n",
+                  xPortGetCoreID(), uxTaskGetStackHighWaterMark(NULL));
+  }
+}
+
+// งานที่รันบน Core 1: งานควบคุมและส่งข้อมูลสื่อสาร
+void taskControlCore1(void * pvParameters) {
+  for (;;) {
+    digitalWrite(LED_CORE1, HIGH);
+    vTaskDelay(pdMS_TO_TICKS(500));
+    digitalWrite(LED_CORE1, LOW);
+    vTaskDelay(pdMS_TO_TICKS(500));
+
+    if (emergencyFlag) {
+      emergencyFlag = false;
+      Serial.printf("[CRITICAL INTERRUPT on Core %d] Emergency Triggered! Total count = %d\n",
+                    xPortGetCoreID(), interruptCounter);
+    }
+  }
+}
 
 void setup() {
   Serial.begin(115200);
-  pinMode(LED_PIN, OUTPUT);
-  // ขา ADC ไม่ต้อง pinMode (ตั้งค่าอัตโนมัติ)
-  Serial.println("LDR Sensor Ready");
+  pinMode(LED_CORE0, OUTPUT);
+  pinMode(LED_CORE1, OUTPUT);
+  pinMode(BTN_INTERRUPT, INPUT_PULLUP);
+
+  // ผูก Interrupt ขอบขาลง (FALLING Edge) เข้ากับฟังก์ชัน ISR
+  attachInterrupt(digitalPinToInterrupt(BTN_INTERRUPT), handleEmergencyButton, FALLING);
+
+  // สร้าง Task และผูกเข้ากับ Core 0 และ Core 1
+  xTaskCreatePinnedToCore(taskSensorCore0, "SensorTask", 2048, NULL, 1, NULL, 0);
+  xTaskCreatePinnedToCore(taskControlCore1, "ControlTask", 2048, NULL, 1, NULL, 1);
+
+  Serial.println("\n--- LAB 05: ESP32 Dual-Core Tasks Initialized ---");
 }
 
 void loop() {
-  int ldrValue = analogRead(LDR_PIN);  // อ่านค่า 0–4095
-
-  Serial.print("LDR Value: ");
-  Serial.println(ldrValue);
-
-  if (ldrValue < THRESHOLD) {
-    // มืด → เปิดไฟ
-    digitalWrite(LED_PIN, HIGH);
-    Serial.println("Status: DARK -> LED ON");
-  } else {
-    // สว่าง → ปิดไฟ
-    digitalWrite(LED_PIN, LOW);
-    Serial.println("Status: BRIGHT -> LED OFF");
-  }
-
-  delay(500);  // อ่านค่าทุก 0.5 วินาที
+  // loop() หลักปล่อยว่างเนื่องจากงานทั้งหมดถูกจัดการด้วย FreeRTOS
+  vTaskDelete(NULL);
 }
 ```
-
-**อธิบายการทำงาน:**
-1. ใช้ `analogRead()` อ่านค่าจาก LDR ที่ GPIO 34 (ค่า 0–4095)
-2. เปรียบเทียบกับค่า `THRESHOLD` ที่ตั้งไว้ 1000
-3. ถ้าค่าน้อยกว่า (แสงน้อย = มืด) → เปิด LED / ถ้ามากกว่า (แสงมาก) → ปิด LED
-4. แสดงค่าและสถานะผ่าน Serial Monitor ตลอดเวลา
-
----
-
-## 5.7 การออกแบบเฟิร์มแวร์แบบไม่บล็อกการทำงาน (Non-blocking Firmware Design)
-
-ในงานระบบควบคุมทางวิศวกรรม เฟิร์มแวร์ที่ดีจะต้องมีคุณสมบัติในการตอบสนองที่รวดเร็วแบบทันท่วงที (Real-time responsiveness) เพื่อรับมือกับเหตุการณ์ต่าง ๆ ได้ขนานกัน
-
-### 5.7.1 ปัญหาของฟังก์ชัน `delay()` ในงานวิศวกรรมจริง
-
-ฟังก์ชัน `delay(milliseconds)` เป็นฟังก์ชันที่มีคุณลักษณะเป็น **Blocking Call** คือเมื่อเรียกใช้ ตัวประมวลผล CPU จะถูกกักตัวไว้ในลูปเปล่า (CPU Spinning) คอยตรวจสอบเวลาที่ผ่านไป การกระทำนี้ทำให้อุปกรณ์หยุดชะงักการตรวจสอบสัญญาณรอบตัวไปโดยสิ้นเชิง ซึ่งส่งผลเสียอย่างรุนแรงในหลายมิติ:
-
-- **การหยุดชะงักของระบบความปลอดภัย (Safety Block):** หากอุปกรณ์กำลังรัน `delay(5000)` เพื่อรอส่งข้อมูล และในจังหวะนั้นเกิดเหตุฉุกเฉิน เช่น ท่อระเบิด อุณหภูมิเกินเกณฑ์ หรือผู้ใช้งานกดปุ่มหยุดฉุกเฉิน (Emergency Stop) ระบบจะไม่สามารถตรวจจับสัญญาณขัดจังหวะนั้นได้เลยจนกว่าจะสิ้นสุดการหน่วงเวลา 5 วินาที
-- **ความล่าช้าในลูปควบคุมแบบป้อนกลับ (PID Controller Latency):** ตัวควบคุมแบบ PID ต้องการรอบการประมวลผลที่ตรงเวลาสม่ำเสมอ (เช่น ทุก ๆ 10 มิลลิวินาที) หากมีจุดหน่วงเวลาแบบ `delay()` สอดแทรกอยู่ ระบบควบคุมจะไม่สามารถแก้ไขค่าของระบบ (เช่น ควบคุมทิศทางโดรน, ความเร็วมอเตอร์) ได้อย่างราบรื่น ทำให้เกิดการแกว่งและระบบอาจพังเสียหาย
-- **การหลุดการเชื่อมต่อเครือข่ายไร้สาย (Wi-Fi/Bluetooth Disconnection):** ในโมดูล ESP32 แม้จะรันสแต็ก Wi-Fi แยกกันในระดับแกนฮาร์ดแวร์ แต่หากเฟิร์มแวร์แอปพลิเคชันเกิดการบล็อกเป็นเวลานานเกินไป อาจทำให้ทาสก์การเชื่อมต่อขาดการตรวจสอบหรือการสลับงานภายในโปรแกรมชะงัก (Watchdog reset หรือสัญญาณ keep-alive หลุด) ส่งผลให้อุปกรณ์หลุดจากเครือข่าย
-
----
-
-### 5.7.2 การทำงานมัลติทาสกิงแบบร่วมมือด้วย `millis()` (Cooperative Multitasking)
-
-เพื่อหลีกเลี่ยงปัญหาข้างต้น เฟิร์มแวร์วิศวกรรมจะใช้ฟังก์ชัน `millis()` เพื่อดึงเวลาปัจจุบันในหน่วยมิลลิวินาที นับตั้งแต่ไมโครคอนโทรลเลอร์เริ่มรัน และนำไปคำนวณเปรียบเทียบกับตัวแปรที่บันทึกเวลาล่าสุดเพื่อบริหารจัดการเวลาโดยไม่บล็อกการประมวลผล (Non-blocking timing)
-
-### 1) โครงสร้างโค้ดแบบ Non-blocking (Blink without Delay)
-
-```cpp
-#define LED_PIN 2
-const unsigned long INTERVAL = 1000; // รอบการทำงาน 1 วินาที (1000 ms)
-unsigned long previousMillis = 0;    // ตัวแปรเก็บเวลาครั้งล่าสุดที่สลับสถานะ LED
-
-bool ledState = false;
-
-void setup() {
-    pinMode(LED_PIN, OUTPUT);
-}
-
-void loop() {
-    unsigned long currentMillis = millis(); // ดึงเวลาปัจจุบันมาเก็บไว้
-    
-    // ตรวจสอบว่าผ่านไปครบช่วงเวลาที่ต้องการหรือยัง
-    if (currentMillis - previousMillis >= INTERVAL) {
-        previousMillis = currentMillis; // อัปเดตเวลาล่าสุด
-        ledState = !ledState;           // กลับสถานะไฟ LED
-        digitalWrite(LED_PIN, ledState);
-    }
-    
-    // ตรงส่วนนี้ CPU สามารถไปประมวลผลโปรแกรมอื่น ๆ ได้ทันทีโดยไม่หยุดคอย!
-    // เช่น การสแกนอินพุตปุ่มกด หรืออ่านค่าเซ็นเซอร์ทุกรอบของ loop()
-}
-```
-
-### 2) การพิสูจน์คณิตศาสตร์ปัญหารอบเวียนล้นของบิต (32-bit Rollover Math Proof)
-ฟังก์ชัน `millis()` ส่งค่ากลับมาในรูปแบบตัวแปร `unsigned long` ขนาด 32 บิต ซึ่งมีขอบเขตค่าอยู่ที่ $0$ ถึง $4,294,967,295$ (หรือ $2^{32} - 1$) ซึ่งระบบจะเกิดสภาวะล้น **(Rollover/Overflow)** กลับไปเริ่มที่ 0 ใหม่เมื่อถึงระยะเวลาประมาณ **49.71 วัน**
-
-*คำถามยอดนิยมทางวิศวกรรม:* หาก `currentMillis` ล้นกลับมาที่ 0 แล้ว แต่ตัวแปรอ้างอิง `previousMillis` ยังเก็บค่าสุดท้ายก่อนล้น เช่น $4,294,967,290$ หากใช้วิธีลบแบบปกติจะทำให้การทำงานมีปัญหาหรือไม่?
-
-*การพิสูจน์:* สมการที่ถูกต้องคือ `currentMillis - previousMillis` เสมอ (ห้ามเขียนกลับด้านหรือใช้วิธีเปรียบเทียบค่าตรง ๆ เช่น `currentMillis >= previousMillis + INTERVAL`)
-
-ด้วยคุณลักษณะของ **เลขคณิตส่วนเติมเต็มสอง (Two's Complement Arithmetic)** ในตัวประมวลผล 32 บิต เมื่อคำนวณการลบที่เป็นเลขฐานลบของตัวแปรประเภทไม่มีเครื่องหมาย (Unsigned) ผลลัพธ์จะล้นกลับมาเป็นค่าบวกที่แท้จริงเสมอ
-
-**ตัวอย่างสมมติเพื่อให้เข้าใจง่ายด้วย 8-bit unsigned (ค่า 0-255, ล้นกลับที่ 256):**
-- สมมติให้ `previousMillis` บันทึกค่าที่ $250$
-- กำหนด `INTERVAL` เท่ากับ $10$
-- เมื่อเวลาล่วงเลยไป $10$ มิลลิวินาที ค่าจริงต้องเป็น $260$ แต่เกิดล้นขึ้นเนื่องจากเก็บในตัวแปรกว้าง 8 บิต ผลลัพธ์จึงกลายเป็น $260 - 256 = 4$
-- ดังนั้น `currentMillis` อ่านได้เท่ากับ $4$
-- ทำการแทนค่าลงในสมการเปรียบเทียบ:
-  $$\text{result} = currentMillis - previousMillis$$
-  $$\text{result} = 4 - 250$$
-- ในการลบแบบ Unsigned 8-bit ค่าลบที่เกิดขึ้นจะถูกคำนวณภายใต้คณิตศาสตร์แบบมอดุโล 256 ($\pmod{256}$):
-  $$4 - 250 = -246$$
-  $$-246 \equiv -246 + 256 = 10 \pmod{256}$$
-- หรือพิจารณาในรูปแบบเลขฐานสอง:
-  - $4_{10}$ = `0b00000100`
-  - $250_{10}$ = `0b11111010`
-  - การลบคือการบวกด้วย Two's Complement ของ $250$ (ซึ่งก็คือ $-250_{10}$ = `0b00000110` หรือ $6_{10}$):
-    $$\text{result} = \text{0b00000100} + \text{0b00000110} = \text{0b00001010} \ (10_{10})$$
-- ผลลัพธ์จากการลบได้คำตอบเป็น **$10$** ซึ่งตรงกับช่วงเวลาที่ล่วงเลยไปจริงอย่างถูกต้อง! ทำให้ตัวโปรแกรมสามารถทำงานผ่านพ้นปัญหารอบเวลา 49.7 วันไปได้โดยไม่มีอาการค้างหรือข้อบกพร่องใด ๆ
-
----
-
-### 5.7.3 การออกแบบโดยใช้ Finite State Machine (FSM)
-
-ในการออกแบบระบบเฟิร์มแวร์ที่มีความซับซ้อน มีเงื่อนไขการรับอินพุตและการเปลี่ยนสถานะที่ขึ้นแก่เวลาและอุปกรณ์แวดล้อม วิศวกรจะจัดกลุ่มพฤติกรรมของระบบให้อยู่ในรูปแบบของ **เครื่องจำลองสถานะจำกัด (Finite State Machine - FSM)**
-
-### การใช้ `enum class` เพื่อความปลอดภัยของข้อมูล (Type Safety)
-ในการเขียนภาษา C++ ดั้งเดิม มักใช้วิธีนิยามสถานะระบบด้วย `#define STATE_A 0` หรือ `enum State { STATE_A, STATE_B }` ซึ่งไม่ปลอดภัยต่อการเขียนโค้ดขนาดใหญ่ เนื่องจากค่าเหล่านี้สามารถถูกนำไปเปรียบเทียบหรือแทนค่าเป็นจำนวนเต็มอินทิเจอร์ (Implicit Conversion) ได้โดยคอมไพเลอร์ไม่แจ้งเตือน และขอบเขตตัวแปรสามารถปนเปกันได้
-
-การใช้งาน `enum class` (หรือเรียกว่า Scoped Enumerations) จะช่วยแก้ปัญหานี้ได้:
-- ป้องกันการแปลงชนิดข้อมูลอัตโนมัติ (No Implicit Conversion to int)
-- ป้องกันปัญหามลภาวะของเนมสเปซ (Namespace Pollution) เนื่องจากต้องระบุขอบเขตด้วยสัญลักษณ์ `::` (เช่น `State::IDLE` แทนที่จะเป็น `IDLE` ลอย ๆ)
-
-### โครงสร้างทั่วไปของ FSM ใน Arduino `loop()`:
-```cpp
-enum class MachineState {
-    STANDBY,
-    RUNNING,
-    ERROR
-};
-
-MachineState currentState = MachineState::STANDBY;
-
-void loop() {
-    switch (currentState) {
-        case MachineState::STANDBY:
-            // 1. ทำกิจกรรมในสถานะ STANDBY
-            // 2. ตรวจสอบเงื่อนไขเพื่อเปลี่ยนสถานะ
-            if (digitalRead(START_PIN) == LOW) {
-                currentState = MachineState::RUNNING;
-            }
-            break;
-            
-        case MachineState::RUNNING:
-            // 1. ทำกิจกรรมในสถานะ RUNNING
-            // 2. ตรวจสอบเงื่อนไขเพื่อเปลี่ยนสถานะ
-            if (analogRead(SENSOR_PIN) > LIMIT) {
-                currentState = MachineState::ERROR;
-            }
-            break;
-            
-        case MachineState::ERROR:
-            // 1. ส่งสัญญาณแจ้งเตือนระบบขัดข้อง
-            break;
-    }
-}
-```
-
----
-
-## 5.8 กรณีศึกษาเชิงวิศวกรรม: ระบบควบคุมปั๊มระบายความร้อนหม้อต้มอุตสาหกรรม (Boiler Cooling Pump Controller)
-
-### 5.8.1 รายละเอียดการออกแบบระบบและเงื่อนไขความปลอดภัย
-โจทย์ทางวิศวกรรมนี้ประกอบด้วยหน่วยประมวลผล ESP32 คอยควบคุมระบบปั๊มน้ำไหลเวียนเพื่อระบายความร้อนให้แก่ระบบบอยเลอร์อุตสาหกรรม โดยควบคุมตามสถานะความร้อน (ผ่านเซ็นเซอร์ NTC Thermistor แอนะล็อก) และมีเงื่อนไขต่าง ๆ ดังนี้:
-
-1. **Safety Interlock (ระบบเซ็นเซอร์ล้มเหลว):** ตรวจสอบกรณีเซ็นเซอร์เสียหาย ได้แก่ สายขาด (Open Circuit - อ่านค่าดิบ ADC ได้ต่ำกว่า 50) หรือเกิดการชอร์ตลงกราวด์ (Short Circuit - อ่านค่าดิบ ADC ได้สูงกว่า 4050) หากตรวจพบต้องบังคับย้ายระบบไปทำงานที่สถานะ `FAULT` ทันที เพื่อป้องกันเครื่องควบคุมอ่านค่าอุณหภูมิผิดพลาด
-2. **Post-Run Cooling (ชะลอการดับปั๊ม):** เมื่อตัวควบคุมประเมินว่าอุณหภูมิลดลงต่ำกว่าเกณฑ์เปิดปั๊มแล้ว ระบบจะไม่ดับปั๊มทันที แต่จะเปลี่ยนไปที่สถานะหน่วงเวลา (`COOLDOWN_DELAY`) รันปั๊มต่ออีกเป็นเวลา 10 วินาทีเพื่อขจัดความร้อนสะสมที่สะสมในห้องเครื่องป้องกันอาการเดือดหลังเครื่องดับ (Thermal overshoot) และป้องกันระบบเปิด-ปิดปั๊มถี่เกินไป (ลด Hysteresis Wear)
-3. **Failsafe in Fault:** เมื่อเครื่องเข้าสู่สถานะ `FAULT` ปั๊มระบายความร้อนจะถูกเปิดค้างไว้ตลอดเวลา (Failsafe ON) พร้อมมีสัญญาณเตือนภัย (Siren) และจะอนุญาตให้ทำการรีเซ็ตเครื่องกลับมาสแตนด์บายได้เฉพาะเมื่อปุ่ม Reset ถูกกด **และ** อุณหภูมิโดยรอบต้องลดลงมาอยู่ในเกณฑ์ปลอดภัยจริง (< 70°C) เท่านั้น
-4. **Software Debounce (การกรองสัญญาณรบกวนปุ่มกด):** ปุ่มกด Reset ภายนอกมักมีการเด้งของกลไกหน้าสัมผัส (Contact bounce) ทำให้ชิปเข้าใจผิดว่าเกิดการกดหลายครั้งในเวลาอันสั้น จึงต้องเขียนโค้ดตรวจสอบสัญญาณหน่วงเวลาอย่างเป็นระบบ
-
----
-
-### 5.8.2 แผนภาพสถานะของระบบ (State Transition Diagram)
-
-<svg id="ch4-fsm-svg" viewBox="0 0 760 520" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px;display:block;margin:1.5em auto;font-family:'IBM Plex Sans Thai', system-ui, sans-serif;">
-  <style>
-    #ch4-fsm-svg .bg { fill:#f8fafc; stroke:#cbd5e1; stroke-width:1.5; }
-    /* State boxes */
-    #ch4-fsm-svg .state-idle    { fill:#f0fdf4; stroke:#16a34a; stroke-width:2; rx:8; }
-    #ch4-fsm-svg .state-pump    { fill:#eff6ff; stroke:#2563eb; stroke-width:2; }
-    #ch4-fsm-svg .state-cool    { fill:#fefce8; stroke:#ca8a04; stroke-width:2; }
-    #ch4-fsm-svg .state-fault   { fill:#fff1f2; stroke:#e11d48; stroke-width:2; }
-    #ch4-fsm-svg .state-poweron { fill:#faf5ff; stroke:#7c3aed; stroke-width:2; }
-    /* Labels */
-    #ch4-fsm-svg .lbl-title { font-size:13px; font-weight:700; }
-    #ch4-fsm-svg .lbl-sub   { font-size:10px; fill:#475569; }
-    #ch4-fsm-svg .lbl-edge  { font-size:9.5px; fill:#334155; }
-    /* Arrow lines */
-    #ch4-fsm-svg .arrow { stroke:#334155; stroke-width:2; fill:none; marker-end:url(#arr); }
-    #ch4-fsm-svg .arrow-fault { stroke:#e11d48; stroke-width:2; fill:none; marker-end:url(#arr-red); stroke-dasharray:5 3; }
-    #ch4-fsm-svg .arrow-reset { stroke:#16a34a; stroke-width:2; fill:none; marker-end:url(#arr-green); stroke-dasharray:5 3; }
-    /* Active glow pulse */
-    @keyframes ch4-glow-idle  { 0%,100%{filter:drop-shadow(0 0 0px #16a34a)} 50%{filter:drop-shadow(0 0 8px #16a34a88)} }
-    @keyframes ch4-glow-pump  { 0%,100%{filter:drop-shadow(0 0 0px #2563eb)} 50%{filter:drop-shadow(0 0 8px #2563eb88)} }
-    @keyframes ch4-glow-cool  { 0%,100%{filter:drop-shadow(0 0 0px #ca8a04)} 50%{filter:drop-shadow(0 0 8px #ca8a0488)} }
-    @keyframes ch4-glow-fault { 0%,100%{filter:drop-shadow(0 0 0px #e11d48)} 50%{filter:drop-shadow(0 0 12px #e11d4899)} }
-    /* Travelling dot on arrows */
-    @keyframes ch4-dot-down  { 0%{opacity:0;transform:translateY(-4px)} 10%{opacity:1} 90%{opacity:1} 100%{opacity:0;transform:translateY(4px)} }
-    @keyframes ch4-move-1    { from{offset-distance:0%} to{offset-distance:100%} }
-    #ch4-fsm-svg .g-idle  { animation: ch4-glow-idle  2.4s ease-in-out infinite; }
-    #ch4-fsm-svg .g-pump  { animation: ch4-glow-pump  2.0s ease-in-out infinite 0.6s; }
-    #ch4-fsm-svg .g-cool  { animation: ch4-glow-cool  2.0s ease-in-out infinite 1.2s; }
-    #ch4-fsm-svg .g-fault { animation: ch4-glow-fault 1.4s ease-in-out infinite 0s; }
-    /* Moving dot */
-    .ch4-dot { r:4; opacity:0; }
-    @keyframes ch4-d1 { 0%,100%{opacity:0;cy:93}  8%{opacity:1} 40%{opacity:1;cy:140} 45%{opacity:0;cy:140} }
-    @keyframes ch4-d2 { 0%,100%{opacity:0;cy:213} 8%{opacity:1} 40%{opacity:1;cy:267} 45%{opacity:0;cy:267} }
-    @keyframes ch4-d3 { 0%,100%{opacity:0;cy:340} 8%{opacity:1} 40%{opacity:1;cy:393} 45%{opacity:0;cy:393} }
-    @keyframes ch4-derr{ 0%,100%{opacity:0} 15%{opacity:1} 55%{opacity:1} 65%{opacity:0} }
-    @keyframes ch4-drst{ 0%,100%{opacity:0} 15%{opacity:1} 55%{opacity:1} 65%{opacity:0} }
-    #ch4-d1  { animation: ch4-d1  3.2s ease-in-out infinite 0s; fill:#16a34a; }
-    #ch4-d2  { animation: ch4-d2  3.2s ease-in-out infinite 0.8s; fill:#2563eb; }
-    #ch4-d3  { animation: ch4-d3  3.2s ease-in-out infinite 1.6s; fill:#ca8a04; }
-    #ch4-derr{ animation: ch4-derr 4s ease-in-out infinite 0.4s; fill:#e11d48; }
-    #ch4-drst{ animation: ch4-drst 4s ease-in-out infinite 2s; fill:#16a34a; }
-  </style>
-  <defs>
-    <marker id="arr"       markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#334155"/></marker>
-    <marker id="arr-red"   markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#e11d48"/></marker>
-    <marker id="arr-green" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#16a34a"/></marker>
-  </defs>
-
-  <!-- Background -->
-  <rect class="bg" x="1" y="1" width="758" height="518" rx="12"/>
-
-  <!-- Title -->
-  <text x="380" y="28" text-anchor="middle" font-size="15" font-weight="700" fill="#1e293b">แผนภาพสถานะของระบบ (FSM — Finite State Machine)</text>
-
-  <!-- Power-on -->
-  <g>
-    <rect x="290" y="44" width="180" height="44" rx="8" fill="#faf5ff" stroke="#7c3aed" stroke-width="2"/>
-    <text x="380" y="62" text-anchor="middle" class="lbl-title" fill="#7c3aed">Power-on / เริ่มต้นระบบ</text>
-    <text x="380" y="78" text-anchor="middle" class="lbl-sub">Reset → State = IDLE</text>
-  </g>
-
-  <!-- Arrow: Power-on → IDLE -->
-  <line x1="380" y1="88" x2="380" y2="136" class="arrow"/>
-  <!-- Moving dot -->
-  <circle id="ch4-d1" class="ch4-dot" cx="380" cy="93"/>
-
-  <!-- IDLE -->
-  <g class="g-idle">
-    <rect x="270" y="140" width="220" height="68" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
-    <text x="380" y="161" text-anchor="middle" class="lbl-title" fill="#15803d">IDLE</text>
-    <text x="380" y="177" text-anchor="middle" class="lbl-sub">● ปั๊ม: ปิด (OFF)</text>
-    <text x="380" y="192" text-anchor="middle" class="lbl-sub">● สัญญาณเตือน: ปิด (OFF)</text>
-  </g>
-
-  <!-- Arrow: IDLE → PUMPING (Temp > 80°C) -->
-  <line x1="380" y1="208" x2="380" y2="256" class="arrow"/>
-  <text x="384" y="237" class="lbl-edge" fill="#2563eb">Temp &gt; 80°C</text>
-  <circle id="ch4-d2" class="ch4-dot" cx="380" cy="213"/>
-
-  <!-- PUMPING -->
-  <g class="g-pump">
-    <rect x="270" y="260" width="220" height="68" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
-    <text x="380" y="281" text-anchor="middle" class="lbl-title" fill="#1d4ed8">PUMPING</text>
-    <text x="380" y="297" text-anchor="middle" class="lbl-sub">● ปั๊ม: เปิด (ON)</text>
-    <text x="380" y="312" text-anchor="middle" class="lbl-sub">● สัญญาณเตือน: ปิด (OFF)</text>
-  </g>
-
-  <!-- Arrow: PUMPING → COOLDOWN (Temp < 60°C) -->
-  <line x1="380" y1="328" x2="380" y2="376" class="arrow"/>
-  <text x="384" y="356" class="lbl-edge" fill="#ca8a04">Temp &lt; 60°C</text>
-  <circle id="ch4-d3" class="ch4-dot" cx="380" cy="340"/>
-
-  <!-- COOLDOWN_DELAY -->
-  <g class="g-cool">
-    <rect x="260" y="380" width="240" height="68" rx="8" fill="#fefce8" stroke="#ca8a04" stroke-width="2"/>
-    <text x="380" y="401" text-anchor="middle" class="lbl-title" fill="#92400e">COOLDOWN_DELAY</text>
-    <text x="380" y="417" text-anchor="middle" class="lbl-sub">● ปั๊ม: เปิด (ON) ต่อเนื่อง 10 วิ</text>
-    <text x="380" y="432" text-anchor="middle" class="lbl-sub">● สัญญาณเตือน: ปิด (OFF)</text>
-  </g>
-
-  <!-- Arrow: COOLDOWN → IDLE (Timer 10s) via right side -->
-  <path d="M500,400 Q518,400 518,382 L518,192 Q518,174 490,174" class="arrow" fill="none" stroke="#334155" stroke-width="2"/>
-  <text x="528" y="235" class="lbl-edge" fill="#334155" text-anchor="start">Timer 10s หมดลง → กลับ IDLE</text>
-
-  <!-- FAULT arrow from IDLE (Sensor Error / Temp > 95°C) — left side -->
-  <path d="M270,174 Q120,174 120,418" class="arrow-fault"/>
-  <text x="60" y="320" class="lbl-edge" fill="#e11d48" text-anchor="middle" transform="rotate(-90,60,320)">Sensor Error / Temp &gt; 95°C</text>
-  <!-- Moving dot on fault path -->
-  <circle id="ch4-derr" class="ch4-dot" cx="120" cy="220" r="4"/>
-
-  <!-- FAULT box -->
-  <g class="g-fault">
-    <rect x="20" y="418" width="220" height="80" rx="8" fill="#fff1f2" stroke="#e11d48" stroke-width="2.5"/>
-    <text x="130" y="440" text-anchor="middle" class="lbl-title" fill="#be123c" font-size="14">FAULT 🚨</text>
-    <text x="130" y="457" text-anchor="middle" class="lbl-sub">● ปั๊ม: เปิดค้าง (Failsafe ON)</text>
-    <text x="130" y="472" text-anchor="middle" class="lbl-sub">● สัญญาณเตือน: ดัง (Siren ON)</text>
-    <text x="130" y="487" text-anchor="middle" class="lbl-sub">● ต้องกดปุ่ม Reset ด้วยตนเอง</text>
-  </g>
-
-  <!-- Arrow: FAULT → IDLE (Reset) -->
-  <path d="M130,418 Q160,250 270,174" class="arrow-reset"/>
-  <!-- Text background mask for Reset Label -->
-  <rect x="115" y="310" width="120" height="28" fill="#f8fafc" rx="4"/>
-  <text x="175" y="321" class="lbl-edge" fill="#16a34a" font-size="9.5" text-anchor="middle">Temp&lt;70°C &amp; Sensor OK</text>
-  <text x="175" y="333" class="lbl-edge" fill="#16a34a" font-size="9.5" text-anchor="middle">&amp; กดปุ่ม Reset</text>
-  <!-- Moving dot on reset path -->
-  <circle id="ch4-drst" class="ch4-dot" cx="130" cy="418" r="4" fill="#16a34a"/>
-
-  <!-- FAULT arrow also from PUMPING left path -->
-  <path d="M270,295 Q160,295 120,418" class="arrow-fault" fill="none"/>
-
-  <!-- Legend -->
-  <rect x="530" y="410" width="210" height="92" rx="6" fill="#fff" stroke="#cbd5e1" stroke-width="1"/>
-  <text x="635" y="428" text-anchor="middle" font-size="10" font-weight="600" fill="#334155">คำอธิบาย</text>
-  <rect x="540" y="436" width="12" height="12" rx="2" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
-  <text x="558" y="447" font-size="9" fill="#15803d">สถานะปกติ (Normal)</text>
-  <rect x="540" y="454" width="12" height="12" rx="2" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
-  <text x="558" y="465" font-size="9" fill="#1d4ed8">สถานะปั๊มทำงาน</text>
-  <rect x="540" y="472" width="12" height="12" rx="2" fill="#fefce8" stroke="#ca8a04" stroke-width="1.5"/>
-  <text x="558" y="483" font-size="9" fill="#92400e">สถานะชะลอการดับ</text>
-  <rect x="540" y="490" width="12" height="12" rx="2" fill="#fff1f2" stroke="#e11d48" stroke-width="1.5"/>
-  <text x="558" y="501" font-size="9" fill="#be123c">สถานะผิดพลาด (Fault)</text>
-</svg>
-
----
-
-### 5.8.3 ซอร์สโค้ดภาษา C++ เต็มรูปแบบสำหรับกรณีศึกษา (Industrial C++ Source Code)
-
-ซอร์สโค้ดต่อไปนี้ได้รับการรับรองไวยากรณ์ผ่านคอมไพเลอร์ ทำงานแบบปราศจากการบล็อกเวลาทั้งหมด (Pure Non-blocking) โดยจัดวางแยกแต่ละสถานะอย่างเป็นระบบ:
-
-```cpp
-#include <Arduino.h>
-
-// การนิยามสถานะใน FSM ด้วย enum class ป้องกันปัญหาระดับประเภทข้อมูล
-enum class State {
-    IDLE,
-    PUMPING,
-    COOLDOWN_DELAY,
-    FAULT
-};
-
-// พินกำหนดอินพุต/เอาต์พุตของระบบ
-const uint8_t TEMP_PIN = 34;      // ขาอินพุตแอนะล็อกเชื่อมกับเซ็นเซอร์วัดอุณหภูมิ (ADC1)
-const uint8_t PUMP_PIN = 25;      // ขาสั่งงานรีเลย์ควบคุมปั๊มน้ำระบายความร้อน
-const uint8_t BUZZER_PIN = 26;    // ขาสั่งการบัซเซอร์สัญญาณเตือนภัย (Siren)
-const uint8_t RESET_BTN_PIN = 14;  // ขาต่อปุ่มกด Reset (วงจรดึง Pull-up ภายใน, กดปุ่ม = LOW)
-
-// ค่าเกณฑ์และค่าทางวิศวกรรม
-const double TEMP_PUMP_ON = 80.0;   // อุณหภูมิสั่งเริ่มปั๊มน้ำ (°C)
-const double TEMP_PUMP_OFF = 60.0;  // อุณหภูมิสั่งเริ่มหยุดปั๊ม (°C)
-const double TEMP_CRITICAL = 95.0;  // อุณหภูมิวิกฤต บังคับเข้าสู่ FAULT (°C)
-const double TEMP_SAFE_RESET = 70.0;// อุณหภูมิปลอดภัยที่ยินยอมให้เริ่มทำงานใหม่หลังเคลียร์ FAULT (°C)
-
-const unsigned long COOLDOWN_DURATION = 10000; // ระยะเวลาชะลอการปิดปั๊ม 10 วินาที (10,000 ms)
-const unsigned long DEBOUNCE_DELAY = 50;       // เวลาการกรองปุ่มกดหน้าสัมผัส 50 ms
-
-// ตัวแปรควบคุมระบบ
-State currentState = State::IDLE;
-unsigned long cooldownStart = 0;
-
-// ตัวแปรกองสัญญาณปุ่มกด (Debounce variables)
-int lastButtonState = HIGH;      // หน้าสัมผัสปกติเนื่องจาก Pull-up
-int buttonState = HIGH;          // สถานะปุ่มคัดกรองแล้ว
-unsigned long lastDebounceTime = 0; 
-
-// ฟังก์ชันแปลงสัญญาณ ADC และตรวจสอบสถานะเซ็นเซอร์ (Failsafe)
-// ส่งค่ากลับเป็น true หากเซ็นเซอร์ปกติ และเก็บอุณหภูมิในพารามิเตอร์อ้างอิง tempCelsius
-bool readTemperature(double &tempCelsius) {
-    int rawAdc = analogRead(TEMP_PIN); // อ่านค่าขนาด 12-bit (0 - 4095)
-    
-    // ตรวจสอบความปลอดภัยเซ็นเซอร์ (Open / Short circuit checking)
-    // สำหรับ ESP32 ADC ที่แรงดันสูงสุด 3.1V หากสายขาดหรือชอร์ต แรงดันไฟฟ้าจะกระโดดขอบวงจร
-    if (rawAdc < 50 || rawAdc > 4050) {
-        return false; // เกิดปัญหาที่ตัวอุปกรณ์วัดค่า
-    }
-    
-    // คำนวณแปลงค่าดิบตามข้อมูลผู้ผลิต:
-    // แรงดันเซ็นเซอร์: Vout = (10mV/C) * T + 500mV -> Vout (mV) = 10 * T + 500
-    // แรงดันรับเข้า ESP32: V_adc (mV) = rawAdc * (3100.0 / 4095.0)
-    double vAdcMv = ((double)rawAdc * 3100.0) / 4095.0;
-    tempCelsius = (vAdcMv - 500.0) / 10.0;
-    return true; // การวัดค่าเสร็จสมบูรณ์
-}
-
-// ฟังก์ชันพิมพ์บันทึกการเปลี่ยนผ่านสถานะการทำงานออก Serial Monitor
-const char* stateToString(State s) {
-    switch (s) {
-        case State::IDLE: return "IDLE";
-        case State::PUMPING: return "PUMPING";
-        case State::COOLDOWN_DELAY: return "COOLDOWN_DELAY";
-        case State::FAULT: return "FAULT";
-    }
-    return "UNKNOWN";
-}
-
-void transitionTo(State newState) {
-    Serial.print("[FSM] Transition: ");
-    Serial.print(stateToString(currentState));
-    Serial.print(" -> ");
-    Serial.println(stateToString(newState));
-    currentState = newState;
-}
-
-void setup() {
-    Serial.begin(115200);
-    
-    pinMode(PUMP_PIN, OUTPUT);
-    pinMode(BUZZER_PIN, OUTPUT);
-    pinMode(RESET_BTN_PIN, INPUT_PULLUP);
-    
-    // ตั้งค่าความปลอดภัยล่วงหน้า
-    digitalWrite(PUMP_PIN, LOW);
-    digitalWrite(BUZZER_PIN, LOW);
-    
-    Serial.println("[SYSTEM] Boiler Cooling Pump Controller Initialized.");
-}
-
-void loop() {
-    double currentTemp = 0.0;
-    bool isSensorHealthy = readTemperature(currentTemp);
-    
-    // -------------------------------------------------------------
-    // กลไกคัดกรองหน้าสัมผัสสวิตช์ปุ่มกด (Software Debounce)
-    // -------------------------------------------------------------
-    int currentBtnReading = digitalRead(RESET_BTN_PIN);
-    bool isResetActivated = false;
-    
-    if (currentBtnReading != lastButtonState) {
-        lastDebounceTime = millis(); // เริ่มนับเวลาใหม่เมื่อพบการแกว่ง
-    }
-    
-    if ((millis() - lastDebounceTime) > DEBOUNCE_DELAY) {
-        if (currentBtnReading != buttonState) {
-            buttonState = currentBtnReading;
-            if (buttonState == LOW) { // กดปุ่มทำงาน (ลอจิกเป็น LOW เนื่องจากวงจร Pull-up)
-                isResetActivated = true;
-            }
-        }
-    }
-    lastButtonState = currentBtnReading;
-    
-    // -------------------------------------------------------------
-    // ส่วนประมวลผลเงื่อนไขสถานะ (Finite State Machine Execution)
-    // -------------------------------------------------------------
-    switch (currentState) {
-        case State::IDLE:
-            digitalWrite(PUMP_PIN, LOW);
-            digitalWrite(BUZZER_PIN, LOW);
-            
-            if (!isSensorHealthy) {
-                Serial.println("[CRITICAL] Sensor fault detected in IDLE!");
-                transitionTo(State::FAULT);
-            } else if (currentTemp > TEMP_PUMP_ON) {
-                Serial.print("[TEMP ALERT] Temp: ");
-                Serial.print(currentTemp);
-                Serial.println(" C. Starting cooling.");
-                transitionTo(State::PUMPING);
-            }
-            break;
-            
-        case State::PUMPING:
-            digitalWrite(PUMP_PIN, HIGH); // สั่งปั๊มทำงานระบายความร้อน
-            digitalWrite(BUZZER_PIN, LOW);
-            
-            if (!isSensorHealthy) {
-                Serial.println("[CRITICAL] Sensor fault detected during PUMPING!");
-                transitionTo(State::FAULT);
-            } else if (currentTemp > TEMP_CRITICAL) {
-                Serial.print("[CRITICAL] Boiler temperature exceeded threshold: ");
-                Serial.print(currentTemp);
-                Serial.println(" C!");
-                transitionTo(State::FAULT);
-            } else if (currentTemp < TEMP_PUMP_OFF) {
-                Serial.print("[TEMP OK] Temp fell to ");
-                Serial.print(currentTemp);
-                Serial.println(" C. Entering post-cooling.");
-                cooldownStart = millis(); // บันทึกเวลาก่อนหน่วงสถานะ
-                transitionTo(State::COOLDOWN_DELAY);
-            }
-            break;
-            
-        case State::COOLDOWN_DELAY:
-            digitalWrite(PUMP_PIN, HIGH); // ปั๊มรันต่อไปในระดับหน่วงเวลา
-            digitalWrite(BUZZER_PIN, LOW);
-            
-            if (!isSensorHealthy) {
-                Serial.println("[CRITICAL] Sensor fault detected in COOLDOWN!");
-                transitionTo(State::FAULT);
-            } else if (currentTemp > TEMP_CRITICAL) {
-                Serial.println("[CRITICAL] Temperature spikes during COOLDOWN!");
-                transitionTo(State::FAULT);
-            } else if (currentTemp > TEMP_PUMP_ON) {
-                // หากอุณหภูมิกลับขึ้นสูงก่อนชะลอเวลาสิ้นสุด ให้กระโดดไปรันเต็มตัวใหม่
-                Serial.println("[WARN] Temperature rose again. Returning to PUMPING.");
-                transitionTo(State::PUMPING);
-            } else if (millis() - cooldownStart >= COOLDOWN_DURATION) {
-                Serial.println("[INFO] Post-cooling finished. Pump stopped.");
-                transitionTo(State::IDLE);
-            }
-            break;
-            
-        case State::FAULT:
-            // โหมดความปลอดภัยสูงสุด: เปิดปั๊มเพื่อลดอุณหภูมิ, ส่งสัญญาณเตือน
-            digitalWrite(PUMP_PIN, HIGH);
-            digitalWrite(BUZZER_PIN, HIGH);
-            
-            // รอรับสัญญาณการกู้คืนเครื่องจากวิศวกรผู้ควบคุม
-            if (isResetActivated) {
-                if (!isSensorHealthy) {
-                    Serial.println("[RESET REJECTED] Cannot reset system: Sensor is still faulty!");
-                } else if (currentTemp >= TEMP_SAFE_RESET) {
-                    Serial.print("[RESET REJECTED] Temperature is still unsafe (");
-                    Serial.print(currentTemp);
-                    Serial.print(" C >= ");
-                    Serial.print(TEMP_SAFE_RESET);
-                    Serial.println(" C)");
-                } else {
-                    Serial.println("[SYSTEM RESET] Fault cleared. System returning to IDLE.");
-                    transitionTo(State::IDLE);
-                }
-            }
-            break;
-    }
-}
-```
-
----
-
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Reference / Summary" data-tab-icon="📊" id="waveform" markdown="1">

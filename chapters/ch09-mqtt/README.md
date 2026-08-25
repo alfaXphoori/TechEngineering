@@ -1,542 +1,410 @@
-# Chapter 9: โปรโตคอล MQTT สำหรับงานด้านไอโอที (MQTT Messaging Protocol)
+---
+layout: default
+title: "บทที่ 9: โพรโทคอลการรับส่งข้อความแบบไลท์เวท MQTT"
+permalink: /chapters/ch09-mqtt/
+---
 
-> บทนี้จะอธิบายสถาปัตยกรรมการสื่อสารแบบกระจายข้อความ Publish-Subscribe ผ่านโปรโตคอล MQTT ซึ่งออกแบบมาสำหรับอุปกรณ์ฝังตัวที่มีหน่วยความจำจำกัดและแบนด์วิดท์เครือข่ายต่ำ รวมถึงอธิบายระดับคุณภาพความมั่นคงในการรับส่ง (QoS) และการเขียนโปรแกรม MQTT Client บนบอร์ดไมโครคอนโทรลเลอร์
+# Chapter 9: โพรโทคอลการรับส่งข้อความแบบไลท์เวท MQTT
 
+## Lightweight Messaging Protocol MQTT (Pub/Sub, Broker, Topics, Wildcards, QoS, LWT, PubSubClient)
+
+---
+
+**รายวิชา:** เทคโนโลยีดิจิทัลสำหรับวิศวกรรม (Digital Technology for Engineering)  
+**หลักสูตร:** วิศวกรรมเครื่องกล ชั้นปีที่ 1  
+**ผู้เรียบเรียง:** คณะวิศวกรรมศาสตร์  
+
+---
+
+> ### 🎯 ผลลัพธ์การเรียนรู้และการเชื่อมโยง (Constructive Alignment)
+>
+> - **สัปดาห์การเรียนรู้:** สัปดาห์ที่ 10 — โปรโตคอลการรับส่งข้อความแบบไลท์เวท (Lightweight Messaging Protocols & MQTT)
+> - **ผลลัพธ์การเรียนรู้ระดับรายวิชา (CLOs):**
+>   - **CLO2:** เลือกใช้และอธิบายเทคโนโลยีไร้สาย โพรโทคอลการสื่อสาร และเทคโนโลยีคลาวด์สำหรับ IoT ได้
+>   - **CLO3:** ออกแบบและพัฒนาระบบ IoT ที่เชื่อมต่อเซนเซอร์/ตัวกระทำ สื่อสารข้อมูล และแสดงผลผ่านโปรแกรมของผู้ใช้ได้
+>   - **CLO4:** ปฏิบัติการสร้าง ทดสอบ และประยุกต์ใช้ระบบ IoT พร้อมการเรียนรู้ของเครื่องเบื้องต้น และทำงานเป็นทีมอย่างรับผิดชอบ
+> - **ผลลัพธ์การเรียนรู้ระดับบทเรียน (LLOs):**
+>   - **LLO10.1:** อธิบายรูปแบบ Publish/Subscribe ของ MQTT (Broker, Topic, QoS) ได้ (CLO2)
+>   - **LLO10.2:** ส่งและรับข้อมูลเซนเซอร์ผ่านโพรโทคอล MQTT ได้ (CLO3, CLO4)
+>
 ---
 
 <div class="chapter-tab-content" data-tab-name="Concept" data-tab-icon="💡" id="concept" markdown="1">
 
-## 9.1 MQTT: รูปแบบ Publish/Subscribe
+## 9.1 บทนำและสถาปัตยกรรม Publish/Subscribe (Pub/Sub)
 
-**MQTT (Message Queuing Telemetry Transport)** ถูกออกแบบมาเพื่ออุปกรณ์ IoT โดยเฉพาะ มีขนาดเล็ก (Lightweight) และใช้แบนด์วิดท์ต่ำ
+ในบทที่ 8 เราได้เรียนรู้โพรโทคอล HTTP ซึ่งใช้โมเดล Request-Response แต่ในงานวิศวกรรมไอโอทีที่มีอุปกรณ์เซนเซอร์นับร้อยนับพันตัว และต้องการการรายงานข้อมูลแบบทันที (Event-driven / Push-based) โพรโทคอล HTTP จะสร้างภาระให้กับระบบอย่างมาก
 
-### 9.1.1 องค์ประกอบหลัก
+**MQTT (Message Queuing Telemetry Transport)** ได้รับการคิดค้นโดย Dr. Andy Stanford-Clark (IBM) และ Arlen Nipper (Arcom) ในปี ค.ศ. 1999 โดยออกแบบมาเพื่อติดตามท่อส่งน้ำมันผ่านดาวเทียมที่แบนด์วิดท์มีจำกัดและสัญญาณขาดหายบ่อย ปัจจุบัน MQTT เป็นมาตรฐานสากล (ISO/IEC 20922) สำหรับการสื่อสารในระบบ IoT และ IIoT
 
-MQTT ทำงานแบบ **Publish/Subscribe (Pub/Sub)** ซึ่งต่างจาก HTTP ตรงที่ไม่ต้องร้องขอโดยตรง:
+### 9.1.1 การแยกความเป็นอิสระ (Decoupling) 3 มิติของ Publish/Subscribe
 
-- **Broker** — เซิร์ฟเวอร์ตัวกลางที่รับและกระจายข้อความ (เช่น Mosquitto, HiveMQ)
-- **Publisher** — อุปกรณ์ที่ "เผยแพร่" ข้อมูลไปยัง Topic เช่น ESP32 ส่งค่าอุณหภูมิ
-- **Subscriber** — อุปกรณ์ที่ "สมัครรับ" ข้อมูลจาก Topic ที่สนใจ
-
-แผนภาพเคลื่อนไหวด้านล่างนี้แสดงกลไกการแลกเปลี่ยนข้อมูลแบบ Publish/Subscribe โดยมี Broker เป็นศูนย์กลางในการกระจายข้อมูลอุณหภูมิไปยังผู้รับหลายรายพร้อมกัน:
-
-<div style="text-align: center; margin: 20px 0;">
-<svg viewBox="0 0 760 270" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
-  <style>
-    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; rx: 12px; }
-    .pub-box { fill: #faf5ff; stroke: #7c3aed; stroke-width: 2; rx: 8px; }
-    .broker-box { fill: #ffffff; stroke: #334155; stroke-width: 2; rx: 4px; }
-    .sub-box { fill: #ffffff; stroke: #334155; stroke-width: 2; rx: 4px; }
-    .dashboard-box { fill: #ffffff; stroke: #334155; stroke-width: 2; rx: 4px; }
-    .wire { fill: none; stroke: #334155; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
-    .wire-pub { fill: none; stroke: #f59e0b; stroke-width: 2.5; stroke-dasharray: 6 4; stroke-linecap: round; animation: flowPub 3s linear infinite; }
-    .wire-sub1 { fill: none; stroke: #16a34a; stroke-width: 2.5; stroke-dasharray: 6 4; stroke-linecap: round; animation: flowSub1 3s linear infinite; }
-    .wire-sub2 { fill: none; stroke: #16a34a; stroke-width: 2.5; stroke-dasharray: 6 4; stroke-linecap: round; animation: flowSub2 3s linear infinite; }
-    
-    .msg-pub { fill: #ffffff; stroke: #f59e0b; stroke-width: 2; rx: 3px; animation: mqttPubCycle 6s infinite cubic-bezier(0.4, 0, 0.2, 1); }
-    .msg-sub1 { fill: #ffffff; stroke: #16a34a; stroke-width: 2; rx: 3px; animation: mqttSub1Cycle 6s infinite cubic-bezier(0.4, 0, 0.2, 1); }
-    .msg-sub2 { fill: #ffffff; stroke: #16a34a; stroke-width: 2; rx: 3px; animation: mqttSub2Cycle 6s infinite cubic-bezier(0.4, 0, 0.2, 1); }
-    
-    .text-main { font-size: 13px; font-weight: 700; fill: #334155; }
-    .text-sub { font-size: 11px; fill: #64748b; }
-    .text-code { font-family: monospace; font-size: 11px; fill: #7c3aed; font-weight: bold; }
-    .text-title { font-size: 14px; font-weight: 800; fill: #0f172a; }
-    
-    @keyframes flowPub {
-      0% { stroke-dashoffset: 20; }
-      100% { stroke-dashoffset: 0; }
-    }
-    @keyframes flowSub1 {
-      0% { stroke-dashoffset: 0; }
-      100% { stroke-dashoffset: 20; }
-    }
-    @keyframes flowSub2 {
-      0% { stroke-dashoffset: 0; }
-      100% { stroke-dashoffset: 20; }
-    }
-    
-    @keyframes mqttPubCycle {
-      0% { transform: translate(190px, 135px); opacity: 0; }
-      5%, 30% { opacity: 1; }
-      35%, 100% { transform: translate(320px, 135px); opacity: 0; }
-    }
-    @keyframes mqttSub1Cycle {
-      0%, 40% { transform: translate(440px, 110px); opacity: 0; }
-      45%, 70% { opacity: 1; }
-      75%, 100% { transform: translate(570px, 72px); opacity: 0; }
-    }
-    @keyframes mqttSub2Cycle {
-      0%, 40% { transform: translate(440px, 160px); opacity: 0; }
-      45%, 70% { opacity: 1; }
-      75%, 100% { transform: translate(570px, 198px); opacity: 0; }
-    }
-  </style>
-  <rect x="5" y="5" width="750" height="260" class="bg"/>
-  <text x="380" y="32" class="text-title" text-anchor="middle">สถาปัตยกรรม MQTT (Publish / Subscribe)</text>
-  
-  <!-- Publisher Box -->
-  <rect x="25" y="85" width="150" height="100" class="pub-box"/>
-  <text x="100" y="110" class="text-main" text-anchor="middle" fill="#7c3aed">ESP32 Publisher</text>
-  <text x="100" y="130" class="text-sub" text-anchor="middle">ผู้เผยแพร่ข้อมูลอุณหภูมิ</text>
-  <text x="100" y="150" class="text-sub" text-anchor="middle">Topic: home/temp</text>
-  <text x="100" y="170" class="text-code" text-anchor="middle">temp: 32.5</text>
-  
-  <!-- MQTT Broker Box (Center) -->
-  <rect x="305" y="85" width="150" height="100" class="broker-box"/>
-  <text x="380" y="110" class="text-main" text-anchor="middle">MQTT Broker</text>
-  <text x="380" y="130" class="text-sub" text-anchor="middle">ตัวกลางคัดแยกข้อมูล</text>
-  <text x="380" y="150" class="text-sub" text-anchor="middle">ตาม Topic</text>
-  <text x="380" y="170" class="text-code" text-anchor="middle" fill="#334155">Mosquitto / HiveMQ</text>
-  
-  <!-- Subscriber 1 (Web Dashboard) -->
-  <rect x="585" y="30" width="150" height="85" class="dashboard-box"/>
-  <text x="660" y="55" class="text-main" text-anchor="middle">Web Dashboard</text>
-  <text x="660" y="75" class="text-sub" text-anchor="middle">Sub: home/temp</text>
-  <text x="660" y="98" class="text-code" text-anchor="middle" fill="#16a34a">Temp: 32.5 °C</text>
-  
-  <!-- Subscriber 2 (Mobile App) -->
-  <rect x="585" y="155" width="150" height="85" class="sub-box"/>
-  <text x="660" y="180" class="text-main" text-anchor="middle">Mobile App</text>
-  <text x="660" y="200" class="text-sub" text-anchor="middle">Sub: home/temp</text>
-  <text x="660" y="223" class="text-code" text-anchor="middle" fill="#16a34a">Temp: 32.5 °C</text>
-  
-  <!-- Paths -->
-  <!-- Pub to Broker -->
-  <line x1="175" y1="135" x2="305" y2="135" class="wire"/>
-  <line x1="175" y1="135" x2="305" y2="135" class="wire-pub"/>
-  <path d="M 297 130 L 305 135 L 297 140 Z" fill="#f59e0b"/>
-  
-  <!-- Broker to Sub 1 (Web Dashboard) -->
-  <line x1="455" y1="110" x2="585" y2="72" class="wire"/>
-  <line x1="455" y1="110" x2="585" y2="72" class="wire-sub1"/>
-  <path d="M 577 69 L 585 72 L 579 78 Z" fill="#16a34a"/>
-  
-  <!-- Broker to Sub 2 (Mobile App) -->
-  <line x1="455" y1="160" x2="585" y2="198" class="wire"/>
-  <line x1="455" y1="160" x2="585" y2="198" class="wire-sub2"/>
-  <path d="M 579 192 L 585 198 L 577 201 Z" fill="#16a34a"/>
-  
-  <!-- Message Envelope Icons -->
-  <!-- Pub Envelope -->
-  <g class="msg-pub">
-    <rect x="-12" y="-8" width="24" height="16" rx="2" />
-    <path d="M -12 -8 L 0 0 L 12 -8" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
-  </g>
-  
-  <!-- Sub 1 Envelope -->
-  <g class="msg-sub1">
-    <rect x="-12" y="-8" width="24" height="16" rx="2" />
-    <path d="M -12 -8 L 0 0 L 12 -8" fill="none" stroke="#16a34a" stroke-width="1.5"/>
-  </g>
-  
-  <!-- Sub 2 Envelope -->
-  <g class="msg-sub2">
-    <rect x="-12" y="-8" width="24" height="16" rx="2" />
-    <path d="M -12 -8 L 0 0 L 12 -8" fill="none" stroke="#16a34a" stroke-width="1.5"/>
-  </g>
-  
-</svg>
-</div>
-
-### 9.1.2 โครงสร้าง Topic
-
-Topic ใน MQTT จัดเป็นลำดับชั้น (Hierarchy) คล้ายโครงสร้างโฟลเดอร์:
+สถาปัตยกรรม Pub/Sub แตกต่างจาก Client/Server โดยสิ้นเชิง เพราะผู้ส่งและผู้รับข้อมูลไม่ต้องเชื่อมต่อกันโดยตรง (Decoupled):
 
 ```
-building/floor1/room101/temperature
-building/floor1/room101/humidity
-building/floor2/room201/temperature
+┌───────────────────────────┐                               ┌───────────────────────────┐
+│         Publisher         │                               │        Subscriber         │
+│   (ESP32 Vibration Node)  │ ─── Publish (Topic: A) ───┐   │   (Factory Dashboard)     │
+└───────────────────────────┘                           │   │  (Subscribed to Topic: A) │
+                                                        ▼   └───────────────────────────┘
+                                              ┌───────────────────┐       ▲
+                                              │    MQTT Broker    │ ──────┘
+                                              │ (Message Router)  │ ──────┐
+                                              └───────────────────┘       ▼
+┌───────────────────────────┐                           ▲   ┌───────────────────────────┐
+│         Publisher         │                           │   │        Subscriber         │
+│    (ESP32 Climate Node)   │ ─── Publish (Topic: B) ───┘   │     (Alarm Controller)    │
+│                           │                               │  (Subscribed to Topic: B) │
+└───────────────────────────┘                               └───────────────────────────┘
 ```
 
-**Wildcard (ตัวแทน):**
-- `+` แทนระดับเดียว — `building/+/room101/temperature` จะรับข้อมูลจากทุกชั้น
-- `#` แทนหลายระดับ — `building/floor1/#` จะรับข้อมูลทั้งหมดของชั้น 1
-
-### 9.1.3 ระดับ QoS (Quality of Service)
-
-MQTT มีกลไกการรับประกันการรับส่งข้อมูลผ่านระดับ **QoS (Quality of Service)** 3 ระดับ เพื่อรองรับเสถียรภาพเครือข่ายและข้อจำกัดของอุปกรณ์ที่แตกต่างกัน:
-
-| ระดับ QoS | ชื่อเรียก | คำอธิบาย | การแลกเปลี่ยนแพ็กเก็ตคีย์หลัก | เหมาะกับงาน |
-|-----------|------|----------|---------------------------|------------|
-| **0** | At most once | ส่งข้อมูลครั้งเดียว ไม่รอการยืนยัน | `PUBLISH` ➔ จบงานทันที | ข้อมูลเซ็นเซอร์ทั่วไปที่ส่งถี่ ๆ (เช่น อุณหภูมิรายวินาที) |
-| **1** | At least once | มั่นใจว่าถึงปลายทาง แต่อาจมีข้อมูลซ้ำ | `PUBLISH` ➔ `PUBACK` | คำสั่งเปิด-ปิดไฟ หรือข้อมูลที่ห้ามสูญหายเด็ดขาด |
-| **2** | Exactly once | ข้อมูลถึงผู้รับครั้งเดียวแน่นอน ไม่ซ้ำ | `PUBLISH` ➔ `PUBREC` ➔ `PUBREL` ➔ `PUBCOMP` | ระบบการเงิน, การหักยอดสินค้า หรือคำสั่งที่ห้ามเกิดซ้ำซ้อน |
-
-#### ลำดับขั้นตอนการแลกเปลี่ยนแพ็กเก็ตควบคุม (Packet Flow Sequence)
-
-เพื่อให้เข้าใจเชิงลึกว่าแต่ละระดับ QoS จัดการข้อมูลอย่างไรในระดับ TCP Payload ด้านล่างนี้คือลำดับแพ็กเก็ตควบคุมที่แลกเปลี่ยนกันระหว่างผู้ส่ง (Client/Publisher) และผู้รับ (Broker):
-
-##### 1. ลำดับของ QoS 0 (At most once - อย่างมากหนึ่งครั้ง)
-ส่งแบบ **"ยิงแล้วลืม" (Fire and Forget)** ไม่มีการเก็บสถานะ ไม่มีการรอแพ็กเก็ตตอบกลับใด ๆ
-<div style="text-align: center; margin: 20px 0;">
-<svg viewBox="0 0 600 130" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
-  <title>QoS 0 Sequence Diagram</title>
-  <style>
-    .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1.5; rx: 8px; }
-    .lifeline { stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 4 4; }
-    .node-box { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; rx: 4px; }
-    .txt-node { font-size: 12px; font-weight: bold; fill: #1e293b; }
-    
-    .msg-line { fill: none; stroke: #94a3b8; stroke-width: 2; }
-    .msg-flow { fill: none; stroke: #3b82f6; stroke-width: 2; stroke-dasharray: 6 6; animation: msg-march 1.5s linear infinite; }
-    .msg-text { font-size: 11.5px; font-weight: bold; fill: #2563eb; }
-    .note-text { font-size: 11px; fill: #64748b; }
-    
-    @keyframes msg-march {
-      to { stroke-dashoffset: -12; }
-    }
-  </style>
-
-  <rect x="5" y="5" width="590" height="120" class="bg"/>
-  
-  <defs>
-    <marker id="arrow-seq" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-      <path d="M 0 1.5 L 7 5 L 0 8.5 z" fill="#3b82f6"/>
-    </marker>
-  </defs>
-
-  <!-- Lifelines -->
-  <line x1="150" y1="45" x2="150" y2="105" class="lifeline"/>
-  <line x1="450" y1="45" x2="450" y2="105" class="lifeline"/>
-  
-  <rect x="90" y="20" width="120" height="26" class="node-box"/>
-  <text x="150" y="37" text-anchor="middle" class="txt-node">Publisher</text>
-
-  <rect x="390" y="20" width="120" height="26" class="node-box"/>
-  <text x="450" y="37" text-anchor="middle" class="txt-node">Broker</text>
-
-  <!-- Message 1 -->
-  <line x1="150" y1="75" x2="450" y2="75" class="msg-line" marker-end="url(#arrow-seq)"/>
-  <line x1="150" y1="75" x2="445" y2="75" class="msg-flow"/>
-  <text x="300" y="68" text-anchor="middle" class="msg-text">1. PUBLISH</text>
-  <text x="462" y="80" text-anchor="start" class="note-text">(ได้รับข้อมูลและประมวลผลทันที)</text>
-</svg>
-</div>
-- **ขั้นตอน:** ผู้ส่งทำการส่งแพ็กเก็ต `PUBLISH` เพียงครั้งเดียว และไม่มีการติดตามการตอบรับ
-- **ข้อดี:** ความหน่วงต่ำมาก (Latency ต่ำสุด) ใช้แบนด์วิดท์และพลังงานน้อยที่สุด
-- **ความเสี่ยง:** หากสัญญาณเครือข่ายมีปัญหาระหว่างส่ง ข้อมูลจะสูญหายทันทีโดยไม่มีการรับรู้
-
-##### 2. ลำดับของ QoS 1 (At least once - อย่างน้อยหนึ่งครั้ง)
-รับประกันข้อมูลถึงปลายทางแน่นอน แต่อาจได้รับข้อความซ้ำได้หากตัวส่งเข้าใจผิดว่าข้อความหล่นหาย
-<div style="text-align: center; margin: 20px 0;">
-<svg viewBox="0 0 600 170" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
-  <title>QoS 1 Sequence Diagram</title>
-  <style>
-    .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1.5; rx: 8px; }
-    .lifeline { stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 4 4; }
-    .node-box { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; rx: 4px; }
-    .txt-node { font-size: 12px; font-weight: bold; fill: #1e293b; }
-    
-    .msg-line { fill: none; stroke: #94a3b8; stroke-width: 2; }
-    .msg-flow-right { fill: none; stroke: #3b82f6; stroke-width: 2; stroke-dasharray: 6 6; animation: march-r 1.5s linear infinite; }
-    .msg-flow-left { fill: none; stroke: #10b981; stroke-width: 2; stroke-dasharray: 6 6; animation: march-l 1.5s linear infinite; }
-    
-    .msg-text-blue { font-size: 11.5px; font-weight: bold; fill: #2563eb; }
-    .msg-text-green { font-size: 11.5px; font-weight: bold; fill: #059669; }
-    .note-text { font-size: 11px; fill: #64748b; }
-    
-    @keyframes march-r {
-      to { stroke-dashoffset: -12; }
-    }
-    @keyframes march-l {
-      to { stroke-dashoffset: 12; }
-    }
-  </style>
-
-  <rect x="5" y="5" width="590" height="160" class="bg"/>
-  
-  <defs>
-    <marker id="arrow-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-      <path d="M 0 1.5 L 7 5 L 0 8.5 z" fill="#3b82f6"/>
-    </marker>
-    <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-      <path d="M 0 1.5 L 7 5 L 0 8.5 z" fill="#10b981"/>
-    </marker>
-  </defs>
-
-  <!-- Lifelines -->
-  <line x1="150" y1="45" x2="150" y2="145" class="lifeline"/>
-  <line x1="450" y1="45" x2="450" y2="145" class="lifeline"/>
-  
-  <rect x="90" y="20" width="120" height="26" class="node-box"/>
-  <text x="150" y="37" text-anchor="middle" class="txt-node">Publisher</text>
-
-  <rect x="390" y="20" width="120" height="26" class="node-box"/>
-  <text x="450" y="37" text-anchor="middle" class="txt-node">Broker</text>
-
-  <!-- Message 1 -->
-  <line x1="150" y1="75" x2="450" y2="75" class="msg-line" marker-end="url(#arrow-blue)"/>
-  <line x1="150" y1="75" x2="445" y2="75" class="msg-flow-right"/>
-  <text x="300" y="68" text-anchor="middle" class="msg-text-blue">1. PUBLISH (PacketID: 1)</text>
-  <text x="462" y="80" text-anchor="start" class="note-text">(ได้รับและบันทึกข้อความ)</text>
-
-  <!-- Message 2 -->
-  <line x1="450" y1="115" x2="150" y2="115" class="msg-line" marker-end="url(#arrow-green)"/>
-  <line x1="450" y1="115" x2="155" y2="115" class="msg-flow-left"/>
-  <text x="300" y="108" text-anchor="middle" class="msg-text-green">2. PUBACK (PacketID: 1)</text>
-  <text x="138" y="120" text-anchor="end" class="note-text">(ลบข้อความออกจากหน่วยความจำ)</text>
-</svg>
-</div>
-- **ขั้นตอน:**
-  1. ผู้ส่งบันทึกข้อความไว้ใน Memory เครื่อง และส่ง `PUBLISH` พร้อมตัวระบุเลขแพ็กเก็ต (`Packet ID`)
-  2. ผู้รับบันทึกข้อความลงระบบ ประมวลผล และส่งแพ็กเก็ต `PUBACK` (Publish Acknowledgement) กลับไปหาผู้ส่ง
-  3. เมื่อผู้ส่งได้รับ `PUBACK` ตรงกับ `Packet ID` จึงลบข้อความนั้นออกจาก Memory
-- **การจัดการกรณีเครือข่ายขัดข้อง:** หากผู้ส่งไม่ได้ส่ง `PUBACK` กลับมาภายในเวลาที่กำหนด (Timeout) ผู้ส่งจะส่ง `PUBLISH` ซ้ำอีกครั้งโดยเพิ่มแฟล็ก `DUP: 1` (Duplicate) เพื่อเตือนผู้รับ
-
-##### 3. ลำดับของ QoS 2 (Exactly once - ครั้งเดียวและแน่นอน)
-การันตีความถูกต้องสูงสุด ป้องกันปัญหากรณีข้อมูลซ้ำซ้อนอย่างสมบูรณ์แบบโดยใช้ระบบ Handshake 4 ขั้นตอน:
-<div style="text-align: center; margin: 20px 0;">
-<svg viewBox="0 0 600 250" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
-  <title>QoS 2 Sequence Diagram</title>
-  <style>
-    .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1.5; rx: 8px; }
-    .lifeline { stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 4 4; }
-    .node-box { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; rx: 4px; }
-    .txt-node { font-size: 12px; font-weight: bold; fill: #1e293b; }
-    
-    .msg-line { fill: none; stroke: #94a3b8; stroke-width: 2; }
-    .msg-flow-right { fill: none; stroke: #3b82f6; stroke-width: 2; stroke-dasharray: 6 6; animation: march-r 1.5s linear infinite; }
-    .msg-flow-left { fill: none; stroke: #10b981; stroke-width: 2; stroke-dasharray: 6 6; animation: march-l 1.5s linear infinite; }
-    .msg-flow-purple-right { fill: none; stroke: #8b5cf6; stroke-width: 2; stroke-dasharray: 6 6; animation: march-r 1.5s linear infinite; }
-    .msg-flow-purple-left { fill: none; stroke: #8b5cf6; stroke-width: 2; stroke-dasharray: 6 6; animation: march-l 1.5s linear infinite; }
-    
-    .msg-text-blue { font-size: 11px; font-weight: bold; fill: #2563eb; }
-    .msg-text-green { font-size: 11px; font-weight: bold; fill: #059669; }
-    .msg-text-purple { font-size: 11px; font-weight: bold; fill: #6d28d9; }
-    .note-text { font-size: 10.5px; fill: #64748b; }
-    
-    @keyframes march-r {
-      to { stroke-dashoffset: -12; }
-    }
-    @keyframes march-l {
-      to { stroke-dashoffset: 12; }
-    }
-  </style>
-
-  <rect x="5" y="5" width="590" height="240" class="bg"/>
-  
-  <defs>
-    <marker id="arrow-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-      <path d="M 0 1.5 L 7 5 L 0 8.5 z" fill="#3b82f6"/>
-    </marker>
-    <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-      <path d="M 0 1.5 L 7 5 L 0 8.5 z" fill="#10b981"/>
-    </marker>
-    <marker id="arrow-purple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-      <path d="M 0 1.5 L 7 5 L 0 8.5 z" fill="#8b5cf6"/>
-    </marker>
-  </defs>
-
-  <!-- Lifelines -->
-  <line x1="150" y1="45" x2="150" y2="225" class="lifeline"/>
-  <line x1="450" y1="45" x2="450" y2="225" class="lifeline"/>
-  
-  <rect x="90" y="20" width="120" height="26" class="node-box"/>
-  <text x="150" y="37" text-anchor="middle" class="txt-node">Publisher</text>
-
-  <rect x="390" y="20" width="120" height="26" class="node-box"/>
-  <text x="450" y="37" text-anchor="middle" class="txt-node">Broker</text>
-
-  <!-- Message 1 -->
-  <line x1="150" y1="70" x2="450" y2="70" class="msg-line" marker-end="url(#arrow-blue)"/>
-  <line x1="150" y1="70" x2="445" y2="70" class="msg-flow-right"/>
-  <text x="300" y="63" text-anchor="middle" class="msg-text-blue">1. PUBLISH (PacketID: 2)</text>
-  <text x="462" y="74" text-anchor="start" class="note-text">(จำ Packet ID ไว้ชั่วคราว)</text>
-
-  <!-- Message 2 -->
-  <line x1="450" y1="110" x2="150" y2="110" class="msg-line" marker-end="url(#arrow-green)"/>
-  <line x1="450" y1="110" x2="155" y2="110" class="msg-flow-left"/>
-  <text x="300" y="103" text-anchor="middle" class="msg-text-green">2. PUBREC (PacketID: 2)</text>
-  <text x="138" y="114" text-anchor="end" class="note-text">(รับทราบและบล็อกข้อมูลซ้ำ)</text>
-
-  <!-- Message 3 -->
-  <line x1="150" y1="150" x2="450" y2="150" class="msg-line" marker-end="url(#arrow-purple)"/>
-  <line x1="150" y1="150" x2="445" y2="150" class="msg-flow-purple-right"/>
-  <text x="300" y="143" text-anchor="middle" class="msg-text-purple">3. PUBREL (PacketID: 2)</text>
-  <text x="462" y="154" text-anchor="start" class="note-text">(ส่งข้อมูลหาผู้รับ / ปลดล็อก)</text>
-
-  <!-- Message 4 -->
-  <line x1="450" y1="190" x2="150" y2="190" class="msg-line" marker-end="url(#arrow-purple)"/>
-  <line x1="450" y1="190" x2="155" y2="190" class="msg-flow-purple-left"/>
-  <text x="300" y="183" text-anchor="middle" font-size="11px" font-weight="bold" fill="#6d28d9">4. PUBCOMP (PacketID: 2)</text>
-  <text x="138" y="194" text-anchor="end" class="note-text">(เสร็จสิ้นกระบวนการแลกเปลี่ยน)</text>
-</svg>
-</div>
-- **ขั้นตอน:**
-  1. **PUBLISH (ส่ง):** ผู้ส่งส่งข้อความระบุ `Packet ID`
-  2. **PUBREC (ตอบรับว่าได้รับ):** ผู้รับรับทราบการส่งและบันทึกข้อมูลไว้ แต่จะยังไม่กระจายไปยัง Subscriber โดยตอบรับด้วยแพ็กเก็ต `PUBREC` (Publish Received) กลับไป
-  3. **PUBREL (แจ้งลบสถานะตัวส่ง):** เมื่อผู้ส่งได้รับ `PUBREC` จะตอบกลับด้วย `PUBREL` (Publish Release) เพื่อบอกให้ผู้รับเตรียมเผยแพร่ข้อความและลบเลขแพ็กเก็ตที่บันทึกไว้ได้
-  4. **PUBCOMP (ยืนยันสิ้นสุดงาน):** ผู้รับกระจายข้อความเสร็จแล้ว ส่งสัญญาณ `PUBCOMP` (Publish Complete) กลับไปเพื่อบอกผู้ส่งว่าเสร็จสมบูรณ์ร้อยเปอร์เซ็นต์
-
-### 9.1.4 คุณสมบัติพิเศษ
-
-- **Retained Message** — Broker เก็บข้อความล่าสุดไว้ เมื่อมี Subscriber ใหม่จะได้รับข้อมูลทันทีโดยไม่ต้องรอ Publisher ส่งใหม่
-- **Last Will and Testament (LWT)** — ข้อความที่ Client ฝากไว้กับ Broker ตั้งแต่ตอนเชื่อมต่อ หาก Client หลุดโดยไม่ปกติ Broker จะส่งข้อความนี้แจ้งเตือน เช่น `"ESP32-001 offline"`
-
-> 💡 **LWT เหมาะมากสำหรับ IoT** — เพราะอุปกรณ์ในภาคสนามอาจหลุดเชื่อมต่อได้ตลอดเวลา การแจ้งเตือนอัตโนมัติช่วยให้ระบบรู้สถานะอุปกรณ์แม้ไม่ได้รับข้อมูล
+1. **Space Decoupling (อิสระด้านสถานที่):** Publisher และ Subscriber ไม่จำเป็นต้องทราบ IP Address หรือตำแหน่งที่อยู่ของกันและกัน รู้เพียง Address ของ Broker
+2. **Time Decoupling (อิสระด้านเวลา):** Subscriber ไม่จำเป็นต้องเปิดเครื่องหรือออนไลน์ในขณะที่ Publisher กำลังส่งข้อมูล (หากใช้ฟีเจอร์ Retained Message หรือ Persistent Session)
+3. **Synchronization Decoupling (อิสระด้านจังหวะการทำงาน):** Publisher ส่งข้อมูลเสร็จแล้วสามารถเข้าสู่โหมดประหยัดพลังงาน (Deep Sleep) ได้ทันทีโดยไม่ต้องรอให้ Subscriber ประมวลผลเสร็จ
 
 ---
 
+## 9.2 องค์ประกอบหลักของระบบ MQTT
 
-## 9.2 ตารางเปรียบเทียบแบบเจาะลึก: HTTP/REST ปะทะ MQTT
-
-การเลือกโพรโทคอลที่เหมาะสมมีผลโดยตรงต่อการเลือกแบตเตอรี่ ขนาดหน่วยความจำบอร์ด และค่าใช้จ่ายอินเทอร์เน็ตของโครงการ IoT ตารางด้านล่างเป็นการเปรียบเทียบเชิงวิศวกรรมระหว่าง HTTP/REST และ MQTT:
-
-| เกณฑ์การพิจารณา | HTTP/REST | MQTT |
-| :--- | :--- | :--- |
-| **รูปแบบสถาปัตยกรรม (Architecture)** | **Request-Response (ดึง/ส่งแบบทิศทางเดียว)**<br>Client ต้องร้องขอก่อน เซิร์ฟเวอร์จึงตอบกลับ | **Publish-Subscribe (กระจายตามหัวข้อ)**<br>Broker เป็นตัวกลางจัดการข้อมูลผ่าน Topic |
-| **ขนาดเมตาดาต้า (Header Overhead)** | **สูงมาก (300 - 1,000 ไบต์ต่อครั้ง)**<br>เนื่องจากใช้ข้อความ Text เช่น HTTP Headers, User-Agent | **ต่ำมาก (เริ่มต้นเพียง 2 ไบต์)**<br>จัดเก็บในรูปแบบไบนารีฟอร์แมตขนาดเล็กพิเศษ |
-| **ความคงอยู่ของการเชื่อมต่อ (Persistence)** | **ไม่คงอยู่ (Stateless)**<br>สร้างและปิดการเชื่อมต่อ TCP บ่อยครั้ง (ยกเว้นใช้ Keep-Alive) | **คงอยู่ตลอดเวลา (Persistent)**<br>รักษาการเชื่อมต่อไว้ด้วยการส่งแพ็กเก็ต Ping ประหยัดเวลา Handshake |
-| **ความหน่วงเวลา (Latency)** | **สูงปานกลาง**<br>ต้องเสียเวลาสร้าง TCP handshake และแลกเปลี่ยน Header ใหม่ทุกรอบ | **ต่ำมาก (Real-time)**<br>เนื่องจากท่อเชื่อมต่อ TCP เปิดค้างไว้แล้ว ส่งข้อมูลถึงทันที |
-| **คุณภาพการบริการ (QoS Support)** | **ไม่มีในระดับแอปพลิเคชัน**<br>อาศัยการรับประกันของ TCP ด้านล่างเท่านั้น หากแอปหลุดต้องเขียนซ้ำเอง | **มี 3 ระดับในตัว (QoS 0, 1, 2)**<br>เลือกระดับความน่าเชื่อถือของการส่งข้อมูลได้อิสระ |
-| **การใช้พลังงาน (Power Consumption)** | **สูง**<br>ต้องใช้ CPU ประมวลผลและเปิดวิทยุรับส่งบ่อยครั้งเนื่องจากข้อมูลมีขนาดใหญ่ | **ต่ำมาก**<br>ลด Overhead ส่งผลให้ชิปอยู่ในโหมด Deep Sleep ได้ยาวนานกว่า |
-| **การส่งข้อมูลจาก Server ➔ Client** | **ทำได้ยาก**<br>ต้องใช้เทคนิค Polling (ถามซ้ำ ๆ) หรือเปลี่ยนไปใช้ WebSockets | **ทำได้ง่ายและเร็ว**<br>เซิร์ฟเวอร์สามารถ Publish ไปยัง Topic ที่อุปกรณ์ Subscribe ไว้ได้ทันที |
-| **ปริมาณแบนด์วิดท์ (Bandwidth)** | **ใช้ปริมาณข้อมูลมาก**<br>ไม่เหมาะกับอุปกรณ์ที่ส่งผ่านซิมการ์ด 4G/5G ที่คิดตามปริมาณการรับส่งข้อมูล | **ใช้ข้อมูลน้อยมาก (ประหยัดสุด)**<br>เหมาะอย่างยิ่งกับการรับส่งข้อมูลที่นับเป็นกิโลไบต์/เดือน |
-| **ความซับซ้อนของโครงสร้างระบบ** | **ต่ำ**<br>ไม่ต้องใช้ Broker เพิ่มเติม สามารถเรียกใช้ URL API ได้โดยตรง | **ปานกลาง**<br>ต้องติดตั้งและดูแลรักษาเซิร์ฟเวอร์ MQTT Broker (เช่น Mosquitto) |
-| **ความเหมาะสมของหน้างาน** | 1. การร้องขอข้อมูลขนาดใหญ่เป็นรอบ ๆ<br>2. การเรียกใช้ Web Service API ภายนอก<br>3. การอัปโหลดเฟิร์มแวร์อุปกรณ์ (OTA) | 1. บอร์ดแบตเตอรี่ต่ำในพื้นที่ห่างไกล<br>2. ระบบแจ้งเตือนเซ็นเซอร์แบบ Real-time<br>3. มีอุปกรณ์รับส่งข้อมูลหลักร้อยถึงล้านตัวพร้อม ๆ กัน |
+1. **MQTT Broker (เซิร์ฟเวอร์ตัวกลาง):** ทำหน้าที่เป็นศูนย์กลางรับข้อความจาก Publisher และกระจายข้อความต่อไปยัง Subscriber ทุกตัวที่ลงทะเบียนไว้ในหัวข้อ (Topic) นั้น ๆ เช่น *Eclipse Mosquitto, EMQX, HiveMQ, AWS IoT Core*
+2. **MQTT Publisher (ผู้เผยแพร่ข้อมูล):** อุปกรณ์ฝั่งส่งข้อมูล เช่น บอร์ด ESP32 ที่อ่านค่าอุณหภูมิแล้วส่งไปยัง Broker
+3. **MQTT Subscriber (ผู้รับข้อมูล):** แอปพลิเคชัน แดชบอร์ด หรือไมโครคอนโทรลเลอร์อีกตัวที่รอรับข้อมูลจาก Broker เมื่อมีข้อความใหม่เข้ามา
 
 ---
 
+## 9.3 โครงสร้างหัวข้อข้อความ (MQTT Topics & Wildcards)
+
+หัวข้อ (Topic) ใน MQTT มีลักษณะเป็นลำดับชั้น (Hierarchical String) คั่นด้วยเครื่องหมายทับ `/` (Slash) คล้ายกับโครงสร้างโฟลเดอร์ในคอมพิวเตอร์
+
+### 9.3.1 ตัวอย่างการออกแบบ Topic ในโรงงานอุตสาหกรรม:
+```text
+factory/building1/lineA/machine02/telemetry/temperature
+factory/building1/lineA/machine02/telemetry/vibration
+factory/building1/lineA/machine02/control/relay
+factory/building1/lineA/machine02/status
+```
+
+### 9.3.2 เครื่องหมายแทนค่า (Wildcards) สำหรับการ Subscribe:
+Subscriber สามารถใช้ Wildcards เพื่อรับข้อมูลจากหลาย Topic พร้อมกันได้:
+
+1. **Single-Level Wildcard (`+`):** ใช้แทนระดับชั้นใดก็ได้ **เพียง 1 ชั้น**
+   - เช่น `factory/building1/+/machine02/telemetry/temperature`
+   - จะรับข้อมูลจากทั้ง `lineA`, `lineB`, `lineC`
+2. **Multi-Level Wildcard (`#`):** ใช้แทนระดับชั้นใดก็ได้ **ตั้งแต่ตำแหน่งนั้นลงไปทั้งหมด** (ต้องอยู่ท้ายสุดของ Topic)
+   - เช่น `factory/building1/lineA/#`
+   - จะรับข้อมูลทุกอย่างที่เกิดขึ้นใน `lineA` ทั้งหมด
+
+---
+
+## 9.4 ระดับคุณภาพการบริการ (Quality of Service: QoS)
+
+MQTT มีกลไกรับประกันการส่งข้อมูลถึงปลายทาง 3 ระดับ (QoS Levels):
+
+| ระดับ QoS | คำนิยาม | กลไกการทำงาน | จำนวนแพ็กเก็ต | ข้อดี / ข้อเสีย | การประยุกต์ใช้งาน |
+|:---:|---|---|:---:|---|---|
+| **QoS 0** | At most once<br>(ส่งได้มากที่สุด 1 ครั้ง) | Fire and forget ผู้ส่งส่งข้อความออกไปแล้วไม่รอการตอบรับ | **1 Packet**<br>(PUBLISH) | เร็วที่สุด ใช้แบนด์วิดท์น้อยที่สุด ข้อมูลอาจสูญหายได้ | การส่งค่าเซนเซอร์อุณหภูมิเป็นประจำทุก 1 วินาที |
+| **QoS 1** | At least once<br>(ส่งได้อย่างน้อย 1 ครั้ง) | ผู้รับต้องส่ง `PUBACK` ยืนยัน หากผู้ส่งไม่ได้รับ จะส่งซ้ำ | **2 Packets**<br>(PUBLISH + PUBACK) | ข้อมูลไม่สูญหายแน่นอน แต่อาจได้รับข้อความซ้ำ | การส่งค่าบันทึกการทำงาน หรือการแจ้งเตือนทั่วไป |
+| **QoS 2** | Exactly once<br>(ส่งถึงเพียงครั้งเดียวพอดี) | มีการยืนยันแบบ 4 ขั้นตอน (Handshake) | **4 Packets**<br>(PUBLISH + PUBREC + PUBREL + PUBCOMP) | ปลอดภัยสูงสุด ไม่ซ้ำซ้อน แต่ช้าและใช้ทรัพยากรมากที่สุด | คำสั่งสั่งหยุดเครื่องจักรฉุกเฉิน (E-Stop), ธุรกรรมการเงิน |
+
+---
+
+## 9.5 คุณสมบัติขั้นสูงของ MQTT
+
+### 1) Last Will and Testament (LWT - พินัยกรรมสั่งเสีย)
+เมื่อ Client เชื่อมต่อกับ Broker จะสามารถฝากข้อความ LWT ไว้ได้ (เช่น Topic: `.../status`, Payload: `offline`) หากอุปกรณ์เกิดไฟดับ สัญญาณเน็ตหลุด หรือแฮงก์กะทันหัน Broker จะตรวจพบและส่งข้อความ LWT นี้ไปยัง Subscriber ทุกคนโดยอัตโนมัติ ทำให้ระบบรู้ทันทีว่าโหนดหลุดการเชื่อมต่อ
+
+### 2) Retained Messages (ข้อความค้างส่ง)
+หาก Publisher ส่งข้อความโดยเปิด Flag **Retain = true** Broker จะบันทึกข้อความล่าสุดนั้นไว้ เมื่อมี Subscriber ตัวใหม่เพิ่งเปิดเครื่องขึ้นมาและ Subscribe หัวข้อดังกล่าว จะได้รับข้อความล่าสุดทันทีโดยไม่ต้องรอให้ Publisher ส่งรอบใหม่
+
+### 3) Keep-Alive & Ping Mechanism
+Client จะส่งแพ็กเก็ต `PINGREQ` ขนาด 2 ไบต์ไปยัง Broker ตามช่วงเวลาที่กำหนด (เช่น ทุก 60 วินาที) และ Broker จะตอบกลับด้วย `PINGRESP` เพื่อยืนยันว่าการเชื่อมต่อ TCP ยังคงมีชีวิตอยู่
+
+---
+
+## 9.6 ตารางเปรียบเทียบเชิงวิศวกรรม: MQTT vs HTTP
+
+| คุณลักษณะ | MQTT | HTTP (REST) |
+|---|---|---|
+| **รูปแบบสถาปัตยกรรม** | Publish / Subscribe (Event-driven) | Request / Response (Client/Server) |
+| **ขนาด Header ต่ำสุด** | **2 ไบต์** (ประหยัดพลังงานมาก) | **200 – 800 ไบต์** (Overhead สูง) |
+| **การเชื่อมต่อเครือข่าย** | เชื่อมต่อ TCP ค้างไว้ตลอดเวลา (Keep-Alive) | เปิดและปิดการเชื่อมต่อบ่อยครั้ง |
+| **การส่งข้อมูลจากคลาวด์ลงอุปกรณ์** | ส่งแบบ Push ทันที (Real-time Push) | อุปกรณ์ต้องคอย Poll ไปถามเป็นระยะ |
+| **ความเหมาะสมด้านพลังงาน** | เหมาะมากสำหรับอุปกรณ์ใช้แบตเตอรี่ | สิ้นเปลืองพลังงานมากกว่า |
+| **ความง่ายในการเชื่อมต่อ** | ต้องมี MQTT Broker | ต่อตรงกับ Web Server ทั่วไปได้ทันที |
 
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
 
-## 9.3 Publish/Subscribe ผ่าน MQTT
+## 9.7 การทดลองและจำลองวงจรบน Wokwi Simulator
 
-โค้ดนี้เชื่อมต่อ MQTT Broker แบบสาธารณะ ส่งค่าอุณหภูมิ (Publish) และรับคำสั่งเปิด-ปิด LED (Subscribe) — ใช้ได้กับ Wokwi
+การทดลองนี้จำลองบอร์ด ESP32 เชื่อมต่อไปยัง Public MQTT Broker (`broker.hivemq.com`) ทำหน้าที่:
+1. **Publish:** ส่งข้อมูลอุณหภูมิและความชื้น (JSON) ไปยัง Topic `ksu/iot/telemetry`
+2. **Subscribe:** รอรับคำสั่งควบคุม Relay เปิด/ปิดไฟ จาก Topic `ksu/iot/control`
+
+### 9.7.1 แผนผังการต่อวงจร (Wiring Table)
+
+| อุปกรณ์ | ขาอุปกรณ์ | ขาบนบอร์ด ESP32 DevKit | หน้าที่ / หมายเหตุ |
+|---|---|---|---|
+| **DHT22 Sensor** | VCC / GND | 3V3 / GND | แหล่งจ่ายไฟและกราวด์ |
+| | DATA | **GPIO 15** | สัญญาณดิจิทัลอุณหภูมิและความชื้น |
+| **Relay Module** | VCC / GND | 5V / GND | ไฟเลี้ยงวงจรขับคอยล์รีเลย์ |
+| | IN | **GPIO 13** | ขาสั่งงาน Relay จากคำสั่ง MQTT |
+| **Status LED** | Anode (+) | **GPIO 12** | แสดงสถานะการเชื่อมต่อ MQTT |
+
+---
+
+### 9.7.2 โค้ดโปรแกรม Arduino C++ (ใช้ไลบรารี PubSubClient)
 
 ```cpp
+/**
+ * Chapter 9: ESP32 MQTT Telemetry & Remote Control Node
+ * Library: PubSubClient, ArduinoJson, DHT sensor library
+ */
+
 #include <WiFi.h>
 #include <PubSubClient.h>
-#include <DHTesp.h>
+#include <ArduinoJson.h>
+#include <DHT.h>
 
-// --- ตั้งค่า Wi-Fi และ MQTT ---
-const char* ssid        = "Wokwi-GUEST";
-const char* password    = "";
-const char* mqttBroker  = "broker.hivemq.com";
-const int   mqttPort    = 1883;
+// WiFi Configuration
+const char* WIFI_SSID = "Wokwi-GUEST";
+const char* WIFI_PASS = "";
 
-// --- Topic ---
-const char* pubTopic    = "ksu/me/lab301/temperature";
-const char* subTopic    = "ksu/me/lab301/led";
+// MQTT Broker Configuration (Public HiveMQ Broker)
+const char* MQTT_BROKER = "broker.hivemq.com";
+const int   MQTT_PORT   = 1883;
 
-WiFiClient   espClient;
-PubSubClient mqtt(espClient);
-DHTesp       dht;
+// Topics
+const char* TOPIC_TELEMETRY = "ksu/eng/machine01/telemetry";
+const char* TOPIC_CONTROL   = "ksu/eng/machine01/control";
+const char* TOPIC_STATUS    = "ksu/eng/machine01/status";
 
-const int DHT_PIN = 15;
-const int LED_PIN = 2;
+#define DHTPIN 15
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
 
-// --- Callback เมื่อได้รับข้อความ ---
+#define RELAY_PIN 13
+#define LED_STATUS_PIN 12
+
+WiFiClient espClient;
+PubSubClient mqttClient(espClient);
+
+unsigned long lastTelemetryTime = 0;
+const unsigned long TELEMETRY_INTERVAL = 3000; // ส่งข้อมูลทุก 3 วินาที
+
+// Callback Function: ทำงานอัตโนมัติเมื่อมีข้อความเข้ามาใน Topic ที่ Subscribe ไว้
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
-  String message;
+  Serial.printf("
+[MQTT Callback] Message arrived on topic: %s
+", topic);
+  
+  // แปลง Payload เป็น String
+  String message = "";
   for (unsigned int i = 0; i < length; i++) {
     message += (char)payload[i];
   }
-  Serial.println("Received [" + String(topic) + "]: " + message);
+  Serial.print("[MQTT Callback] Payload: ");
+  Serial.println(message);
 
-  if (message == "ON")  digitalWrite(LED_PIN, HIGH);
-  if (message == "OFF") digitalWrite(LED_PIN, LOW);
+  // แกะข้อมูล JSON คำสั่งควบคุม
+  JsonDocument doc;
+  DeserializationError err = deserializeJson(doc, message);
+  if (!err) {
+    if (doc.containsKey("relay")) {
+      bool relayCmd = doc["relay"];
+      digitalWrite(RELAY_PIN, relayCmd ? HIGH : LOW);
+      Serial.printf("[ACTION] Relay state updated to: %s
+", relayCmd ? "ON" : "OFF");
+    }
+  } else {
+    // รองรับคำสั่งข้อความธรรมดา "ON" / "OFF"
+    if (message == "ON" || message == "1") {
+      digitalWrite(RELAY_PIN, HIGH);
+      Serial.println("[ACTION] Relay turned ON via plain text command");
+    } else if (message == "OFF" || message == "0") {
+      digitalWrite(RELAY_PIN, LOW);
+      Serial.println("[ACTION] Relay turned OFF via plain text command");
+    }
+  }
 }
 
-void reconnect() {
-  while (!mqtt.connected()) {
-    Serial.print("Connecting to MQTT...");
-    // ตั้ง LWT: แจ้ง "offline" หากหลุด
-    if (mqtt.connect("ESP32-ME-001", NULL, NULL,
-                     "ksu/me/lab301/status", 1, true, "offline")) {
-      Serial.println("connected!");
-      mqtt.subscribe(subTopic);
-      mqtt.publish("ksu/me/lab301/status", "online", true);
+void reconnectMQTT() {
+  while (!mqttClient.connected()) {
+    Serial.print("[MQTT] Attempting connection to broker...");
+    String clientId = "ESP32Client-" + String(random(0xffff), HEX);
+
+    // กำหนด Last Will and Testament (LWT)
+    // หากบอร์ดดับกะทันหัน Broker จะ Publish "offline" อัตโนมัติ
+    if (mqttClient.connect(clientId.c_str(), TOPIC_STATUS, 1, true, "offline")) {
+      Serial.println("CONNECTED!");
+      digitalWrite(LED_STATUS_PIN, HIGH);
+
+      // ประกาศสถานะว่าบอร์ดออนไลน์ (Retained = true)
+      mqttClient.publish(TOPIC_STATUS, "online", true);
+
+      // Subscribe หัวข้อรับคำสั่งควบคุม
+      mqttClient.subscribe(TOPIC_CONTROL);
+      Serial.printf("[MQTT] Subscribed to topic: %s
+", TOPIC_CONTROL);
     } else {
-      Serial.print("failed, rc=");
-      Serial.println(mqtt.state());
-      delay(3000);
+      Serial.printf("FAILED, rc=%d. Retrying in 2 seconds...
+", mqttClient.state());
+      digitalWrite(LED_STATUS_PIN, LOW);
+      delay(2000);
     }
   }
 }
 
 void setup() {
   Serial.begin(115200);
-  pinMode(LED_PIN, OUTPUT);
-  dht.setup(DHT_PIN, DHTesp::DHT22);
+  pinMode(RELAY_PIN, OUTPUT);
+  pinMode(LED_STATUS_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, LOW);
+  digitalWrite(LED_STATUS_PIN, LOW);
 
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) delay(500);
-  Serial.println("WiFi connected");
+  dht.begin();
 
-  mqtt.setServer(mqttBroker, mqttPort);
-  mqtt.setCallback(mqttCallback);
+  // 1. เชื่อมต่อ WiFi
+  Serial.print("[WIFI] Connecting to ");
+  Serial.println(WIFI_SSID);
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("
+[WIFI] Connected!");
+
+  // 2. ตั้งค่า MQTT Client
+  mqttClient.setServer(MQTT_BROKER, MQTT_PORT);
+  mqttClient.setCallback(mqttCallback);
 }
 
 void loop() {
-  if (!mqtt.connected()) reconnect();
-  mqtt.loop();
+  // รักษาการเชื่อมต่อ MQTT
+  if (!mqttClient.connected()) {
+    reconnectMQTT();
+  }
+  mqttClient.loop(); // ประมวลผลข้อความเข้า-ออก
 
-  static unsigned long lastSend = 0;
-  if (millis() - lastSend > 5000) {
-    float temp = dht.getTemperature();
-    String payload = String(temp, 1);
-    mqtt.publish(pubTopic, payload.c_str());
-    Serial.println("Published: " + payload + " °C");
-    lastSend = millis();
+  // ส่ง Telemetry ตามช่วงเวลา (Non-blocking)
+  unsigned long currentMillis = millis();
+  if (currentMillis - lastTelemetryTime >= TELEMETRY_INTERVAL) {
+    lastTelemetryTime = currentMillis;
+
+    float t = dht.readTemperature();
+    float h = dht.readHumidity();
+
+    if (!isnan(t) && !isnan(h)) {
+      JsonDocument doc;
+      doc["deviceId"] = "ESP32-MTR01";
+      doc["temp"] = t;
+      doc["humidity"] = h;
+      doc["relay_status"] = digitalRead(RELAY_PIN) == HIGH;
+      doc["uptime"] = millis() / 1000;
+
+      String payload;
+      serializeJson(doc, payload);
+
+      // Publish ข้อมูลด้วย QoS 0
+      mqttClient.publish(TOPIC_TELEMETRY, payload.c_str());
+      Serial.printf("[PUBLISH -> %s] %s
+", TOPIC_TELEMETRY, payload.c_str());
+    }
   }
 }
 ```
 
-#### อธิบายการทำงานของโค้ด PubSubClient MQTT (คำอธิบายรายบรรทัด)
-- **การประกาศตัวแปรไคลเอนต์และตัวนำทางเครือข่าย:**
-  ```cpp
-  WiFiClient espClient;
-  PubSubClient mqtt(espClient);
-  ```
-  เนื่องจาก `PubSubClient` จำเป็นต้องใช้ออบเจกต์เครือข่ายพื้นฐานในการจัดการ TCP Stream เราจึงสร้าง `WiFiClient` ส่งผ่านเข้าไปในคอนสตรัคเตอร์ของ MQTT ไคลเอนต์
-- **ฟังก์ชันตอบกลับข้อความ (`void mqttCallback(char* topic, byte* payload, unsigned int length)`):**
-  เป็นฟังก์ชัน Event Handler ที่ Broker จะเรียกใช้เมื่อมีข้อความใหม่ถูก Publish เข้ามาใน Topic ที่ ESP32 สมัครรับข้อมูล (`Subscribe`) ไว้ ตัวฟังก์ชันจะทำการวนลูปแปลงข้อมูลจาก byte array ในตัวแปร `payload` ออกมาเป็น String เพื่อเอาไปตรวจสอบเงื่อนไข เช่น เปิด-ปิดไฟ LED
-- **การเชื่อมต่อและรักษาการทำงาน (`reconnect()`):**
-  ```cpp
-  mqtt.connect("ESP32-ME-001", NULL, NULL, "ksu/me/lab301/status", 1, true, "offline")
-  ```
-  ฟังก์ชันนี้จะเชื่อมต่อเข้ากับ Broker โดยมีการฝากข้อความ **Last Will and Testament (LWT)** ไว้กับเซิร์ฟเวอร์:
-  - ชื่อหัวข้อแจ้งสถานะ: `ksu/me/lab301/status`
-  - QoS: 1
-  - Retain: true
-  - ข้อความเมื่อหลุดกะทันหัน: `"offline"`
-  - เมื่อสามารถเชื่อมต่อ Broker สำเร็จ บอร์ดจะส่งคำขอ `mqtt.subscribe(subTopic)` ทันที และส่งข้อความ `"online"` ไปยัง Topic สถานะเพื่อระบุว่าบอร์ดพร้อมทำงานแล้ว
-- **ฟังก์ชันลูปการรันงานหลัก (`mqtt.loop()`):**
-  ต้องเรียกใช้คำสั่งนี้ในฟังก์ชัน `loop()` เสมอ เนื่องจากทำหน้าที่จัดการการรับส่งข้อความในบัฟเฟอร์ คอยส่งสัญญาณ `PINGREQ` ไปยัง Broker เพื่อบอกว่าอุปกรณ์ยังทำงานอยู่ (Keep-Alive) และคอยกระตุ้นฟังก์ชัน `mqttCallback` เมื่อมีข้อความเข้า
-- **การส่งข้อมูลแบบไม่หน่วงลูปหลัก (`millis() - lastSend > 5000`):**
-  หลีกเลี่ยงการใช้คำสั่ง `delay()` ในลูปหลัก เพื่อไม่ให้โปรแกรมหยุดการทำงานชั่วขณะ ซึ่งจะขัดขวางการรับข้อความด่วนผ่านคำสั่ง `mqtt.loop()` โดยใช้การเช็คเวลารูปแบบ Millis ในการสั่งส่งข้อมูลอุณหภูมิ (Publish) ทุก ๆ 5 วินาทีแทน
-
 ---
+
+### 9.7.3 ไฟล์จำลอง `diagram.json` สำหรับ Wokwi
+
+```json
+{
+  "version": 1,
+  "author": "KSU TechEngineering",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-dht22", "id": "dht1", "top": -140, "left": 120, "attrs": { "temperature": "29.4", "humidity": "62" } },
+    { "type": "wokwi-relay-module", "id": "relay1", "top": 120, "left": 140, "attrs": {} },
+    { "type": "wokwi-led", "id": "led1", "top": 120, "left": -80, "attrs": { "color": "green" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 170, "left": -80, "attrs": { "value": "330" } }
+  ],
+  "connections": [
+    [ "esp:3V3", "dht1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "dht1:GND", "black", [ "v0" ] ],
+    [ "esp:15", "dht1:SDA", "blue", [ "v0" ] ],
+
+    [ "esp:5V", "relay1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "relay1:GND", "black", [ "v0" ] ],
+    [ "esp:13", "relay1:IN", "purple", [ "v0" ] ],
+
+    [ "esp:12", "led1:A", "orange", [ "v0" ] ],
+    [ "led1:C", "r1:1", "black", [ "v0" ] ],
+    [ "r1:2", "esp:GND", "black", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}
+```
 
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Reference / Summary" data-tab-icon="📊" id="waveform" markdown="1">
 
-## 9.4 สรุปประจำบทที่ 9 (Summary)
+## 9.8 สรุปเนื้อหาและตารางอ้างอิงทางวิศวกรรม
 
-1. **สถาปัตยกรรม Publish-Subscribe** มีจุดเด่นคือการลดการผูกติดกัน (Decoupling) ของอุปกรณ์ส่งและรับข้อมูล โดยทำงานร่วมกันผ่านตัวกลางประสานข้อมูลกลางที่เรียกว่า **MQTT Broker**
-2. **Topic (หัวข้อ)** เป็นกลไกหลักในการจำแนกเส้นทางการไหลของข้อความ มีรูปแบบโครงสร้างเป็นลำดับชั้นแบ่งระดับด้วยเครื่องหมายทับ `/` และรองรับการใช้สัญลักษณ์ Wildcard (`+` และ `#`) ในการฟิลเตอร์ดักจับหลายหัวข้อพร้อมกัน
-3. **QoS (Quality of Service)** มี 3 ระดับช่วยรับประกันความเชื่อมั่นในการส่งข้อมูลตามลักษณะความสำคัญและคุณสมบัติแบนด์วิดท์เครือข่าย ได้แก่ QoS 0 (ส่งรอบเดียวไม่การันตี), QoS 1 (การันตีถึงอย่างน้อย 1 ครั้ง), และ QoS 2 (การันตีถึงเป๊ะ 1 ครั้งถ้วน)
-4. **LWT (Last Will and Testament)** เป็นคุณสมบัติในการกำหนดฝากข้อความแจ้งเตือนสถานะขาดการเชื่อมต่อเอาไว้ล่วงหน้า ทำให้แอปพลิเคชันส่วนบนสามารถดักทราบสภาวะที่เกิดความล้มเหลวทางเครือข่ายของอุปกรณ์ปลายสนามได้รวดเร็ว
+### 9.8.1 ตารางสรุปโค้ดสถานะข้อผิดพลาดของ PubSubClient (`state()`)
+
+| รหัสสถานะ (`state()`) | สัญลักษณ์ (Constant) | ความหมายและสาเหตุ |
+|:---:|---|---|
+| **0** | `MQTT_CONNECTED` | เชื่อมต่อกับ Broker สำเร็จพร้อมใช้งาน |
+| **-1** | `MQTT_CONNECT_FAILED` | ไม่สามารถต่อ TCP Socket ไปยัง IP/Port ของ Broker ได้ |
+| **-2** | `MQTT_DISCONNECTED` | การเชื่อมต่อถูกตัดขาด (Connection Closed) |
+| **-3** | `MQTT_CONNECT_BAD_PROTOCOL` | Broker ไม่รองรับเวอร์ชันของโพรโทคอล MQTT |
+| **-4** | `MQTT_CONNECT_BAD_CLIENT_ID` | Client ID ไม่ถูกต้องหรือถูกปฏิเสธ |
+| **-5** | `MQTT_CONNECT_UNAVAILABLE` | Broker ไม่พร้อมให้บริการ (Server Unavailable) |
+| **-6** | `MQTT_CONNECT_BAD_CREDENTIALS` | Username หรือ Password ไม่ถูกต้อง |
+| **-7** | `MQTT_CONNECT_UNAUTHORIZED` | ไม่ได้รับสิทธิ์เข้าถึง (Unauthorized Access) |
 
 ---
+
+### 9.8.2 กฎและแนวปฏิบัติที่ดีในการตั้งชื่อ Topic (Topic Best Practices)
+
+1. **ห้ามขึ้นต้นด้วยเครื่องหมาย `/` (Leading Slash):** เช่น `/factory/sensor` เพราะจะทำให้เกิด Topic ระดับบนสุดเป็นค่าว่าง ทำให้เปลืองหน่วยความจำบน Broker
+2. **ห้ามใช้ช่องว่าง (Spaces):** ใช้ตัวพิมพ์เล็กและคั่นด้วยขีดล่างหรือขีดกลาง เช่น `vibration_rms` หรือ `temperature-c`
+3. **กำหนดโครงสร้างเชิงตรรกะที่แน่นอน:** `[องค์กร]/[สถานที่]/[สายการผลิต]/[รหัสอุปกรณ์]/[ประเภทข้อมูล]`
+4. **แยก Topic ระหว่าง Telemetry และ Command:**
+   - ข้อมูลส่งออก: `.../telemetry`
+   - ข้อมูลสั่งการ: `.../command` หรือ `.../control`
+   - ข้อมูลสถานะ: `.../status`
 
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Challenge" data-tab-icon="🏆" id="challenge" markdown="1">
 
-## 9.5 แบบฝึกหัดท้ายบทที่ 9 (Exercises)
+## 9.9 โจทย์ท้าทายวิศวกรรม (Engineering Challenges)
 
-**ข้อ 1:** จงอธิบายกลไกการทำหน้าที่ของ **MQTT Broker** ในการประมวลผลข้อความและส่งต่อให้กับ **Subscribers**
-**ข้อ 2:** หากท่านกำหนด Topic การส่งสัญญาณเป็น `factory/buildingA/line1/sensor/temp` จงหาว่าหัวข้อดักสัญญาณ (Subscribed Topic) ต่อไปนี้สามารถดักจับข้อความได้หรือไม่ (ตอบ ได้ / ไม่ได้):
-*   `factory/buildingA/+/sensor/temp`
-*   `factory/buildingA/line1/sensor/#`
-*   `factory/+/+/temp`
-*   `factory/#`
-**ข้อ 3:** ระดับคุณภาพบริการ QoS 1 และ QoS 2 มีกระบวนการส่งสัญญาณที่แตกต่างกันอย่างไร และแบบใดส่งผลให้ปริมาณการรับส่งสัญญาณในเครือข่ายแออัดมากกว่ากัน?
-**ข้อ 4:** เพราะเหตุใดการเขียนโปรแกรมฝั่งผู้ใช้งาน (เช่น โค้ด ESP32) สำหรับรับข้อความจากภายนอกผ่าน MQTT จึงจำเป็นต้องอาศัยฟังก์ชันประเภท Callback (เช่น `mqttCallback`)?
+### 🏆 โจทย์: ระบบตรวจสอบการสั่นสะเทือนมอเตอร์และสั่งหยุดฉุกเฉินระยะไกล (E-Stop over MQTT)
+
+โรงงานต้องการพัฒนาระบบ IoT ป้องกันมอเตอร์สายพานลำเลียงเสียหาย โดยให้บอร์ด ESP32 ควบคุมรีเลย์และรายงานข้อมูลผ่าน MQTT:
+
+#### เงื่อนไขการทำงาน (Specifications):
+1. **การรายงานข้อมูล Telemetry:**
+   - ส่งค่าอุณหภูมิและความชื้นจาก DHT22 ทุก ๆ 2 วินาที ไปยัง Topic `plant/line1/conveyor/telemetry` (QoS 0)
+2. **ระบบพินัยกรรมแจ้งสถานะ (Last Will & Status):**
+   - ส่งข้อความสถานะ `online` ไปยัง Topic `plant/line1/conveyor/status` (Retain = true)
+   - กำหนดข้อความ LWT เป็น `offline` เพื่อให้ Broker แจ้งเตือนอัตโนมัติหากสัญญาณขาดหาย
+3. **ระบบตัดการทำงานอัตโนมัติเมื่อเกิดอันตราย (Local Trip Interlock):**
+   - หากตรวจพบอุณหภูมิ $T \ge 55.0^\circ	ext{C}$ ให้บอร์ดสั่งตัดการทำงานของ Relay มอเตอร์ทันที พร้อมส่งข้อความเตือนภัยฉุกเฉินไปยัง Topic `plant/line1/conveyor/alarm` ด้วย **QoS 1**
+4. **ระบบสั่งหยุดฉุกเฉินจากระยะไกล (Remote E-Stop):**
+   - Subscribe หัวข้อ `plant/line1/conveyor/command`
+   - หากได้รับคำสั่ง `{"cmd":"EMERGENCY_STOP"}` ให้สั่งดับรีเลย์ทันทีภายในเวลาไม่เกิน $100	ext{ ms}$
+
+#### สิ่งที่ต้องส่งและประเมินผล:
+- [ ] ซอร์สโค้ดภาษา C++ ที่มีฟังก์ชันการทำงานครบตามเงื่อนไข
+- [ ] แผนผังการต่อวงจรและไฟล์ `diagram.json` บน Wokwi
+- [ ] ภาพบันทึกหน้าจอการทดสอบการส่งคำสั่ง Remote E-Stop ผ่าน MQTT Web Client (เช่น HiveMQ Web Client)
 
 </div>

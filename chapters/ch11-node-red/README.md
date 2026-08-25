@@ -1,294 +1,425 @@
-# Chapter 11: ระบบฐานข้อมูลและแดชบอร์ดแสดงผลท้องถิ่น (Local Databases & Node-RED Orchestration)
+---
+layout: default
+title: "บทที่ 11: ระบบฐานข้อมูลและแดชบอร์ดแสดงผลท้องถิ่นด้วย Node-RED"
+permalink: /chapters/ch11-node-red/
+---
 
-> บทนี้จะอธิบายแนวทางเชื่อมต่อบริการข้อมูลในเครือข่ายภายใน (Local Network) โดยใช้งานโปรแกรม Node-RED ในการเขียนลอจิกการไหลของข้อมูล (Flow-based Programming) ผูกเชื่อมกับระบบฐานข้อมูลอนุกรมเวลา (Time-Series Database) เช่น InfluxDB และระบบฐานข้อมูลเชิงสัมพันธ์น้ำหนักเบาอย่าง SQLite
+# Chapter 11: ระบบฐานข้อมูลและแดชบอร์ดแสดงผลท้องถิ่นด้วย Node-RED
 
+## Local Database & Node-RED Real-time Dashboard (Edge Gateway, Flow-based Programming, MQTT Integration, UI Widgets)
+
+---
+
+**รายวิชา:** เทคโนโลยีดิจิทัลสำหรับวิศวกรรม (Digital Technology for Engineering)  
+**หลักสูตร:** วิศวกรรมเครื่องกล ชั้นปีที่ 1  
+**ผู้เรียบเรียง:** คณะวิศวกรรมศาสตร์  
+
+---
+
+> ### 🎯 ผลลัพธ์การเรียนรู้และการเชื่อมโยง (Constructive Alignment)
+>
+> - **สัปดาห์การเรียนรู้:** สัปดาห์ที่ 13 — ระบบฐานข้อมูลและแดชบอร์ดแสดงผลท้องถิ่น (Local Databases & Real-time Dashboards with Node-RED)
+> - **ผลลัพธ์การเรียนรู้ระดับรายวิชา (CLOs):**
+>   - **CLO3:** ออกแบบและพัฒนาระบบ IoT ที่เชื่อมต่อเซนเซอร์/ตัวกระทำ สื่อสารข้อมูล และแสดงผลผ่านโปรแกรมของผู้ใช้ได้
+>   - **CLO4:** ปฏิบัติการสร้าง ทดสอบ และประยุกต์ใช้ระบบ IoT พร้อมการเรียนรู้ของเครื่องเบื้องต้น และทำงานเป็นทีมอย่างรับผิดชอบ
+> - **ผลลัพธ์การเรียนรู้ระดับบทเรียน (LLOs):**
+>   - **LLO13.1:** เลือกชนิดกราฟและออกแบบการแสดงผลข้อมูลให้เหมาะสมกับงานวิศวกรรมได้ (CLO3)
+>   - **LLO13.2:** สร้างแดชบอร์ดแสดงผลข้อมูลแบบเรียลไทม์และควบคุมอุปกรณ์ด้วย Node-RED ได้ (CLO3, CLO4)
+>
 ---
 
 <div class="chapter-tab-content" data-tab-name="Concept" data-tab-icon="💡" id="concept" markdown="1">
 
-## 11.1 โดเมนการเขียนโฟลว์ดักข้อมูล Node-RED
+## 11.1 ความสำคัญของระบบแสดงผลท้องถิ่นและ Edge Gateway ในงานวิศวกรรม
 
-**Node-RED** เป็นเครื่องมือเขียนโปรแกรมในลักษณะ **Flow-Based Programming (FBP)** ที่ออกแบบมาสำหรับยุค IoT และ Web Services โดยเฉพาะ พัฒนาขึ้นโดย IBM ทำงานบนแพลตฟอร์ม Node.js ทำให้นักพัฒนาสามารถเชื่อมโยงอุปกรณ์ฮาร์ดแวร์, API และบริการออนไลน์เข้าด้วยกันได้อย่างรวดเร็วผ่านตัวแก้ไขแบบลากวาง (Flow Editor) บนเว็บเบราว์เซอร์
+แม้ว่าระบบคลาวด์ (Cloud Computing) จะมีความสามารถในการจัดเก็บข้อมูลระยะยาวและประมวลผลขนาดใหญ่ แต่ในสภาพแวดล้อมโรงงานอุตสาหกรรม การพึ่งพาคลาวด์เพียงอย่างเดียวมีความเสี่ยงสูง:
+1. **ความต่อเนื่องในการผลิต (Operational Continuity):** หากอินเทอร์เน็ตภายนอกถูกตัดขาด ระบบควบคุมในโรงงานยังต้องสามารถทำงานและแสดงผลค่าสถานะวิกฤตได้ต่อเนื่อง 100%
+2. **ความหน่วงเวลาต่ำยิ่งยวด (Zero Cloud Latency):** การตัดสินใจเพื่อความปลอดภัย (เช่น การตัดไฟเมื่อแรงสั่นสะเทือนเกินเกณฑ์) ต้องเกิดขึ้นภายในเวลาเสี้ยววินาทีในระดับเครือข่ายภายใน (LAN)
+3. **ความปลอดภัยและความเป็นส่วนตัวของข้อมูล (Data Sovereignty):** ข้อมูลกระบวนการผลิตบางประเภทเป็นความลับทางการค้าที่ห้ามส่งออกนอกเครือข่ายโรงงาน
 
-#### โครงสร้างและองค์ประกอบหลักของ Node-RED
-1. **Nodes (โหนด):** บล็อกฟังก์ชันสำเร็จรูปที่ทำหน้าที่เฉพาะเจาะจง แบ่งออกเป็น 3 ประเภทหลัก:
-   - **Input Nodes (โหนดนำเข้าข้อมูล):** รับข้อมูลจากแหล่งภายนอกเข้ามายังโฟลว์ เช่น `mqtt in` (รับข้อมูลจาก MQTT Broker), `inject` (การจำลองการส่งข้อมูลด้วยการกดปุ่มส่งแบบตั้งเวลา), และ `http in` (สร้าง Endpoint ของเว็บรับข้อมูลแบบ REST API)
-   - **Processing/Function Nodes (โหนดประมวลผล):** ทำการเปลี่ยนแปลง ปรับปรุง หรือตรวจสอบเงื่อนไขของข้อมูล เช่น `function` (เขียนโค้ดด้วยภาษา JavaScript เพื่อควบคุมข้อมูลอย่างอิสระ), `switch` (แยกเส้นทางการไหลตามเงื่อนไข), และ `change` (แก้ไข เพิ่มเติม หรือลบค่าตัวแปรในออบเจกต์)
-   - **Output Nodes (โหนดส่งออกข้อมูล):** ส่งข้อมูลที่ผ่านการประมวลผลแล้วไปยังปลายทาง เช่น `mqtt out` (ส่งข้อมูลไปเก็บหรือสั่งงานผ่าน MQTT), `debug` (แสดงค่าในหน้าจอดีบักเพื่อตรวจสอบสถานะการทำงาน), และ `ui_gauge` / `ui_chart` (แสดงผลข้อมูลบนหน้าแดชบอร์ด)
-
-2. **Flow & Message Routing (ทิศทางและการส่งต่อข้อมูล):**
-   - การสื่อสารระหว่างโหนดจะใช้วัตถุข้อความภาษา JavaScript ที่เรียกว่า **Message Object (`msg`)**
-   - ตัวแปรหลักที่บรรจุข้อมูลส่งผ่านไปยังโหนดอื่น ๆ คือ **`msg.payload`** ซึ่งอาจเป็นได้ทั้งตัวเลข (Number), ข้อความ (String), หรือออบเจกต์โครงสร้าง (JSON Object)
-   - นอกจากนี้ยังมีตัวแปรเสริม เช่น `msg.topic` เพื่อระบุหัวข้อหรือประเภทของข้อมูลที่เคลื่อนที่ผ่านตัวนำทาง (Wire)
-
-3. **Function Node JavaScript Programming:**
-   - เป็นโหนดที่มีความยืดหยุ่นสูงที่สุดเนื่องจากเปิดโอกาสให้เขียนโปรแกรม JavaScript ลงไป เพื่อคำวณและประมวลผล ตัวอย่างเช่น:
-     ```javascript
-     // ตัวอย่างการคัดกรองข้อมูลอุณหภูมิและเปลี่ยนสถานะแจ้งเตือน
-     let temp = msg.payload.temperature;
-     if (temp > 40.0) {
-         msg.payload = { status: "DANGER", value: temp, alarm: true };
-         return [msg, null]; // ส่งออกไปยังช่องเอาต์พุตที่ 1 (เตือนภัย)
-     } else {
-         msg.payload = { status: "NORMAL", value: temp, alarm: false };
-         return [null, msg]; // ส่งออกไปยังช่องเอาต์พุตที่ 2 (สถานะปกติ)
-     }
-     ```
-
-4. **Node-RED Dashboard Layout Structure:**
-   - โครงสร้างการแสดงผลของโหนดแดชบอร์ด (`node-red-dashboard`) จะเป็นรูปแบบแผนผังต้นไม้ (Tree Structure) เพื่อความเป็นระเบียบและรองรับการจัดสรรบนขนาดหน้าจอที่แตกต่างกัน (Responsive Layout):
-     - **Tabs (แท็บหลัก):** แถบหน้าต่างหลักสำหรับแยกหน้าการแสดงผลตามหมวดหมู่ใหญ่ (เช่น หน้าควบคุมห้องนั่งเล่น, หน้าสถิติพลังงาน)
-     - **Groups (กลุ่มย่อย):** กล่องจัดกลุ่ม (Card Container) บนแต่ละแท็บเพื่อนำเอาชิ้นส่วนควบคุมหรือแสดงผลที่เกี่ยวข้องกันมารวมไว้ด้วยกัน
-     - **Widgets (วิดเจ็ตแสดงผล):** ส่วนควบคุมปฏิสัมพันธ์และอุปกรณ์แสดงผลชิ้นย่อยสุดที่อยู่ภายในกลุ่ม เช่น ปุ่มกด (Button), สวิตช์สลับ (Switch), เกจ (Gauge), กราฟเส้น (Chart) และตารางแสดงข้อมูล (Table)
-
-<div style="text-align: center; margin: 25px 0;">
-<svg viewBox="0 0 800 360" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
-  <title>โครงสร้างการไหลของข้อมูลใน Node-RED</title>
-  <style>
-    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; rx: 12px; }
-    .grid { fill: none; stroke: #e2e8f0; stroke-width: 1; stroke-dasharray: 5 5; }
-    
-    /* Node-RED style nodes - Flat Design */
-    .node-box { fill: #ffffff; stroke: #334155; stroke-width: 2; rx: 6px; }
-    
-    /* Wires and paths */
-    .wire { fill: none; stroke: #475569; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
-    .wire-active { fill: none; stroke: #f59e0b; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 8 10; animation: flowData 2.6s linear infinite; }
-    
-    /* Packets */
-    .packet { fill: #f59e0b; stroke: #ffffff; stroke-width: 1.5; }
-    .packet-green { fill: #16a34a; stroke: #ffffff; stroke-width: 1.5; }
-    .packet-red { fill: #dc2626; stroke: #ffffff; stroke-width: 1.5; }
-    
-    /* Ports */
-    .port { fill: #ffffff; stroke: #334155; stroke-width: 1.5; }
-    
-    /* Text styles */
-    .text-main { font-size: 14px; font-weight: bold; fill: #1e293b; }
-    .text-sub { font-size: 12px; fill: #64748b; }
-    .text-tag { font-size: 10px; font-weight: bold; fill: #1e293b; }
-    
-    /* Tags inside nodes */
-    .tag-mqtt { fill: #e0e7ff; stroke: #6366f1; stroke-width: 1; rx: 3px; }
-    .tag-func { fill: #d1fae5; stroke: #10b981; stroke-width: 1; rx: 3px; }
-    .tag-ui { fill: #fef3c7; stroke: #f59e0b; stroke-width: 1; rx: 3px; }
-    
-    /* Animations */
-    @keyframes flowData {
-      to { stroke-dashoffset: -44; }
-    }
-    .gauge-needle {
-      transform-origin: 640px 145px;
-      animation: swingNeedle 4s ease-in-out infinite alternate;
-    }
-    @keyframes swingNeedle {
-      0% { transform: rotate(-60deg); }
-      50% { transform: rotate(10deg); }
-      100% { transform: rotate(45deg); }
-    }
-    .chart-line {
-      stroke-dasharray: 200;
-      stroke-dashoffset: 200;
-      animation: drawChart 8s linear infinite;
-    }
-    @keyframes drawChart {
-      0%, 10% { stroke-dashoffset: 200; }
-      50%, 100% { stroke-dashoffset: 0; }
-    }
-    .node-hover {
-      transition: all 0.2s ease;
-    }
-    .node-hover:hover {
-      filter: brightness(0.97);
-      cursor: pointer;
-    }
-  </style>
-
-  <!-- Panel background -->
-  <rect x="5" y="5" width="790" height="350" class="bg"/>
-  
-  <!-- Grid -->
-  <g class="grid">
-    <path d="M 5,40 H 795 M 5,80 H 795 M 5,120 H 795 M 5,160 H 795 M 5,200 H 795 M 5,240 H 795 M 5,280 H 795 M 5,320 H 795" />
-    <path d="M 80,5 V 355 M 160,5 V 355 M 240,5 V 355 M 320,5 V 355 M 400,5 V 355 M 480,5 V 355 M 560,5 V 355 M 640,5 V 355 M 720,5 V 355" />
-  </g>
-
-  <!-- Connection Wires -->
-  <path d="M 230,120 C 280,120 280,180 330,180" class="wire"/>
-  <path id="wire1" d="M 230,120 C 280,120 280,180 330,180" class="wire-active"/>
-
-  <path d="M 480,165 C 530,165 530,120 580,120" class="wire"/>
-  <path id="wire2" d="M 480,165 C 530,165 530,120 580,120" class="wire-active" stroke="#16a34a"/>
-
-  <path d="M 480,195 C 530,195 530,240 580,240" class="wire"/>
-  <path id="wire3" d="M 480,195 C 530,195 530,240 580,240" class="wire-active" stroke="#dc2626"/>
-
-  <!-- Node 1: MQTT Input -->
-  <g transform="translate(50, 80)" class="node-hover">
-    <rect x="0" y="0" width="180" height="80" class="node-box"/>
-    <!-- Node Tag -->
-    <rect x="12" y="12" width="55" height="18" class="tag-mqtt"/>
-    <text x="39" y="24" class="text-tag" text-anchor="middle">mqtt in</text>
-    <!-- Labels -->
-    <text x="15" y="48" class="text-main">รับค่าอุณหภูมิ</text>
-    <text x="15" y="66" class="text-sub">หัวข้อ: office/temp</text>
-    <!-- Output Port -->
-    <circle cx="180" cy="40" r="5" class="port"/>
-  </g>
-
-  <!-- Node 2: Function Node -->
-  <g transform="translate(300, 140)" class="node-hover">
-    <rect x="0" y="0" width="180" height="80" class="node-box"/>
-    <rect x="12" y="12" width="55" height="18" class="tag-func"/>
-    <text x="39" y="24" class="text-tag" text-anchor="middle">function</text>
-    <text x="15" y="48" class="text-main">ตรวจสอบเงื่อนไข</text>
-    <text x="15" y="66" class="text-sub">msg.payload > 35.0 ?</text>
-    <!-- Input Port -->
-    <circle cx="0" cy="40" r="5" class="port"/>
-    <!-- Output Ports -->
-    <circle cx="180" cy="25" r="5" class="port"/>
-    <circle cx="180" cy="55" r="5" class="port"/>
-    <text x="170" y="28" font-size="9" fill="#64748b" text-anchor="end">1</text>
-    <text x="170" y="58" font-size="9" fill="#64748b" text-anchor="end">2</text>
-  </g>
-
-  <!-- Node 3: Gauge Node -->
-  <g transform="translate(580, 80)" class="node-hover">
-    <rect x="0" y="0" width="180" height="80" class="node-box"/>
-    <rect x="12" y="12" width="55" height="18" class="tag-ui"/>
-    <text x="39" y="24" class="text-tag" text-anchor="middle">ui_gauge</text>
-    <text x="15" y="48" class="text-main">เกจวัดความร้อน</text>
-    <text x="15" y="66" class="text-sub">แท็บ: แดชบอร์ดหลัก</text>
-    <!-- Input Port -->
-    <circle cx="0" cy="40" r="5" class="port"/>
-  </g>
-
-  <!-- Node 4: Chart Node -->
-  <g transform="translate(580, 200)" class="node-hover">
-    <rect x="0" y="0" width="180" height="80" class="node-box"/>
-    <rect x="12" y="12" width="55" height="18" class="tag-ui"/>
-    <text x="39" y="24" class="text-tag" text-anchor="middle">ui_chart</text>
-    <text x="15" y="48" class="text-main">กราฟความร้อน</text>
-    <text x="15" y="66" class="text-sub">แสดงแนวโน้มเวลา</text>
-    <!-- Input Port -->
-    <circle cx="0" cy="40" r="5" class="port"/>
-  </g>
-
-  <!-- Data Flow Simulation Packets -->
-  <circle r="5" class="packet">
-    <animateMotion dur="2.6s" repeatCount="indefinite">
-      <mpath href="#wire1"/>
-    </animateMotion>
-  </circle>
-  <circle r="5" class="packet" opacity="0.65">
-    <animateMotion dur="2.6s" begin="0.86s" repeatCount="indefinite">
-      <mpath href="#wire1"/>
-    </animateMotion>
-  </circle>
-  <circle r="5" class="packet" opacity="0.3">
-    <animateMotion dur="2.6s" begin="1.72s" repeatCount="indefinite">
-      <mpath href="#wire1"/>
-    </animateMotion>
-  </circle>
-
-  <!-- Path 2 flow -->
-  <circle r="5" class="packet-green">
-    <animateMotion dur="2.6s" begin="0.4s" repeatCount="indefinite">
-      <mpath href="#wire2"/>
-    </animateMotion>
-  </circle>
-  <!-- Path 3 flow -->
-  <circle r="5" class="packet-red">
-    <animateMotion dur="2.6s" begin="1.2s" repeatCount="indefinite">
-      <mpath href="#wire3"/>
-    </animateMotion>
-  </circle>
-
-  <!-- Side Panel Miniatures -->
-  <!-- Gauge Mini Graphic -->
-  <g transform="translate(735, 105)">
-    <path d="M -15,10 A 18,18 0 0,1 15,10" fill="none" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/>
-    <path d="M -15,10 A 18,18 0 0,1 5, -8" fill="none" stroke="#dc2626" stroke-width="4" stroke-linecap="round"/>
-    <line x1="0" y1="10" x2="12" y2="-2" stroke="#334155" stroke-width="2.5" stroke-linecap="round" class="gauge-needle"/>
-    <circle cx="0" cy="10" r="3.5" fill="#334155"/>
-  </g>
-
-  <!-- Chart Mini Graphic -->
-  <g transform="translate(720, 240)">
-    <line x1="0" y1="0" x2="30" y2="0" stroke="#cbd5e1" stroke-width="1.5"/>
-    <line x1="0" y1="-15" x2="30" y2="-15" stroke="#cbd5e1" stroke-width="1.5"/>
-    <path d="M 0,0 L 5,-4 L 10, -2 L 15, -12 L 20, -8 L 25, -18 L 30, -14" fill="none" stroke="#16a34a" stroke-width="2.5" class="chart-line"/>
-  </g>
-
-  <!-- Labels -->
-  <text x="400" y="336" fill="#64748b" font-size="12" font-weight="500" text-anchor="middle">ทิศทางการไหลของวัตถุข้อความ (msg) จากโหนดอินพุต ผ่านฟังก์ชันประมวลผล สู่หน้าจอแดชบอร์ด</text>
-
-</svg>
-<div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 9.1 แผนภาพการไหลของข้อมูล (Flow) ในระบบ Node-RED แสดงการรับ ส่ง และแปลงข้อมูล</div>
-</div>
+ดังนั้น วิศวกรจึงนิยมติดตั้ง **Edge Gateway** หรือเครื่องคอมพิวเตอร์แม่ข่ายขนาดเล็ก (เช่น Raspberry Pi หรือ Industrial IPC) ภายในโรงงาน เพื่อรันระบบรับส่งข้อมูลและแดชบอร์ดแสดงผลท้องถิ่นด้วย **Node-RED**
 
 ---
 
+## 11.2 สถาปัตยกรรมและการทำงานของ Node-RED
 
-## 11.2 ระบบฐานข้อมูลสำหรับข้อมูลเชิงอนุกรมเวลา (Databases for Time-Series IoT Data)
+**Node-RED** คือเครื่องมือพัฒนาซอฟต์แวร์แบบ **Flow-based Programming** ที่พัฒนาขึ้นโดย IBM Emerging Technology ทำงานอยู่บน Node.js Runtime:
 
-ในการทำระบบจัดเก็บและวิเคราะห์ข้อมูลจากอุปกรณ์ IoT การเลือกฐานข้อมูลมีความสำคัญอย่างยิ่ง เนื่องจากปริมาณข้อมูลที่ส่งจากเซนเซอร์จะมีลักษณะส่งเข้ามาอย่างสม่ำเสมอตามระยะเวลาที่กำหนด (เช่น ส่งอุณหภูมิทุก ๆ 10 วินาที) ข้อมูลประเภทนี้ถูกเรียกว่า **ข้อมูลอนุกรมเวลา (Time-Series Data)**
+```
+┌──────────────┐         ┌──────────────┐         ┌──────────────┐
+│  mqtt in     │ ──────► │   function   │ ──────► │   ui_gauge   │
+│ (Input Node) │ [msg]   │ (Processing) │ [msg]   │ (Output UI)  │
+└──────────────┘         └──────────────┘         └──────────────┘
+```
 
-### 11.2.1 ฐานข้อมูลอนุกรมเวลา (Time-Series Database: TSDB)
-*   **InfluxDB:** เป็นระบบฐานข้อมูลแบบ Open-source ที่ได้รับความนิยมสูงสุดสำหรับการบันทึกค่าทางสถิติ IoT โดยออกแบบโครงสร้างคีย์การจัดเก็บแบบเฉพาะทาง
-    *   **Measurement:** เปรียบได้กับตารางใน Relational DB (เช่น `machine_telemetry`)
-    *   **Tags:** ดัชนีข้อมูลสำหรับช่วยค้นหาได้อย่างรวดเร็ว (เช่น `device_id="motor_A"`, `location="line_1"`)
-    *   **Fields:** ค่าตัวเลขหรือสภาวะจริงที่เราวัดได้ (เช่น `vibration=4.23`, `temp=45.2`)
-    *   **Timestamp:** คีย์หลักที่ระบุเวลาวินาที/มิลลิวินาทีของจุดข้อมูลนั้น
-
-### 11.2.2 ฐานข้อมูลเชิงสัมพันธ์น้ำหนักเบา (Relational Database: SQLite)
-*   **SQLite:** เป็นฐานข้อมูลแบบมีขนาดเล็ก ไม่ต้องการเซิร์ฟเวอร์แยกต่างหาก (Serverless) ตัวข้อมูลจะถูกจัดเก็บลงเป็นไฟล์เดียว เหมาะสำหรับการทดลองเก็บข้อมูลแบบง่าย ๆ ภายในระบบขอบข่ายขนาดเล็ก เช่น ติดตั้งบน Raspberry Pi ในระดับเครื่องจักรเดี่ยว
+### 11.2.1 โครงสร้างของอ็อบเจกต์ข้อความ (Message Object: `msg`)
+ข้อมูลที่ไหลผ่านสายเชื่อมต่อ (Wire) ใน Node-RED จะถูกห่อหุ้มอยู่ในรูปของ JavaScript Object ที่ชื่อว่า `msg` ซึ่งมีคุณสมบัติหลักดังนี้:
+- **`msg.payload`:** เนื้อหาข้อมูลหลัก (Payload) อาจเป็นตัวเลข, ข้อความ (String), หรือ JSON Object
+- **`msg.topic`:** หัวข้อของข้อมูล เช่น `factory/line1/temp`
+- **`msg._msgid`:** รหัสประจำตัวเฉพาะของข้อความแต่ละชิ้นที่สร้างขึ้นโดยระบบ
 
 ---
+
+## 11.3 โหนดพื้นฐานที่สำคัญใน Node-RED
+
+### 1) โหนดกลุ่ม Input / Output
+- **`inject`:** จำลองการส่งข้อมูลเข้าสู่ Flow ตามจังหวะเวลาหรือเมื่อกดปุ่ม เหมาะสำหรับการทดสอบ (Debug)
+- **`debug`:** แสดงผลค่าของ `msg.payload` ออกทางหน้าต่าง Debug Sidebar ด้านขวา
+- **`mqtt in`:** รับข้อมูลแบบ Real-time จาก MQTT Broker เมื่อมีข้อความเข้ามาใน Topic ที่กำหนด
+- **`mqtt out`:** ส่งข้อมูลจาก Flow ไปยัง MQTT Broker ไปยัง Topic ปลายทาง
+- **`http in` / `http response`:** สร้าง REST API Endpoint บน Node-RED เพื่อรับคำร้องจากอุปกรณ์ภายนอก
+
+### 2) โหนดกลุ่ม Function & Logic
+- **`function`:** เขียนโค้ดภาษา JavaScript เพื่อคำนวณสูตรทางวิศวกรรม แยกข้อมูล หรือแปลงโครงสร้าง JSON
+- **`switch`:** กระจายทิศทางของข้อความตามเงื่อนไข (เช่น ถ้าอุณหภูมิ > 50 ให้ส่งออกขาที่ 1 ถ้าปกติส่งออกขาที่ 2)
+- **`change`:** แก้ไข เปลี่ยนแปลง หรือลบค่าใน `msg.payload` หรือ `msg.topic`
+- **`range`:** ปรับสเกลค่าตัวเลขเชิงเส้น (เหมือนฟังก์ชัน `map()` ใน Arduino) เช่น แปลงค่า $0-4095 
+ightarrow 0.0-100.0\%$
+
+---
+
+## 11.4 การออกแบบแดชบอร์ดด้วย `node-red-dashboard`
+
+โมดูล `node-red-dashboard` ช่วยให้วิศวกรสร้างหน้าจอควบคุมสั่งการและติดตามผล (HMI/Dashboard) ในรูปแบบเว็บแอปพลิเคชันได้ทันทีโดยไม่ต้องเขียนโค้ด HTML/CSS:
+
+| วิดเจ็ต (UI Widget) | ลักษณะการแสดงผล | การใช้งานที่เหมาะสมในงานวิศวกรรม |
+|---|---|---|
+| **`ui_gauge`** | มาตรวัดเข็ม / แถบระดับทรงกลม | แสดงค่าความดันบรรยากาศ (Bar), อุณหภูมิ (°C), ความเร็วรอบมอเตอร์ (RPM) |
+| **`ui_chart`** | กราฟเส้นแนวโน้มแบบ Real-time | ติดตามแนวโน้มการเปลี่ยนแปลงของอุณหภูมิหรือความสั่นสะเทือนตามเวลา |
+| **`ui_text`** | กล่องข้อความและตัวเลข | แสดงสถานะเครื่องจักร เช่น `RUNNING`, `STANDBY`, `TRIPPED` |
+| **`ui_switch`** | สวิตช์เปิด-ปิดแบบ Toggle | สั่งเปิด/ปิด ปั๊มน้ำ, พัดลมระบายอากาศ, หรือหลอดไฟ |
+| **`ui_slider`** | แถบเลื่อนปรับค่าตัวเลข | กำหนดค่าเป้าหมาย (Setpoint) อุณหภูมิ หรือความเร็วรอบ |
+| **`ui_button`** | ปุ่มกด Trigger | ปุ่มเริ่มการทำงาน (Start), รีเซ็ตค่า (Reset), หรือหยุดฉุกเฉิน (E-Stop) |
+| **`ui_audio`** | สัญญาณเสียงเตือนภัย (Audio Alert) | เล่นเสียงไซเรนเตือนภัยผ่านลำโพงของเครื่องคอมพิวเตอร์ควบคุม |
+
+---
+
+## 11.5 หลักการเลือกชนิดกราฟสำหรับการแสดงภาพข้อมูลทางวิศวกรรม
+
+```
+                    ┌─────────────────────────┐
+                    │ ต้องการแสดงข้อมูลแบบใด? │
+                    └────────────┬────────────┘
+                                 │
+         ┌───────────────────────┼───────────────────────┐
+         ▼                       ▼                       ▼
+┌──────────────────┐    ┌──────────────────┐    ┌──────────────────┐
+│ การเปลี่ยนแปลง   │    │ ค่าปัจจุบัน      │    │ สถานะตรรกะ      │
+│ ตามเวลา (Trend)  │    │ ทันที (Instant)  │    │ (State/Discrete) │
+└────────┬─────────┘    └────────┬─────────┘    └────────┬─────────┘
+         │                       │                       │
+         ▼                       ▼                       ▼
+    [ ui_chart ]            [ ui_gauge ]            [ ui_text ]
+  (Real-time Line)      (Dial/Gauge Meter)      (Colored Status)
+```
+
+1. **ข้อมูลอนุกรมเวลา (Time-Series / Trends):** ใช้ **Line Chart** พร้อมกำหนด Time Window เช่น ย้อนหลัง 15 นาที หรือ 1 ชั่วโมง เพื่อดูอัตราการเพิ่มขึ้นของความร้อน
+2. **ข้อมูลสภาวะปัจจุบัน (Instantaneous Values):** ใช้ **Gauge** พร้อมกำหนดช่วงสีแถบเตือน (เขียว = ปกติ, เหลือง = เตือน, แดง = อันตราย)
+3. **สถานะการทำงาน (Operating State):** ใช้ **Status Badge / Text** ที่เปลี่ยนสีพื้นหลังตามสถานะ
 
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
 
-## 11.3 โครงสร้างการเชื่อมต่อแดชบอร์ดท้องถิ่น (Local Data Orchestration)
+## 11.6 การทดลองและจำลองวงจรบน Wokwi + Node-RED
 
-การเชื่อมต่อของข้อมูลในระบบท้องถิ่น (Local Area Network - LAN) โดยทั่วไปมีขั้นตอนดังภาพ:
-```
-[ ESP32 Node ]  ---> ( MQTT Broker ) ---> [ Node-RED Flow ] ---> [ InfluxDB / SQLite ]
-                                                  |
-                                                  v
-                                      [ Node-RED Dashboard UI ]
-```
+การทดลองนี้จำลองบอร์ด ESP32 อ่านค่าเซนเซอร์และส่งข้อมูลผ่าน MQTT ไปแสดงผลบน Node-RED Dashboard พร้อมรับคำสั่งควบคุมสวิตช์จากหน้าจอ Node-RED
 
-### 11.3.1 ตัวอย่างการสร้างโฟลว์ใน Node-RED เพื่อบันทึกข้อมูลและแสดงผล
-1.  **โหนด `mqtt in`:** คอยสมัครรับข้อมูลจากหัวข้อ เช่น `factory/sensor/temp`
-2.  **โหนด `json`:** แปลงข้อความสตริง JSON ให้เป็นออบเจกต์ JavaScript (payload)
-3.  **โหนด `function`:** เขียนสคริปต์สั้น ๆ เพื่อสกัดฟิลด์ข้อมูลไปพล็อตหรือจัดรูปแบบ SQL query
-4.  **โหนด `influxdb out` / `sqlite`:** บันทึกข้อมูลลงฐานข้อมูลโดยตรง
-5.  **โหนด `ui_gauge` / `ui_chart`:** นำข้อมูลความร้อนมาพล็อตเป็นหน้าเกจบนแท็บเบราว์เซอร์
+### 11.6.1 แผนผังการเชื่อมต่อวงจร (Wiring Table)
+
+| อุปกรณ์ | ขาอุปกรณ์ | ขาบนบอร์ด ESP32 | หน้าที่ / หมายเหตุ |
+|---|---|---|---|
+| **DHT22** | DATA | **GPIO 15** | อุณหภูมิและความชื้น |
+| **Potentiometer (Speed)** | SIG | **GPIO 34** | จำลองความเร็วรอบปั๊ม (0-3000 RPM) |
+| **Relay Module** | IN | **GPIO 13** | สั่งงานปั๊มน้ำ (Pump Driver) |
+| **Status LED** | Anode (+) | **GPIO 12** | ไฟแสดงสถานะ Alarm |
 
 ---
+
+### 11.6.2 โค้ดโปรแกรม Arduino C++ สำหรับ ESP32 Node
+
+```cpp
+/**
+ * Chapter 11: ESP32 Node for Node-RED Local Dashboard
+ * Protocol: MQTT (HiveMQ Public Broker)
+ */
+
+#include <WiFi.h>
+#include <PubSubClient.h>
+#include <ArduinoJson.h>
+#include <DHT.h>
+
+const char* WIFI_SSID = "Wokwi-GUEST";
+const char* WIFI_PASS = "";
+
+const char* MQTT_BROKER = "broker.hivemq.com";
+const int   MQTT_PORT   = 1883;
+
+// กำหนด Topics สำหรับคุยกับ Node-RED
+const char* TOPIC_TELEMETRY = "ksu/nodered/telemetry";
+const char* TOPIC_CONTROL   = "ksu/nodered/control";
+
+#define DHTPIN 15
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
+
+#define POT_PIN 34
+#define RELAY_PIN 13
+#define LED_PIN 12
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+unsigned long lastSend = 0;
+
+void callback(char* topic, byte* payload, unsigned int length) {
+  String message = "";
+  for (unsigned int i = 0; i < length; i++) message += (char)payload[i];
+  
+  Serial.printf("[COMMAND FROM NODE-RED] Topic: %s | Payload: %s
+", topic, message.c_str());
+
+  JsonDocument doc;
+  if (!deserializeJson(doc, message)) {
+    if (doc.containsKey("pump")) {
+      bool pumpState = doc["pump"];
+      digitalWrite(RELAY_PIN, pumpState ? HIGH : LOW);
+      Serial.printf("[ACTUATOR] Pump Relay set to: %s
+", pumpState ? "ON" : "OFF");
+    }
+  }
+}
+
+void reconnect() {
+  while (!client.connected()) {
+    Serial.print("[MQTT] Connecting to Node-RED Broker...");
+    String cid = "ESP32-NodeRED-" + String(random(0xffff), HEX);
+    if (client.connect(cid.c_str())) {
+      Serial.println("CONNECTED!");
+      client.subscribe(TOPIC_CONTROL);
+    } else {
+      delay(2000);
+    }
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(RELAY_PIN, OUTPUT);
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, LOW);
+  digitalWrite(LED_PIN, LOW);
+
+  dht.begin();
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+  while (WiFi.status() != WL_CONNECTED) delay(300);
+
+  client.setServer(MQTT_BROKER, MQTT_PORT);
+  client.setCallback(callback);
+}
+
+void loop() {
+  if (!client.connected()) reconnect();
+  client.loop();
+
+  if (millis() - lastSend >= 2000) {
+    lastSend = millis();
+
+    float temp = dht.readTemperature();
+    float humid = dht.readHumidity();
+    int rawPot = analogRead(POT_PIN);
+    int rpm = map(rawPot, 0, 4095, 0, 3000); // 0 - 3000 RPM
+
+    if (!isnan(temp) && !isnan(humid)) {
+      JsonDocument doc;
+      doc["temp"] = temp;
+      doc["humid"] = humid;
+      doc["rpm"] = rpm;
+      doc["pump_running"] = digitalRead(RELAY_PIN) == HIGH;
+
+      String payload;
+      serializeJson(doc, payload);
+      client.publish(TOPIC_TELEMETRY, payload.c_str());
+    }
+  }
+}
+```
+
+---
+
+### 11.6.3 ไฟล์ Exportable Node-RED Flow JSON (พร้อม Import ใช้งานได้ทันที)
+
+คัดลอก JSON ด้านล่างนี้ไปที่เมนู **Import** บนโปรแกรม Node-RED เพื่อสร้างแดชบอร์ดทันที:
+
+```json
+[
+  {
+    "id": "tab_ch11_dashboard",
+    "type": "tab",
+    "label": "Industrial Chiller Dashboard",
+    "disabled": false,
+    "info": "Dashboard for Chapter 11 IoT Engineering"
+  },
+  {
+    "id": "mqtt_in_telemetry",
+    "type": "mqtt in",
+    "z": "tab_ch11_dashboard",
+    "name": "Receive Telemetry",
+    "topic": "ksu/nodered/telemetry",
+    "qos": "0",
+    "datatype": "json",
+    "broker": "hivemq_broker",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "x": 150,
+    "y": 140,
+    "wires": [["fn_split_data", "debug_telemetry"]]
+  },
+  {
+    "id": "fn_split_data",
+    "type": "function",
+    "z": "tab_ch11_dashboard",
+    "name": "Parse Sensor Metrics",
+    "func": "var tempMsg = { payload: msg.payload.temp };
+var humidMsg = { payload: msg.payload.humid };
+var rpmMsg = { payload: msg.payload.rpm };
+var pumpMsg = { payload: msg.payload.pump_running ? 'RUNNING' : 'STOPPED' };
+return [tempMsg, humidMsg, rpmMsg, pumpMsg];",
+    "outputs": 4,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 380,
+    "y": 140,
+    "wires": [
+      ["ui_gauge_temp", "ui_chart_temp"],
+      ["ui_gauge_humid"],
+      ["ui_gauge_rpm"],
+      ["ui_text_status"]
+    ]
+  },
+  {
+    "id": "ui_gauge_temp",
+    "type": "ui_gauge",
+    "z": "tab_ch11_dashboard",
+    "name": "Temperature Gauge",
+    "group": "group_metrics",
+    "order": 1,
+    "width": 6,
+    "height": 4,
+    "gtype": "gage",
+    "title": "Chiller Temp (°C)",
+    "label": "°C",
+    "format": "{{value}}",
+    "min": 0,
+    "max": 60,
+    "colors": ["#00B500", "#E6E600", "#CA3838"],
+    "seg1": "35",
+    "seg2": "45",
+    "x": 640,
+    "y": 80,
+    "wires": []
+  },
+  {
+    "id": "ui_chart_temp",
+    "type": "ui_chart",
+    "z": "tab_ch11_dashboard",
+    "name": "Temp Trend Chart",
+    "group": "group_trends",
+    "order": 1,
+    "width": 12,
+    "height": 5,
+    "label": "Temperature Trend Line",
+    "chartType": "line",
+    "legend": "false",
+    "xformat": "HH:mm:ss",
+    "interpolate": "linear",
+    "nodata": "Waiting for data...",
+    "dot": false,
+    "ymin": "15",
+    "ymax": "55",
+    "removeOlder": 15,
+    "removeOlderPoints": "",
+    "removeOlderUnit": "60",
+    "cutout": 0,
+    "useOneColor": false,
+    "useUTC": false,
+    "colors": ["#1f77b4", "#aec7e8", "#ff7f0e"],
+    "outputs": 1,
+    "x": 630,
+    "y": 140,
+    "wires": [[]]
+  }
+]
+```
 
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Reference / Summary" data-tab-icon="📊" id="waveform" markdown="1">
 
-## 11.4 สรุปประจำบทที่ 11 (Summary)
+## 11.7 สรุปเนื้อหาและตารางอ้างอิงทางวิศวกรรม
 
-1.  **Node-RED** ทำงานภายใต้สถาปัตยกรรมแบบ Flow-Based Programming ช่วยให้ออกแบบเส้นทางการไหลของข้อมูล (Data Pipelines) ได้ง่ายและรวดเร็ว
-2.  **โหนดประเภทอินพุตและเอาต์พุต** ช่วยลดความซับซ้อนในการเขียนคำสั่งเชื่อมต่อเครือข่ายระดับต่ำ
-3.  **InfluxDB (TSDB)** มีสถาปัตยกรรมการจัดเก็บบนเงื่อนเวลาเป็นดัชนีหลัก ทำให้ประหยัดเนื้อที่ดิสก์และสามารถดึงค่าสถิติปริมาณล้านจุดออกมาคำนวณเฉลี่ยได้เร็วกว่าฐานข้อมูลตารางแบบเก่า
+### 11.7.1 โค้ดตัวอย่าง JavaScript สำเร็จรูปสำหรับ Function Node
+
+#### 1) การคำนวณค่าเฉลี่ยเคลื่อนที่ (Moving Average Filter):
+```javascript
+// เก็บค่าก่อนหน้าไว้ใน context
+var buffer = context.get('buffer') || [];
+buffer.push(msg.payload);
+
+if (buffer.length > 10) {
+  buffer.shift(); // เก็บเพียง 10 ค่าล่าสุด
+}
+context.set('buffer', buffer);
+
+// คำนวณค่าเฉลี่ย
+var sum = buffer.reduce((a, b) => a + b, 0);
+msg.payload = parseFloat((sum / buffer.length).toFixed(2));
+return msg;
+```
+
+#### 2) การตรวจสอบเงื่อนไขและเปลี่ยนสีข้อความแจ้งเตือน:
+```javascript
+if (msg.payload.temp > 45.0) {
+  msg.color = "red";
+  msg.payload = "OVERHEAT ALARM!";
+} else {
+  msg.color = "green";
+  msg.payload = "NORMAL OPERATION";
+}
+return msg;
+```
 
 ---
+
+### 11.7.2 ข้อควรระวังในการติดตั้งระบบ Node-RED ในโรงงาน
+1. **การตั้งรหัสผ่านความปลอดภัย (Admin Authentication):** ต้องเปิดใช้งาน `adminAuth` ในไฟล์ `settings.js` เพื่อป้องกันผู้ไม่หวังดีเข้ามาแก้ไข Flow
+2. **การจัดการหน่วยความจำของ Chart:** กำหนด `removeOlder` บน `ui_chart` ไม่ให้เก็บข้อมูลนานเกินไป (เช่น ไม่เกิน 1 ชั่วโมง) เพื่อป้องกันแรมบนเครื่องเกตเวย์เต็ม
 
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Challenge" data-tab-icon="🏆" id="challenge" markdown="1">
 
-## 11.5 แบบฝึกหัดท้ายบทที่ 11 (Exercises)
+## 11.8 โจทย์ท้าทายวิศวกรรม (Engineering Challenges)
 
-**ข้อ 1:** จงอธิบายความแตกต่างระหว่างฐานข้อมูลอนุกรมเวลา (เช่น InfluxDB) และฐานข้อมูลเชิงสัมพันธ์ทั่วไป (เช่น MySQL/PostgreSQL) ในแง่การรองรับข้อมูลเซนเซอร์ปริมาณสูง
-**ข้อ 2:** ในโฟลว์ของ Node-RED หากเราได้รับ Payload เป็นข้อความตัวอักษรธรรมดา เช่น `"25.5"` จาก MQTT แต่หน้าจอ Widget เกจต้องการตัวเลข (Number) เราต้องใช้โหนดใดหรือเขียนคำสั่งสคริปต์อย่างไรเพื่อแปลงประเภทตัวแปร?
-**ข้อ 3:** โหนดประเภท Inject Node และ Debug Node มีบทบาทอย่างไรต่อนักพัฒนาในการทดสอบระบบและแก้ปัญหา (Debugging) โฟลว์การควบคุมข้อมูล?
+### 🏆 โจทย์: แดชบอร์ดตรวจสอบและตัดการทำงานอัตโนมัติสถานีสูบน้ำหล่อเย็น (Chilled Water Pump Station)
+
+โรงงานผลิตพลังงานต้องการระบบ Local Monitoring สำหรับปั๊มน้ำหล่อเย็นขนาด 75 kW:
+
+#### เงื่อนไขการทำงาน (Specifications):
+1. **หน้าจอ Node-RED Dashboard:**
+   - ติดตั้ง Gauge มาตรวัดความเร็วรอบปั๊ม ($0-3000	ext{ RPM}$)
+   - ติดตั้ง Real-time Chart แสดงแนวโน้มอุณหภูมิย้อนหลัง 10 นาที
+   - มีปุ่มสวิตช์ Toggle สั่ง `PUMP ON/OFF` จากหน้าเว็บ
+2. **ระบบตัดการทำงานอัตโนมัติ (Automated Trip Logic):**
+   - หากอุณหภูมิน้ำหล่อเย็นสูงเกิน $48.0^\circ	ext{C}$ ติดต่อกันนานกว่า 5 วินาที ให้ Flow ใน Node-RED ส่งคำสั่ง MQTT ไปสั่งดับปั๊มทันที
+   - แสดงกล่องข้อความเตือนภัยสีแดงบน Dashboard และส่งเสียงไซเรนผ่าน `ui_audio`
+
+#### สิ่งที่ต้องส่งและประเมินผล:
+- [ ] ไฟล์ Exported Flow JSON จาก Node-RED
+- [ ] ซอร์สโค้ด ESP32 C++ ที่ทำงานร่วมกับแดชบอร์ด
+- [ ] ภาพบันทึกหน้าจอแดชบอร์ดขณะทำงานปกติ และขณะเกิดสภาวะ Trip
 
 </div>

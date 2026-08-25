@@ -34,6 +34,44 @@ ESP32 มี ADC แบบ 12-bit หมายความว่าค่าท�
    - ขา SIG (ขากลาง) → GPIO **34** ของ ESP32
 3. อัปโหลดโค้ดด้านล่าง แล้วกด ▶ เพื่อรันจำลอง
 
+
+### 📁 ไฟล์โครงสร้างวงจร `diagram.json` (สำหรับ Import บน Wokwi)
+
+```json
+{
+  "version": 1,
+  "author": "KSU TechEngineering",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-potentiometer", "id": "pot1", "top": -120, "left": -80, "attrs": { "value": "2048" } },
+    { "type": "wokwi-led", "id": "led_pwm", "top": -120, "left": 100, "attrs": { "color": "green" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": -70, "left": 100, "attrs": { "value": "330" } },
+    { "type": "wokwi-led", "id": "led_alert", "top": -120, "left": 160, "attrs": { "color": "red" } },
+    { "type": "wokwi-resistor", "id": "r2", "top": -70, "left": 160, "attrs": { "value": "330" } },
+    { "type": "wokwi-pushbutton", "id": "btn1", "top": 100, "left": 100, "attrs": { "color": "blue" } }
+  ],
+  "connections": [
+    [ "esp:3V3", "pot1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "pot1:GND", "black", [ "v0" ] ],
+    [ "esp:34", "pot1:SIG", "green", [ "v0" ] ],
+
+    [ "esp:18", "r1:1", "orange", [ "v0" ] ],
+    [ "r1:2", "led_pwm:A", "orange", [ "v0" ] ],
+    [ "led_pwm:C", "esp:GND", "black", [ "v0" ] ],
+
+    [ "esp:19", "r2:1", "orange", [ "v0" ] ],
+    [ "r2:2", "led_alert:A", "orange", [ "v0" ] ],
+    [ "led_alert:C", "esp:GND", "black", [ "v0" ] ],
+
+    [ "esp:4", "btn1:1.L", "blue", [ "v0" ] ],
+    [ "btn1:2.L", "esp:GND", "black", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}
+```
+
+---
 ```cpp
 const int POT_PIN = 34;  // ขาอ่านค่าโพเทนชิออมิเตอร์
 

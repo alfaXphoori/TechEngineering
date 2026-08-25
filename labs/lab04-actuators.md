@@ -28,6 +28,37 @@ LED เป็นตัวกระทำพื้นฐานที่สุด 
 2. ต่อวงจร LED 3 ดวงที่ขา Pin 2, Pin 3 และ Pin 4 ของ Arduino Uno (ต่อตัวต้านทาน Resistor 220Ω อนุกรมกันกระแสเกินทุกดวง)
 3. อัปโหลดโค้ดต่อไปนี้แล้วสังเกตพฤติกรรม
 
+
+### 📁 ไฟล์โครงสร้างวงจร `diagram.json` (สำหรับ Import บน Wokwi)
+
+```json
+{
+  "version": 1,
+  "author": "KSU TechEngineering",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-relay-module", "id": "relay1", "top": -140, "left": 140, "attrs": {} },
+    { "type": "wokwi-servo", "id": "servo1", "top": -140, "left": -120, "attrs": {} },
+    { "type": "wokwi-buzzer", "id": "buzz1", "top": 120, "left": 140, "attrs": { "hasVolume": "1" } }
+  ],
+  "connections": [
+    [ "esp:5V", "relay1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "relay1:GND", "black", [ "v0" ] ],
+    [ "esp:13", "relay1:IN", "purple", [ "v0" ] ],
+
+    [ "esp:5V", "servo1:V+", "red", [ "v0" ] ],
+    [ "esp:GND", "servo1:GND", "black", [ "v0" ] ],
+    [ "esp:18", "servo1:PWM", "orange", [ "v0" ] ],
+
+    [ "esp:19", "buzz1:2", "yellow", [ "v0" ] ],
+    [ "esp:GND", "buzz1:1", "black", [ "v0" ] ]
+  ],
+  "dependencies": { "ESP32Servo": "1.1.0" }
+}
+```
+
+---
 ```cpp
 // Lab3-Part1: LED Chaser Pattern
 const int ledPins[] = {2, 3, 4}; // ต่อ LED เข้า Pin 2, 3, 4

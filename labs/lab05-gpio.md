@@ -22,6 +22,39 @@
 2. ต่อวงจร: LED ขาบวก (Anode) → ตัวต้านทาน 220Ω → **GPIO 2** และขาลบ (Cathode) → **GND**
 3. เขียนโค้ดด้านล่างลงในเอดิเตอร์ของ Wokwi
 
+
+### 📁 ไฟล์โครงสร้างวงจร `diagram.json` (สำหรับ Import บน Wokwi)
+
+```json
+{
+  "version": 1,
+  "author": "KSU TechEngineering",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-led", "id": "led_core0", "top": -100, "left": 80, "attrs": { "color": "green" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": -50, "left": 80, "attrs": { "value": "330" } },
+    { "type": "wokwi-led", "id": "led_core1", "top": -100, "left": 140, "attrs": { "color": "blue" } },
+    { "type": "wokwi-resistor", "id": "r2", "top": -50, "left": 140, "attrs": { "value": "330" } },
+    { "type": "wokwi-pushbutton", "id": "btn_isr", "top": 100, "left": 100, "attrs": { "color": "red" } }
+  ],
+  "connections": [
+    [ "esp:18", "r1:1", "orange", [ "v0" ] ],
+    [ "r1:2", "led_core0:A", "orange", [ "v0" ] ],
+    [ "led_core0:C", "esp:GND", "black", [ "v0" ] ],
+
+    [ "esp:19", "r2:1", "orange", [ "v0" ] ],
+    [ "r2:2", "led_core1:A", "orange", [ "v0" ] ],
+    [ "led_core1:C", "esp:GND", "black", [ "v0" ] ],
+
+    [ "esp:4", "btn_isr:1.L", "blue", [ "v0" ] ],
+    [ "btn_isr:2.L", "esp:GND", "black", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}
+```
+
+---
 ```cpp
 #define LED_PIN 2
 

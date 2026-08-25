@@ -44,6 +44,45 @@ Machine Learning จะ "เรียน" ว่าค่าระยะทา�
 
 เขียนโค้ดอ่านค่าระยะทางใน `sketch.ino`:
 
+
+### 📁 ไฟล์โครงสร้างวงจร `diagram.json` (สำหรับ Import บน Wokwi)
+
+```json
+{
+  "version": 1,
+  "author": "KSU TechEngineering",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-potentiometer", "id": "pot1", "top": -140, "left": -100, "attrs": { "value": "2048" } },
+    { "type": "wokwi-led", "id": "led_norm", "top": -140, "left": 80, "attrs": { "color": "green" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": -90, "left": 80, "attrs": { "value": "330" } },
+    { "type": "wokwi-led", "id": "led_anom", "top": -140, "left": 140, "attrs": { "color": "red" } },
+    { "type": "wokwi-resistor", "id": "r2", "top": -90, "left": 140, "attrs": { "value": "330" } },
+    { "type": "wokwi-relay-module", "id": "relay1", "top": 120, "left": 100, "attrs": {} }
+  ],
+  "connections": [
+    [ "esp:3V3", "pot1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "pot1:GND", "black", [ "v0" ] ],
+    [ "esp:34", "pot1:SIG", "green", [ "v0" ] ],
+
+    [ "esp:18", "r1:1", "orange", [ "v0" ] ],
+    [ "r1:2", "led_norm:A", "orange", [ "v0" ] ],
+    [ "led_norm:C", "esp:GND", "black", [ "v0" ] ],
+
+    [ "esp:19", "r2:1", "orange", [ "v0" ] ],
+    [ "r2:2", "led_anom:A", "orange", [ "v0" ] ],
+    [ "led_anom:C", "esp:GND", "black", [ "v0" ] ],
+
+    [ "esp:5V", "relay1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "relay1:GND", "black", [ "v0" ] ],
+    [ "esp:13", "relay1:IN", "purple", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}
+```
+
+---
 ```cpp
 #define TRIG_PIN 5
 #define ECHO_PIN 18

@@ -35,6 +35,39 @@
    - LED ขาสั้น (Cathode) → **GND**
 3. เขียนโค้ดต่อไปนี้:
 
+
+### 📁 ไฟล์โครงสร้างวงจร `diagram.json` (สำหรับ Import บน Wokwi)
+
+```json
+{
+  "version": 1,
+  "author": "KSU TechEngineering",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-dht22", "id": "dht1", "top": -140, "left": 140, "attrs": { "temperature": "27.5", "humidity": "60" } },
+    { "type": "wokwi-hc-sr04", "id": "sonar1", "top": -140, "left": -120, "attrs": { "distance": "35" } },
+    { "type": "wokwi-photoresistor-sensor", "id": "ldr1", "top": 120, "left": -100, "attrs": {} }
+  ],
+  "connections": [
+    [ "esp:3V3", "dht1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "dht1:GND", "black", [ "v0" ] ],
+    [ "esp:15", "dht1:SDA", "blue", [ "v0" ] ],
+
+    [ "esp:5V", "sonar1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "sonar1:GND", "black", [ "v0" ] ],
+    [ "esp:5", "sonar1:TRIG", "purple", [ "v0" ] ],
+    [ "esp:18", "sonar1:ECHO", "yellow", [ "v0" ] ],
+
+    [ "esp:3V3", "ldr1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "ldr1:GND", "black", [ "v0" ] ],
+    [ "esp:34", "ldr1:AO", "green", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}
+```
+
+---
 ```cpp
 #define BUTTON_PIN 2
 #define LED_PIN 3

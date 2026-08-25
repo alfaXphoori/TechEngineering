@@ -23,9 +23,9 @@ title: คู่มือการติดตั้งและใช้งา�
 3. ค้นหาคำว่า **`Wokwi Simulator`** แล้วคลิก **Install**
 4. ตรวจสอบว่าได้ติดตั้งส่วนขยาย **PlatformIO IDE** แล้วด้วย (หากยังไม่มี ให้ค้นหา `PlatformIO IDE` แล้วกด **Install**)
 
-![ค้นหาและติดตั้ง Wokwi Simulator Extension ใน VS Code]({{ \'/assets/images/wokwi/01-install-wokwi.png\' | relative_url }})
+![ค้นหาและติดตั้ง Wokwi Simulator Extension ใน VS Code](assets/images/wokwi/01-install-wokwi.png)
 
-![ติดตั้งและเปิดใช้งาน PlatformIO IDE Extension]({{ \'/assets/images/wokwi/02-platformio-extension.png\' | relative_url }})
+![ติดตั้งและเปิดใช้งาน PlatformIO IDE Extension](assets/images/wokwi/02-platformio-extension.png)
 
 ---
 
@@ -40,7 +40,7 @@ title: คู่มือการติดตั้งและใช้งา�
    - **Location:** ติ๊กเลือก `Use default location` (หรือเลือกโฟลเดอร์ที่ต้องการ)
 4. คลิกปุ่ม **Finish** แล้วรอให้ PlatformIO สร้างโครงสร้างโปรเจกต์จนเสร็จสมบูรณ์
 
-![สร้างโปรเจกต์ใหม่ด้วย Project Wizard ใน PlatformIO]({{ \'/assets/images/wokwi/03-create-project.png\' | relative_url }})
+![สร้างโปรเจกต์ใหม่ด้วย Project Wizard ใน PlatformIO](assets/images/wokwi/03-create-project.png)
 
 ---
 
@@ -67,7 +67,7 @@ void loop() {
 }
 ```
 
-![เขียนโค้ด Blink ในไฟล์ src/main.cpp]({{ \'/assets/images/wokwi/04-main-cpp-code.png\' | relative_url }})
+![เขียนโค้ด Blink ในไฟล์ src/main.cpp](assets/images/wokwi/04-main-cpp-code.png)
 
 ---
 
@@ -79,7 +79,7 @@ void loop() {
    - `.pio/build/esp32doit-devkit-v1/firmware.bin`
    - `.pio/build/esp32doit-devkit-v1/firmware.elf`
 
-![คอมไพล์โค้ดและสร้างไฟล์ไบนารี firmware.bin / firmware.elf สำเร็จ]({{ \'/assets/images/wokwi/05-build-project.png\' | relative_url }})
+![คอมไพล์โค้ดและสร้างไฟล์ไบนารี firmware.bin / firmware.elf สำเร็จ](assets/images/wokwi/05-build-project.png)
 
 ---
 
@@ -91,11 +91,11 @@ void loop() {
 4. หน้าต่างเบราว์เซอร์จะแจ้งเตือนเพื่อเปิดกลับมายัง VS Code ให้กดยืนยัน **"Open"** หรือ **"Allow"**
 5. ใน VS Code จะมีกล่องข้อความถามยืนยัน ให้คลิก **"Open"** ระบบจะเปิดใช้งาน Community License สำเร็จ
 
-![เรียกคำสั่ง Wokwi: Request a New License ผ่าน Command Palette]({{ \'/assets/images/wokwi/06-request-license.png\' | relative_url }})
+![เรียกคำสั่ง Wokwi: Request a New License ผ่าน Command Palette](assets/images/wokwi/06-request-license.png)
 
-![กดปุ่ม GET YOUR LICENSE บนหน้าเว็บไซต์ Wokwi]({{ \'/assets/images/wokwi/07-activate-license-web.png\' | relative_url }})
+![กดปุ่ม GET YOUR LICENSE บนหน้าเว็บไซต์ Wokwi](assets/images/wokwi/07-activate-license-web.png)
 
-![ยืนยันการเปิด URI ใน VS Code เพื่อเปิดใช้งาน License]({{ \'/assets/images/wokwi/08-license-vscode-confirm.png\' | relative_url }})
+![ยืนยันการเปิด URI ใน VS Code เพื่อเปิดใช้งาน License](assets/images/wokwi/08-license-vscode-confirm.png)
 
 ---
 
@@ -141,9 +141,9 @@ void loop() {
 
 4. เมื่อบันทึกไฟล์และเปิดดู `diagram.json` ในหน้าต่าง Wokwi Diagram Editor จะเห็นภาพบอร์ด ESP32, ตัวต้านทาน (Resistor), หลอด LED สีแดง และสายไฟเชื่อมต่ออย่างชัดเจน
 
-![เขียนโครงสร้างอุปกรณ์และวงจรในไฟล์ diagram.json]({{ \'/assets/images/wokwi/09-diagram-json-editor.png\' | relative_url }})
+![เขียนโครงสร้างอุปกรณ์และวงจรในไฟล์ diagram.json](assets/images/wokwi/09-diagram-json-editor.png)
 
-![หน้าต่าง Wokwi Diagram Editor แสดงภาพวงจร ESP32 และ LED]({{ \'/assets/images/wokwi/10-diagram-ui-preview.png\' | relative_url }})
+![หน้าต่าง Wokwi Diagram Editor แสดงภาพวงจร ESP32 และ LED](assets/images/wokwi/10-diagram-ui-preview.png)
 
 ---
 
@@ -162,7 +162,7 @@ elf = '.pio/build/esp32doit-devkit-v1/firmware.elf'
 > [!NOTE]
 > บน Windows สามารถใช้ได้ทั้งเครื่องหมาย `/` หรือ `\` (เช่น `.pio\build\esp32doit-devkit-v1\firmware.bin`) ส่วนบน macOS/Linux ให้ใช้ `/`
 
-![สร้างและกำหนดค่าไฟล์ wokwi.toml เพื่อชี้ตำแหน่ง firmware.bin และ firmware.elf]({{ \'/assets/images/wokwi/11-wokwi-toml.png\' | relative_url }})
+![สร้างและกำหนดค่าไฟล์ wokwi.toml เพื่อชี้ตำแหน่ง firmware.bin และ firmware.elf](assets/images/wokwi/11-wokwi-toml.png)
 
 ---
 
@@ -173,7 +173,7 @@ elf = '.pio/build/esp32doit-devkit-v1/firmware.elf'
 3. สังเกตไฟ LED สีแดงบนหน้าจอจำลองจะเริ่มกระพริบติด-ดับสลับกันทุก 1 วินาทีตามที่โค้ดสั่งการ
 4. หน้าต่าง Terminal ด้านล่างจะแสดงสถานะการบูตของชิป ESP32
 
-![กดปุ่มเริ่มจำลองและสังเกตไฟ LED กระพริบบน Wokwi Simulator]({{ \'/assets/images/wokwi/12-run-simulation.png\' | relative_url }})
+![กดปุ่มเริ่มจำลองและสังเกตไฟ LED กระพริบบน Wokwi Simulator](assets/images/wokwi/12-run-simulation.png)
 
 ---
 
@@ -207,9 +207,9 @@ void loop() {
 3. กลับไปที่หน้า `diagram.json` แล้วกดปุ่ม **Start / Restart Simulation**
 4. ในหน้าต่าง Wokwi Terminal ด้านล่าง จะเห็นข้อความ `LED HIGH` และ `LED LOW` ปรากฏขึ้นสลับกันแบบ Real-time
 
-![เพิ่มโค้ดคำสั่ง Serial.begin และ Serial.println ใน src/main.cpp]({{ \'/assets/images/wokwi/13-serial-code.png\' | relative_url }})
+![เพิ่มโค้ดคำสั่ง Serial.begin และ Serial.println ใน src/main.cpp](assets/images/wokwi/13-serial-code.png)
 
-![ผลลัพธ์การแสดงผลข้อความใน Wokwi Terminal / Serial Monitor]({{ \'/assets/images/wokwi/14-serial-monitor-output.png\' | relative_url }})
+![ผลลัพธ์การแสดงผลข้อความใน Wokwi Terminal / Serial Monitor](assets/images/wokwi/14-serial-monitor-output.png)
 
 ---
 

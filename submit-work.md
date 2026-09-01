@@ -34,15 +34,15 @@ assignments:
     due: ก่อนคาบสัปดาห์ที่ 6
     form: "https://docs.google.com/forms/d/e/1FAIpQLSeQB2q--x2vMY8taE8dA_mme0QrINyKLCn91GaEUta2ErKGcQ/viewform?usp=dialog"
   - n: 6
-    topic: การแสดงผลข้อมูลผ่าน จอ
-    work: ใบงานที่ 6 — การใช้โพรโทคอลสื่อสารอุปกรณ์ (I2C/SPI/UART)
+    topic: Wokwi DHT
+    work: Wokwi DHT
     due: ก่อนคาบสัปดาห์ที่ 7
     form: "https://docs.google.com/forms/d/e/1FAIpQLSdGqWJjB8OV_v-E572yswM9-FFQf7Z1JHcP-J7i-9iX-kZ8xg/viewform?usp=dialog"
   - n: 7
-    topic: เทคโนโลยีไร้สายสำหรับ IoT — Wi-Fi
-    work: ใบงานที่ 7 — การใช้งาน Wi-Fi และ Web Server บนบอร์ด ESP32
+    topic: Wokwi Sensor
+    work: ใบงานที่ 7 — Wokwi Sensor
     due: ก่อนคาบสัปดาห์ที่ 8
-    form: "#"
+    form: "https://docs.google.com/forms/d/e/1FAIpQLSe3Dot-xXtnPLKkfpjRiJsqhtoXtIbgSQzoOfuLxDqvKpZ2zQ/viewform?usp=dialog"
   - n: 8
     topic: เทคโนโลยีไร้สาย — BLE, LoRa, Zigbee
     work: ใบงานที่ 8 — การใช้งาน BLE และการคำนวณเครือข่ายไร้สาย

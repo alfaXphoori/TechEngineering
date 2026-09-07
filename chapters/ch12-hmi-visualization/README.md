@@ -202,7 +202,7 @@ GROUP BY time(5m) fill(linear)
 <div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
 ## 12.6 ปฏิบัติการ Wokwi Lab 14: การสร้าง HMI อุตสาหกรรม และการควบคุมสองทาง 2-Way RPC บน ThingsBoard
 
-**รหัสปฏิบัติการ:** LAB-12 | **เวลาปฏิบัติการ:** 2 ชั่วโมง  
+**รหัสปฏิบัติการ:** LAB-14 | **เวลาปฏิบัติการ:** 2 ชั่วโมง  
 **เป้าหมายการเรียนรู้:** LLO14.1, LLO14.2 (CLO3, CLO4)  
 **เครื่องมือที่ใช้:** Wokwi Simulator, ThingsBoard Dashboard Builder, ESP32, Relay, OLED SSD1306
 

@@ -166,12 +166,22 @@ if (temperature >= TEMP_HIGH_SETPOINT) {
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
+## 6.5 ปฏิบัติการ Wokwi Lab 6: ระบบวัดค่าสิ่งแวดล้อมและแสดงผลอัตโนมัติ (I2C Multi-Sensor & OLED Display)
 
-## 6.5 การทดลองและจำลองวงจรบน Wokwi Simulator
+**รหัสปฏิบัติการ:** LAB-06 | **เวลาปฏิบัติการ:** 2 ชั่วโมง  
+**เป้าหมายการเรียนรู้:** LLO6.1, LLO6.2 (CLO3, CLO4)  
+**เครื่องมือที่ใช้:** Wokwi Simulator, ESP32, SSD1306 OLED, BMP280, DHT22, Relay Module, LED แสดงสถานะ
 
-การทดลองนี้เป็นการรวมระบบวัดค่าสิ่งแวดล้อม (DHT22 และ BMP280) แสดงผลข้อมูลผ่านจอ SSD1306 OLED (I2C) และควบคุมการทำงานของพัดลมระบายอากาศผ่าน Relay พร้อมไฟแจ้งเตือนสถานะ
+---
 
-### 6.5.1 แผนผังการต่อวงจร (Wiring Diagram)
+### 6.5.1 วัตถุประสงค์เชิงปฏิบัติการ
+1. ต่อและทดสอบอุปกรณ์หลายตัวบนบัส I2C ร่วมกัน (SSD1306 OLED และ BMP280) โดยใช้แอดเดรสต่างกันบนคู่สาย SDA/SCL เดียว
+2. อ่านค่าเซนเซอร์ดิจิทัลแบบ Single-Wire (DHT22) ควบคู่กับเซนเซอร์ความดันบรรยากาศ (BMP280) แล้วแสดงผลบนจอ OLED แบบ Real-time
+3. ออกแบบตรรกะควบคุมแบบวงปิดด้วย Hysteresis Band เพื่อสั่งเปิด-ปิดพัดลมระบายอากาศผ่าน Relay พร้อมไฟแจ้งเตือนสถานะ Alarm
+
+---
+
+### 6.5.2 แผนผังการต่อวงจร (Wiring Table)
 
 | อุปกรณ์ | ขาอุปกรณ์ | ขาบนบอร์ด ESP32 DevKit | หน้าที่ / หมายเหตุ |
 |---|---|---|---|
@@ -192,7 +202,52 @@ if (temperature >= TEMP_HIGH_SETPOINT) {
 
 ---
 
-### 6.5.2 โค้ดโปรแกรม Arduino C++ ฉบับสมบูรณ์
+### 6.5.3 ไฟล์โครงสร้างวงจร `diagram.json` สำหรับ Wokwi
+
+```json
+{
+  "version": 1,
+  "author": "KSU Digital Technology",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-ssd1306", "id": "oled1", "top": -160, "left": 10, "attrs": { "i2cAddress": "0x3c" } },
+    { "type": "wokwi-dht22", "id": "dht1", "top": -160, "left": 160, "attrs": { "temperature": "36.5", "humidity": "65" } },
+    { "type": "wokwi-bmp280", "id": "bmp1", "top": -160, "left": -120, "attrs": { "i2cAddress": "0x76" } },
+    { "type": "wokwi-relay-module", "id": "relay1", "top": 120, "left": 160, "attrs": {} },
+    { "type": "wokwi-led", "id": "led1", "top": 120, "left": -80, "attrs": { "color": "red" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 170, "left": -80, "attrs": { "value": "330" } }
+  ],
+  "connections": [
+    [ "esp:3V3", "oled1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "oled1:GND", "black", [ "v0" ] ],
+    [ "esp:21", "oled1:SDA", "green", [ "v0" ] ],
+    [ "esp:22", "oled1:SCL", "yellow", [ "v0" ] ],
+
+    [ "esp:3V3", "bmp1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "bmp1:GND", "black", [ "v0" ] ],
+    [ "esp:21", "bmp1:SDA", "green", [ "v0" ] ],
+    [ "esp:22", "bmp1:SCL", "yellow", [ "v0" ] ],
+
+    [ "esp:3V3", "dht1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "dht1:GND", "black", [ "v0" ] ],
+    [ "esp:15", "dht1:SDA", "blue", [ "v0" ] ],
+
+    [ "esp:5V", "relay1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "relay1:GND", "black", [ "v0" ] ],
+    [ "esp:13", "relay1:IN", "purple", [ "v0" ] ],
+
+    [ "esp:12", "led1:A", "orange", [ "v0" ] ],
+    [ "led1:C", "r1:1", "black", [ "v0" ] ],
+    [ "r1:2", "esp:GND", "black", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}
+```
+
+---
+
+### 6.5.4 ซอร์สโค้ดภาษา C++ (Multi-Sensor Display & Hysteresis Control)
 
 ```cpp
 /**
@@ -330,51 +385,6 @@ void loop() {
 
     display.display();
   }
-}
-```
-
----
-
-### 6.5.3 ไฟล์จำลอง `diagram.json` สำหรับ Wokwi
-
-```json
-{
-  "version": 1,
-  "author": "KSU Digital Technology",
-  "editor": "wokwi",
-  "parts": [
-    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
-    { "type": "wokwi-ssd1306", "id": "oled1", "top": -160, "left": 10, "attrs": { "i2cAddress": "0x3c" } },
-    { "type": "wokwi-dht22", "id": "dht1", "top": -160, "left": 160, "attrs": { "temperature": "36.5", "humidity": "65" } },
-    { "type": "wokwi-bmp280", "id": "bmp1", "top": -160, "left": -120, "attrs": { "i2cAddress": "0x76" } },
-    { "type": "wokwi-relay-module", "id": "relay1", "top": 120, "left": 160, "attrs": {} },
-    { "type": "wokwi-led", "id": "led1", "top": 120, "left": -80, "attrs": { "color": "red" } },
-    { "type": "wokwi-resistor", "id": "r1", "top": 170, "left": -80, "attrs": { "value": "330" } }
-  ],
-  "connections": [
-    [ "esp:3V3", "oled1:VCC", "red", [ "v0" ] ],
-    [ "esp:GND", "oled1:GND", "black", [ "v0" ] ],
-    [ "esp:21", "oled1:SDA", "green", [ "v0" ] ],
-    [ "esp:22", "oled1:SCL", "yellow", [ "v0" ] ],
-
-    [ "esp:3V3", "bmp1:VCC", "red", [ "v0" ] ],
-    [ "esp:GND", "bmp1:GND", "black", [ "v0" ] ],
-    [ "esp:21", "bmp1:SDA", "green", [ "v0" ] ],
-    [ "esp:22", "bmp1:SCL", "yellow", [ "v0" ] ],
-
-    [ "esp:3V3", "dht1:VCC", "red", [ "v0" ] ],
-    [ "esp:GND", "dht1:GND", "black", [ "v0" ] ],
-    [ "esp:15", "dht1:SDA", "blue", [ "v0" ] ],
-
-    [ "esp:5V", "relay1:VCC", "red", [ "v0" ] ],
-    [ "esp:GND", "relay1:GND", "black", [ "v0" ] ],
-    [ "esp:13", "relay1:IN", "purple", [ "v0" ] ],
-
-    [ "esp:12", "led1:A", "orange", [ "v0" ] ],
-    [ "led1:C", "r1:1", "black", [ "v0" ] ],
-    [ "r1:2", "esp:GND", "black", [ "v0" ] ]
-  ],
-  "dependencies": {}
 }
 ```
 

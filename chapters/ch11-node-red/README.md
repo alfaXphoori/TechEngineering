@@ -122,7 +122,7 @@ ightarrow 0.0-100.0\%$
 <div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
 ## 11.6 ปฏิบัติการ Wokwi Lab 13: ระบบเกตเวย์ท้องถิ่นและแดชบอร์ด Node-RED Real-time
 
-**รหัสปฏิบัติการ:** LAB-11 | **เวลาปฏิบัติการ:** 2 ชั่วโมง  
+**รหัสปฏิบัติการ:** LAB-13 | **เวลาปฏิบัติการ:** 2 ชั่วโมง  
 **เป้าหมายการเรียนรู้:** LLO13.1, LLO13.2 (CLO3, CLO4)  
 **เครื่องมือที่ใช้:** Wokwi Simulator, Node-RED Runtime, ESP32, DHT22, Potentiometer, Relay
 

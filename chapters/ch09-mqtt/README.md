@@ -135,14 +135,22 @@ Client จะส่งแพ็กเก็ต `PINGREQ` ขนาด 2 ไบ�
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
+## 9.7 ปฏิบัติการ Wokwi Lab 10: การรับส่งข้อมูลแบบ Publish/Subscribe ด้วยโพรโทคอล MQTT
 
-## 9.7 การทดลองและจำลองวงจรบน Wokwi Simulator
+**รหัสปฏิบัติการ:** LAB-10 | **เวลาปฏิบัติการ:** 2 ชั่วโมง  
+**เป้าหมายการเรียนรู้:** LLO10.1, LLO10.2 (CLO2, CLO3, CLO4)  
+**เครื่องมือที่ใช้:** Wokwi Simulator, ESP32, DHT22, Relay Module, LED แสดงสถานะ, Public Broker `broker.hivemq.com`, HiveMQ Web Client
 
-การทดลองนี้จำลองบอร์ด ESP32 เชื่อมต่อไปยัง Public MQTT Broker (`broker.hivemq.com`) ทำหน้าที่:
-1. **Publish:** ส่งข้อมูลอุณหภูมิและความชื้น (JSON) ไปยัง Topic `ksu/iot/telemetry`
-2. **Subscribe:** รอรับคำสั่งควบคุม Relay เปิด/ปิดไฟ จาก Topic `ksu/iot/control`
+---
 
-### 9.7.1 แผนผังการต่อวงจร (Wiring Table)
+### 9.7.1 วัตถุประสงค์เชิงปฏิบัติการ
+1. เชื่อมต่อ ESP32 เข้ากับ MQTT Broker สาธารณะ (`broker.hivemq.com`) ด้วยไลบรารี PubSubClient
+2. Publish ข้อมูลอุณหภูมิและความชื้นในรูปแบบ JSON ไปยัง Topic `ksu/iot/telemetry` เป็นระยะอย่างต่อเนื่อง
+3. Subscribe Topic `ksu/iot/control` เพื่อรับคำสั่งควบคุม Relay จากภายนอก และทดสอบคุณสมบัติ Retained Message กับ Last Will and Testament (LWT)
+
+---
+
+### 9.7.2 แผนผังการต่อวงจร (Wiring Table)
 
 | อุปกรณ์ | ขาอุปกรณ์ | ขาบนบอร์ด ESP32 DevKit | หน้าที่ / หมายเหตุ |
 |---|---|---|---|
@@ -154,7 +162,40 @@ Client จะส่งแพ็กเก็ต `PINGREQ` ขนาด 2 ไบ�
 
 ---
 
-### 9.7.2 โค้ดโปรแกรม Arduino C++ (ใช้ไลบรารี PubSubClient)
+### 9.7.3 ไฟล์โครงสร้างวงจร `diagram.json` สำหรับ Wokwi
+
+```json
+{
+  "version": 1,
+  "author": "KSU TechEngineering",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-dht22", "id": "dht1", "top": -140, "left": 120, "attrs": { "temperature": "29.4", "humidity": "62" } },
+    { "type": "wokwi-relay-module", "id": "relay1", "top": 120, "left": 140, "attrs": {} },
+    { "type": "wokwi-led", "id": "led1", "top": 120, "left": -80, "attrs": { "color": "green" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 170, "left": -80, "attrs": { "value": "330" } }
+  ],
+  "connections": [
+    [ "esp:3V3", "dht1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "dht1:GND", "black", [ "v0" ] ],
+    [ "esp:15", "dht1:SDA", "blue", [ "v0" ] ],
+
+    [ "esp:5V", "relay1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "relay1:GND", "black", [ "v0" ] ],
+    [ "esp:13", "relay1:IN", "purple", [ "v0" ] ],
+
+    [ "esp:12", "led1:A", "orange", [ "v0" ] ],
+    [ "led1:C", "r1:1", "black", [ "v0" ] ],
+    [ "r1:2", "esp:GND", "black", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}
+```
+
+---
+
+### 9.7.4 ซอร์สโค้ดภาษา C++ (MQTT Pub/Sub ด้วยไลบรารี PubSubClient)
 
 ```cpp
 /**
@@ -195,9 +236,7 @@ const unsigned long TELEMETRY_INTERVAL = 3000; // ส่งข้อมูลท
 
 // Callback Function: ทำงานอัตโนมัติเมื่อมีข้อความเข้ามาใน Topic ที่ Subscribe ไว้
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
-  Serial.printf("
-[MQTT Callback] Message arrived on topic: %s
-", topic);
+  Serial.printf("\n[MQTT Callback] Message arrived on topic: %s\n", topic);
   
   // แปลง Payload เป็น String
   String message = "";
@@ -214,8 +253,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     if (doc.containsKey("relay")) {
       bool relayCmd = doc["relay"];
       digitalWrite(RELAY_PIN, relayCmd ? HIGH : LOW);
-      Serial.printf("[ACTION] Relay state updated to: %s
-", relayCmd ? "ON" : "OFF");
+      Serial.printf("[ACTION] Relay state updated to: %s\n", relayCmd ? "ON" : "OFF");
     }
   } else {
     // รองรับคำสั่งข้อความธรรมดา "ON" / "OFF"
@@ -245,11 +283,9 @@ void reconnectMQTT() {
 
       // Subscribe หัวข้อรับคำสั่งควบคุม
       mqttClient.subscribe(TOPIC_CONTROL);
-      Serial.printf("[MQTT] Subscribed to topic: %s
-", TOPIC_CONTROL);
+      Serial.printf("[MQTT] Subscribed to topic: %s\n", TOPIC_CONTROL);
     } else {
-      Serial.printf("FAILED, rc=%d. Retrying in 2 seconds...
-", mqttClient.state());
+      Serial.printf("FAILED, rc=%d. Retrying in 2 seconds...\n", mqttClient.state());
       digitalWrite(LED_STATUS_PIN, LOW);
       delay(2000);
     }
@@ -273,8 +309,7 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("
-[WIFI] Connected!");
+  Serial.println("\n[WIFI] Connected!");
 
   // 2. ตั้งค่า MQTT Client
   mqttClient.setServer(MQTT_BROKER, MQTT_PORT);
@@ -309,43 +344,9 @@ void loop() {
 
       // Publish ข้อมูลด้วย QoS 0
       mqttClient.publish(TOPIC_TELEMETRY, payload.c_str());
-      Serial.printf("[PUBLISH -> %s] %s
-", TOPIC_TELEMETRY, payload.c_str());
+      Serial.printf("[PUBLISH -> %s] %s\n", TOPIC_TELEMETRY, payload.c_str());
     }
   }
-}
-```
-
----
-
-### 9.7.3 ไฟล์จำลอง `diagram.json` สำหรับ Wokwi
-
-```json
-{
-  "version": 1,
-  "author": "KSU TechEngineering",
-  "editor": "wokwi",
-  "parts": [
-    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
-    { "type": "wokwi-dht22", "id": "dht1", "top": -140, "left": 120, "attrs": { "temperature": "29.4", "humidity": "62" } },
-    { "type": "wokwi-relay-module", "id": "relay1", "top": 120, "left": 140, "attrs": {} },
-    { "type": "wokwi-led", "id": "led1", "top": 120, "left": -80, "attrs": { "color": "green" } },
-    { "type": "wokwi-resistor", "id": "r1", "top": 170, "left": -80, "attrs": { "value": "330" } }
-  ],
-  "connections": [
-    [ "esp:3V3", "dht1:VCC", "red", [ "v0" ] ],
-    [ "esp:GND", "dht1:GND", "black", [ "v0" ] ],
-    [ "esp:15", "dht1:SDA", "blue", [ "v0" ] ],
-
-    [ "esp:5V", "relay1:VCC", "red", [ "v0" ] ],
-    [ "esp:GND", "relay1:GND", "black", [ "v0" ] ],
-    [ "esp:13", "relay1:IN", "purple", [ "v0" ] ],
-
-    [ "esp:12", "led1:A", "orange", [ "v0" ] ],
-    [ "led1:C", "r1:1", "black", [ "v0" ] ],
-    [ "r1:2", "esp:GND", "black", [ "v0" ] ]
-  ],
-  "dependencies": {}
 }
 ```
 

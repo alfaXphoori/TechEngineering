@@ -1321,7 +1321,7 @@ $$\text{Link Margin (dB)} = \text{Received Power (dBm)} - \text{Sensitivity (dBm
 <div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
 ## 7.6 ปฏิบัติการ Wokwi Lab 7 & 8: การเชื่อมต่อ Wi-Fi Web Server และ Bluetooth Low Energy
 
-**รหัสปฏิบัติการ:** LAB-07 | **เวลาปฏิบัติการ:** 2 ชั่วโมง  
+**รหัสปฏิบัติการ:** LAB-07, LAB-08 | **เวลาปฏิบัติการ:** 4 ชั่วโมง  
 **เป้าหมายการเรียนรู้:** LLO7.1, LLO7.2, LLO8.1, LLO8.2 (CLO2, CLO3, CLO4)  
 **เครื่องมือที่ใช้:** Wokwi Simulator, ESP32, DHT22, รีเลย์, LED แสดงสถานะ Wi-Fi
 

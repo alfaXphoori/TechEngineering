@@ -47,6 +47,28 @@ BLE (Bluetooth Low Energy) เป็นโปรโตคอลสื่อส�
    - ใช้จำลองเป็นเซนเซอร์อุณหภูมิ (แปลงค่า ADC เป็นองศา)
 3. คัดลอกโค้ดด้านล่างลงใน editor ของ Wokwi:
 
+### 📁 ไฟล์โครงสร้างวงจร `diagram.json` (สำหรับ Import บน Wokwi)
+
+```json
+{
+  "version": 1,
+  "author": "KSU TechEngineering",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-potentiometer", "id": "pot1", "top": -120, "left": -80, "attrs": { "value": "2048" } }
+  ],
+  "connections": [
+    [ "esp:3V3", "pot1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "pot1:GND", "black", [ "v0" ] ],
+    [ "esp:34", "pot1:SIG", "green", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}
+```
+
+---
+
 ```cpp
 #include <BLEDevice.h>
 #include <BLEServer.h>
@@ -122,7 +144,7 @@ void loop() {
 }
 ```
 
-4. ตั้งค่า `diagram.json` ใน Wokwi ให้มี ESP32 + Potentiometer ต่อที่ GPIO 34
+4. เปิดแท็บ **diagram.json** ใน Wokwi แล้ววางเนื้อหาไฟล์ด้านบนแทนของเดิม (ESP32 + Potentiometer ต่อที่ GPIO 34)
 5. กด **Run** แล้วสังเกตผลใน Serial Monitor
 
 ### บันทึกผลการทดลอง

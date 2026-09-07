@@ -207,12 +207,22 @@ if (!error) {
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
+## 8.7 ปฏิบัติการ Wokwi Lab 9: การส่งข้อมูลเซนเซอร์ขึ้น REST API ด้วย HTTP POST และ JSON
 
-## 8.7 การทดลองและจำลองวงจรบน Wokwi Simulator
+**รหัสปฏิบัติการ:** LAB-09 | **เวลาปฏิบัติการ:** 2 ชั่วโมง  
+**เป้าหมายการเรียนรู้:** LLO9.1, LLO9.2 (CLO2, CLO3, CLO4)  
+**เครื่องมือที่ใช้:** Wokwi Simulator, ESP32, DHT22, Potentiometer, LED แสดงสถานะ, ไลบรารี HTTPClient และ ArduinoJson
 
-การทดลองนี้จำลองบอร์ด ESP32 อ่านค่าเซนเซอร์อุณหภูมิและความชื้น (DHT22) พร้อมจำลองการวัดแรงสั่นสะเทือนผ่าน Potentiometer จากนั้นสร้าง JSON Payload ส่งขึ้นสู่ Cloud REST API ผ่านคำสั่ง HTTP POST และรับคำสั่งควบคุมตอบกลับจากเซิร์ฟเวอร์
+---
 
-### 8.7.1 แผนผังการต่อวงจร (Wiring Table)
+### 8.7.1 วัตถุประสงค์เชิงปฏิบัติการ
+1. เชื่อมต่อ ESP32 เข้าเครือข่าย Wi-Fi จำลองของ Wokwi (`Wokwi-GUEST`) แล้วทำหน้าที่เป็น HTTP Client
+2. ประกอบข้อมูลเซนเซอร์เป็น JSON Payload แบบมีโครงสร้างซ้อน (Nested Object) ด้วยไลบรารี ArduinoJson
+3. ส่งข้อมูลด้วยคำร้อง HTTP POST ไปยัง REST API ปลายทาง พร้อมอ่านและตรวจสอบ HTTP Status Code และ Response Body ที่ตอบกลับมา
+
+---
+
+### 8.7.2 แผนผังการต่อวงจร (Wiring Table)
 
 | อุปกรณ์ | ขาอุปกรณ์ | ขาบนบอร์ด ESP32 DevKit | หน้าที่ / หมายเหตุ |
 |---|---|---|---|
@@ -225,7 +235,40 @@ if (!error) {
 
 ---
 
-### 8.7.2 โค้ดโปรแกรม Arduino C++ ส่งข้อมูล HTTP POST JSON
+### 8.7.3 ไฟล์โครงสร้างวงจร `diagram.json` สำหรับ Wokwi
+
+```json
+{
+  "version": 1,
+  "author": "KSU TechEngineering",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-dht22", "id": "dht1", "top": -140, "left": 120, "attrs": { "temperature": "38.2", "humidity": "55" } },
+    { "type": "wokwi-potentiometer", "id": "pot1", "top": -140, "left": -100, "attrs": { "value": "1800" } },
+    { "type": "wokwi-led", "id": "led1", "top": 120, "left": 100, "attrs": { "color": "blue" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 170, "left": 100, "attrs": { "value": "330" } }
+  ],
+  "connections": [
+    [ "esp:3V3", "dht1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "dht1:GND", "black", [ "v0" ] ],
+    [ "esp:15", "dht1:SDA", "blue", [ "v0" ] ],
+
+    [ "esp:3V3", "pot1:VCC", "red", [ "v0" ] ],
+    [ "esp:GND", "pot1:GND", "black", [ "v0" ] ],
+    [ "esp:34", "pot1:SIG", "green", [ "v0" ] ],
+
+    [ "esp:13", "led1:A", "orange", [ "v0" ] ],
+    [ "led1:C", "r1:1", "black", [ "v0" ] ],
+    [ "r1:2", "esp:GND", "black", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}
+```
+
+---
+
+### 8.7.4 ซอร์สโค้ดภาษา C++ (REST Client & JSON Telemetry)
 
 ```cpp
 /**
@@ -265,8 +308,7 @@ void connectWiFi() {
     Serial.print(".");
   }
 
-  Serial.println("
-[WIFI] Connected successfully!");
+  Serial.println("\n[WIFI] Connected successfully!");
   Serial.print("[WIFI] IP Address: ");
   Serial.println(WiFi.localIP());
 }
@@ -299,8 +341,7 @@ void sendTelemetryData(float temp, float humid, float vibration) {
   String requestBody;
   serializeJson(doc, requestBody);
 
-  Serial.println("
---- [HTTP POST Request] ---");
+  Serial.println("\n--- [HTTP POST Request] ---");
   Serial.print("Target URL: "); Serial.println(SERVER_URL);
   Serial.print("Payload: "); Serial.println(requestBody);
 
@@ -311,8 +352,7 @@ void sendTelemetryData(float temp, float humid, float vibration) {
 
   // 4. ตรวจสอบผลลัพธ์การตอบกลับ
   if (httpResponseCode > 0) {
-    Serial.printf("[HTTP Response] Status Code: %d
-", httpResponseCode);
+    Serial.printf("[HTTP Response] Status Code: %d\n", httpResponseCode);
     String responseBody = http.getString();
     
     // แกะอ่านข้อมูล Response
@@ -322,8 +362,7 @@ void sendTelemetryData(float temp, float humid, float vibration) {
       Serial.println("[HTTP Response] Successfully received JSON from server!");
     }
   } else {
-    Serial.printf("[HTTP ERROR] Request failed, error: %s
-", http.errorToString(httpResponseCode).c_str());
+    Serial.printf("[HTTP ERROR] Request failed, error: %s\n", http.errorToString(httpResponseCode).c_str());
   }
 
   http.end(); // ปิดการเชื่อมต่อ
@@ -358,39 +397,6 @@ void loop() {
       Serial.println("[ERROR] Failed to read from DHT22!");
     }
   }
-}
-```
-
----
-
-### 8.7.3 ไฟล์จำลอง `diagram.json` สำหรับ Wokwi
-
-```json
-{
-  "version": 1,
-  "author": "KSU TechEngineering",
-  "editor": "wokwi",
-  "parts": [
-    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
-    { "type": "wokwi-dht22", "id": "dht1", "top": -140, "left": 120, "attrs": { "temperature": "38.2", "humidity": "55" } },
-    { "type": "wokwi-potentiometer", "id": "pot1", "top": -140, "left": -100, "attrs": { "value": "1800" } },
-    { "type": "wokwi-led", "id": "led1", "top": 120, "left": 100, "attrs": { "color": "blue" } },
-    { "type": "wokwi-resistor", "id": "r1", "top": 170, "left": 100, "attrs": { "value": "330" } }
-  ],
-  "connections": [
-    [ "esp:3V3", "dht1:VCC", "red", [ "v0" ] ],
-    [ "esp:GND", "dht1:GND", "black", [ "v0" ] ],
-    [ "esp:15", "dht1:SDA", "blue", [ "v0" ] ],
-
-    [ "esp:3V3", "pot1:VCC", "red", [ "v0" ] ],
-    [ "esp:GND", "pot1:GND", "black", [ "v0" ] ],
-    [ "esp:34", "pot1:SIG", "green", [ "v0" ] ],
-
-    [ "esp:13", "led1:A", "orange", [ "v0" ] ],
-    [ "led1:C", "r1:1", "black", [ "v0" ] ],
-    [ "r1:2", "esp:GND", "black", [ "v0" ] ]
-  ],
-  "dependencies": {}
 }
 ```
 

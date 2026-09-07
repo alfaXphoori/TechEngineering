@@ -165,7 +165,7 @@ ML ให้คอมพิวเตอร์ **เรียนรู้รู�
 <div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
 ## 13.6 ปฏิบัติการ Wokwi Lab 15: การตรวจจับความผิดปกติของแรงสั่นสะเทือนมอเตอร์ด้วยการเรียนรู้ของเครื่อง (TinyML / Edge AI)
 
-**รหัสปฏิบัติการ:** LAB-13 | **เวลาปฏิบัติการ:** 2 ชั่วโมง  
+**รหัสปฏิบัติการ:** LAB-15 | **เวลาปฏิบัติการ:** 2 ชั่วโมง  
 **เป้าหมายการเรียนรู้:** LLO15.1, LLO15.2 (CLO1, CLO4)  
 **เครื่องมือที่ใช้:** Wokwi Simulator, Google Colab (Python ML), ESP32, Potentiometer (Vibration sensor sim), Relay, LEDs (Normal/Anomaly)
 

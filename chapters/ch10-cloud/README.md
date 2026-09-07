@@ -245,7 +245,7 @@ $$\text{Physical Sensor} \rightarrow \text{Edge MCU (ESP32)} \rightarrow \text{L
 <div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
 ## 10.6 ปฏิบัติการ Wokwi Lab 11 & 12: การส่งข้อมูลขึ้นคลาวด์ ThingsBoard และระบบประมวลผลกฎ
 
-**รหัสปฏิบัติการ:** LAB-10 | **เวลาปฏิบัติการ:** 2 ชั่วโมง  
+**รหัสปฏิบัติการ:** LAB-11, LAB-12 | **เวลาปฏิบัติการ:** 4 ชั่วโมง  
 **เป้าหมายการเรียนรู้:** LLO11.1, LLO11.2, LLO12.1, LLO12.2 (CLO2, CLO3, CLO4)  
 **เครื่องมือที่ใช้:** Wokwi Simulator, ThingsBoard Cloud Account, ESP32, DHT22, Potentiometer, Relay
 

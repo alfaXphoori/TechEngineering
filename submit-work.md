@@ -44,8 +44,8 @@ assignments:
     due: ก่อนคาบสัปดาห์ที่ 8
     form: "https://docs.google.com/forms/d/e/1FAIpQLSe3Dot-xXtnPLKkfpjRiJsqhtoXtIbgSQzoOfuLxDqvKpZ2zQ/viewform?usp=dialog"
   - n: 8
-    topic: เทคโนโลยีไร้สาย — BLE, LoRa, Zigbee
-    work: ใบงานที่ 8 — การใช้งาน BLE และการคำนวณเครือข่ายไร้สาย
+    topic: Wokwi Aculator
+    work: "https://docs.google.com/forms/d/e/1FAIpQLSeadXsnqewRjklvUZamMOEbfxDJxsWGUeiF55YD0N_MZ4ghVA/viewform?usp=dialog"
     due: 
     form: "#"
   - n: 9

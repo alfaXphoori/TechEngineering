@@ -44,10 +44,10 @@ assignments:
     due: ก่อนคาบสัปดาห์ที่ 8
     form: "https://docs.google.com/forms/d/e/1FAIpQLSe3Dot-xXtnPLKkfpjRiJsqhtoXtIbgSQzoOfuLxDqvKpZ2zQ/viewform?usp=dialog"
   - n: 8
-    topic: Wokwi Aculator
-    work: "https://docs.google.com/forms/d/e/1FAIpQLSeadXsnqewRjklvUZamMOEbfxDJxsWGUeiF55YD0N_MZ4ghVA/viewform?usp=dialog"
+    topic: Wokwi actuator
+    work: ใบงานที่ 8 — Wokwi actuator
     due: 
-    form: "#"
+    form: "https://docs.google.com/forms/d/e/1FAIpQLSeadXsnqewRjklvUZamMOEbfxDJxsWGUeiF55YD0N_MZ4ghVA/viewform?usp=dialog"
   - n: 9
     topic: โพรโทคอลการสื่อสาร HTTP/REST
     work: ใบงานที่ 9 — การแลกเปลี่ยนข้อมูลผ่าน HTTP/REST และ JSON

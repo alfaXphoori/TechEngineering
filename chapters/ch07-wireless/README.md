@@ -1,12 +1,12 @@
 ---
 layout: default
-title: "บทที่ 7: การสื่อสารไร้สายสำหรับงานวิศวกรรม"
+title: "บทที่ 7: การสื่อสารไร้สายสำหรับงานวิศวกรรม (ESP32-S3 IoT Console & Web Server)"
 permalink: /chapters/ch07-wireless/
 ---
 
-# Chapter 7: การสื่อสารไร้สายสำหรับงานวิศวกรรม
+# Chapter 7: การสื่อสารไร้สายสำหรับงานวิศวกรรม (Wireless Communications in Engineering)
 
-## Wireless Communications in Engineering (Wi-Fi, Web Server, BLE, Zigbee, LoRa, NB-IoT)
+## ESP32-S3 Standalone Access Point, AHT25 I2C Sensor & Real-time Web Dashboard
 
 ---
 
@@ -18,1358 +18,297 @@ permalink: /chapters/ch07-wireless/
 
 > ### 🎯 ผลลัพธ์การเรียนรู้และการเชื่อมโยง (Constructive Alignment)
 >
-> - **สัปดาห์การเรียนรู้:** สัปดาห์ที่ 7 & 8 — เครือข่ายไร้สายพื้นฐานและเฉพาะทาง (Wi-Fi, Web Server, BLE, Zigbee, LoRa, NB-IoT)
+> - **สัปดาห์การเรียนรู้:** สัปดาห์ที่ 7 & 8 — เครือข่ายไร้สายพื้นฐานและการพัฒนาคอนโซลควบคุม IoT (Wi-Fi SoftAP, I2C Sensor Interfacing, Embedded Web Server)
 > - **ผลลัพธ์การเรียนรู้ระดับรายวิชา (CLOs):**
->   - **CLO2:** เลือกใช้และอธิบายเทคโนโลยีไร้สาย โพรโทคอลการสื่อสาร และเทคโนโลยีคลาวด์สำหรับ IoT ได้
+>   - **CLO2:** เลือกใช้และอธิบายเทคโนโลยีไร้สาย โพรโทคอลการสื่อสาร และการแลกเปลี่ยนข้อมูลสำหรับระบบ IoT ได้
 >   - **CLO3:** ออกแบบและพัฒนาระบบ IoT ที่เชื่อมต่อเซนเซอร์/ตัวกระทำ สื่อสารข้อมูล และแสดงผลผ่านโปรแกรมของผู้ใช้ได้
->   - **CLO4:** ปฏิบัติการสร้าง ทดสอบ และประยุกต์ใช้ระบบ IoT พร้อมการเรียนรู้ของเครื่องเบื้องต้น และทำงานเป็นทีมอย่างรับผิดชอบ
+>   - **CLO4:** ปฏิบัติการสร้าง ทดสอบ และประยุกต์ใช้ระบบ IoT ไร้สาย พร้อมแสดงผลข้อมูลแบบเรียลไทม์และทำงานเป็นทีมอย่างรับผิดชอบ
 > - **ผลลัพธ์การเรียนรู้ระดับบทเรียน (LLOs):**
->   - **LLO7.1:** อธิบายคลื่นความถี่ มาตรฐาน และหลักการทำงานของ Wi-Fi (802.11 b/g/n) ได้ (CLO2)
->   - **LLO7.2:** เชื่อมต่อ ESP32 เข้าเครือข่าย Wi-Fi และสร้าง Web Server เพื่อควบคุมอุปกรณ์ได้ (CLO3, CLO4)
->   - **LLO8.1:** เปรียบเทียบ BLE, Zigbee, LoRa และ NB-IoT ด้านระยะทาง พลังงาน และอัตราการส่งข้อมูลได้ (CLO2)
->   - **LLO8.2:** คำนวณ Link Budget และเลือกเทคโนโลยีไร้สายให้เหมาะสมกับโจทย์วิศวกรรมได้ (CLO2)
+>   - **LLO7.1:** อธิบายหลักการทำงานของ Wi-Fi ในโหมด Access Point (SoftAP) และการจัดการ Event ขาเข้า-ออกของเครือข่ายไร้สายได้ (CLO2)
+>   - **LLO7.2:** สื่อสารกับเซนเซอร์ดิจิทัล AHT25 ผ่านบัส I2C และส่งข้อมูลผ่าน Embedded Web Server ในรูปแบบ JSON ได้ (CLO3, CLO4)
+>   - **LLO7.3:** พัฒนา Web Dashboard แบบ Asynchronous Polling พร้อมระบบควบคุมอุปกรณ์หลายช่องสัญญาณ (Multi-channel & Master Controls) ได้ (CLO3, CLO4)
 >
 ---
 
-<div class="chapter-tab-content" data-tab-name="Concept" data-tab-icon="💡" id="concept" markdown="1">
-
-## 7.1 พื้นฐานการสื่อสารไร้สาย (Wireless Communication Fundamentals)
-
-การสื่อสารไร้สาย (Wireless Communication) คือกระบวนการส่งและรับข้อมูลระหว่างอุปกรณ์โดยอาศัยคลื่นแม่เหล็กไฟฟ้า (Electromagnetic Waves) ซึ่งจะแพร่กระจายผ่านตัวกลางที่เป็นอากาศหรืออวกาศ แทนการใช้สายสัญญาณทางกายภาพ (เช่น สายทองแดง หรือสายไฟเบอร์ออปติก) การสื่อสารไร้สายคือหัวใจสำคัญในการปลดล็อกระบบ IoT เนื่องจากอุปกรณ์เซ็นเซอร์ในโรงงานอุตสาหกรรมหรือพื้นที่เกษตรกรรมมักติดตั้งอยู่ในจุดที่เคลื่อนไหว เข้าถึงยาก หรือมีค่าใช้จ่ายสูงหากต้องเดินสายสัญญาณ
-
-### 7.1.1 คลื่นความถี่และย่าน ISM (RF & ISM Bands)
-
-คลื่นวิทยุ (Radio Frequency — RF) เป็นส่วนหนึ่งของสเปกตรัมแม่เหล็กไฟฟ้า (Electromagnetic Spectrum) ที่อยู่ระหว่างความถี่ 3 kHz ถึง 300 GHz อุปกรณ์วิทยุทั่วไปจำเป็นต้องได้รับการควบคุมการใช้งานความถี่โดยหน่วยงานของรัฐ (เช่น กสทช. ในประเทศไทย) เพื่อป้องกันไม่ให้สัญญาณรบกวนกัน
-
-อย่างไรก็ตาม เพื่อส่งเสริมการพัฒนาเทคโนโลยีและการใช้งานเชิงสาธารณะ จึงมีการกำหนดระดับสากลให้มี **ย่านความถี่ ISM (Industrial, Scientific, and Medical Band)** ซึ่งเป็นย่านความถี่ที่ไม่ต้องขอใบอนุญาต (Unlicensed Band) อนุญาตให้ทุกคนสามารถพัฒนาและใช้อุปกรณ์ส่งสัญญาณวิทยุในย่านนี้ได้ภายใต้ข้อกำหนดเรื่องกำลังส่งสูงสุด (Transmit Power Limit) ย่านความถี่ ISM ที่สำคัญในงาน IoT ได้แก่:
-
-*   **ย่าน Sub-GHz (ความถี่ต่ำกว่า 1 GHz):**
-    *   **433 MHz:** นิยมใช้ในรีโมตคอนโทรลรถยนต์ ระบบเปิด-ปิดประตูอัตโนมัติ และระบบสื่อสารระยะสั้น
-    *   **868 MHz (ยุโรป) / 915 MHz (อเมริกา) / 920-925 MHz (ประเทศไทย - อ้างอิงตามมาตรฐาน กสทช. มท. 1031-2562):** เป็นย่านหลักสำหรับเทคโนโลยีระยะไกลพลังงานต่ำ เช่น LoRa และ Zigbee บางประเภท
-    *   *ลักษณะเด่น:* ความยาวคลื่น (Wavelength) มีขนาดใหญ่ ทำให้สามารถสะท้อน เลี้ยวเบน (Diffraction) และทะลุผ่านสิ่งกีดขวาง เช่น ผนังคอนกรีต ต้นไม้ หรือโครงสร้างเหล็กได้ดีมาก มีระยะทางส่งไกลกว่าย่านความถี่สูงที่กำลังส่งเท่ากัน แต่แบนด์วิดท์ต่ำกว่า
-*   **ย่าน 2.4 GHz (ความถี่ 2.400 GHz ถึง 2.4835 GHz):**
-    *   เป็นย่านที่ใช้งานทั่วโลก (Global License-free) ใช้สำหรับ Wi-Fi (802.11b/g/n), Bluetooth/BLE และ Zigbee
-    *   *ลักษณะเด่น:* มีแบนด์วิดท์ที่กว้างกว่า ส่งข้อมูลได้เร็วกว่าย่าน Sub-GHz แต่ความยาวคลื่นมีขนาดสั้น (~12.5 cm) ทำให้ถูกดูดซับโดยสิ่งกีดขวางได้ง่าย โดยเฉพาะน้ำและความชื้น (เนื่องจากโมเลกุลของน้ำมี resonance frequency ในย่านความถี่นี้พอดี) อีกทั้งยังมีปัญหาการรบกวนของสัญญาณที่แออัดเนื่องจากมีอุปกรณ์ใช้งานหนาแน่น
-*   **ย่าน 5 GHz และ 6 GHz:**
-    *   ใช้สำหรับ Wi-Fi ความเร็วสูง (Wi-Fi 5/6/7) มีช่องสัญญาณกว้างและไม่มีสัญญาณรบกวนจากอุปกรณ์บลูทูธ แต่ระยะทางส่งสั้นลงมากและมีความสามารถในการทะลุทะลวงผนังต่ำ
-
-### 7.1.2 แบนด์วิดท์ (Bandwidth)
-
-แบนด์วิดท์คือ **ความกว้างของช่วงความถี่ (Frequency Range)** ที่ใช้ในการรับส่งสัญญาณวิทยุ มีหน่วยวัดเป็นเฮิรตซ์ (Hz) เช่น ช่องสัญญาณ LoRa กว้าง 125 kHz ช่องสัญญาณ Wi-Fi กว้าง 20 MHz หรือ 40 MHz
-ตามหลักการทางทฤษฎีสารสนเทศ (Shannon-Hartley Theorem):
-$$C = B \log_2 \left(1 + \frac{S}{N}\right)$$
-โดยที่ $C$ คือความจุช่องสัญญาณ (Channel Capacity - bps), $B$ คือแบนด์วิดท์ (Bandwidth - Hz) และ $S/N$ คืออัตราส่วนสัญญาณต่อสัญญาณรบกวน (Signal-to-Noise Ratio)
-ดังนั้น ยิ่งแบนด์วิดท์กว้างขึ้น อัตราการรับส่งข้อมูล (Data Rate) สูงสุดก็จะยิ่งมากขึ้น แต่การใช้แบนด์วิดท์ที่กว้างจะทำให้อุปกรณ์รับสัญญาณรบกวน (Noise) เข้ามามากขึ้นเช่นกัน และจำเป็นต้องประมวลผลสัญญาณที่ซับซ้อนขึ้น ส่งผลให้กินพลังงานเพิ่มขึ้น
-
-### 7.1.3 การลดทอนสัญญาณ (Signal Attenuation)
-
-เมื่อคลื่นวิทยุเดินทางออกจากสายอากาศส่ง กำลังของสัญญาณจะลดทอนลงตามระยะทางและสิ่งแวดล้อม ปรากฏการณ์นี้อธิบายได้ด้วยทฤษฎีทางฟิสิกส์และคณิตศาสตร์ดังนี้:
-
-#### 1. กฎกำลังสองผกผัน (Inverse Square Law)
-ในสภาวะที่ไม่มีสิ่งกีดขวางและไม่มีการดูดซับของชั้นบรรยากาศ (Free Space) พลังงานคลื่นแม่เหล็กไฟฟ้าจะกระจายออกเป็นทรงกลมรอบสายอากาศแบบรอบตัว (Isotropic Antenna) ความเข้มของพลังงานต่อพื้นที่ผิวจะลดลงเป็นสัดส่วนผกผันกับระยะทางยกกำลังสอง:
-$$P_r \propto \frac{P_t}{d^2}$$
-โดยที่ $P_r$ คือกำลังสัญญาณที่ฝั่งรับ, $P_t$ คือกำลังสัญญาณที่ฝั่งส่ง และ $d$ คือระยะห่างระหว่างจุดส่งและจุดรับ
-
-#### 2. แบบจำลองความสูญเสียในเส้นทางฟรีสเปซ (Free Space Path Loss — FSPL)
-ความสูญเสียในเส้นทางฟรีสเปซ (FSPL) คือค่าการลดทอนของกำลังสัญญาณเมื่อคลื่นเดินทางผ่านพื้นที่ว่างโดยไม่มีสิ่งกีดขวาง คำนวณได้ดังนี้:
-$$\text{FSPL} = \left(\frac{4\pi d}{\lambda}\right)^2 = \left(\frac{4\pi d f}{c}\right)^2$$
-เมื่อแปลงให้อยู่ในรูปของสเกลลอการิทึม (เดซิเบล - dB) จะได้สูตรการคำนวณความสูญเสียดังนี้:
-$$\text{FSPL (dB)} = 20\log_{10}(d) + 20\log_{10}(f) + 20\log_{10}\left(\frac{4\pi}{c}\right)$$
-หากต้องการคำนวณกำลังสัญญาณที่ฝั่งรับ ($P_r$) โดยรวมผลของกำลังส่ง ($P_t$) และกำลังขยายของสายอากาศส่งและรับ ($G_t, G_r$ ในหน่วย dBi) จะใช้ **สมการส่งผ่านของฟรีส (Friis Transmission Equation)** ดังนี้:
-$$P_r\text{ (dBm)} = P_t\text{ (dBm)} + G_t\text{ (dBi)} + G_r\text{ (dBi)} - \text{FSPL (dB)}$$
-
-หากสมมติให้กำลังขยายของสายอากาศส่งและรับ ($G_t, G_r$) เท่ากับ $0\text{ dBi}$ และแทนค่าความเร็วแสง $c \approx 3 \times 10^8\text{ m/s}$ จะได้สูตรแบบง่ายเมื่อระยะทาง $d$ เป็นเมตร (m) และความถี่ $f$ เป็นเฮิรตซ์ (Hz):
-$$\text{FSPL (dB)} = 20\log_{10}(d) + 20\log_{10}(f) - 147.56$$
-และหากแปลงหน่วยระยะทางเป็นกิโลเมตร ($d_{\text{km}}$) และความถี่เป็นเมกะเฮิรตซ์ ($f_{\text{MHz}}$) จะได้สูตรมาตรฐานที่ใช้ในงานวิศวกรรมวิทยุ:
-$$\text{FSPL (dB)} = 20\log_{10}(d_{\text{km}}) + 20\log_{10}(f_{\text{MHz}}) + 32.44$$
-*การวิเคราะห์จากสมการ:* หากความถี่สูงขึ้น ($f$ เพิ่มขึ้น) ความสูญเสียในสเปซจะเพิ่มขึ้นตามลอการิทึม นี่เป็นเหตุผลว่าทำไมย่าน Sub-GHz (เช่น 923 MHz) จึงมีค่าการลดทอนที่ต่ำกว่าและเดินทางได้ไกลกว่าย่าน 2.4 GHz มากที่ระดับกำลังส่งเท่ากัน
-
-#### 3. ค่า RSSI (Received Signal Strength Indicator)
-RSSI คือระดับกำลังสัญญาณที่เครื่องรับสแกนและวัดได้ มีหน่วยเป็น **dBm (Decibels relative to 1 milliwatt)** เป็นค่าลอการิทึมที่เทียบกำลังไฟกับ 1 มิลลิวัตต์:
-$$\text{Power (dBm)} = 10\log_{10}\left(\frac{P_{\text{mW}}}{1\text{ mW}}\right)$$
-*   $0\text{ dBm} = 1\text{ mW}$
-*   $-30\text{ dBm} = 1\text{ }\mu\text{W}$ (ระดับสัญญาณดีเยี่ยม มักอยู่ใกล้เครื่องส่งมาก)
-*   $-70\text{ dBm} = 0.1\text{ nW}$ (ระดับสัญญาณปานกลาง ใช้งานทั่วไปได้เสถียร)
-*   $-90\text{ dBm}$ ถึง $-100\text{ dBm}$ (ระดับสัญญาณอ่อนมาก มีโอกาสที่ข้อมูลจะสูญหายสูง หรือเชื่อมต่อหลุด)
-*   $-120\text{ dBm}$ ขึ้นไป (สัญญาณต่ำมากจนใกล้เคียงระดับ Noise Floor วิทยุทั่วไปไม่สามารถถอดรหัสได้ ยกเว้น LoRa ที่มีกลไกพิเศษ)
-
-#### 4. SNR (Signal-to-Noise Ratio)
-SNR คืออัตราส่วนระหว่างกำลังของสัญญาณที่ต้องการรับเทียบกับกำลังของสัญญาณรบกวน (Noise floor) มีหน่วยเป็นเดซิเบล (dB):
-$$\text{SNR (dB)} = P_{\text{signal (dBm)}} - P_{\text{noise (dBm)}}$$
-*   **ค่า SNR เป็นบวก (เช่น +10 dB):** สัญญาณมีความแรงกว่าสัญญาณรบกวน ถอดรหัสข้อมูลได้ง่าย
-*   **ค่า SNR เป็นศูนย์หรือติดลบ (เช่น -5 dB):** สัญญาณมีความแรงเท่ากันหรือน้อยกว่าสัญญาณรบกวน ในวิทยุทั่วไป (เช่น Wi-Fi) จะไม่สามารถใช้งานได้ แต่ LoRa สามารถถอดรหัสสัญญาณที่ติดลบได้ถึง -20 dB เนื่องจากประสิทธิภาพของการมอดูเลตแบบ CSS
-
----
-
-## 7.2 Wi-Fi
-
-Wi-Fi คือเทคโนโลยีเครือข่ายไร้สายระยะใกล้ถึงปานกลางที่ได้รับความนิยมสูงที่สุด ออกแบบมาตามมาตรฐานของสมาคม IEEE ในรหัสกลุ่ม **802.11** โดยเน้นการให้บริการรับส่งข้อมูลความเร็วสูงและเชื่อมโยงเข้ากับเครือข่ายอินเทอร์เน็ตผ่านโครงสร้างพื้นฐานที่มีอยู่เดิม (Access Point และ Router)
-
-### 7.2.1 รายละเอียดมาตรฐาน IEEE 802.11 แต่ละยุค
-
-ความต้องการใช้งานในระบบ IoT แตกต่างจากคอมพิวเตอร์ทั่วไป บางงานต้องการอัตราข้อมูลที่สูงมาก (เช่น กล้องวงจรปิด IP) แต่บางงานต้องการระยะทางไกลและการประหยัดพลังงาน มาตรฐานวิทยุ 802.11 จึงได้รับการปรับปรุงและพัฒนาออกมาหลายรุ่นย่อย ดังแสดงในตารางเปรียบเทียบ:
-
-| มาตรฐาน | ชื่อยุค (Generational Name) | ช่วงความถี่หลัก (Frequency) | ความกว้างช่องสัญญาณ (Channel Width) | อัตราส่งข้อมูลสูงสุด (Max Data Rate) | ระยะทางใช้งานทั่วไป (Typical Range) | จุดประสงค์และลักษณะการใช้งานในระบบ IoT |
-|---|---|---|---|---|---|---|
-| **802.11b** | Wi-Fi 1 | 2.4 GHz | 22 MHz | 11 Mbps | ~35 m (ในอาคาร) | ยุคบุกเบิก ใช้การมอดูเลตแบบ DSSS ทนทานต่อการรบกวนระดับหนึ่ง แต่ความเร็วต่ำมาก ปัจจุบันยังพบในระบบ legacy |
-| **802.11g** | Wi-Fi 3 | 2.4 GHz | 20 MHz | 54 Mbps | ~38 m (ในอาคาร) | เปลี่ยนมาใช้การมอดูเลตแบบ OFDM อัตราข้อมูลสูงขึ้น เข้ากันได้กับอุปกรณ์ 802.11b ยึดเป็นมาตรฐานวิทยุพื้นฐาน |
-| **802.11n** | Wi-Fi 4 | 2.4 GHz / 5 GHz | 20 MHz, 40 MHz | 72 - 600 Mbps | ~70 m (ในอาคาร) | **รองรับโดยชิป ESP32** เพิ่มเทคโนโลยี MIMO (Multi-Input Multi-Output) ใช้สายอากาศหลายต้น ส่งสัญญาณครอบคลุมและมีประสิทธิภาพสูงสุดในย่าน 2.4 GHz |
-| **802.11ac** | Wi-Fi 5 | 5 GHz | 20, 40, 80, 160 MHz | 433 Mbps - 6.93 Gbps | ~35 m (ในอาคาร) | เน้นส่งข้อมูลเร็วสูงมากเฉพาะในย่าน 5 GHz ลดสัญญาณรบกวนจากอุปกรณ์อื่น แต่ระยะทางสั้นลงและทะลุผนังปูนได้แย่ |
-| **802.11ax** | Wi-Fi 6 / 6E | 2.4 GHz / 5 GHz / 6 GHz | 20 - 160 MHz | Up to 9.6 Gbps | ~30 m (ในอาคาร) | ใช้เทคโนโลยี OFDMA และ 1024-QAM จัดการช่องสัญญาณที่มีอุปกรณ์หนาแน่นได้ดีขึ้น เหมาะกับโรงงานอัจฉริยะที่มีจุดเซ็นเซอร์ Wi-Fi เป็นร้อยจุด |
-| **802.11ah** | Wi-Fi HaLow | Sub-1 GHz (920-925 MHz ในไทย) | 1, 2, 4, 8, 16 MHz | 150 kbps - 8.7 Mbps | **~1 km** | **พัฒนาเพื่อ IoT โดยเฉพาะ** ทำงานที่ย่านความถี่ต่ำ ประหยัดพลังงานมาก รองรับโหมด Sleep ระยะไกลมาก เหมาะกับงานเกษตรกรรมและโรงงานขนาดใหญ่ |
-
-### 7.2.2 สถาปัตยกรรมการทำงานของ Wi-Fi ใน ESP32
-
-ไมโครคอนโทรลเลอร์ ESP32 มีชิปวิทยุ Wi-Fi 802.11b/g/n ในตัว รองรับโหมดการทำงาน 3 รูปแบบหลัก ซึ่งนักพัฒนาสามารถประยุกต์ใช้งานได้ตามความเหมาะสม:
-
-1.  **Station Mode (STA):** ESP32 ทำงานเป็นอุปกรณ์ลูกข่าย (Client) เชื่อมต่อเข้ากับ Access Point (AP) หรือเราเตอร์ในบ้านหรือโรงงานเพื่อเข้าสู่เครือข่าย LAN/Internet โหมดนี้เหมาะสำหรับส่งข้อมูลขึ้น Cloud
-2.  **Access Point Mode (AP):** ESP32 ทำหน้าที่เป็นจุดกระจายสัญญาณ สร้างเครือข่าย Wi-Fi ท้องถิ่นของตัวเองและจ่าย IP Address ให้อุปกรณ์อื่น (เช่น โน้ตบุ๊ก หรือ สมาร์ตโฟน) เชื่อมต่อเข้ามา โหมดนี้มักนิยมใช้ในการกำหนดค่าเริ่มต้นให้บอร์ด (Configuration Mode) เช่น ผู้ใช้ต่อ Wi-Fi ของบอร์ดเพื่อกรอกรหัสผ่าน Wi-Fi บ้านผ่านหน้าเว็บเบราว์เซอร์
-3.  **AP+STA Dual Mode:** ESP32 ทำงานทั้งสองโหมดพร้อมกัน ช่วยให้บอร์ดสามารถเชื่อมต่อเครือข่ายภายนอกเพื่อทำงานหลักได้ ในขณะเดียวกันก็ยังเปิดช่องทางให้ช่างเทคนิคเชื่อมต่อไร้สายเข้ามาตรวจสอบหรือตั้งค่าการทำงาน (Diagnostic Interface) ได้โดยตรง
-
-### 7.2.3 ขั้นตอนการเชื่อมต่อเครือข่าย Wi-Fi (Wi-Fi Connection Process)
-
-ก่อนที่อุปกรณ์ Wi-Fi Client (เช่น ESP32) จะสามารถส่งข้อมูลผ่านเครือข่ายได้ จะต้องผ่านกระบวนการเชื่อมต่อ (Link Layer Connection) 4 ขั้นตอนดังนี้:
-
-<div style="text-align: center; margin: 20px 0;">
-<svg id="ch6-svg1" viewBox="0 0 760 510" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
-  <title>กระบวนการ Wi-Fi Handshake</title>
-  <style>
-    #ch6-svg1 .svg1-bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
-    #ch6-svg1 .svg1-mcu { fill: #faf5ff; stroke: #7c3aed; stroke-width: 2; }
-    #ch6-svg1 .svg1-comp { fill: #ffffff; stroke: #334155; stroke-width: 2; }
-    #ch6-svg1 .svg1-title { font-size: 14px; font-weight: 700; fill: #7c3aed; text-anchor: middle; }
-    #ch6-svg1 .svg1-sub { font-size: 11px; fill: #334155; text-anchor: middle; }
-    #ch6-svg1 .svg1-lifeline { stroke: #334155; stroke-width: 2; stroke-dasharray: 5 4; }
-    #ch6-svg1 .svg1-arrow { stroke: #334155; stroke-width: 2.5; stroke-linecap: round; }
-    #ch6-svg1 .svg1-head { fill: #334155; }
-    #ch6-svg1 .svg1-msg { font-size: 11px; fill: #334155; font-weight: 600; text-anchor: middle; }
-    #ch6-svg1 .svg1-num-bg { fill: #ffffff; stroke: #334155; stroke-width: 1.5; }
-    #ch6-svg1 .svg1-num { font-size: 10px; fill: #334155; font-weight: bold; text-anchor: middle; }
-    #ch6-svg1 .svg1-phase { font-size: 10.5px; fill: #334155; font-weight: bold; text-anchor: middle; }
-    #ch6-svg1 .svg1-pkt-req {
-      fill: none; stroke: #f59e0b; stroke-width: 3.5; stroke-linecap: round;
-      stroke-dasharray: 10 12;
-      animation: svg1-march-r 2.4s linear infinite;
-    }
-    #ch6-svg1 .svg1-pkt-resp {
-      fill: none; stroke: #16a34a; stroke-width: 3.5; stroke-linecap: round;
-      stroke-dasharray: 10 12;
-      animation: svg1-march-l 2.4s linear infinite;
-    }
-    #ch6-svg1 .svg1-pkt-both {
-      fill: none; stroke: #7c3aed; stroke-width: 3.5; stroke-linecap: round;
-      stroke-dasharray: 10 12;
-      animation: svg1-march-r 2s linear infinite;
-    }
-    @keyframes svg1-march-r { to { stroke-dashoffset: -44; } }
-    @keyframes svg1-march-l { to { stroke-dashoffset: 44; } }
-  </style>
-  <rect x="5" y="5" width="750" height="500" rx="12" class="svg1-bg"/>
-  <rect x="18" y="110" width="100" height="78" rx="4" class="svg1-comp"/>
-  <text x="68" y="137" class="svg1-phase">① สแกนสัญญาณ</text>
-  <text x="68" y="153" class="svg1-phase">(Scanning)</text>
-  <text x="68" y="169" class="svg1-phase">Probe Req/Resp</text>
-  <rect x="18" y="205" width="100" height="60" rx="4" class="svg1-comp"/>
-  <text x="68" y="228" class="svg1-phase">② พิสูจน์สิทธิ์</text>
-  <text x="68" y="244" class="svg1-phase">(Authentication)</text>
-  <rect x="18" y="280" width="100" height="60" rx="4" class="svg1-comp"/>
-  <text x="68" y="303" class="svg1-phase">③ เชื่อมโยง</text>
-  <text x="68" y="319" class="svg1-phase">(Association)</text>
-  <rect x="18" y="355" width="100" height="120" rx="4" class="svg1-comp"/>
-  <text x="68" y="378" class="svg1-phase">④ เข้ารหัสลับ</text>
-  <text x="68" y="394" class="svg1-phase">4-Way Handshake</text>
-  <text x="68" y="410" class="svg1-phase">(WPA2/WPA3)</text>
-  <line x1="210" y1="95" x2="210" y2="490" class="svg1-lifeline"/>
-  <line x1="570" y1="95" x2="570" y2="490" class="svg1-lifeline"/>
-  <rect x="140" y="28" width="140" height="58" rx="8" class="svg1-mcu"/>
-  <text x="210" y="52" class="svg1-title">ลูกข่าย Wi-Fi</text>
-  <text x="210" y="70" class="svg1-sub">(ESP32 Station)</text>
-  <rect x="500" y="28" width="140" height="58" rx="8" class="svg1-mcu"/>
-  <text x="570" y="52" class="svg1-title">จุดเข้าใช้งาน</text>
-  <text x="570" y="70" class="svg1-sub">(Access Point — AP)</text>
-  <line x1="210" y1="130" x2="558" y2="130" class="svg1-arrow"/>
-  <polygon points="558,126 570,130 558,134" class="svg1-head"/>
-  <path d="M 210 130 L 570 130" class="svg1-pkt-req"/>
-  <circle cx="175" cy="130" r="10" class="svg1-num-bg"/>
-  <text x="175" y="134" class="svg1-num">1</text>
-  <text x="390" y="122" class="svg1-msg">Probe Request — ค้นหาสัญญาณ AP</text>
-  <line x1="570" y1="165" x2="222" y2="165" class="svg1-arrow"/>
-  <polygon points="222,161 210,165 222,169" class="svg1-head"/>
-  <path d="M 570 165 L 210 165" class="svg1-pkt-resp"/>
-  <circle cx="605" cy="165" r="10" class="svg1-num-bg"/>
-  <text x="605" y="169" class="svg1-num">2</text>
-  <text x="390" y="157" class="svg1-msg">Probe Response — ตอบกลับความพร้อม</text>
-  <line x1="210" y1="220" x2="558" y2="220" class="svg1-arrow"/>
-  <polygon points="558,216 570,220 558,224" class="svg1-head"/>
-  <path d="M 210 220 L 570 220" class="svg1-pkt-req"/>
-  <circle cx="175" cy="220" r="10" class="svg1-num-bg"/>
-  <text x="175" y="224" class="svg1-num">3</text>
-  <text x="390" y="212" class="svg1-msg">Authentication Request — ขอพิสูจน์สิทธิ์</text>
-  <line x1="570" y1="253" x2="222" y2="253" class="svg1-arrow"/>
-  <polygon points="222,249 210,253 222,257" class="svg1-head"/>
-  <path d="M 570 253 L 210 253" class="svg1-pkt-resp"/>
-  <circle cx="605" cy="253" r="10" class="svg1-num-bg"/>
-  <text x="605" y="257" class="svg1-num">4</text>
-  <text x="390" y="245" class="svg1-msg">Authentication Response — ยืนยันสิทธิ์เบื้องต้น</text>
-  <line x1="210" y1="294" x2="558" y2="294" class="svg1-arrow"/>
-  <polygon points="558,290 570,294 558,298" class="svg1-head"/>
-  <path d="M 210 294 L 570 294" class="svg1-pkt-req"/>
-  <circle cx="175" cy="294" r="10" class="svg1-num-bg"/>
-  <text x="175" y="298" class="svg1-num">5</text>
-  <text x="390" y="286" class="svg1-msg">Association Request — ขอเชื่อมต่อลิงก์</text>
-  <line x1="570" y1="327" x2="222" y2="327" class="svg1-arrow"/>
-  <polygon points="222,323 210,327 222,331" class="svg1-head"/>
-  <path d="M 570 327 L 210 327" class="svg1-pkt-resp"/>
-  <circle cx="605" cy="327" r="10" class="svg1-num-bg"/>
-  <text x="605" y="331" class="svg1-num">6</text>
-  <text x="390" y="319" class="svg1-msg">Association Response — ยอมรับลิงก์สำเร็จ</text>
-  <rect x="185" y="356" width="400" height="118" rx="4" class="svg1-comp"/>
-  <text x="385" y="375" class="svg1-msg">กระบวนการ EAPOL 4-Way Handshake (WPA2/WPA3)</text>
-  <line x1="210" y1="393" x2="558" y2="393" class="svg1-arrow"/>
-  <polygon points="558,389 570,393 558,397" class="svg1-head"/>
-  <path d="M 210 393 L 570 393" class="svg1-pkt-both"/>
-  <text x="390" y="387" class="svg1-msg" style="font-size:9.5px;">Msg 1: ANonce (AP → Client)</text>
-  <line x1="570" y1="418" x2="222" y2="418" class="svg1-arrow"/>
-  <polygon points="222,414 210,418 222,422" class="svg1-head"/>
-  <path d="M 570 418 L 210 418" class="svg1-pkt-both" style="animation-direction:reverse;"/>
-  <text x="390" y="412" class="svg1-msg" style="font-size:9.5px;">Msg 2: SNonce + MIC (Client → AP)</text>
-  <line x1="210" y1="443" x2="558" y2="443" class="svg1-arrow"/>
-  <polygon points="558,439 570,443 558,447" class="svg1-head"/>
-  <path d="M 210 443 L 570 443" class="svg1-pkt-both"/>
-  <text x="390" y="437" class="svg1-msg" style="font-size:9.5px;">Msg 3: GTK + MIC (AP → Client)</text>
-  <line x1="570" y1="462" x2="222" y2="462" class="svg1-arrow"/>
-  <polygon points="222,458 210,462 222,466" class="svg1-head"/>
-  <path d="M 570 462 L 210 462" class="svg1-pkt-both" style="animation-direction:reverse;"/>
-  <text x="390" y="456" class="svg1-msg" style="font-size:9.5px;">Msg 4: ACK — คีย์ PTK ใช้งานได้แล้ว</text>
-  <circle cx="175" cy="415" r="10" class="svg1-num-bg"/>
-  <text x="175" y="419" class="svg1-num">7</text>
-</svg>
+<div class="chapter-tabs-nav" markdown="0">
+  <button class="chapter-tab-btn active" data-tab-target="#concept">💡 ทฤษฎีและหลักการ (Concept)</button>
+  <button class="chapter-tab-btn" data-tab-target="#sim">🎮 ปฏิบัติการและโค้ด (Interactive Sim)</button>
+  <button class="chapter-tab-btn" data-tab-target="#waveform">📊 สรุปและอ้างอิง (Reference / Summary)</button>
+  <button class="chapter-tab-btn" data-tab-target="#challenge">🏆 แบบฝึกหัดท้าทาย (Challenge)</button>
 </div>
 
-1.  **Scanning (การค้นหาสัญญาณ):** Client ทำการกวาดช่องความถี่เพื่อค้นหา AP ที่กำลังทำงาน
-    *   *Passive Scanning:* รอฟังสัญญาณ **Beacon Frame** ที่ AP ส่งออกมาเป็นรอบเวลาปกติ (ปกติทุก 100 ms)
-    *   *Active Scanning:* Client ส่งเฟรม **Probe Request** ออกไปในทุกช่องความถี่ แล้วรอฟัง **Probe Response** ตอบกลับจาก AP ที่มี SSID ตรงกับที่ต้องการค้นหา
-2.  **Authentication (การพิสูจน์สิทธิ์ระดับลิงก์):** เป็นขั้นตอนเริ่มต้นเพื่อสร้างความน่าเชื่อถือระดับวิทยุ ซึ่งส่วนใหญ่มักเป็นระบบ *Open System Authentication* (ยอมรับการเชื่อมต่อวิทยุกับอุปกรณ์ทุกตัวโดยยังไม่ได้ตรวจสอบรหัสผ่านจริง)
-3.  **Association (การเชื่อมโยงสถานะ):** Client ส่งเฟรม **Association Request** เพื่อขอบันทึกสถานะการเชื่อมต่อกับ AP เมื่อ AP ตอบรับด้วย **Association Response** ทั้งคู่จะถือว่ามีการเชื่อมต่อทางกายภาพทางวิทยุสำเร็จ
-4.  **4-Way Handshake (กระบวนการแลกเปลี่ยนกุญแจเข้ารหัสลับ):** ในกรณีที่เครือข่ายใช้การเข้ารหัสแบบความปลอดภัยสูง (เช่น WPA2 หรือ WPA3 Personal) จะเกิดการแลกเปลี่ยนข้อมูล 4 ขั้นตอนระหว่าง AP และ Client โดยไม่มีการส่งรหัสผ่านจริงผ่านอากาศ แต่ใช้รหัสผ่าน (PSK) ร่วมกับค่าสุ่ม (ANonce และ SNonce) เพื่อคำนวณและสร้างคีย์ชั่วคราว **PTK (Pairwise Transient Key)** เพื่อใช้เข้ารหัสข้อมูลในการสื่อสารหลังจากนั้น ป้องกันการดักจับข้อมูลและการโจมตีแบบ Replay Attack
-
-### 7.2.4 ความปลอดภัย WPA3 และ MU-MIMO
-
-#### WPA3 (Wi-Fi Protected Access 3)
-WPA3 เป็นมาตรฐานความปลอดภัยล่าสุดที่ประกาศโดย Wi-Fi Alliance ในปี 2018 มีการปรับปรุงสำคัญเหนือ WPA2:
-
-*   **SAE (Simultaneous Authentication of Equals):** แทนที่ PSK handshake แบบเดิม ใช้กลไก Dragonfly Key Exchange ซึ่งทนทานต่อการโจมตีแบบ Offline Dictionary Attack และ KRACK (Key Reinstallation Attack) เนื่องจากแต่ละ session ใช้คีย์ชั่วคราวที่ไม่ซ้ำกัน (Forward Secrecy)
-*   **Enhanced Open (OWE):** สำหรับเครือข่ายสาธารณะที่ไม่ต้องใช้รหัสผ่าน OWE ยังคงเข้ารหัสข้อมูลแต่ละการเชื่อมต่อแยกกัน ป้องกันการดักจับของผู้ร่วมใช้เครือข่ายเดียวกัน
-*   **192-bit Security Suite:** สำหรับองค์กรระดับสูง รองรับ GCMP-256 และ HMAC-SHA-384
-
-#### MU-MIMO (Multi-User MIMO)
-เทคโนโลยี MIMO ใน Wi-Fi 4 (802.11n) เป็นแบบ **SU-MIMO (Single-User MIMO)** ซึ่ง AP สามารถส่งสัญญาณหาอุปกรณ์เดียวต่อรอบเวลาเท่านั้น ส่วน **MU-MIMO (Multi-User MIMO)** ที่เริ่มใช้ใน Wi-Fi 5 (802.11ac Wave 2) และปรับปรุงใน Wi-Fi 6 (802.11ax) ช่วยให้ AP สามารถ:
-
-*   ส่งสัญญาณหาอุปกรณ์หลายตัวพร้อมกัน **ในรอบเวลาเดียว** โดยใช้ Beamforming ชี้ทิศทางสัญญาณแยกกัน
-*   Wi-Fi 6 รองรับ **8×8 Downlink MU-MIMO** และ **4×4 Uplink MU-MIMO** ทำให้ throughput รวมของ AP เพิ่มขึ้นอย่างมากในสภาพแวดล้อมที่มีอุปกรณ์หนาแน่น
-
-| เทคโนโลยี | จำนวน Spatial Streams | ทิศทาง | ประโยชน์หลัก |
-|---|---|---|---|
-| SU-MIMO (Wi-Fi 4) | สูงสุด 4 streams ต่อ 1 user | DL เท่านั้น | เพิ่ม throughput ต่ออุปกรณ์ |
-| DL MU-MIMO (Wi-Fi 5) | 4 users × 4 streams | DL เท่านั้น | ลดคอขวดใน Downlink |
-| UL+DL MU-MIMO (Wi-Fi 6) | 8 users × 8 streams | DL + UL | ประสิทธิภาพสูงสุดในโรงงาน IoT |
-
-### 7.2.5 โหมดการประหยัดพลังงาน Wi-Fi ของ ESP32
-
-ESP32 มีโหมดจัดการพลังงานสำหรับวิทยุ Wi-Fi อยู่ 3 ระดับ นักพัฒนาสามารถเลือกให้เหมาะกับงานได้:
-
-| โหมด | กลไก | การสิ้นเปลืองกระแส (approx.) | กรณีใช้งาน |
-|---|---|---|---|
-| **Modem Sleep** | วงจร Wi-Fi ปิด-เปิดตามกรอบ DTIM Beacon (ตั้งค่าได้ 1-10) แต่ CPU ยังทำงาน | ~15-20 mA (เฉลี่ย) | เซ็นเซอร์ที่ต้องส่งข้อมูลทุกไม่กี่วินาที |
-| **Light Sleep** | CPU หยุดชั่วคราว วิทยุปิดระหว่างรอ DTIM ระบบตื่นจากตัวจับเวลาหรือ GPIO | ~0.8-2 mA (เฉลี่ย) | งานที่ตื่น-หลับเป็นรอบ ยังต้องรักษาการเชื่อมต่อ Wi-Fi |
-| **Deep Sleep** | ปิดทุกอย่างยกเว้น RTC (Real-Time Clock) วิทยุตัดการเชื่อมต่อทั้งหมด | ~10-150 µA | เซ็นเซอร์แบตเตอรี่ที่ส่งข้อมูลเป็นนาทีหรือชั่วโมง ต้องเชื่อมต่อ Wi-Fi ใหม่ทุกครั้ง |
-
-```cpp
-// ตัวอย่างการตั้งค่า Modem Sleep
-WiFi.setSleep(true);  // เปิด Modem Sleep อัตโนมัติตาม DTIM
-
-// ตัวอย่างการเข้า Light Sleep 10 วินาที
-esp_sleep_enable_timer_wakeup(10 * 1000000ULL);
-esp_light_sleep_start();
-
-// ตัวอย่างการเข้า Deep Sleep 30 วินาที
-esp_sleep_enable_timer_wakeup(30 * 1000000ULL);
-esp_deep_sleep_start(); // หลังจากนี้ ESP32 จะ reset ใหม่เมื่อตื่น
-```
-
-### 7.2.6 การกำหนดค่า IP: DHCP vs Static IP
-
-หลังจากเชื่อมโยงระดับลิงก์สำเร็จ อุปกรณ์จำเป็นต้องได้รับ IP Address ในระดับ Network Layer เพื่อให้สามารถจัดส่งแพ็กเกจข้อมูลในเครือข่าย TCP/IP ได้:
-
-*   **DHCP (Dynamic Host Configuration Protocol):** เป็นค่าเริ่มต้นที่อุปกรณ์ใช้งานทั่วไป โดย ESP32 จะส่งคำขอแบบ Broadcast ไปในเครือข่ายเพื่อขอรับ IP Address, Subnet Mask, Gateway และ DNS Server จากอุปกรณ์เราเตอร์หรือ DHCP Server ขั้นตอนนี้มีข้อดีคือมีความยืดหยุ่นสูง ป้องกันปัญหา IP ซ้ำซ้อน (IP Conflict) แต่มีข้อจำกัดคือ IP ของ ESP32 อาจเปลี่ยนไปทุกครั้งที่บอร์ดรีบูตเครื่อง
-*   **Static IP (ที่อยู่ IP คงที่):** เป็นการกำหนดค่าคงที่ลงในโค้ดของบอร์ดโดยตรง ข้อดีคือเราจะทราบ IP ของบอร์ดที่แน่นอนตลอดเวลา ทำให้เครื่องคอมพิวเตอร์หรือเซิร์ฟเวอร์ตัวอื่นสามารถวิ่งมาดึงข้อมูล (Pull Data) จาก ESP32 ได้อย่างถูกต้องโดยไม่ต้องสแกนหาตัวอุปกรณ์ในเครือข่าย เหมาะสำหรับการตั้งค่าบอร์ดเป็น Web Server หรือ TCP Server ในระบบควบคุมในโรงงาน
-
-### 7.2.7 แนวคิดพอร์ต TCP (TCP Ports)
-
-โปรโตคอล TCP (Transmission Control Protocol) ทำงานในชั้น Transport Layer ควบคุมการรับส่งข้อมูลแบบเน้นการเชื่อมต่อ (Connection-Oriented) โดยมีกลไกตรวจสอบความถูกต้องและการตอบรับข้อมูล (ACK)
-ในการระบุว่าข้อมูลที่ได้รับจากเครือข่ายควรถูกส่งไปยังแอปพลิเคชันใดในระบบปฏิบัติการ จะมีการระบุหมายเลข **Port (พอร์ต)** ซึ่งเป็นค่าตัวเลขขนาด 16 บิต (มีค่าระหว่าง 1 ถึง 65535) พอร์ตที่สำคัญในงาน IoT ได้แก่:
-*   **Port 80 (HTTP):** ใช้สำหรับการสื่อสารเว็บเพจทั่วไปแบบไม่เข้ารหัส
-*   **Port 443 (HTTPS):** ใช้สำหรับเว็บเพจที่มีการเข้ารหัส SSL/TLS เพื่อความปลอดภัย
-*   **Port 1883 (MQTT):** ใช้สำหรับการสื่อสารของโปรโตคอล MQTT แบบมาตรฐาน
-*   **Port 8883 (MQTTS):** ใช้สำหรับ MQTT ที่เข้ารหัสความปลอดภัยด้วย SSL/TLS
-*   **Port 502 (Modbus TCP):** ใช้สำหรับการรับส่งข้อมูลอุตสาหกรรมด้วยโปรโตคอล Modbus ผ่านเครือข่าย Ethernet หรือ Wi-Fi
-
 ---
 
-### 7.2.8 ตัวอย่างโค้ด ESP32 Wi-Fi (Non-blocking & Static IP / DHCP Web Server)
+<div class="chapter-tab-content active" data-tab-name="Concept" data-tab-icon="💡" id="concept" markdown="1">
 
-ตัวอย่างโค้ดด้านล่างแสดงการออกแบบการเชื่อมต่อ Wi-Fi ที่ดีที่สุดสำหรับอุตสาหกรรม โดยใช้หลักการทำงานแบบ **Non-blocking** และการตั้งค่า Static IP พร้อมฟังก์ชันป้องกันบอร์ดค้างจาก Client
+## 7.1 สถาปัตยกรรมการสื่อสารไร้สาย Wi-Fi บนไมโครคอนโทรลเลอร์ ESP32-S3
+
+ในงานวิศวกรรมเครื่องกลและระบบอัตโนมัติอุตสาหกรรม มีหลายสถานการณ์ที่ไม่สามารถเชื่อมต่ออุปกรณ์เข้ากับโครงสร้างพื้นฐานเครือข่ายอินเทอร์เน็ตเดิมได้ เช่น เครื่องจักรกลที่ติดตั้งในพื้นที่ห่างไกล, ตู้ควบคุมเคลื่อนที่ (Mobile Machine Consoles), หรือเครื่องจักรที่ต้องการแยกเครือข่ายเพื่อความปลอดภัย (Air-gapped Systems) ไมโครคอนโทรลเลอร์ **ESP32-S3** จึงเป็นชิปประมวลผลที่ได้รับความนิยมอย่างสูง เนื่องจากมีโมดูลวิทยุ Wi-Fi 2.4 GHz (802.11 b/g/n) และ Bluetooth 5 (LE) ภายในตัว สามารถทำหน้าที่เป็นตัวส่งและสร้างเครือข่ายไร้สายได้ด้วยตนเอง
+
+### 7.1.1 การเปรียบเทียบโหมด Wi-Fi: Station (STA) vs Soft Access Point (SoftAP)
+
+โมดูล Wi-Fi ของ ESP32 รองรับรูปแบบการทำงาน 3 รูปแบบหลัก:
+
+| คุณลักษณะทางเทคนิค | Station Mode (STA) | Soft Access Point Mode (SoftAP) | Concurrent Mode (AP + STA) |
+|---|---|---|---|
+| **บทบาทในเครือข่าย** | ทำหน้าที่เป็น **ลูกข่าย (Client)** เชื่อมต่อไปยัง Wi-Fi Router | ทำหน้าที่เป็น **ศูนย์กลางเครือข่าย (Hotspot)** ปล่อยสัญญาณให้ผู้อื่นเชื่อมต่อ | ทำงานทั้งเป็น Client และปล่อย Hotspot ไปพร้อมกัน |
+| **ความต้องการเราเตอร์ภายนอก** | **จำเป็น** ต้องมี Wi-Fi Router หรือ Mobile Hotspot | **ไม่จำเป็น** ทำงานได้สมบูรณ์แบบ Standalone | จำเป็นสำหรับฝั่ง STA แต่ฝั่ง AP ไม่ต้องมี |
+| **การแจกจ่ายหมายเลข IP** | รอรับ IP จาก DHCP Server ของ Router | **มี DHCP Server ภายในตัว** แจกจ่าย IP ให้ไคลเอนต์อัตโนมัติ | จัดการทั้งสองฝั่งแยกซับเน็ต |
+| **หมายเลข IP เริ่มต้น** | ผันแปรตามวงแลนภายนอก (เช่น `192.168.1.X`) | **คงที่เสมอ** โดยเริ่มต้นคือ `192.168.4.1` | ฝั่ง AP คงที่ ฝั่ง STA ผันแปร |
+| **การเชื่อมต่อไปยังอินเทอร์เน็ตภายนอก** | เชื่อมต่อไปยัง Internet ได้โดยตรง | **จำกัดเฉพาะ Local Network** (อินทราเน็ตภายในเครื่อง) | สามารถทำ Packet Forwarding ได้ |
+| **การประยุกต์ใช้งานในงานวิศวกรรม** | ส่งข้อมูลขึ้น Cloud (MQTT, HTTP POST, InfluxDB) | **หน้าปัดควบคุมเครื่องจักรไร้สาย (Local Machine Console/HMI)**, การตั้งค่าหน้างาน (Field Commissioning) | เกตเวย์รับข้อมูลเซนเซอร์ในเครื่องแล้วรีเลย์ส่งต่อ |
+
+```
+[ โหมด SoftAP ของ ESP32-S3 (Standalone Local Network) ]
+
+  ┌─────────────────────────────────────────────────────────────┐
+  │                 ESP32-S3 Dual-Core SoC                      │
+  │                                                             │
+  │  ┌───────────────────────┐       ┌───────────────────────┐  │
+  │  │   Wi-Fi SoftAP        │       │   Embedded WebServer  │  │
+  │  │   SSID: ESP32S3_...   │ <───> │   Port: 80 (HTTP)     │  │
+  │  │   IP: 192.168.4.1     │       │   JSON REST Endpoints │  │
+  │  └───────────▲───────────┘       └───────────▲───────────┘  │
+  └──────────────┼───────────────────────────────┼──────────────┘
+                 │ Wi-Fi 2.4 GHz (WPA2-PSK)      │
+       ┌─────────┴─────────┐           ┌─────────┴─────────┐
+       │                   │           │                   │
+  ┌────┴────────────┐ ┌────┴────────────┐ ┌────┴────────────┐
+  │ สมาร์ตโฟนช่างกล │ │ แท็บเล็ตตรวจสอบ │ │ โน้ตบุ๊กทดสอบ   │
+  │ 192.168.4.2     │ │ 192.168.4.3     │ │ 192.168.4.4     │
+  └─────────────────┘ └─────────────────┘ └─────────────────┘
+```
+
+### 7.1.2 กลไกการทำงานของ SoftAP และ DHCP Server ใน ESP32-S3
+
+เมื่อสั่งงาน `WiFi.mode(WIFI_AP)` และ `WiFi.softAP(ssid, password)` ตัวควบคุมคลื่นวิทยุ (Baseband & MAC Layer) ของ ESP32-S3 จะเริ่มดำเนินการดังนี้:
+1. **การแพร่กระจายสัญญาณ Beacon Frames:** ESP32-S3 จะส่งแพ็กเก็ต Beacon ออกไปในอากาศทุกๆ 100 ms (Target Beacon Transmission Time - TBTT) เพื่อประกาศ SSID, รูปแบบการเข้ารหัส (WPA2-Personal/PSK) และ Channel ความถี่
+2. **การเจรจาเชื่อมต่อ (4-Way Handshake):** เมื่อไคลเอนต์ (เช่น สมาร์ตโฟน) ป้อนรหัสผ่าน ชิปจะดำเนินการยืนยันตัวตนด้วย Pairwise Master Key (PMK)
+3. **การแจกจ่าย IP ผ่าน Internal DHCP Server:** ทันทีที่การยืนยันตัวตนสำเร็จ เซิร์ฟเวอร์ DHCP ภายใน ESP-IDF (LwIP Stack) จะแจกหมายเลข IP ให้อุปกรณ์ลูกข่าย โดยเริ่มตั้งแต่ `192.168.4.2` เป็นต้นไป พร้อมกำหนดให้เกตเวย์และเซิร์ฟเวอร์ DNS ชี้มาที่ `192.168.4.1`
+
+### 7.1.3 การจัดการเหตุการณ์เครือข่ายไร้สาย (Wi-Fi Event-Driven Architecture)
+
+ในการพัฒนาเฟิร์มแวร์วิศวกรรมระดับมืออาชีพ การวนลูปตรวจสอบสถานะ Wi-Fi ซ้ำๆ (Polling) เป็นวิธีที่เปลืองทรัพยากรซีพียูและตอบสนองช้า ระบบของ ESP32 มีระบบส่งต่อสัญญาณขัดจังหวะของระบบปฏิบัติการ FreeRTOS เรียกว่า **Wi-Fi Events** ซึ่งสามารถดักจับสถานะผ่านฟังก์ชัน `WiFi.onEvent(callback)` ได้โดยตรง
 
 ```cpp
-#include <WiFi.h>
-
-#define USE_STATIC_IP
-
-const char* ssid     = "Factory_Wi-Fi_Network";
-const char* password = "ControlRoomSecurePass";
-
-#ifdef USE_STATIC_IP
-IPAddress local_IP(192, 168, 1, 200);
-IPAddress gateway(192, 168, 1, 1);
-IPAddress subnet(255, 255, 255, 0);
-IPAddress dns_primary(8, 8, 8, 8);
-#endif
-
-WiFiServer server(80);
-
-unsigned long lastAttemptTime = 0;
-const unsigned long reconnectInterval = 10000;
-bool isCurrentlyConnected = false;
-
-const int COOLING_FAN_RELAY = 14;
-bool fanState = false;
-
-void setup() {
-  Serial.begin(115200);
-  pinMode(COOLING_FAN_RELAY, OUTPUT);
-  digitalWrite(COOLING_FAN_RELAY, LOW);
-  WiFi.setSleep(false);
-
-  #ifdef USE_STATIC_IP
-  if (!WiFi.config(local_IP, gateway, subnet, dns_primary)) {
-    Serial.println("[Wi-Fi] ไม่สามารถกำหนดค่า Static IP ได้!");
-  }
-  #endif
-
-  WiFi.begin(ssid, password);
-  lastAttemptTime = millis();
-  server.begin();
-}
-
-void loop() {
-  unsigned long currentMillis = millis();
-
-  if (WiFi.status() != WL_CONNECTED) {
-    isCurrentlyConnected = false;
-    if (currentMillis - lastAttemptTime >= reconnectInterval) {
-      Serial.println("[Wi-Fi] พยายามเชื่อมใหม่...");
-      WiFi.disconnect();
-      WiFi.begin(ssid, password);
-      lastAttemptTime = currentMillis;
-    }
-  } else {
-    if (!isCurrentlyConnected) {
-      Serial.print("IP Address: "); Serial.println(WiFi.localIP());
-      Serial.print("RSSI: "); Serial.print(WiFi.RSSI()); Serial.println(" dBm");
-      isCurrentlyConnected = true;
-    }
-  }
-
-  WiFiClient client = server.available();
-  if (client) {
-    String currentLine = "";
-    unsigned long connTime = millis();
-    while (client.connected() && (millis() - connTime < 2500)) {
-      if (client.available()) {
-        char c = client.read();
-        if (c == '\n') {
-          if (currentLine.length() == 0) {
-            client.println("HTTP/1.1 200 OK");
-            client.println("Content-Type: text/html; charset=utf-8");
-            client.println("Connection: close");
-            client.println();
-            client.println("<!DOCTYPE html><html><body>");
-            if (fanState) {
-              client.println("<p>พัดลม: <strong>ON</strong></p>");
-              client.println("<a href='/fan/off'><button>ปิดพัดลม</button></a>");
-            } else {
-              client.println("<p>พัดลม: <strong>OFF</strong></p>");
-              client.println("<a href='/fan/on'><button>เปิดพัดลม</button></a>");
-            }
-            client.println("</body></html>");
-            break;
-          } else {
-            if (currentLine.indexOf("GET /fan/on") >= 0) {
-              fanState = true; digitalWrite(COOLING_FAN_RELAY, HIGH);
-            } else if (currentLine.indexOf("GET /fan/off") >= 0) {
-              fanState = false; digitalWrite(COOLING_FAN_RELAY, LOW);
-            }
-            currentLine = "";
-          }
-        } else if (c != '\r') { currentLine += c; }
-      }
-    }
-    client.stop();
+void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
+  switch (event) {
+    case ARDUINO_EVENT_WIFI_AP_STACONNECTED:
+      // มีอุปกรณ์เชื่อมต่อเข้ามาใหม่: ดึง MAC Address และนับจำนวนเครื่อง
+      Serial.printf("MAC: %02X:%02X:%02X:%02X:%02X:%02X | Total: %d\n",
+                    info.wifi_ap_staconnected.mac[0], info.wifi_ap_staconnected.mac[1],
+                    info.wifi_ap_staconnected.mac[2], info.wifi_ap_staconnected.mac[3],
+                    info.wifi_ap_staconnected.mac[4], info.wifi_ap_staconnected.mac[5],
+                    WiFi.softAPgetStationNum());
+      break;
+    case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED:
+      // มีอุปกรณ์ตัดการเชื่อมต่อ: ตรวจสอบความปลอดภัยทันที
+      Serial.printf("Device disconnected | Remaining: %d\n", WiFi.softAPgetStationNum());
+      break;
   }
 }
 ```
 
----
-
-## 7.3 Bluetooth และ BLE (Bluetooth Low Energy)
-
-<div style="text-align: center; margin: 20px 0;">
-  <img src="../../assets/images/hc05_bluetooth.jpg" alt="HC-05 Bluetooth Module" style="max-width: 250px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;"/>
-  <div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 7.1 โมดูลรับส่งข้อมูลไร้สายระยะสั้น Bluetooth Transceiver Module รุ่น HC-05</div>
-</div>
-
-Bluetooth เป็นโปรโตคอลการสื่อสารไร้สายระยะสั้น (ปกติ < 100 เมตร) ทำงานที่ความถี่ 2.4 GHz เช่นเดียวกับ Wi-Fi แต่มีวัตถุประสงค์การออกแบบและพฤติกรรมการใช้งานที่แตกต่างกันโดยสิ้นเชิง
-
-### 7.3.1 ความแตกต่างระหว่าง Bluetooth Classic และ BLE
-
-| เกณฑ์เปรียบเทียบ (Parameters) | Bluetooth Classic (BR/EDR) | Bluetooth Low Energy (BLE) |
-|---|---|---|
-| **ช่องสัญญาณวิทยุ (Channels)** | 79 ช่องสัญญาณ (กว้างช่องละ 1 MHz) | 40 ช่องสัญญาณ (กว้างช่องละ 2 MHz) |
-| **ความจุการส่งข้อมูล (Throughput)** | สูง (1 Mbps ถึง 3 Mbps) | ต่ำ (100 kbps ถึง 2 Mbps ระดับทางกายภาพ) |
-| **รูปแบบการสื่อสาร (Traffic Pattern)** | **เน้นส่งข้อมูลต่อเนื่อง (Streaming)** เช่น ส่งสัญญาณเสียง ลำโพง | **เน้นส่งข้อมูลสั้น ๆ เป็นช่วงเวลา (Burst)** เช่น ค่าอุณหภูมิ สถานะปุ่ม |
-| **การใช้พลังงาน (Power Consumption)** | ปานกลางถึงสูง (~1 วัตต์) | ต่ำมากเป็นพิเศษ (กระแสช่วงหลับ < 15 µA) |
-| **ระยะเวลาเชื่อมต่อใหม่ (Latency/Setup Time)** | ช้ามาก (~3-5 วินาที) | เร็วมากเป็นพิเศษ (< 6-10 มิลลิวินาที) |
-| **อายุการใช้งานแบตเตอรี่ (Battery Life)** | สั้น (ชั่วโมงถึงไม่กี่วัน) | ยาวนานมาก (เป็นปีหรือหลายปีจากถ่านกระดุม CR2032) |
-
-### 7.3.2 BLE 5.0 — ฟีเจอร์ที่ปรับปรุงสำคัญ
-
-Bluetooth 5.0 (ประกาศปี 2016) นำมาซึ่งการปรับปรุงชั้นกายภาพที่สำคัญ 3 รายการ:
-
-#### 1. LE 2M PHY (2 Megabit PHY)
-ชั้นกายภาพความเร็ว 2 Mbps เพิ่มอัตราข้อมูลเป็น 2 เท่าของ BLE 4.x (1M PHY) เหมาะสำหรับการส่งข้อมูลขนาดใหญ่ เช่น การอัปเดตเฟิร์มแวร์ OTA (Over-The-Air Firmware Update) หรือข้อมูลเซ็นเซอร์ที่มีความถี่สูง
-
-#### 2. LE Coded PHY (Long Range PHY)
-ชั้นกายภาพพิเศษที่เพิ่มระยะทางส่งสัญญาณได้ 2 เท่า (S=2) หรือ 4 เท่า (S=8) โดยแลกด้วยอัตราข้อมูลที่ลดลง:
-*   **S=2 Coded PHY:** อัตราข้อมูล 500 kbps ระยะทางเพิ่มขึ้น 2× (~200-400 เมตร)
-*   **S=8 Coded PHY:** อัตราข้อมูล 125 kbps ระยะทางเพิ่มขึ้น 4× (~400-800 เมตร)
-
-ใช้กลไก FEC (Forward Error Correction) เพื่อถอดรหัสสัญญาณในสภาพแวดล้อมที่มีสัญญาณรบกวนสูง
-
-#### 3. Extended Advertising (การโฆษณาแบบขยาย)
-BLE 4.x จำกัดขนาดข้อมูล Advertising Packet ไว้ที่ 31 bytes ส่วน BLE 5.0 Extended Advertising รองรับสูงสุด **255 bytes** ทำให้ส่งข้อมูลเซ็นเซอร์จำนวนมากผ่าน Advertising โดยไม่ต้องเชื่อมต่อ (Connectionless)
-
-| PHY Mode | อัตราข้อมูล | ระยะทาง (โดยประมาณ) | ใช้งานใน |
-|---|---|---|---|
-| LE 1M PHY (BLE 4.x) | 1 Mbps | ~50-100 m | ทั่วไป |
-| LE 2M PHY (BLE 5.0) | 2 Mbps | ~30-70 m | OTA, ข้อมูลหนาแน่น |
-| LE Coded S=2 | 500 kbps | ~150-400 m | Smart Home, Asset Tracking |
-| LE Coded S=8 | 125 kbps | ~400-800 m | LPWAN-style BLE |
-
-### 7.3.3 สถาปัตยกรรม GATT (Generic Attribute Profile)
-
-BLE ใช้โครงสร้างข้อมูลที่เป็นรูปแบบชั้นสถาปัตยกรรมแบบ **GATT (Generic Attribute Profile)** เพื่อจัดระเบียบข้อมูลที่มีอยู่ภายในตัวเครื่องรับส่งสัญญาณ:
-
-<div style="text-align: center; margin: 20px 0;">
-<svg id="ch6-svg2" viewBox="0 0 760 430" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
-  <title>BLE GATT Hierarchy</title>
-  <style>
-    #ch6-svg2 .svg2-bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
-    #ch6-svg2 .svg2-client-box { fill: #ffffff; stroke: #334155; stroke-width: 2; }
-    #ch6-svg2 .svg2-client-screen { fill: #faf5ff; stroke: #7c3aed; stroke-width: 1.5; }
-    #ch6-svg2 .svg2-profile-box { fill: #ffffff; stroke: #7c3aed; stroke-width: 2.5; }
-    #ch6-svg2 .svg2-service-box { fill: #eff6ff; stroke: #2563eb; stroke-width: 2; }
-    #ch6-svg2 .svg2-char-box { fill: #f0fdf4; stroke: #059669; stroke-width: 2; }
-    #ch6-svg2 .svg2-value-box { fill: #fffbeb; stroke: #d97706; stroke-width: 1.5; }
-    #ch6-svg2 .svg2-prop-pill { fill: #faf5ff; stroke: #7c3aed; stroke-width: 1; }
-    #ch6-svg2 .svg2-prop-text { font-size: 9px; fill: #7c3aed; font-weight: bold; text-anchor: middle; }
-    #ch6-svg2 .svg2-title { font-size: 12px; font-weight: 700; fill: #334155; }
-    #ch6-svg2 .svg2-profile-title { font-size: 13px; font-weight: 800; fill: #7c3aed; }
-    #ch6-svg2 .svg2-service-title { font-size: 12px; font-weight: 700; fill: #2563eb; }
-    #ch6-svg2 .svg2-char-title { font-size: 11.5px; font-weight: 700; fill: #059669; }
-    #ch6-svg2 .svg2-value-title { font-size: 11px; font-weight: 700; fill: #d97706; }
-    #ch6-svg2 .svg2-uuid { font-size: 10px; font-family: monospace; fill: #475569; }
-    #ch6-svg2 .svg2-sub { font-size: 10px; fill: #475569; }
-    #ch6-svg2 .svg2-pulse-req {
-      fill: none; stroke: #f59e0b; stroke-width: 2.5; stroke-linecap: round;
-      stroke-dasharray: 7 5;
-      animation: svg2-march-r 1.6s linear infinite;
-    }
-    #ch6-svg2 .svg2-pulse-notif {
-      fill: none; stroke: #16a34a; stroke-width: 2.5; stroke-linecap: round;
-      stroke-dasharray: 7 5;
-      animation: svg2-march-l 1.6s linear infinite;
-    }
-    @keyframes svg2-march-r { to { stroke-dashoffset: -24; } }
-    @keyframes svg2-march-l { to { stroke-dashoffset: 24; } }
-  </style>
-  <rect x="5" y="5" width="750" height="420" rx="12" class="svg2-bg"/>
-  <rect x="20" y="40" width="145" height="340" rx="8" class="svg2-client-box"/>
-  <text x="92" y="62" class="svg2-title" text-anchor="middle">GATT Client</text>
-  <text x="92" y="76" class="svg2-sub" text-anchor="middle">(แอปมือถือ)</text>
-  <rect x="32" y="90" width="121" height="270" rx="6" class="svg2-client-screen"/>
-  <rect x="42" y="115" width="101" height="50" rx="4" class="svg2-client-box"/>
-  <text x="92" y="135" class="svg2-title" text-anchor="middle" style="font-size:10.5px;">Read Request</text>
-  <text x="92" y="150" class="svg2-sub" text-anchor="middle" style="fill:#f59e0b;font-weight:bold;">ส่งคำขออ่านค่า</text>
-  <rect x="42" y="210" width="101" height="50" rx="4" class="svg2-client-box"/>
-  <text x="92" y="230" class="svg2-title" text-anchor="middle" style="font-size:10.5px;">Notification</text>
-  <text x="92" y="245" class="svg2-sub" text-anchor="middle" style="fill:#16a34a;font-weight:bold;">รับการแจ้งเตือน</text>
-  <rect x="42" y="300" width="101" height="42" rx="4" class="svg2-client-box"/>
-  <text x="92" y="320" class="svg2-title" text-anchor="middle" style="font-size:10px;">Write Command</text>
-  <text x="92" y="333" class="svg2-sub" text-anchor="middle" style="fill:#7c3aed;font-weight:bold;">เขียนคำสั่ง</text>
-  <path d="M 143 140 C 165 140 175 140 185 140" class="svg2-pulse-req"/>
-  <path d="M 185 230 C 175 230 165 230 143 230" class="svg2-pulse-notif"/>
-  <path d="M 143 320 C 165 320 175 320 185 320" class="svg2-pulse-req"/>
-  <rect x="185" y="28" width="558" height="384" rx="8" class="svg2-profile-box"/>
-  <text x="198" y="50" class="svg2-profile-title">BLE Profile — โครงร่างความต้องการของระบบ</text>
-  <rect x="198" y="60" width="532" height="340" rx="6" class="svg2-service-box"/>
-  <text x="212" y="82" class="svg2-service-title">Environmental Sensing Service</text>
-  <text x="212" y="96" class="svg2-uuid">UUID: 0x181A</text>
-  <rect x="212" y="110" width="504" height="100" rx="4" class="svg2-char-box"/>
-  <text x="226" y="130" class="svg2-char-title">Characteristic: Temperature — ค่าอุณหภูมิ</text>
-  <text x="226" y="145" class="svg2-uuid">UUID: 0x2A6E</text>
-  <g transform="translate(226,155)">
-    <rect x="0" y="0" width="38" height="16" rx="3" class="svg2-prop-pill"/>
-    <text x="19" y="11" class="svg2-prop-text">Read</text>
-    <rect x="44" y="0" width="42" height="16" rx="3" class="svg2-prop-pill"/>
-    <text x="65" y="11" class="svg2-prop-text">Notify</text>
-  </g>
-  <rect x="540" y="115" width="165" height="88" rx="4" class="svg2-value-box"/>
-  <text x="550" y="132" class="svg2-value-title">ค่า (Value)</text>
-  <text x="550" y="148" class="svg2-uuid" style="fill:#d97706;font-size:11px;">28.50 °C</text>
-  <text x="550" y="165" class="svg2-sub">Descriptor: CCCD</text>
-  <text x="550" y="178" class="svg2-uuid">0x2902</text>
-  <text x="550" y="193" class="svg2-sub">(เปิดโหมดแจ้งเตือน)</text>
-  <rect x="212" y="222" width="504" height="95" rx="4" class="svg2-char-box"/>
-  <text x="226" y="242" class="svg2-char-title">Characteristic: Humidity — ค่าความชื้น</text>
-  <text x="226" y="257" class="svg2-uuid">UUID: 0x2A6F</text>
-  <g transform="translate(226,267)">
-    <rect x="0" y="0" width="38" height="16" rx="3" class="svg2-prop-pill"/>
-    <text x="19" y="11" class="svg2-prop-text">Read</text>
-    <rect x="44" y="0" width="42" height="16" rx="3" class="svg2-prop-pill"/>
-    <text x="65" y="11" class="svg2-prop-text">Notify</text>
-  </g>
-  <rect x="540" y="227" width="165" height="82" rx="4" class="svg2-value-box"/>
-  <text x="550" y="244" class="svg2-value-title">ค่า (Value)</text>
-  <text x="550" y="260" class="svg2-uuid" style="fill:#d97706;font-size:11px;">65.20 %RH</text>
-  <text x="550" y="275" class="svg2-sub">Descriptor: User Desc</text>
-  <text x="550" y="290" class="svg2-uuid">0x2901</text>
-  <rect x="212" y="328" width="504" height="62" rx="4" class="svg2-char-box" style="stroke:#7c3aed;"/>
-  <text x="226" y="348" class="svg2-char-title" style="fill:#7c3aed;">Characteristic: Relay Control — คำสั่งรีเลย์ (Custom)</text>
-  <text x="226" y="363" class="svg2-uuid">UUID: c3d69dd4-4d89-4cd7-bf53-9d41c888e2c2</text>
-  <g transform="translate(226,372)">
-    <rect x="0" y="0" width="42" height="16" rx="3" class="svg2-prop-pill"/>
-    <text x="21" y="11" class="svg2-prop-text">Write</text>
-  </g>
-</svg>
-</div>
-
-*   **Profile:** ชุดการจัดวางบริการทั้งหมดที่ระบุพฤติกรรมโดยรวมและหน้าที่ของอุปกรณ์
-*   **Service:** กลุ่มข้อมูลหรือฟังก์ชันที่มีความสัมพันธ์กัน ระบุด้วย **UUID (Universal Unique Identifier)**
-*   **Characteristic:** ที่เก็บบันทึกข้อมูลดิบจริง ๆ มี Property กำหนดว่า Client ทำอะไรได้: **Read**, **Write**, **Notify**, **Indicate**
-*   **Descriptor:** รายละเอียดเพิ่มเติมติดกับ Characteristic เช่น CCCD (0x2902) เปิด/ปิดโหมดแจ้งเตือน
-
-### 7.3.4 กระบวนการสื่อสาร: Advertising vs Connection
-
-#### 1. สถานะกระจายสัญญาณโฆษณา (Advertising State)
-อุปกรณ์ Peripheral แพร่ **Advertising Packets** ผ่านช่องความถี่ 37, 38 และ 39 ทุกๆ ช่วง Advertising Interval อุปกรณ์ Central สแกนอ่านข้อมูลได้ทันทีโดยไม่ต้องสร้างการเชื่อมต่อ ช่วยประหยัดแบตเตอรี่
-
-#### 2. สถานะสร้างการเชื่อมต่ออย่างเป็นทางการ (Connection State)
-เมื่อ Central เชื่อมต่อกับ Peripheral อุปกรณ์ Peripheral ทำหน้าที่เป็น **GATT Server** ส่วน Central เป็น **GATT Client** การส่งข้อมูลใช้ Frequency Hopping ครอบคลุม 37 ช่องที่เหลือ
+ประโยชน์เชิงวิศวกรรมของการดักจับ Event:
+- **Audit Logging & Security:** สามารถบันทึกรหัสเฉพาะ (MAC Address) ของอุปกรณ์ช่างที่เข้ามาเชื่อมต่อกับเครื่องจักร เพื่อใช้เป็นหลักฐานการเข้าปฏิบัติงาน
+- **Session Tracking:** ใช้ทราบจำนวนผู้ควบคุมเครื่องที่กำลังเข้าถึงระบบพร้อมกัน ป้องกันการสั่งงานซ้ำซ้อน
 
 ---
 
-### 7.3.5 ตัวอย่างโค้ด ESP32 BLE GATT Server
+## 7.2 การเชื่อมต่อเซนเซอร์ดิจิทัลความแม่นยำสูง AHT25 ผ่านบัส I2C
 
+### 7.2.1 ลักษณะทางกายภาพและโครงสร้างของเซนเซอร์ AHT25 / AHT20
+
+เซนเซอร์ **AHT25** (ผลิตโดย Aosong/Guangzhou ASAIR) เป็นเซนเซอร์วัดอุณหภูมิและความชื้นสัมพัทธ์แบบดิจิทัลรุ่นปรับปรุงที่รวมชิปตรวจจับความจุไฟฟ้าเซมิคอนดักเตอร์ (MEMS capacitive humidity sensing element) เข้ากับเซนเซอร์วัดอุณหภูมิมาตรฐานสูงและชิป ASIC สำหรับประมวลผลสัญญาณภายในตัว
+
+```
+  ┌─────────────────── AHT25 Module ───────────────────┐
+  │                                                    │
+  │   [ VCC ] ──────────── แหล่งจ่ายไฟ 3.3V DC         │
+  │   [ SDA ] ──────────── สายข้อมูล I2C (Serial Data) │
+  │   [ GND ] ──────────── กราวด์ร่วม (Common GND)     │
+  │   [ SCL ] ──────────── สัญญาณนาฬิกา I2C (Clock)    │
+  │                                                    │
+  │   • ย่านวัดอุณหภูมิ: -40°C ถึง +85°C (±0.3°C)     │
+  │   • ย่านวัดความชื้น: 0% ถึง 100% RH (±2% RH)      │
+  │   • I2C Address: 0x38 (ความเร็วสูงสุด 400 kHz)    │
+  └────────────────────────────────────────────────────┘
+```
+
+### 7.2.2 การกำหนดขา I2C บน ESP32-S3 (Custom I2C Pin Mapping)
+
+ชิป **ESP32-S3** มีโมดูลฮาร์ดแวร์ I2C Master ภายใน 2 ช่อง (I2C0 และ I2C1) จุดเด่นของ ESP32-S3 คือมีวงจร **GPIO Matrix** ภายใน ทำให้เราสามารถกำหนดขา GPIO ใดๆ เป็นขา SDA และ SCL ได้โดยไม่จำกัดตายตัว
+
+ในโครงงานนี้ มีการกำหนดขาใช้งานดังนี้:
+- **SDA (Data Line):** ใช้ขา **GPIO 9**
+- **SCL (Clock Line):** ใช้ขา **GPIO 8**
+
+คำสั่งภาษา C++ ในการเปิดบัส I2C ด้วยขาที่ระบุ:
 ```cpp
-#include <BLEDevice.h>
-#include <BLEUtils.h>
-#include <BLEServer.h>
-#include <BLE2902.h>
+#define I2C_SDA 9
+#define I2C_SCL 8
 
-#define ENV_SERVICE_UUID      "0000181a-0000-1000-8000-00805f9b34fb"
-#define TEMP_CHAR_UUID        "00002a6e-0000-1000-8000-00805f9b34fb"
-#define CTRL_SERVICE_UUID     "9a48ec82-2e7a-422f-ad3d-c782782b54bf"
-#define RELAY_CHAR_UUID       "c3d69dd4-4d89-4cd7-bf53-9d41c888e2c2"
-
-BLEServer* pServer = NULL;
-BLECharacteristic* pTempChar = NULL;
-BLECharacteristic* pRelayChar = NULL;
-
-bool isClientConnected = false;
-bool wasClientConnected = false;
-unsigned long prevNotifyTime = 0;
-const unsigned long notifyPeriod = 3000;
-
-class ServerStatusCallbacks: public BLEServerCallbacks {
-    void onConnect(BLEServer* pServer) {
-      isClientConnected = true;
-      Serial.println("[BLE] Client เชื่อมต่อแล้ว");
-    }
-    void onDisconnect(BLEServer* pServer) {
-      isClientConnected = false;
-      Serial.println("[BLE] Client ตัดการเชื่อมต่อ");
-    }
-};
-
-class CommandReceiverCallbacks: public BLECharacteristicCallbacks {
-    void onWrite(BLECharacteristic *pCharacteristic) {
-      std::string receivedData = pCharacteristic->getValue();
-      if (receivedData.length() > 0) {
-        if (receivedData == "ACTIVATE") {
-          Serial.println("[BLE Control] เปิดทำงานระบบวาล์วน้ำหลัก");
-        } else if (receivedData == "DEACTIVATE") {
-          Serial.println("[BLE Control] ปิดการทำงานระบบวาล์วน้ำหลัก");
-        }
-      }
-    }
-};
-
-void setup() {
-  Serial.begin(115200);
-  BLEDevice::init("ME_Telemetry_Node_01");
-  pServer = BLEDevice::createServer();
-  pServer->setCallbacks(new ServerStatusCallbacks());
-
-  BLEService *pEnvService = pServer->createService(ENV_SERVICE_UUID);
-  pTempChar = pEnvService->createCharacteristic(
-                TEMP_CHAR_UUID,
-                BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
-  pTempChar->addDescriptor(new BLE2902());
-  pEnvService->start();
-
-  BLEService *pCtrlService = pServer->createService(CTRL_SERVICE_UUID);
-  pRelayChar = pCtrlService->createCharacteristic(
-                 RELAY_CHAR_UUID, BLECharacteristic::PROPERTY_WRITE);
-  pRelayChar->setCallbacks(new CommandReceiverCallbacks());
-  pCtrlService->start();
-
-  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-  pAdvertising->addServiceUUID(ENV_SERVICE_UUID);
-  pAdvertising->addServiceUUID(CTRL_SERVICE_UUID);
-  pAdvertising->setScanResponse(true);
-  BLEDevice::startAdvertising();
-  Serial.println("[BLE] ระบบพร้อมแพร่โฆษณา...");
+Wire.begin(I2C_SDA, I2C_SCL);
+if (!aht.begin(&Wire)) {
+  Serial.println("❌ ไม่พบเซนเซอร์ AHT25!");
+  aht_found = false;
+} else {
+  Serial.println("✅ ตรวจพบและเชื่อมต่อ AHT25 สำเร็จ");
+  aht_found = true;
 }
+```
 
-void loop() {
-  unsigned long now = millis();
-  if (isClientConnected && (now - prevNotifyTime >= notifyPeriod)) {
-    float simulatedTemp = 35.0 + (random(0, 100) / 50.0);
-    int16_t tempPayload = (int16_t)(simulatedTemp * 100);
-    pTempChar->setValue((uint8_t*)&tempPayload, 2);
-    pTempChar->notify();
-    Serial.print("[BLE] ส่งอุณหภูมิ: "); Serial.print(simulatedTemp); Serial.println(" C");
-    prevNotifyTime = now;
-  }
-  if (!isClientConnected && wasClientConnected) {
-    delay(500);
-    BLEDevice::startAdvertising();
-    Serial.println("[BLE] เริ่มโฆษณาใหม่...");
-    wasClientConnected = isClientConnected;
-  }
-  if (isClientConnected && !wasClientConnected) {
-    wasClientConnected = isClientConnected;
-  }
+### 7.2.3 การอ่านค่าแบบ Non-blocking และ Fault-Tolerant Fallback
+
+หากสายสัญญาณเซนเซอร์หลุด หรือเกิดสัญญาณรบกวนในโรงงานจนบัส I2C หยุดตอบสนอง เฟิร์มแวร์ระบบวิศวกรรมที่ดีต้อง **ไม่ค้าง (Hang/Freeze)** ฟังก์ชัน `readSensors()` ใช้ระบบตรวจสอบเงื่อนไข `aht_found` และส่งคืนค่าเดิมล่าสุด (`lastTemp`, `lastHum`) เพื่อให้ระบบ Web Server ยังคงทำงานและให้บริการควบคุม LED ต่อไปได้โดยไม่หยุดชะงัก
+
+---
+
+## 7.3 สถาปัตยกรรม Embedded Web Server และ REST JSON API
+
+### 7.3.1 เปรียบเทียบสถาปัตยกรรม Web Dashboard ในระบบฝังตัว
+
+ในการนำเสนอข้อมูลผ่านหน้าเว็บจากบอร์ดไมโครคอนโทรลเลอร์ มีแนวทางการออกแบบ 2 แบบที่มีข้อดีข้อเสียต่างกันอย่างสิ้นเชิง:
+
+```
+[ แบบดั้งเดิม (Traditional Full Page Reload) ]
+เบราว์เซอร์ ──(1) ขอหน้าเว็บ ──► ESP32 (ประมวลผล HTML ใหม่ทั้งหน้า 5-10 KB)
+เบราว์เซอร์ ◄──(2) ส่ง HTML เต็ม ── ESP32 (หน้าเว็บกะพริบ ทุกๆ 3 วินาที ซีพียูโหลดสูง)
+
+[ แบบโมเดิร์น (SPA + RESTful JSON Polling) ]
+เบราว์เซอร์ ──(1) ดาวน์โหลดแอปครั้งแรก ──► ESP32 (ส่ง MAIN_page ครั้งเดียว จบ)
+เบราว์เซอร์ ──(2) fetch('/data') ทุก 1.5s ─► ESP32 (อ่านเซนเซอร์ & สร้าง JSON ~80 ไบต์)
+เบราว์เซอร์ ◄──(3) ส่งเฉพาะ JSON กะทัดรัด ─ ESP32 (หน้าเว็บไม่กะพริบ อัปเดตลื่นไหล)
+```
+
+### 7.3.2 รายละเอียด Routing และ Endpoint บน `WebServer`
+
+เฟิร์มแวร์ในโครงงานนี้ใช้ไลบรารี `WebServer.h` และกำหนดเส้นทางข้อมูล (Routing Table) ดังนี้:
+
+| Endpoint (URL) | HTTP Method | รูปแบบข้อมูลตอบกลับ | หน้าที่การทำงาน |
+|---|---|---|---|
+| `/` | `GET` | `text/html; charset=UTF-8` | ส่งหน้าเว็บ Single Page Application (`MAIN_page`) จาก Flash Memory |
+| `/data` | `GET` | `application/json` | ส่งสถานะเซนเซอร์และสถานะ LED ทั้ง 3 ช่องในรูปแบบ JSON |
+| `/toggle?led={1,2,3}` | `GET` | `application/json` | สลับสถานะของ LED ตามหมายเลขที่ส่งมา และตอบกลับ JSON สถานะใหม่ทันที |
+| `/setall?state={0,1}` | `GET` | `application/json` | สั่งเปิดทั้งหมด (`state=1`) หรือปิดทั้งหมด (`state=0`) และตอบกลับ JSON |
+
+### 7.3.3 โครงสร้าง JSON Payload
+
+```json
+{
+  "temp": 28.45,
+  "hum": 62.10,
+  "led1": true,
+  "led2": false,
+  "led3": true
 }
+```
+ข้อดีของรูปแบบนี้คือ ขนาดข้อมูลเล็กมาก (น้อยกว่า 90 ไบต์) ส่งผ่านเครือข่ายไร้สายได้ภายในเวลาไม่ถึง 2 มิลลิวินาที ทำให้ความเร็วการตอบสนองในการกดปุ่มควบคุมแทบจะเกิดขึ้นทันที (Near Zero Latency)
+
+---
+
+## 7.4 การพัฒนาหน้ากากควบคุมอัจฉริยะ (Modern Web Dashboard Architecture)
+
+### 7.4.1 การเก็บซอร์สโค้ดหน้าเว็บบน Flash ด้วย `PROGMEM`
+
+เนื่องจากหน่วยความจำแรม (SRAM) ของไมโครคอนโทรลเลอร์มีจำกัด การสร้างตัวแปร String ขนาดใหญ่เพื่อเก็บหน้าเว็บ HTML/CSS/JS จะทำให้แรมเต็มและบอร์ดรีเซ็ตตัวเอง การใช้คีย์เวิร์ด `PROGMEM` และ Raw String Literal `R"rawliteral(...)rawliteral"` จะสั่งให้คอมไพเลอร์เก็บโค้ดหน้าเว็บไว้ในหน่วยความจำแฟลช (Flash ROM) ซึ่งมีขนาดใหญ่ (4MB – 16MB) และอ่านส่งให้ไคลเอนต์โดยตรง
+
+### 7.4.2 การพล็อตกราฟแบบเรียลไทม์ด้วย HTML5 Canvas และเส้นโค้ง Bézier
+
+หน้าเว็บของโครงงานนี้ไม่พึ่งพาไลบรารีภายนอกอย่าง Chart.js หรือ Highcharts (Zero External Dependency) ทำให้สามารถแสดงผลกราฟได้อย่างรวดเร็วแม้ไม่มีการเชื่อมต่ออินเทอร์เน็ตภายนอก โดยเขียนฟังก์ชัน `drawGraph()` บน HTML5 Canvas API:
+
+1. **Auto-scaling:** หาค่าต่ำสุด (`min`) และค่าสูงสุด (`max`) จากชุดข้อมูล แล้วเพิ่มระยะเผื่อ (Padding) 20% เพื่อให้รูปคลื่นกราฟอยู่ตรงกลางกรอบ ไม่ชนขอบบนหรือขอบล่าง
+2. **Cubic Bézier Smoothing:** แทนที่จะลากเส้นตรงหักมุมแบบฟันปลา (`lineTo`) อัลกอริทึมจะคำนวณจุดควบคุมกึ่งกลาง (`cx = (prevX + x) / 2`) แล้วใช้คำสั่ง `ctx.bezierCurveTo(cx, prevY, cx, y, x, y)` เพื่อให้เส้นกราฟมีความโค้งมนสวยงามระดับโปรดักชัน
+3. **Linear Gradient Fill:** ลงสีไล่ระดับใต้เส้นกราฟด้วย `ctx.createLinearGradient()` จากค่าความโปร่งแสง 25% ด้านบน สู่โปร่งแสง 0% ด้านล่าง เพื่อให้ดูมีมิติเหมือนแดชบอร์ดอุตสาหกรรมยุคใหม่
+
+```
+  y (Min-Max Scaled)
+  ▲
+  │            ╭───────╮ (Cubic Bézier Interpolation)
+  │    ╭───────╯       ╰──────╮
+  │   ╱                        ╲
+  │  ╱   Gradient Fill (25%)    ╲
+  └──┴───────────────────────────┴────────► x (Time Series, Max 20 points)
 ```
 
 ---
 
-## 7.4 Zigbee (IEEE 802.15.4)
+## 7.5 การเปรียบเทียบเทคโนโลยีการสื่อสารไร้สายในงานวิศวกรรม
 
-Zigbee คือโปรโตคอลการสื่อสารไร้สายระยะสั้นถึงปานกลางที่ออกแบบมาเพื่อ **ประหยัดพลังงานเป็นพิเศษและมีความจุการเชื่อมโยงระบบสูง** ทำงานบนมาตรฐานสากล **IEEE 802.15.4**
-
-### 7.4.1 มาตรฐานย่านความถี่และช่องสัญญาณ
-
-*   **ย่าน 2.4 GHz:** ใช้งานแพร่หลายทั่วโลก มีช่องสัญญาณ 16 ช่อง (ช่องที่ 11 ถึง 26) อัตราส่งข้อมูล **250 kbps**
-*   **ย่าน 915 MHz:** ใช้งานในโซนอเมริกา อัตราส่งข้อมูล 40 kbps
-*   **ย่าน 868 MHz:** ใช้งานในยุโรป อัตราส่งข้อมูล 20 kbps
-
-### 7.4.2 โทโพโลยีเครือข่ายแบบ Mesh และการค้นหาเส้นทาง
-
-<div style="text-align: center; margin: 20px 0;">
-<svg id="ch6-svg3" viewBox="0 0 760 360" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
-  <title>Zigbee Mesh Self-Healing</title>
-  <style>
-    #ch6-svg3 .svg3-bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
-    #ch6-svg3 .svg3-zc { fill: #faf5ff; stroke: #7c3aed; stroke-width: 2; }
-    #ch6-svg3 .svg3-zr { fill: #ffffff; stroke: #334155; stroke-width: 2; }
-    #ch6-svg3 .svg3-zed { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; }
-    #ch6-svg3 .svg3-link { stroke: #cbd5e1; stroke-width: 2; stroke-linecap: round; }
-    #ch6-svg3 .svg3-title { font-size: 12px; font-weight: 700; fill: #334155; text-anchor: middle; }
-    #ch6-svg3 .svg3-sub { font-size: 10px; fill: #475569; text-anchor: middle; }
-    #ch6-svg3 .svg3-zr2-fail {
-      fill: #ffffff; stroke: #334155; stroke-width: 2;
-      animation: svg3-router-fail 8s infinite;
-    }
-    #ch6-svg3 .svg3-cross {
-      stroke: #dc2626; stroke-width: 3; stroke-linecap: round;
-      opacity: 0;
-      animation: svg3-cross-appear 8s infinite;
-    }
-    #ch6-svg3 .svg3-link-normal {
-      stroke: #f59e0b; stroke-width: 2.5;
-      animation: svg3-link-n 8s infinite;
-    }
-    #ch6-svg3 .svg3-link-heal {
-      stroke: #cbd5e1; stroke-width: 2; stroke-dasharray: 4 4;
-      animation: svg3-link-h 8s infinite;
-    }
-    #ch6-svg3 .svg3-pkt-normal {
-      fill: none; stroke: #f59e0b; stroke-width: 4; stroke-linecap: round;
-      stroke-dasharray: 12 300; stroke-dashoffset: 0;
-      animation: svg3-pkt-n 8s infinite linear;
-    }
-    #ch6-svg3 .svg3-pkt-heal {
-      fill: none; stroke: #16a34a; stroke-width: 4; stroke-linecap: round;
-      stroke-dasharray: 12 600; stroke-dashoffset: 0;
-      opacity: 0;
-      animation: svg3-pkt-h 8s infinite linear;
-    }
-    #ch6-svg3 .svg3-status-box { fill: #334155; }
-    #ch6-svg3 .svg3-status-text { font-size: 11.5px; fill: #ffffff; font-weight: bold; text-anchor: middle; }
-    #ch6-svg3 .svg3-lbl-n { opacity: 0; animation: svg3-show-n 8s infinite; }
-    #ch6-svg3 .svg3-lbl-f { opacity: 0; animation: svg3-show-f 8s infinite; }
-    #ch6-svg3 .svg3-lbl-h { opacity: 0; animation: svg3-show-h 8s infinite; }
-    @keyframes svg3-router-fail {
-      0%,39%  { fill:#ffffff; stroke:#334155; }
-      40%,89% { fill:#fff1f2; stroke:#dc2626; }
-      90%,100%{ fill:#ffffff; stroke:#334155; }
-    }
-    @keyframes svg3-cross-appear {
-      0%,39%  { opacity:0; }
-      40%,89% { opacity:1; }
-      90%,100%{ opacity:0; }
-    }
-    @keyframes svg3-link-n {
-      0%,39%  { stroke:#f59e0b; stroke-width:2.5; stroke-dasharray:none; }
-      40%,100%{ stroke:#cbd5e1; stroke-width:1.5; stroke-dasharray:4 4; }
-    }
-    @keyframes svg3-link-h {
-      0%,39%  { stroke:#cbd5e1; stroke-width:1.5; stroke-dasharray:4 4; }
-      40%,89% { stroke:#16a34a; stroke-width:2.5; stroke-dasharray:none; }
-      90%,100%{ stroke:#cbd5e1; stroke-width:1.5; stroke-dasharray:4 4; }
-    }
-    @keyframes svg3-pkt-n {
-      0%       { stroke-dashoffset:0; opacity:0; }
-      3%       { opacity:1; }
-      32%      { stroke-dashoffset:-210; opacity:1; }
-      33%,100% { stroke-dashoffset:-210; opacity:0; }
-    }
-    @keyframes svg3-pkt-h {
-      0%,44%   { stroke-dashoffset:0; opacity:0; }
-      47%      { opacity:1; }
-      82%      { stroke-dashoffset:-480; opacity:1; }
-      83%,100% { stroke-dashoffset:-480; opacity:0; }
-    }
-    @keyframes svg3-show-n {
-      0%,37%  { opacity:1; }
-      38%,100%{ opacity:0; }
-    }
-    @keyframes svg3-show-f {
-      0%,38%  { opacity:0; }
-      39%,58% { opacity:1; }
-      59%,100%{ opacity:0; }
-    }
-    @keyframes svg3-show-h {
-      0%,58%  { opacity:0; }
-      59%,88% { opacity:1; }
-      89%,100%{ opacity:0; }
-    }
-  </style>
-  <rect x="5" y="5" width="750" height="350" rx="12" class="svg3-bg"/>
-  <line x1="225" y1="168" x2="145" y2="268" class="svg3-link"/>
-  <line x1="225" y1="168" x2="265" y2="268" class="svg3-link"/>
-  <line x1="545" y1="168" x2="545" y2="268" class="svg3-link"/>
-  <line x1="385" y1="68" x2="225" y2="168" class="svg3-link"/>
-  <line x1="385" y1="68" x2="385" y2="168" class="svg3-link-normal"/>
-  <line x1="385" y1="168" x2="385" y2="268" class="svg3-link-normal"/>
-  <line x1="385" y1="268" x2="545" y2="168" class="svg3-link-heal"/>
-  <line x1="545" y1="168" x2="225" y2="168" class="svg3-link-heal"/>
-  <path d="M 385 268 L 385 168 L 385 68" class="svg3-pkt-normal"/>
-  <path d="M 385 268 L 545 168 L 225 168 L 385 68" class="svg3-pkt-heal"/>
-  <g transform="translate(325,38)">
-    <rect x="0" y="0" width="120" height="46" rx="8" class="svg3-zc"/>
-    <text x="60" y="22" class="svg3-title" style="fill:#7c3aed;">Coordinator (ZC)</text>
-    <text x="60" y="36" class="svg3-sub" style="fill:#7c3aed;font-weight:bold;">ผู้ประสานงานหลัก</text>
-  </g>
-  <g transform="translate(175,148)">
-    <rect x="0" y="0" width="100" height="40" rx="6" class="svg3-zr"/>
-    <text x="50" y="19" class="svg3-title">Router (ZR1)</text>
-    <text x="50" y="31" class="svg3-sub">โหนดส่งต่อข้อมูล 1</text>
-  </g>
-  <g transform="translate(335,148)">
-    <rect x="0" y="0" width="100" height="40" rx="6" class="svg3-zr2-fail"/>
-    <text x="50" y="19" class="svg3-title">Router (ZR2)</text>
-    <text x="50" y="31" class="svg3-sub">โหนดส่งต่อข้อมูล 2</text>
-    <line x1="12" y1="8" x2="88" y2="32" class="svg3-cross"/>
-    <line x1="88" y1="8" x2="12" y2="32" class="svg3-cross"/>
-  </g>
-  <g transform="translate(495,148)">
-    <rect x="0" y="0" width="100" height="40" rx="6" class="svg3-zr"/>
-    <text x="50" y="19" class="svg3-title">Router (ZR3)</text>
-    <text x="50" y="31" class="svg3-sub">โหนดส่งต่อข้อมูล 3</text>
-  </g>
-  <g transform="translate(100,248)">
-    <rect x="0" y="0" width="88" height="34" rx="4" class="svg3-zed"/>
-    <text x="44" y="16" class="svg3-title" style="font-size:10.5px;">End Device 1</text>
-    <text x="44" y="27" class="svg3-sub" style="font-size:9px;">ZED1</text>
-  </g>
-  <g transform="translate(220,248)">
-    <rect x="0" y="0" width="88" height="34" rx="4" class="svg3-zed"/>
-    <text x="44" y="16" class="svg3-title" style="font-size:10.5px;">End Device 2</text>
-    <text x="44" y="27" class="svg3-sub" style="font-size:9px;">ZED2</text>
-  </g>
-  <g transform="translate(330,244)">
-    <rect x="0" y="0" width="110" height="40" rx="4" class="svg3-zed" style="stroke:#7c3aed;fill:#faf5ff;stroke-width:2;"/>
-    <text x="55" y="17" class="svg3-title" style="font-size:10.5px;fill:#7c3aed;">ZED3 (เซ็นเซอร์)</text>
-    <text x="55" y="30" class="svg3-sub" style="font-size:9px;fill:#7c3aed;font-weight:bold;">โหนดเริ่มส่งข้อมูล</text>
-  </g>
-  <g transform="translate(500,248)">
-    <rect x="0" y="0" width="88" height="34" rx="4" class="svg3-zed"/>
-    <text x="44" y="16" class="svg3-title" style="font-size:10.5px;">End Device 4</text>
-    <text x="44" y="27" class="svg3-sub" style="font-size:9px;">ZED4</text>
-  </g>
-  <g transform="translate(180,300)">
-    <rect x="0" y="0" width="400" height="32" rx="6" class="svg3-status-box"/>
-    <g class="svg3-lbl-n">
-      <circle cx="20" cy="16" r="5" fill="#16a34a"/>
-      <text x="200" y="20" class="svg3-status-text">สถานะ: ปกติ — ZED3 → ZR2 → ZC</text>
-    </g>
-    <g class="svg3-lbl-f">
-      <circle cx="20" cy="16" r="5" fill="#dc2626"/>
-      <text x="200" y="20" class="svg3-status-text" style="fill:#fca5a5;">ขัดข้อง: ZR2 ล้มเหลว / ตัดการทำงาน</text>
-    </g>
-    <g class="svg3-lbl-h">
-      <circle cx="20" cy="16" r="5" fill="#f59e0b"/>
-      <text x="200" y="20" class="svg3-status-text" style="fill:#fde68a;">เยียวยาตนเอง: ZED3 → ZR3 → ZR1 → ZC</text>
-    </g>
-  </g>
-</svg>
-</div>
-
-*   **การส่งแบบ Multi-hop:** โหนดสามารถส่งข้อมูลผ่านโหนดอื่นเป็นทอด ๆ เพิ่มระยะทางโดยไม่ต้องเพิ่มกำลังส่ง
-*   **Self-Healing:** หากโหนดเส้นทางปกติขัดข้อง เครือข่ายจะค้นหาเส้นทางใหม่อัตโนมัติ (AODV Routing)
-
-### 7.4.3 บทบาทหน้าที่ของอุปกรณ์ในระบบ Zigbee
-
-1.  **Zigbee Coordinator (ZC):** ต้องมีเพียง 1 ตัวในหนึ่งเครือข่าย สร้างโครงร่างระบบ เลือกช่องความถี่ จ่าย Security Keys และกำหนด Network Address ให้สมาชิก
-2.  **Zigbee Router (ZR):** กระจายสัญญาณและสลับเส้นทาง ต้องการไฟเลี้ยงคงที่เพราะต้องเปิดรับวิทยุตลอดเวลา
-3.  **Zigbee End Device (ZED):** เซ็นเซอร์หรือสวิตช์ปลายทาง สื่อสารเฉพาะกับโหนดแม่ของตน สามารถเข้า Deep Sleep เพื่อประหยัดพลังงานสูงสุด
-
----
-
-## 7.5 LoRa และ LoRaWAN
-
-<div style="text-align: center; margin: 20px 0;">
-  <img src="../../assets/images/lora_module.jpg" alt="LoRa Module" style="max-width: 260px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;"/>
-  <div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 7.2 โมดูลสื่อสารไร้สายระยะไกลพลังงานต่ำ LoRa (Long Range) พร้อมต่อสายอากาศภายนอก</div>
-</div>
-
-LoRa และ LoRaWAN จัดอยู่ในกลุ่ม **LPWAN (Low Power Wide Area Network)** มุ่งเน้นการส่งสัญญาณข้อมูลระยะไกลด้วยพลังงานต่ำ
-
-### 7.5.1 การมอดูเลตแบบ LoRa (Chirp Spread Spectrum)
-
-**LoRa** คือเทคโนโลยีชั้นกายภาพที่พัฒนาโดย Semtech ใช้การเปลี่ยนรูปแบบสัญญาณแบบ **Chirp Spread Spectrum (CSS)** กวาดความถี่สูงขึ้นหรือต่ำลงตามช่วงเวลา:
-
-<div style="text-align: center; margin: 20px 0;">
-<svg id="ch6-svg4" viewBox="0 0 760 290" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
-  <title>LoRa CSS Up-Chirps</title>
-  <style>
-    #ch6-svg4 .svg4-bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
-    #ch6-svg4 .svg4-grid { stroke: #e2e8f0; stroke-width: 1; stroke-dasharray: 4 4; }
-    #ch6-svg4 .svg4-axis { stroke: #334155; stroke-width: 2.5; stroke-linecap: round; }
-    #ch6-svg4 .svg4-axis-lbl { font-size: 11px; fill: #475569; font-weight: bold; }
-    #ch6-svg4 .svg4-title { font-size: 13px; fill: #334155; font-weight: bold; }
-    #ch6-svg4 .svg4-desc { font-size: 10.5px; fill: #64748b; }
-    #ch6-svg4 .svg4-chirp-base { fill: none; stroke: #e2e8f0; stroke-width: 2.5; stroke-linecap: round; }
-    #ch6-svg4 .svg4-chirp-active {
-      fill: none; stroke: #7c3aed; stroke-width: 4; stroke-linecap: round;
-      stroke-dasharray: 185; stroke-dashoffset: 185;
-    }
-    #ch6-svg4 .svg4-c1 { animation: svg4-sweep 2.4s 0.0s infinite linear; }
-    #ch6-svg4 .svg4-c2 { animation: svg4-sweep 2.4s 0.35s infinite linear; }
-    #ch6-svg4 .svg4-c3 { animation: svg4-sweep 2.4s 0.70s infinite linear; }
-    #ch6-svg4 .svg4-c4 { animation: svg4-sweep 2.4s 1.05s infinite linear; }
-    #ch6-svg4 .svg4-c5 { animation: svg4-sweep 2.4s 1.40s infinite linear; }
-    #ch6-svg4 .svg4-c6 { animation: svg4-sweep 2.4s 1.75s infinite linear; }
-    #ch6-svg4 .svg4-c7 { animation: svg4-sweep 2.4s 2.10s infinite linear; }
-    @keyframes svg4-sweep {
-      0%   { stroke-dashoffset:185; opacity:0.15; }
-      10%  { opacity:1; }
-      88%  { opacity:1; }
-      100% { stroke-dashoffset:0; opacity:0.15; }
-    }
-    #ch6-svg4 .svg4-freq-lbl { font-size: 9px; fill: #94a3b8; }
-  </style>
-  <rect x="5" y="5" width="750" height="280" rx="12" class="svg4-bg"/>
-  <line x1="85" y1="185" x2="715" y2="185" class="svg4-grid"/>
-  <line x1="85" y1="135" x2="715" y2="135" class="svg4-grid"/>
-  <line x1="85" y1="85" x2="715" y2="85" class="svg4-grid"/>
-  <line x1="175" y1="52" x2="175" y2="235" class="svg4-grid"/>
-  <line x1="265" y1="52" x2="265" y2="235" class="svg4-grid"/>
-  <line x1="355" y1="52" x2="355" y2="235" class="svg4-grid"/>
-  <line x1="445" y1="52" x2="445" y2="235" class="svg4-grid"/>
-  <line x1="535" y1="52" x2="535" y2="235" class="svg4-grid"/>
-  <line x1="625" y1="52" x2="625" y2="235" class="svg4-grid"/>
-  <text x="72" y="238" class="svg4-freq-lbl" text-anchor="end">923.0</text>
-  <text x="72" y="188" class="svg4-freq-lbl" text-anchor="end">923.3</text>
-  <text x="72" y="138" class="svg4-freq-lbl" text-anchor="end">923.5</text>
-  <text x="72" y="88" class="svg4-freq-lbl" text-anchor="end">923.8</text>
-  <path d="M 90 230 L 175 60" class="svg4-chirp-base"/>
-  <path d="M 175 230 L 265 60" class="svg4-chirp-base"/>
-  <path d="M 265 230 L 355 60" class="svg4-chirp-base"/>
-  <path d="M 355 230 L 445 60" class="svg4-chirp-base"/>
-  <path d="M 445 230 L 535 60" class="svg4-chirp-base"/>
-  <path d="M 535 230 L 625 60" class="svg4-chirp-base"/>
-  <path d="M 625 230 L 715 60" class="svg4-chirp-base"/>
-  <path d="M 90 230 L 175 60" class="svg4-chirp-active svg4-c1"/>
-  <path d="M 175 230 L 265 60" class="svg4-chirp-active svg4-c2"/>
-  <path d="M 265 230 L 355 60" class="svg4-chirp-active svg4-c3"/>
-  <path d="M 355 230 L 445 60" class="svg4-chirp-active svg4-c4"/>
-  <path d="M 445 230 L 535 60" class="svg4-chirp-active svg4-c5"/>
-  <path d="M 535 230 L 625 60" class="svg4-chirp-active svg4-c6"/>
-  <path d="M 625 230 L 715 60" class="svg4-chirp-active svg4-c7"/>
-  <line x1="85" y1="235" x2="718" y2="235" class="svg4-axis"/>
-  <line x1="85" y1="48" x2="85" y2="235" class="svg4-axis"/>
-  <polygon points="81,53 85,43 89,53" fill="#334155"/>
-  <polygon points="713,231 723,235 713,239" fill="#334155"/>
-  <text x="52" y="145" class="svg4-axis-lbl" text-anchor="middle" transform="rotate(-90 52 145)">แกน Y: ความถี่ (MHz)</text>
-  <text x="670" y="258" class="svg4-axis-lbl">แกน X: เวลา (ms)</text>
-  <text x="96" y="34" class="svg4-title">สัญญาณการมอดูเลตแบบ LoRa CSS — Up-Chirps</text>
-  <text x="96" y="48" class="svg4-desc">กวาดความถี่สูงขึ้นตามเวลา (Sweep up) — BW = 125 kHz, SF7</text>
-</svg>
-</div>
-
-LoRa สามารถถอดรหัสสัญญาณที่จมต่ำกว่า Noise Floor ได้ถึง -20 dB ตัวแปรสำคัญ:
-*   **Spreading Factor (SF7-SF12):** SF ต่ำ → ส่งเร็ว ระยะสั้น; SF สูง → ส่งช้า ระยะไกล
-*   **Bandwidth (BW):** 125 kHz, 250 kHz หรือ 500 kHz
-*   **Coding Rate (CR):** 4/5, 4/6, 4/7, 4/8
-
-### 7.5.2 สมการ Link Budget และ Spreading Factor vs. Data Rate
-
-#### LoRa Link Budget Calculation
-$$\text{Link Budget (dB)} = P_{tx} + G_{tx} + G_{rx} - L_{cable} - \text{FSPL} - L_{obstacles}$$
-$$\text{Link Margin (dB)} = \text{Received Power (dBm)} - \text{Sensitivity (dBm)}$$
-
-ค่า Link Margin ต้องเป็นบวก (ออกแบบให้มี margin ≥ 10 dB) ตัวอย่าง:
-- $P_{tx}$ = +14 dBm, $G_{tx} = G_{rx}$ = 2 dBi
-- FSPL ที่ 923 MHz, 5 km = 20log(5) + 20log(923) + 32.44 = **105.7 dB**
-- Received Power = 14 + 2 + 2 − 105.7 = **−87.7 dBm**
-- Sensitivity SF12 = −137 dBm → Link Margin = **+49.3 dB** ✓
-
-#### ตารางเปรียบเทียบ Spreading Factor
-
-| Spreading Factor | อัตราข้อมูล (BW=125kHz) | Time-on-Air (10 bytes) | Sensitivity | ระยะทาง (โล่ง) |
+| เกณฑ์เปรียบเทียบ | Wi-Fi SoftAP (ESP32-S3) | Wi-Fi Station (STA) | Bluetooth Low Energy (BLE) | LoRaWAN |
 |---|---|---|---|---|
-| **SF7** | 5,470 bps | ~36 ms | −123 dBm | ~2 km |
-| **SF8** | 3,125 bps | ~62 ms | −126 dBm | ~3 km |
-| **SF9** | 1,760 bps | ~124 ms | −129 dBm | ~5 km |
-| **SF10** | 980 bps | ~247 ms | −132 dBm | ~8 km |
-| **SF11** | 537 bps | ~495 ms | −134.5 dBm | ~11 km |
-| **SF12** | 293 bps | ~991 ms | −137 dBm | ~15 km |
+| **ความถี่วิทยุ** | 2.4 GHz ISM | 2.4 / 5 GHz ISM | 2.4 GHz ISM | Sub-GHz (920-925 MHz ไทย) |
+| **ระยะการส่งสัญญาณ** | 30 – 100 เมตร | 30 – 100 เมตร | 10 – 50 เมตร | **2 – 15 กิโลเมตร** |
+| **อัตราการส่งข้อมูล** | สูง (11 – 150 Mbps) | สูง (11 – 150 Mbps) | ปานกลาง (1 – 2 Mbps) | ต่ำมาก (0.3 – 50 kbps) |
+| **อินเทอร์เฟซผู้ใช้** | **เว็บเบราว์เซอร์มาตรฐาน** (ไม่ต้องลงแอป) | เว็บเบราว์เซอร์ หรือ Cloud | ต้องมีแอปเฉพาะ (Web Bluetooth / Mobile App) | แดชบอร์ดบน Cloud Gateway |
+| **การใช้พลังงาน** | ปานกลาง-สูง (100-240 mA) | ปานกลาง-สูง (100-240 mA) | **ต่ำมาก** (10-15 mA) | **ต่ำที่สุด** (10 mA ขณะส่ง) |
+| **ความเหมาะสมทางวิศวกรรม** | คอนโซลควบคุมเครื่องจักรหน้างาน, แท่นทดสอบ | เชื่อมต่อระบบโรงงานเดิม (SCADA / MES) | เซนเซอร์แบบพกพา, อุปกรณ์วัดสวมใส่ | เซนเซอร์การเกษตร, สถานีวัดน้ำระยะไกล |
 
-### 7.5.3 สถาปัตยกรรมเครือข่าย LoRaWAN (Star-of-Stars)
-
-<div style="text-align: center; margin: 20px 0;">
-<svg id="ch6-svg5" viewBox="0 0 760 330" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
-  <title>LoRaWAN Star-of-Stars Topology</title>
-  <style>
-    #ch6-svg5 .svg5-bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
-    #ch6-svg5 .svg5-mcu { fill: #faf5ff; stroke: #7c3aed; stroke-width: 2; }
-    #ch6-svg5 .svg5-comp { fill: #ffffff; stroke: #334155; stroke-width: 2; }
-    #ch6-svg5 .svg5-lbl-title { font-size: 12px; font-weight: 700; fill: #7c3aed; text-anchor: middle; }
-    #ch6-svg5 .svg5-lbl-sub { font-size: 10px; fill: #334155; text-anchor: middle; }
-    #ch6-svg5 .svg5-lbl-tech { font-size: 9.5px; font-weight: bold; text-anchor: middle; }
-    #ch6-svg5 .svg5-link-ip { stroke: #2563eb; stroke-width: 2.5; stroke-linecap: round; }
-    #ch6-svg5 .svg5-link-lora { stroke: #7c3aed; stroke-dasharray: 5 4; stroke-width: 1.5; }
-    #ch6-svg5 .svg5-pkt-lora {
-      fill: none; stroke: #7c3aed; stroke-width: 3.5; stroke-linecap: round;
-      stroke-dasharray: 8 100; stroke-dashoffset: 0;
-      animation: svg5-lora 6s infinite ease-in-out;
-    }
-    #ch6-svg5 .svg5-pkt-ip1 {
-      fill: none; stroke: #2563eb; stroke-width: 3.5; stroke-linecap: round;
-      stroke-dasharray: 10 100; stroke-dashoffset: 0;
-      animation: svg5-ip1 6s infinite ease-in-out;
-    }
-    #ch6-svg5 .svg5-pkt-ip2 {
-      fill: none; stroke: #2563eb; stroke-width: 3.5; stroke-linecap: round;
-      stroke-dasharray: 10 100; stroke-dashoffset: 0;
-      animation: svg5-ip2 6s infinite ease-in-out;
-    }
-    @keyframes svg5-lora {
-      0%   { stroke-dashoffset:0; opacity:0; }
-      5%   { opacity:1; }
-      27%,100% { stroke-dashoffset:-185; opacity:0; }
-    }
-    @keyframes svg5-ip1 {
-      0%,28%  { stroke-dashoffset:0; opacity:0; }
-      33%     { opacity:1; }
-      57%,100%{ stroke-dashoffset:-210; opacity:0; }
-    }
-    @keyframes svg5-ip2 {
-      0%,58%  { stroke-dashoffset:0; opacity:0; }
-      63%     { opacity:1; }
-      87%,100%{ stroke-dashoffset:-200; opacity:0; }
-    }
-  </style>
-  <rect x="5" y="5" width="750" height="320" rx="12" class="svg5-bg"/>
-  <text x="145" y="28" class="svg5-lbl-title">เครือข่าย LoRa (Sub-GHz)</text>
-  <text x="145" y="42" class="svg5-lbl-sub">(ย่านความถี่ AS923 ประเทศไทย)</text>
-  <line x1="268" y1="16" x2="268" y2="310" stroke="#e2e8f0" stroke-dasharray="4 4" stroke-width="1.5"/>
-  <text x="510" y="28" class="svg5-lbl-title">เครือข่าย TCP/IP / Internet</text>
-  <text x="510" y="42" class="svg5-lbl-sub">(สายเคเบิล / 4G Backhaul)</text>
-  <line x1="285" y1="165" x2="488" y2="165" class="svg5-link-ip"/>
-  <text x="386" y="155" class="svg5-lbl-tech" style="fill:#2563eb;">IP/TCP (MQTT over TLS)</text>
-  <line x1="488" y1="165" x2="665" y2="165" class="svg5-link-ip"/>
-  <text x="577" y="155" class="svg5-lbl-tech" style="fill:#2563eb;">IP/WebSocket</text>
-  <line x1="88" y1="82" x2="285" y2="165" class="svg5-link-lora"/>
-  <line x1="88" y1="165" x2="285" y2="165" class="svg5-link-lora"/>
-  <line x1="88" y1="248" x2="285" y2="165" class="svg5-link-lora"/>
-  <text x="168" y="108" class="svg5-lbl-tech" style="fill:#7c3aed;">LoRa RF</text>
-  <text x="175" y="182" class="svg5-lbl-tech" style="fill:#7c3aed;">LoRa RF</text>
-  <text x="168" y="230" class="svg5-lbl-tech" style="fill:#7c3aed;">LoRa RF</text>
-  <path d="M 88 82 L 285 165" class="svg5-pkt-lora"/>
-  <path d="M 88 165 L 285 165" class="svg5-pkt-lora" style="animation-delay:0.25s;"/>
-  <path d="M 88 248 L 285 165" class="svg5-pkt-lora" style="animation-delay:0.5s;"/>
-  <path d="M 285 165 L 488 165" class="svg5-pkt-ip1"/>
-  <path d="M 488 165 L 665 165" class="svg5-pkt-ip2"/>
-  <g transform="translate(38,57)">
-    <rect x="0" y="0" width="100" height="50" rx="4" class="svg5-comp"/>
-    <text x="50" y="22" class="svg5-lbl-sub" style="font-weight:bold;">End Device 1</text>
-    <text x="50" y="38" class="svg5-lbl-sub" style="font-size:9px;">(เซ็นเซอร์ดิน)</text>
-    <line x1="50" y1="0" x2="50" y2="-10" stroke="#334155" stroke-width="2"/>
-    <circle cx="50" cy="-12" r="3" fill="#334155"/>
-  </g>
-  <g transform="translate(38,140)">
-    <rect x="0" y="0" width="100" height="50" rx="4" class="svg5-comp"/>
-    <text x="50" y="22" class="svg5-lbl-sub" style="font-weight:bold;">End Device 2</text>
-    <text x="50" y="38" class="svg5-lbl-sub" style="font-size:9px;">(เซ็นเซอร์น้ำ)</text>
-    <line x1="50" y1="0" x2="50" y2="-10" stroke="#334155" stroke-width="2"/>
-    <circle cx="50" cy="-12" r="3" fill="#334155"/>
-  </g>
-  <g transform="translate(38,223)">
-    <rect x="0" y="0" width="100" height="50" rx="4" class="svg5-comp"/>
-    <text x="50" y="22" class="svg5-lbl-sub" style="font-weight:bold;">End Device 3</text>
-    <text x="50" y="38" class="svg5-lbl-sub" style="font-size:9px;">(วาล์วน้ำ)</text>
-    <line x1="50" y1="0" x2="50" y2="-10" stroke="#334155" stroke-width="2"/>
-    <circle cx="50" cy="-12" r="3" fill="#334155"/>
-  </g>
-  <g transform="translate(235,130)">
-    <rect x="0" y="0" width="100" height="70" rx="8" class="svg5-mcu"/>
-    <text x="50" y="26" class="svg5-lbl-title">Gateway</text>
-    <text x="50" y="42" class="svg5-lbl-sub" style="font-weight:bold;">เกตเวย์</text>
-    <text x="50" y="57" class="svg5-lbl-sub" style="font-size:8.5px;">(RF ↔ TCP/IP)</text>
-    <line x1="12" y1="0" x2="12" y2="-18" stroke="#7c3aed" stroke-width="2"/>
-    <circle cx="12" cy="-20" r="3.5" fill="#7c3aed"/>
-  </g>
-  <g transform="translate(438,130)">
-    <rect x="0" y="0" width="100" height="70" rx="8" class="svg5-mcu"/>
-    <text x="50" y="26" class="svg5-lbl-title">Network</text>
-    <text x="50" y="40" class="svg5-lbl-title">Server</text>
-    <text x="50" y="57" class="svg5-lbl-sub" style="font-size:8.5px;">(ถอดรหัส / ADR)</text>
-  </g>
-  <g transform="translate(615,130)">
-    <rect x="0" y="0" width="115" height="70" rx="8" class="svg5-mcu"/>
-    <text x="57" y="26" class="svg5-lbl-title">App Server</text>
-    <text x="57" y="42" class="svg5-lbl-sub" style="font-weight:bold;">เซิร์ฟเวอร์ปลายทาง</text>
-    <text x="57" y="58" class="svg5-lbl-sub" style="font-size:8.5px;">(Dashboard / DB)</text>
-  </g>
-  <line x1="30" y1="300" x2="70" y2="300" stroke="#7c3aed" stroke-dasharray="5 4" stroke-width="2"/>
-  <text x="78" y="304" class="svg5-lbl-tech" style="fill:#7c3aed;text-anchor:start;">ลิงก์ LoRa (Sub-GHz วิทยุ)</text>
-  <line x1="250" y1="300" x2="290" y2="300" stroke="#2563eb" stroke-width="2.5"/>
-  <text x="298" y="304" class="svg5-lbl-tech" style="fill:#2563eb;text-anchor:start;">ลิงก์ TCP/IP (อินเทอร์เน็ต)</text>
-</svg>
 </div>
-
-1.  **End Device:** รับส่งสัญญาณวิทยุ LoRa รายงานตัวเลขไปยังเกตเวย์
-2.  **Gateway:** รับสัญญาณ LoRa แปลงเป็น IP ส่งขึ้น Cloud
-3.  **Network Server:** ถอดรหัส ตรวจสอบความปลอดภัย ควบคุม ADR
-4.  **Application Server:** รับข้อมูลที่ถอดรหัสแล้วนำไปวิเคราะห์/แสดงผล
-
-### 7.5.4 ประเภทการทำงาน Class A / B / C
-
-*   **Class A:** เปิดรับ Downlink เฉพาะหลัง Uplink เท่านั้น — ประหยัดพลังงานสูงสุด
-*   **Class B:** ตื่นรับ Downlink ตามช่วงเวลานัด (Beacon-synchronized) — ตอบสนองปานกลาง
-*   **Class C:** เปิดรับ Downlink ตลอดเวลา — ตอบสนองเร็วสุด แต่กินไฟมากสุด เหมาะกับอุปกรณ์ที่มีไฟเลี้ยงหลัก
-
-### 7.5.5 Duty Cycle และ Fair Access Policy
-
-*   **Duty Cycle 1%:** ส่งสัญญาณ 1 วินาที → หยุดพัก 99 วินาที
-*   **TTN Fair Access Policy:** Uplink ≤ 30 วินาที/วัน, Downlink ≤ 10 ข้อความ/วัน
 
 ---
-
-## 7.6 เครือข่ายเซลลูลาร์สำหรับ IoT (Cellular IoT)
-
-<div style="text-align: center; margin: 20px 0;">
-  <img src="../../assets/images/cellular_5g_module.jpg" alt="Cellular 5G IoT Module" style="max-width: 280px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;"/>
-  <div style="font-size: 12px; color: #64748b; margin-top: 8px;">ภาพที่ 7.3 โมดูลสื่อสารไร้สายเซลลูลาร์ความเร็วสูงระดับ 5G สำหรับระบบ IoT เครือข่ายโทรศัพท์เคลื่อนที่</div>
-</div>
-
-### 7.6.1 NB-IoT (Narrowband IoT)
-*   Bandwidth 180 kHz ทำงานในช่อง Guard Band ของ LTE
-*   **PSM (Power Saving Mode):** ประหยัดพลังงานสูงสุด หลับได้นานถึง 413 วัน
-*   **eDRX:** รับสัญญาณเป็นรอบ ลดการใช้พลังงาน
-*   Deep Indoor Coverage เพิ่ม +20 dB จากเครือข่ายทั่วไป
-
-### 7.6.2 LTE-M (eMTC)
-*   Bandwidth 1.4 MHz ความเร็วถึง 1 Mbps
-*   รองรับ **Handover** ข้ามสถานีฐานแบบไร้รอยต่อ เหมาะกับ Logistics Tracking
-
-### 7.6.3 5G สำหรับระบบ IoT (mMTC, URLLC, eMBB)
-
-<div style="text-align: center; margin: 20px 0;">
-<svg id="ch6-svg6" viewBox="0 0 760 360" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
-  <title>5G Triangle — สามเสาหลักเทคโนโลยี 5G</title>
-  <style>
-    #ch6-svg6 .svg6-bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
-    #ch6-svg6 .svg6-tri-fill { fill: #faf5ff; stroke: #7c3aed; stroke-width: 2.5; stroke-linejoin: round; }
-    #ch6-svg6 .svg6-tri-flow {
-      fill: none; stroke: #7c3aed; stroke-width: 3.5; stroke-linecap: round;
-      stroke-linejoin: round; stroke-dasharray: 40 200; stroke-dashoffset: 0;
-      animation: svg6-run 3.5s infinite linear;
-    }
-    #ch6-svg6 .svg6-vertex-embb {
-      fill: #ede9fe; stroke: #7c3aed; stroke-width: 2.5;
-      animation: svg6-pulse-embb 2s 0.0s infinite ease-in-out;
-    }
-    #ch6-svg6 .svg6-vertex-urllc {
-      fill: #dbeafe; stroke: #2563eb; stroke-width: 2.5;
-      animation: svg6-pulse-urllc 2s 0.67s infinite ease-in-out;
-    }
-    #ch6-svg6 .svg6-vertex-mmtc {
-      fill: #dcfce7; stroke: #059669; stroke-width: 2.5;
-      animation: svg6-pulse-mmtc 2s 1.33s infinite ease-in-out;
-    }
-    #ch6-svg6 .svg6-case-box { fill: #ffffff; stroke: #334155; stroke-width: 1.5; }
-    #ch6-svg6 .svg6-pillar { font-size: 15px; font-weight: 800; text-anchor: middle; }
-    #ch6-svg6 .svg6-eng { font-size: 9.5px; fill: #475569; text-anchor: middle; }
-    #ch6-svg6 .svg6-case-text { font-size: 11px; fill: #334155; font-weight: 600; }
-    #ch6-svg6 .svg6-dot { animation: svg6-dot-pulse 1.5s infinite; }
-    #ch6-svg6 .svg6-center { font-size: 13px; font-weight: 700; fill: #334155; text-anchor: middle; }
-    #ch6-svg6 .svg6-center-sub { font-size: 10px; fill: #64748b; text-anchor: middle; }
-    @keyframes svg6-run { to { stroke-dashoffset: -240; } }
-    @keyframes svg6-pulse-embb {
-      0%,100% { r:12; stroke-width:2.5; }
-      50%     { r:16; stroke-width:4; }
-    }
-    @keyframes svg6-pulse-urllc {
-      0%,100% { r:12; stroke-width:2.5; }
-      50%     { r:16; stroke-width:4; }
-    }
-    @keyframes svg6-pulse-mmtc {
-      0%,100% { r:12; stroke-width:2.5; }
-      50%     { r:16; stroke-width:4; }
-    }
-    @keyframes svg6-dot-pulse {
-      0%,100% { opacity:0.35; }
-      50%     { opacity:1; }
-    }
-  </style>
-  <rect x="5" y="5" width="750" height="350" rx="12" class="svg6-bg"/>
-  <polygon points="385,75 555,265 215,265" class="svg6-tri-fill"/>
-  <polygon points="385,75 555,265 215,265" class="svg6-tri-flow"/>
-  <circle cx="385" cy="75" r="12" class="svg6-vertex-embb"/>
-  <circle cx="215" cy="265" r="12" class="svg6-vertex-urllc"/>
-  <circle cx="555" cy="265" r="12" class="svg6-vertex-mmtc"/>
-  <text x="385" y="175" class="svg6-center">สามเสาหลัก 5G</text>
-  <text x="385" y="192" class="svg6-center-sub">(Three Pillars of 5G NR)</text>
-  <text x="385" y="44" class="svg6-pillar" style="fill:#7c3aed;">eMBB</text>
-  <text x="385" y="57" class="svg6-eng">Enhanced Mobile Broadband</text>
-  <rect x="490" y="18" width="255" height="62" rx="4" class="svg6-case-box"/>
-  <circle cx="508" cy="36" r="4" class="svg6-dot" fill="#7c3aed"/>
-  <text x="520" y="40" class="svg6-case-text">สตรีมวิดีโอ 4K/8K ความหน่วงต่ำ</text>
-  <circle cx="508" cy="58" r="4" class="svg6-dot" fill="#7c3aed" style="animation-delay:0.4s;"/>
-  <text x="520" y="62" class="svg6-case-text">แอปฯ VR/AR ในโรงงานอุตสาหกรรม</text>
-  <text x="125" y="286" class="svg6-pillar" style="fill:#2563eb;">URLLC</text>
-  <text x="125" y="300" class="svg6-eng">Ultra-Reliable Low Latency</text>
-  <rect x="12" y="175" width="230" height="62" rx="4" class="svg6-case-box"/>
-  <circle cx="30" cy="193" r="4" class="svg6-dot" fill="#2563eb" style="animation-delay:0.6s;"/>
-  <text x="42" y="197" class="svg6-case-text">ควบคุมหุ่นยนต์แบบ RT (&lt;1 ms)</text>
-  <circle cx="30" cy="215" r="4" class="svg6-dot" fill="#2563eb" style="animation-delay:0.9s;"/>
-  <text x="42" y="219" class="svg6-case-text">รถยนต์อัตโนมัติ V2X Safety</text>
-  <text x="645" y="286" class="svg6-pillar" style="fill:#059669;">mMTC</text>
-  <text x="645" y="300" class="svg6-eng">massive Machine-Type Comm.</text>
-  <rect x="518" y="175" width="228" height="62" rx="4" class="svg6-case-box"/>
-  <circle cx="536" cy="193" r="4" class="svg6-dot" fill="#059669" style="animation-delay:1.1s;"/>
-  <text x="548" y="197" class="svg6-case-text">เซ็นเซอร์ 1 ล้านจุด / ตร.กม.</text>
-  <circle cx="536" cy="215" r="4" class="svg6-dot" fill="#059669" style="animation-delay:1.4s;"/>
-  <text x="548" y="219" class="svg6-case-text">NB-IoT &amp; LTE-M บูรณาการ 5G</text>
-  <text x="385" y="328" class="svg6-center-sub">★ แต่ละมุมสามเหลี่ยมตอบโจทย์กรณีใช้งาน IoT ที่แตกต่างกัน</text>
-</svg>
-</div>
-
-1.  **eMBB:** ส่งข้อมูลปริมาณมาก เช่น วิดีโอ 4K/8K และแอปฯ VR/AR
-2.  **mMTC:** รองรับเซ็นเซอร์หนาแน่นสูงสุด 1 ล้านจุด/ตร.กม. บูรณาการ NB-IoT และ LTE-M
-3.  **URLLC:** ความหน่วงต่ำกว่า 1 ms ควบคุมหุ่นยนต์และรถยนต์อัจฉริยะ
-
-### 7.6.4 5G NR Numerology (µ) และ Network Slicing
-
-#### NR Numerology (Subcarrier Spacing)
-5G NR กำหนดค่า **Numerology (µ)** ควบคุม Subcarrier Spacing (SCS) และระยะเวลาของ Slot:
-
-| µ (Numerology) | Subcarrier Spacing (kHz) | Slot Duration (ms) | ความหน่วง | กรณีใช้งาน |
-|---|---|---|---|---|
-| 0 | 15 | 1.0 | สูง | LTE compatibility, eMBB |
-| 1 | 30 | 0.5 | ปานกลาง | eMBB FR1 (< 6 GHz) |
-| 2 | 60 | 0.25 | ต่ำ | eMBB FR1 + mmWave |
-| 3 | 120 | 0.125 | ต่ำมาก | **URLLC, mmWave FR2** |
-| 4 | 240 | 0.0625 | ต่ำสุด | Reference signal only |
-
-µ สูงขึ้น → SCS กว้างขึ้น → Slot สั้นลง → ความหน่วงต่ำลง URLLC ใช้ Mini-Slot (2-7 OFDM symbols) เพื่อลด latency ต่ำกว่า 0.5 ms
-
-#### Network Slicing (การแบ่งส่วนเครือข่ายเสมือน)
-
-<div style="text-align: center; margin: 25px 0;">
-<svg viewBox="0 0 760 270" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
-  <title>การแบ่งส่วนเครือข่าย (5G Network Slicing)</title>
-  <style>
-    .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1.5; rx: 12px; }
-    .box-infra { fill: #f1f5f9; stroke: #cbd5e1; stroke-width: 2; rx: 8px; }
-    
-    .box-slice { stroke-width: 2; rx: 8px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.02)); }
-    .slice-a { fill: #eff6ff; stroke: #3b82f6; }
-    .slice-b { fill: #faf5ff; stroke: #8b5cf6; }
-    .slice-c { fill: #ecfdf5; stroke: #10b981; }
-    
-    .txt-infra-title { font-size: 15px; font-weight: bold; fill: #1e293b; }
-    .txt-infra-sub { font-size: 12.5px; fill: #475569; font-weight: 500; }
-    
-    .txt-slice-title { font-size: 13.5px; font-weight: bold; fill: #0f172a; }
-    .txt-slice-detail { font-size: 11.5px; fill: #334155; }
-    
-    .arrow-shaft { fill: none; stroke: #cbd5e1; stroke-width: 2; stroke-linecap: round; }
-    .arrow-flow-blue { fill: none; stroke: #3b82f6; stroke-width: 2; stroke-dasharray: 4 6; animation: march 1.5s linear infinite; }
-    .arrow-flow-purple { fill: none; stroke: #8b5cf6; stroke-width: 2; stroke-dasharray: 4 6; animation: march 1.5s linear infinite; }
-    .arrow-flow-green { fill: none; stroke: #10b981; stroke-width: 2; stroke-dasharray: 4 6; animation: march 1.5s linear infinite; }
-    
-    @keyframes march {
-      to { stroke-dashoffset: -10; }
-    }
-  </style>
-
-  <rect x="5" y="5" width="750" height="260" class="bg"/>
-  
-  <defs>
-    <marker id="arrow-slice" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-      <path d="M 0 1.5 L 7 5 L 0 8.5 z" fill="#cbd5e1"/>
-    </marker>
-  </defs>
-
-  <!-- Physical Infrastructure Box -->
-  <rect x="40" y="20" width="680" height="65" class="box-infra"/>
-  <text x="380" y="43" text-anchor="middle" class="txt-infra-title">⚙️ โครงสร้างพื้นฐาน 5G ทางกายภาพ (5G Physical Infrastructure)</text>
-  <text x="380" y="62" text-anchor="middle" class="txt-infra-sub">(5G RAN + Transport Network + 5G Core)</text>
-
-  <!-- Arrows from Infrastructure to Slices -->
-  <line x1="145" y1="85" x2="145" y2="120" class="arrow-shaft" marker-end="url(#arrow-slice)"/>
-  <line x1="145" y1="85" x2="145" y2="115" class="arrow-flow-blue"/>
-  
-  <line x1="380" y1="85" x2="380" y2="120" class="arrow-shaft" marker-end="url(#arrow-slice)"/>
-  <line x1="380" y1="85" x2="380" y2="115" class="arrow-flow-purple"/>
-  
-  <line x1="615" y1="85" x2="615" y2="120" class="arrow-shaft" marker-end="url(#arrow-slice)"/>
-  <line x1="615" y1="85" x2="615" y2="115" class="arrow-flow-green"/>
-
-  <!-- Slice A -->
-  <rect x="40" y="120" width="210" height="120" class="box-slice slice-a"/>
-  <text x="55" y="145" class="txt-slice-title">🍰 Slice A: eMBB</text>
-  <text x="55" y="168" class="txt-slice-detail">▪ เน้นความกว้างช่องสัญญาณ (BW)</text>
-  <text x="55" y="188" class="txt-slice-detail">▪ ความเร็วรับส่งข้อมูลสูงมาก (Gbps)</text>
-  <text x="55" y="208" class="txt-slice-detail">▪ ตัวอย่าง: วิดีโอ 4K/8K, VR/AR</text>
-
-  <!-- Slice B -->
-  <rect x="275" y="120" width="210" height="120" class="box-slice slice-b"/>
-  <text x="290" y="145" class="txt-slice-title">⚡ Slice B: URLLC</text>
-  <text x="290" y="168" class="txt-slice-detail">▪ เน้นความหน่วงเวลาต่ำพิเศษ</text>
-  <text x="290" y="188" class="txt-slice-detail">▪ Latency &lt; 1 ms, เสถียรภาพสูง</text>
-  <text x="290" y="208" class="txt-slice-detail">▪ ตัวอย่าง: รถยนต์ไร้คนขับ, ผ่าตัดไกล</text>
-
-  <!-- Slice C -->
-  <rect x="510" y="120" width="210" height="120" class="box-slice slice-c"/>
-  <text x="525" y="145" class="txt-slice-title">🌐 Slice C: mMTC</text>
-  <text x="525" y="168" class="txt-slice-detail">▪ รองรับอุปกรณ์ IoT หนาแน่นสูง</text>
-  <text x="525" y="188" class="txt-slice-detail">▪ อุปกรณ์ใช้พลังงานต่ำ แบตยาวนาน</text>
-  <text x="525" y="208" class="txt-slice-detail">▪ ตัวอย่าง: NB-IoT, Smart Sensors</text>
-</svg>
-</div>
-
-*   **Slice Isolation:** แต่ละ Slice ทำงานแยกกันสมบูรณ์
-*   **SLA Guarantee:** รับประกัน QoS เฉพาะเจาะจงสำหรับแต่ละ Slice
-*   **On-demand Provisioning:** สร้าง Slice ใหม่ผ่าน software โดยไม่ต้องติดตั้งฮาร์ดแวร์ใหม่
-
----
-
-## 7.7 ตารางเปรียบเทียบเชิงวิศวกรรม 6 เทคโนโลยีไร้สาย
-
-| เกณฑ์เปรียบเทียบ | Wi-Fi 4 (802.11n) | BLE | Zigbee (802.15.4) | LoRa / LoRaWAN | NB-IoT | LTE-M |
-|---|---|---|---|---|---|---|
-| **ความถี่วิทยุหลัก** | 2.4 / 5 GHz | 2.4 GHz | 2.4 GHz | Sub-GHz (923 MHz ไทย) | Licensed LTE Band | Licensed LTE Band |
-| **ระยะทำงาน** | 30-100 m | 10-100 m | 10-100 m (Mesh ขยายได้) | **2-15 km** | **1-15 km** | **1-10 km** |
-| **อัตราข้อมูล** | สูงมาก (150-600 Mbps) | ปานกลาง (1-2 Mbps) | ต่ำ (250 kbps) | ต่ำมาก (0.3-50 kbps) | ต่ำ (~250 kbps) | ปานกลาง (~1 Mbps) |
-| **พลังงานขณะทำงาน** | สูงมาก (100-300 mA) | ต่ำมาก (10-15 mA) | ต่ำมาก (15-20 mA) | ต่ำที่สุด (10-12 mA) | ต่ำมาก (120 mA peak) | ปานกลาง (200 mA peak) |
-| **โครงร่างเครือข่าย** | Star (AP) | Star | **Mesh** | Star-of-Stars | Star (เสาเซลลูลาร์) | Star (เสาเซลลูลาร์) |
-| **ความจุโหนด** | ~50-250 / AP | ขึ้นกับ Master | **สูงสุด 65,000** | **10,000 / Gateway** | 50,000 / สถานี | 50,000 / สถานี |
-| **ค่าใช้จ่ายรายเดือน** | ไม่มี | ไม่มี | ไม่มี | ไม่มี / ต่ำ | ค่าซิมการ์ด | ค่าซิมการ์ด |
-
----
-
-</div>
 
 <div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
-## 7.6 ปฏิบัติการ Wokwi Lab 7 & 8: การเชื่อมต่อ Wi-Fi Web Server และ Bluetooth Low Energy
 
-**รหัสปฏิบัติการ:** LAB-07, LAB-08 | **เวลาปฏิบัติการ:** 4 ชั่วโมง  
-**เป้าหมายการเรียนรู้:** LLO7.1, LLO7.2, LLO8.1, LLO8.2 (CLO2, CLO3, CLO4)  
-**เครื่องมือที่ใช้:** Wokwi Simulator, ESP32, DHT22, รีเลย์, LED แสดงสถานะ Wi-Fi
+## 7.6 ปฏิบัติการ: สร้างระบบคอนโซล IoT ไร้สายด้วย ESP32-S3 และ AHT25 Web Server
 
----
-
-### 7.6.1 วัตถุประสงค์เชิงปฏิบัติการ
-1. เชื่อมต่อ ESP32 เข้ากับเครือข่าย Wi-Fi (โหมด STA) และตั้งค่าโหมด Access Point (AP)
-2. สร้างเว็บเซิร์ฟเวอร์ (Embedded HTTP Web Server) เพื่อรายงานค่าเซนเซอร์แบบ Real-time และมีปุ่มกดเปิด-ปิด Relay ผ่านเว็บเบราว์เซอร์
-3. ศึกษาโครงสร้างการส่งข้อมูลแบบกระจายสัญญาณ Bluetooth Low Energy (BLE GATT Server)
+**รหัสปฏิบัติการ:** LAB-07 | **เวลาปฏิบัติการ:** 3 ชั่วโมง  
+**เป้าหมายการเรียนรู้:** LLO7.1, LLO7.2, LLO7.3 (CLO2, CLO3, CLO4)  
+**อุปกรณ์ที่ใช้:** บอร์ดไมโครคอนโทรลเลอร์ ESP32-S3, โมดูลเซนเซอร์ AHT25 (I2C), หลอด LED 3 ดวง, ตัวต้านทาน $220\Omega$ หรือ $330\Omega$ 3 ตัว, เบรดบอร์ด และสายต่อวงจร
 
 ---
 
-### 7.6.2 แผนผังการต่อวงจร (Wiring Table)
+### 7.6.1 แผนผังการต่อวงจรเชิงฮาร์ดแวร์ (Hardware Wiring Table)
 
-| อุปกรณ์ | ขาของอุปกรณ์ | ขาบนบอร์ด ESP32 DevKit | หน้าที่ / หมายเหตุ |
+| อุปกรณ์ที่เชื่อมต่อ | ขาบนตัวอุปกรณ์ | ขาบนบอร์ด ESP32-S3 | หน้าที่ทางวิศวกรรม / ข้อกำหนดทางไฟฟ้า |
 |---|---|---|---|
-| **DHT22 Climate Sensor** | DATA | **GPIO 15** | สัญญาณอุณหภูมิและความชื้น |
-| **Relay Module (Fan Control)** | IN | **GPIO 13** | สั่งเปิด-ปิดพัดลมจากหน้าเว็บ |
-| **Wi-Fi Status LED** | Anode (+) | **GPIO 12** (ผ่าน R 330Ω) | ติดสว่างเมื่อต่อ Wi-Fi สำเร็จ |
+| **AHT25 Sensor** | **VCC** | **3V3** | แหล่งจ่ายแรงดันไฟฟ้ากระแสตรง 3.3V เสถียร |
+| **AHT25 Sensor** | **GND** | **GND** | กราวด์ร่วมของระบบ (Common Ground) |
+| **AHT25 Sensor** | **SDA** | **GPIO 9** | สัญญาณข้อมูลบัส I2C (Serial Data) |
+| **AHT25 Sensor** | **SCL** | **GPIO 8** | สัญญาณนาฬิกาบัส I2C (Serial Clock) |
+| **LED 1 (ไฟแสดงสถานะ 1)** | ขา Anode (+) ผ่าน R 220Ω | **GPIO 15** | สัญญาณดิจิทัลเอาต์พุต ควบคุม LED ดวงที่ 1 |
+| **LED 1 (ไฟแสดงสถานะ 1)** | ขา Cathode (-) | **GND** | กราวด์ร่วม |
+| **LED 2 (ไฟแสดงสถานะ 2)** | ขา Anode (+) ผ่าน R 220Ω | **GPIO 16** | สัญญาณดิจิทัลเอาต์พุต ควบคุม LED ดวงที่ 2 |
+| **LED 2 (ไฟแสดงสถานะ 2)** | ขา Cathode (-) | **GND** | กราวด์ร่วม |
+| **LED 3 (ไฟแสดงสถานะ 3)** | ขา Anode (+) ผ่าน R 220Ω | **GPIO 17** | สัญญาณดิจิทัลเอาต์พุต ควบคุม LED ดวงที่ 3 |
+| **LED 3 (ไฟแสดงสถานะ 3)** | ขา Cathode (-) | **GND** | กราวด์ร่วม |
 
 ---
 
-### 7.6.3 ไฟล์โครงสร้างวงจร `diagram.json` สำหรับ Wokwi
+### 7.6.2 โครงสร้างไฟล์วงจร `diagram.json` สำหรับการจำลองบน Wokwi
 
 ```json
 {
   "version": 1,
-  "author": "KSU TechEngineering",
+  "author": "Puri Chantima",
   "editor": "wokwi",
   "parts": [
-    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
-    { "type": "wokwi-dht22", "id": "dht1", "top": -140, "left": 120, "attrs": { "temperature": "31.2", "humidity": "58" } },
-    { "type": "wokwi-relay-module", "id": "relay1", "top": 120, "left": 120, "attrs": {} },
-    { "type": "wokwi-led", "id": "led_wifi", "top": 120, "left": -80, "attrs": { "color": "green" } },
-    { "type": "wokwi-resistor", "id": "r1", "top": 170, "left": -80, "attrs": { "value": "330" } }
+    { "type": "board-esp32-s3-devkitc-1", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-aht20", "id": "aht1", "top": -120, "left": 140, "attrs": {} },
+    { "type": "wokwi-led", "id": "led1", "top": 120, "left": -100, "attrs": { "color": "green" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 170, "left": -100, "attrs": { "value": "220" } },
+    { "type": "wokwi-led", "id": "led2", "top": 120, "left": -40, "attrs": { "color": "yellow" } },
+    { "type": "wokwi-resistor", "id": "r2", "top": 170, "left": -40, "attrs": { "value": "220" } },
+    { "type": "wokwi-led", "id": "led3", "top": 120, "left": 20, "attrs": { "color": "red" } },
+    { "type": "wokwi-resistor", "id": "r3", "top": 170, "left": 20, "attrs": { "value": "220" } }
   ],
   "connections": [
-    [ "esp:3V3", "dht1:VCC", "red", [ "v0" ] ],
-    [ "esp:GND", "dht1:GND", "black", [ "v0" ] ],
-    [ "esp:15", "dht1:SDA", "blue", [ "v0" ] ],
+    [ "esp:3V3", "aht1:VIN", "red", [ "v0" ] ],
+    [ "esp:GND", "aht1:GND", "black", [ "v0" ] ],
+    [ "esp:9", "aht1:SDA", "blue", [ "v0" ] ],
+    [ "esp:8", "aht1:SCL", "yellow", [ "v0" ] ],
 
-    [ "esp:5V", "relay1:VCC", "red", [ "v0" ] ],
-    [ "esp:GND", "relay1:GND", "black", [ "v0" ] ],
-    [ "esp:13", "relay1:IN", "purple", [ "v0" ] ],
+    [ "esp:15", "led1:A", "green", [ "v0" ] ],
+    [ "led1:C", "r1:1", "black", [ "v0" ] ],
+    [ "r1:2", "esp:GND", "black", [ "v0" ] ],
 
-    [ "esp:12", "led_wifi:A", "orange", [ "v0" ] ],
-    [ "led_wifi:C", "r1:1", "black", [ "v0" ] ],
-    [ "r1:2", "esp:GND", "black", [ "v0" ] ]
+    [ "esp:16", "led2:A", "orange", [ "v0" ] ],
+    [ "led2:C", "r2:1", "black", [ "v0" ] ],
+    [ "r2:2", "esp:GND", "black", [ "v0" ] ],
+
+    [ "esp:17", "led3:A", "red", [ "v0" ] ],
+    [ "led3:C", "r3:1", "black", [ "v0" ] ],
+    [ "r3:2", "esp:GND", "black", [ "v0" ] ]
   ],
   "dependencies": {}
 }
@@ -1377,142 +316,492 @@ $$\text{Link Margin (dB)} = \text{Received Power (dBm)} - \text{Sensitivity (dBm
 
 ---
 
-### 7.6.4 ซอร์สโค้ดภาษา C++ (Interactive Web Server)
+### 7.6.3 ซอร์สโค้ดภาษา C++ ฉบับสมบูรณ์ (Complete Project Source Code)
+
+คัดลอกโค้ดด้านล่างนี้ลงในโปรแกรม Arduino IDE หรือแท็บ `sketch.ino` บน Wokwi โดยติดตั้งไลบรารี **Adafruit AHTX0** ผ่าน Library Manager ให้เรียบร้อยก่อนทำการคอมไพล์:
 
 ```cpp
-/**
- * LAB 07: ESP32 Interactive Web Server for Machine Monitoring & Control
- * Course: Digital Technology for Engineering, KSU
- */
-
 #include <WiFi.h>
 #include <WebServer.h>
-#include <DHT.h>
+#include <Wire.h>
+#include <Adafruit_AHTX0.h>
 
-const char* SSID = "Wokwi-GUEST";
-const char* PASS = "";
+// กำหนดขา I2C สำหรับ AHT25
+#define I2C_SDA 9
+#define I2C_SCL 8
 
-#define DHTPIN 15
-#define DHTTYPE DHT22
-DHT dht(DHTPIN, DHTTYPE);
+// กำหนดขา LED
+#define LED1 15
+#define LED2 16
+#define LED3 17
 
-#define RELAY_PIN 13
-#define LED_WIFI_PIN 12
+const char* ssid = "ESP32S3_DASHBOARD";
+const char* password = "password123";
 
 WebServer server(80);
-bool relayState = false;
+Adafruit_AHTX0 aht;
+bool aht_found = false;
 
-// สร้างหน้าเว็บ HTML / CSS แบบ Responsive
-String sendHTML(float temperature, float humidity, bool isRelayOn) {
-  String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>";
-  html += "<title>KSU IoT Machine Portal</title>";
-  html += "<style>body{font-family:Arial,sans-serif;text-align:center;margin-top:40px;background:#f1f5f9;}";
-  html += ".card{background:#fff;padding:25px;border-radius:12px;box-shadow:0 4px 6px rgba(0,0,0,0.1);max-width:400px;margin:auto;}";
-  html += ".btn{display:inline-block;padding:12px 24px;color:#fff;text-decoration:none;border-radius:6px;font-size:18px;margin-top:15px;}";
-  html += ".btn-on{background:#22c55e;} .btn-off{background:#ef4444;} .val{font-size:24px;font-weight:bold;color:#1e293b;}</style></head>";
-  html += "<body><div class='card'><h2>🏭 Factory Node 01</h2>";
-  html += "<p>🌡️ Temperature: <span class='val'>" + String(temperature, 1) + " &deg;C</span></p>";
-  html += "<p>💧 Humidity: <span class='val'>" + String(humidity, 1) + " %</span></p>";
-  html += "<p>⚙️ Cooling Fan: <b>" + String(isRelayOn ? "<span style='color:#22c55e;'>RUNNING</span>" : "<span style='color:#64748b;'>STOPPED</span>") + "</b></p>";
-  if (isRelayOn) {
-    html += "<a href='/toggle' class='btn btn-off'>Turn OFF Fan</a>";
-  } else {
-    html += "<a href='/toggle' class='btn btn-on'>Turn ON Fan</a>";
+// สถานะไฟ LED
+bool led1State = false;
+bool led2State = false;
+bool led3State = false;
+
+float lastTemp = 0.0;
+float lastHum = 0.0;
+
+// โค้ดหน้าเว็บ Dashboard
+const char MAIN_page[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESP32-S3 IoT Console</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background-color: #0d1117; color: #e6edf3; padding: 20px 12px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    
+    .header { text-align: center; margin-bottom: 20px; width: 100%; max-width: 600px; }
+    .header h1 { font-size: 24px; font-weight: 700; color: #58a6ff; }
+    .header p { font-size: 13px; color: #8b949e; margin-top: 4px; }
+
+    .grid { display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%; max-width: 600px; }
+    .card { background: #161b22; border: 1px solid #30363d; border-radius: 16px; padding: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+    .card-title { font-size: 14px; text-transform: uppercase; letter-spacing: 0.8px; color: #8b949e; margin-bottom: 12px; font-weight: 600; display: flex; justify-content: space-between; }
+    .val-display { font-size: 32px; font-weight: 800; margin-bottom: 12px; }
+    .temp-accent { color: #ff7b72; }
+    .hum-accent { color: #58a6ff; }
+
+    canvas { width: 100%; height: 160px; background: #0d1117; border-radius: 10px; border: 1px solid #21262d; }
+
+    /* ปุ่ม Master Controls (เปิด/ปิด ทั้งหมด) */
+    .master-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .btn-master {
+      padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 700;
+      border: 1px solid transparent; cursor: pointer; transition: 0.2s;
+    }
+    .btn-all-on { background: #238636; color: #fff; border-color: #2ea043; }
+    .btn-all-on:hover { background: #2ea043; }
+    .btn-all-off { background: #da3633; color: #fff; border-color: #f85149; }
+    .btn-all-off:hover { background: #f85149; }
+
+    /* ปุ่มเปิด-ปิด LED แต่ละดวง */
+    .btn-group { display: flex; flex-direction: column; gap: 10px; }
+    .led-btn {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #21262d; border: 1px solid #30363d; border-radius: 12px;
+      padding: 14px 18px; color: #c9d1d9; font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: all 0.25s ease;
+    }
+    .led-btn:active { transform: scale(0.98); }
+    .led-indicator { width: 14px; height: 14px; border-radius: 5px; background: #484f58; transition: all 0.3s ease; }
+
+    .led-btn.active { background: #1f3527; border-color: #2ea043; color: #fff; }
+    .led-btn.active .led-indicator { background: #3fb950; box-shadow: 0 0 10px #3fb950; }
+
+    /* กล่องข้อมูลผู้จัดทำ ย้ายมาไว้ล่างสุด */
+    .student-card {
+      background: linear-gradient(135deg, #161b22, #0d1117);
+      border: 1px solid #30363d;
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-top: 20px;
+      width: 100%;
+      max-width: 600px;
+      text-align: center;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    }
+    .student-card .label { font-size: 12px; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+    .student-card .name { font-size: 20px; font-weight: 700; color: #58a6ff; margin-top: 4px; }
+    .student-card .detail { font-size: 12px; color: #8b949e; margin-top: 4px; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>ESP32-S3 IoT Console</h1>
+    <p id="clock">กำลังเชื่อมต่อข้อมูล...</p>
+  </div>
+
+  <div class="grid">
+    <!-- กราฟอุณหภูมิ -->
+    <div class="card">
+      <div class="card-title"><span>Temperature</span><span>&deg;C</span></div>
+      <div class="val-display temp-accent"><span id="tVal">--</span> <small style="font-size:18px;">&deg;C</small></div>
+      <canvas id="tempChart" width="400" height="160"></canvas>
+    </div>
+
+    <!-- กราฟความชื้น -->
+    <div class="card">
+      <div class="card-title"><span>Humidity</span><span>%RH</span></div>
+      <div class="val-display hum-accent"><span id="hVal">--</span> <small style="font-size:18px;">%</small></div>
+      <canvas id="humChart" width="400" height="160"></canvas>
+    </div>
+
+    <!-- ควบคุม LED -->
+    <div class="card">
+      <div class="card-title">LED Remote Control</div>
+      
+      <!-- ปุ่มเปิด/ปิด ทั้งหมด -->
+      <div class="master-controls">
+        <button class="btn-master btn-all-on" onclick="setAllLED(1)">⚡ เปิดทั้งหมด (ALL ON)</button>
+        <button class="btn-master btn-all-off" onclick="setAllLED(0)">🔌 ปิดทั้งหมด (ALL OFF)</button>
+      </div>
+
+      <div class="btn-group">
+        <button id="btn1" class="led-btn" onclick="toggle(1)">
+          <span>LED 1 (GPIO 15)</span><span class="led-indicator"></span>
+        </button>
+        <button id="btn2" class="led-btn" onclick="toggle(2)">
+          <span>LED 2 (GPIO 16)</span><span class="led-indicator"></span>
+        </button>
+        <button id="btn3" class="led-btn" onclick="toggle(3)">
+          <span>LED 3 (GPIO 17)</span><span class="led-indicator"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- การ์ดชื่อผู้จัดทำ ย้ายมาไว้ล่างสุดของหน้าเว็บ -->
+  <div class="student-card">
+    <div class="label">ผู้จัดทำโครงงาน (Developer)</div>
+    <div class="name">ภูริ จันทิมา</div>
+    <div class="detail">ESP32-S3 Standalone AP &bull; AHT25 I2C Sensor &bull; Web Server</div>
+  </div>
+
+<script>
+  const maxPoints = 20;
+  let tData = [];
+  let hData = [];
+
+  function drawGraph(canvasId, dataArr, strokeColor, fillColor) {
+    const cvs = document.getElementById(canvasId);
+    const ctx = cvs.getContext('2d');
+    const w = cvs.width, h = cvs.height;
+    ctx.clearRect(0, 0, w, h);
+
+    if (dataArr.length < 2) return;
+
+    let min = Math.min(...dataArr);
+    let max = Math.max(...dataArr);
+    let pad = (max - min) * 0.2 || 2;
+    min = Math.floor(min - pad);
+    max = Math.ceil(max + pad);
+
+    const getY = val => h - ((val - min) / (max - min)) * (h - 30) - 15;
+    const step = w / (maxPoints - 1);
+
+    ctx.strokeStyle = '#21262d';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    for (let i = 1; i <= 3; i++) {
+      let y = (h / 4) * i;
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+
+    ctx.beginPath();
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = 3;
+
+    for (let i = 0; i < dataArr.length; i++) {
+      let x = i * step;
+      let y = getY(dataArr[i]);
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        let prevX = (i - 1) * step;
+        let prevY = getY(dataArr[i - 1]);
+        let cx = (prevX + x) / 2;
+        ctx.bezierCurveTo(cx, prevY, cx, y, x, y);
+      }
+    }
+    ctx.stroke();
+
+    ctx.lineTo((dataArr.length - 1) * step, h);
+    ctx.lineTo(0, h);
+    ctx.closePath();
+    let grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, fillColor);
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.fill();
   }
-  html += "</div></body></html>";
-  return html;
+
+  function setButton(id, state) {
+    const el = document.getElementById(id);
+    if (state) el.classList.add('active');
+    else el.classList.remove('active');
+  }
+
+  function applyData(data) {
+    document.getElementById('tVal').innerText = data.temp.toFixed(1);
+    document.getElementById('hVal').innerText = data.hum.toFixed(1);
+    document.getElementById('clock').innerText = 'อัปเดตข้อมูลล่าสุด: ' + new Date().toLocaleTimeString();
+
+    setButton('btn1', data.led1);
+    setButton('btn2', data.led2);
+    setButton('btn3', data.led3);
+
+    tData.push(data.temp);
+    hData.push(data.hum);
+    if (tData.length > maxPoints) { tData.shift(); hData.shift(); }
+
+    drawGraph('tempChart', tData, '#ff7b72', 'rgba(255, 123, 114, 0.25)');
+    drawGraph('humChart', hData, '#58a6ff', 'rgba(88, 166, 255, 0.25)');
+  }
+
+  function toggle(num) {
+    fetch('/toggle?led=' + num)
+      .then(res => res.json())
+      .then(data => applyData(data))
+      .catch(e => console.error(e));
+  }
+
+  function setAllLED(state) {
+    fetch('/setall?state=' + state)
+      .then(res => res.json())
+      .then(data => applyData(data))
+      .catch(e => console.error(e));
+  }
+
+  function fetchData() {
+    fetch('/data')
+      .then(res => res.json())
+      .then(data => applyData(data))
+      .catch(e => {
+        document.getElementById('clock').innerText = 'สถานะ: ขาดการเชื่อมต่อ';
+      });
+  }
+
+  setInterval(fetchData, 1500);
+  fetchData();
+</script>
+</body>
+</html>
+)rawliteral";
+
+// ตรวจจับการเชื่อมต่อ Wi-Fi
+void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
+  switch (event) {
+    case ARDUINO_EVENT_WIFI_AP_STACONNECTED: {
+      Serial.println("\n------------------------------------------------");
+      Serial.print("📱 [ALERT] มีอุปกรณ์เชื่อมต่อเข้ามาใหม่!");
+      Serial.printf("\n   MAC Address: %02X:%02X:%02X:%02X:%02X:%02X\n",
+                    info.wifi_ap_staconnected.mac[0], info.wifi_ap_staconnected.mac[1],
+                    info.wifi_ap_staconnected.mac[2], info.wifi_ap_staconnected.mac[3],
+                    info.wifi_ap_staconnected.mac[4], info.wifi_ap_staconnected.mac[5]);
+      Serial.printf("   จำนวนเครื่องที่กำลังเชื่อมต่อ: %d เครื่อง\n", WiFi.softAPgetStationNum());
+      Serial.println("------------------------------------------------");
+      break;
+    }
+    case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED: {
+      Serial.println("\n------------------------------------------------");
+      Serial.print("📴 [ALERT] อุปกรณ์ตัดการเชื่อมต่อออกไป");
+      Serial.printf("\n   MAC Address: %02X:%02X:%02X:%02X:%02X:%02X\n",
+                    info.wifi_ap_stadisconnected.mac[0], info.wifi_ap_stadisconnected.mac[1],
+                    info.wifi_ap_stadisconnected.mac[2], info.wifi_ap_stadisconnected.mac[3],
+                    info.wifi_ap_stadisconnected.mac[4], info.wifi_ap_stadisconnected.mac[5]);
+      Serial.printf("   คงเหลือเชื่อมต่อ: %d เครื่อง\n", WiFi.softAPgetStationNum());
+      Serial.println("------------------------------------------------");
+      break;
+    }
+    default:
+      break;
+  }
+}
+
+void readSensors() {
+  if (aht_found) {
+    sensors_event_t hum, temp;
+    if (aht.getEvent(&hum, &temp)) {
+      lastTemp = temp.temperature;
+      lastHum = hum.relative_humidity;
+    }
+  }
+}
+
+String getJsonPayload() {
+  String json = "{";
+  json += "\"temp\":" + String(lastTemp, 2) + ",";
+  json += "\"hum\":" + String(lastHum, 2) + ",";
+  json += "\"led1\":" + String(led1State ? "true" : "false") + ",";
+  json += "\"led2\":" + String(led2State ? "true" : "false") + ",";
+  json += "\"led3\":" + String(led3State ? "true" : "false");
+  json += "}";
+  return json;
 }
 
 void handleRoot() {
-  float t = dht.readTemperature();
-  float h = dht.readHumidity();
-  server.send(200, "text/html", sendHTML(t, h, relayState));
+  server.send(200, "text/html; charset=UTF-8", MAIN_page);
+}
+
+void handleData() {
+  readSensors();
+  server.send(200, "application/json", getJsonPayload());
 }
 
 void handleToggle() {
-  relayState = !relayState;
-  digitalWrite(RELAY_PIN, relayState ? HIGH : LOW);
-  server.sendHeader("Location", "/");
-  server.send(303);
+  if (server.hasArg("led")) {
+    int num = server.arg("led").toInt();
+    if (num == 1) { led1State = !led1State; digitalWrite(LED1, led1State ? HIGH : LOW); }
+    if (num == 2) { led2State = !led2State; digitalWrite(LED2, led2State ? HIGH : LOW); }
+    if (num == 3) { led3State = !led3State; digitalWrite(LED3, led3State ? HIGH : LOW); }
+    Serial.printf("[ACTION] LED %d เปลี่ยนเป็น -> %s\n", num, (num == 1 ? led1State : (num == 2 ? led2State : led3State)) ? "ON" : "OFF");
+  }
+  handleData();
+}
+
+// จัดการคำสั่ง เปิด/ปิด LED ทั้งหมดพร้อมกัน
+void handleSetAll() {
+  if (server.hasArg("state")) {
+    int state = server.arg("state").toInt();
+    bool targetState = (state == 1);
+    led1State = targetState;
+    led2State = targetState;
+    led3State = targetState;
+    digitalWrite(LED1, targetState ? HIGH : LOW);
+    digitalWrite(LED2, targetState ? HIGH : LOW);
+    digitalWrite(LED3, targetState ? HIGH : LOW);
+    Serial.printf("[ACTION] สั่งงาน LED ทั้งหมด -> %s\n", targetState ? "ALL ON" : "ALL OFF");
+  }
+  handleData();
 }
 
 void setup() {
   Serial.begin(115200);
-  pinMode(RELAY_PIN, OUTPUT);
-  pinMode(LED_WIFI_PIN, OUTPUT);
-  digitalWrite(RELAY_PIN, LOW);
-  digitalWrite(LED_WIFI_PIN, LOW);
+  delay(1000);
+  Serial.println("\n================================================");
+  Serial.println("   โครงงาน: ESP32-S3 IoT Dashboard + AHT25");
+  Serial.println("   ผู้จัดทำ: ภูริ จันทิมา");
+  Serial.println("================================================");
 
-  dht.begin();
+  // ขา LED
+  pinMode(LED1, OUTPUT);
+  pinMode(LED2, OUTPUT);
+  pinMode(LED3, OUTPUT);
+  digitalWrite(LED1, LOW);
+  digitalWrite(LED2, LOW);
+  digitalWrite(LED3, LOW);
 
-  Serial.print("[WIFI] Connecting to network...");
-  WiFi.begin(SSID, PASS);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+  // เชื่อมต่อเซนเซอร์ AHT25
+  Wire.begin(I2C_SDA, I2C_SCL);
+  if (!aht.begin(&Wire)) {
+    Serial.printf("❌ [SENSOR] ตรวจไม่พบ AHT25 (SDA: %d, SCL: %d)\n", I2C_SDA, I2C_SCL);
+    aht_found = false;
+  } else {
+    Serial.println("✅ [SENSOR] เชื่อมต่อ AHT25 สำเร็จ");
+    aht_found = true;
   }
 
-  digitalWrite(LED_WIFI_PIN, HIGH);
-  Serial.println("\n[WIFI] Connected!");
-  Serial.print("[WIFI] Open Browser at: http://");
-  Serial.println(WiFi.localIP());
+  // ลงทะเบียน Event Wi-Fi
+  WiFi.onEvent(WiFiEvent);
 
+  // เปิด AP Mode
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP(ssid, password);
+  Serial.printf("📡 [AP READY] Wi-Fi SSID: %s\n", ssid);
+  Serial.printf("🌐 [WEB URL] เปิดได้ที่: http://%s\n", WiFi.softAPIP().toString().c_str());
+
+  // Routing
   server.on("/", handleRoot);
+  server.on("/data", handleData);
   server.on("/toggle", handleToggle);
+  server.on("/setall", handleSetAll);
+
   server.begin();
+  Serial.println("🚀 Web Server พร้อมทำงานแล้ว\n");
 }
 
 void loop() {
   server.handleClient();
 }
 ```
-</div>
 
 ---
 
+### 7.6.4 ขั้นตอนการทดสอบและการทดลองเชิงปฏิบัติการ (Step-by-Step Testing)
+
+1. **การคอมไพล์และอัปโหลดโปรแกรม:**
+   - เลือกบอร์ดใน Arduino IDE เป็น **ESP32S3 Dev Module** (หรือรันจำลองบน Wokwi)
+   - เปิด Serial Monitor ที่อัตราความเร็ว **115200 baud**
+   - สังเกตข้อความ Boot: บอร์ดจะเริ่มค้นหา AHT25 และเริ่มปล่อยสัญญาณ Access Point
+   - ตรวจสอบ URL ที่ได้: ปกติจะเป็น `http://192.168.4.1`
+2. **การเชื่อมต่อ Wi-Fi จากอุปกรณ์ภายนอก:**
+   - ใช้โทรศัพท์มือถือหรือแล็ปท็อป เปิดหน้าต่างค้นหาสัญญาณ Wi-Fi
+   - เลือกเชื่อมต่อ SSID: `ESP32S3_DASHBOARD` ป้อนรหัสผ่าน `password123`
+   - สังเกต Serial Monitor: ฟังก์ชัน `WiFiEvent` จะแจ้งเตือนทันที พร้อมพิมพ์รหัส **MAC Address** ของอุปกรณ์ที่เชื่อมต่อเข้ามาใหม่ และระบุจำนวนไคลเอนต์ปัจจุบัน
+3. **การเข้าถึง Web Dashboard และการทดสอบ Real-time Graph:**
+   - เปิดเว็บเบราว์เซอร์ (Chrome, Safari, Firefox) แล้วไปที่ `http://192.168.4.1`
+   - สังเกตหน้าปัดคอนโซลสีเข้ม (Dark Mode) จะแสดงค่าอุณหภูมิและความชื้น
+   - กราฟ Canvas ทั้งสองช่องจะเริ่มพล็อตจุดข้อมูลต่อเนื่องทุก 1.5 วินาที
+   - ทดสอบให้ความร้อนหรือเป่าลมชื้นใส่เซนเซอร์ AHT25 สังเกตความเปลี่ยนแปลงของกราฟที่ปรับสเกลแกน Y โดยอัตโนมัติ
+4. **การทดสอบระบบควบคุมไฟ LED (Individual & Master Controls):**
+   - ทดสอบคลิกปุ่ม **LED 1 (GPIO 15)**: ไฟสถานะบนหน้าเว็บจะเปลี่ยนเป็นสีเขียวเรืองแสง และหลอด LED 1 บนวงจรจะสว่างขึ้นทันที
+   - ตรวจสอบหน้าต่าง Serial Monitor: จะมีข้อความยืนยัน `[ACTION] LED 1 เปลี่ยนเป็น -> ON`
+   - ทดสอบคลิกปุ่ม **⚡ เปิดทั้งหมด (ALL ON)**: หลอด LED ทั้ง 3 ดวงจะต้องสว่างพร้อมกันทันที
+   - ทดสอบคลิกปุ่ม **🔌 ปิดทั้งหมด (ALL OFF)**: หลอด LED ทั้ง 3 ดวงจะต้องดับพร้อมกันทั้งหมด
+5. **การทดสอบความทนทานต่อการตัดการเชื่อมต่อ:**
+   - ทดลองปิด Wi-Fi บนโทรศัพท์มือถือ สังเกต Serial Monitor จะแสดงข้อความ `📴 [ALERT] อุปกรณ์ตัดการเชื่อมต่อออกไป` พร้อมอัปเดตจำนวนคงเหลือ
+
 </div>
+
+---
 
 <div class="chapter-tab-content" data-tab-name="Reference / Summary" data-tab-icon="📊" id="waveform" markdown="1">
 
-## สรุปบทเรียน (Summary)
+## สรุปบทเรียน (Summary & Key Takeaways)
 
-1.  การสื่อสารไร้สายอาศัย **คลื่นแม่เหล็กไฟฟ้า** บนย่านความถี่สาธารณะ **ISM Band**
-2.  สัญญาณอ่อนลงตาม **Inverse Square Law** คำนวณค่า FSPL และ Link Margin เพื่อตรวจสอบระยะทาง
-3.  **Wi-Fi (802.11n/ax)** เหมาะกับแบนด์วิดท์สูงและมีไฟเลี้ยงคงที่ **WPA3** ใช้ SAE ป้องกัน Dictionary/Replay Attack **MU-MIMO** เพิ่ม throughput ในพื้นที่หนาแน่น ESP32 รองรับ Modem/Light/Deep Sleep
-4.  **BLE** ทำงานผ่าน **GATT** (Profile > Service > Characteristic) ประหยัดไฟสูง **BLE 5.0** เพิ่ม 2M PHY, Coded PHY, Extended Advertising
-5.  **Zigbee** สร้างโครงข่าย **Mesh** เยียวยาตัวเองได้ ZC/ZR/ZED แต่ละบทบาทมีหน้าที่แตกต่างกัน
-6.  **LoRa/LoRaWAN** ใช้ **CSS** ส่งไกลระยะกิโลเมตร SF สูง → ไกลขึ้น แต่ช้าลง คำนวณ Link Budget ก่อนใช้งาน
-7.  **5G NR** ใช้ Network Slicing แบ่ง eMBB/URLLC/mMTC Numerology µ สูง → Latency ต่ำสำหรับ URLLC
+1. **Wi-Fi SoftAP Mode** ทำให้ ESP32-S3 สามารถสร้างเครือข่ายอินทราเน็ตเฉพาะกิจได้ด้วยตนเองโดยไม่ต้องพึ่งพาเราเตอร์ภายนอก โดยแจกจ่าย IP อัตโนมัติและกำหนดให้ตัวเองอยู่ที่ `192.168.4.1`
+2. **Event-Driven Architecture (`WiFi.onEvent`)** มีประสิทธิภาพและเสถียรกว่าการตรวจเช็กแบบ Polling ในฟังก์ชัน loop() ทำให้สามารถดักจับการเชื่อมต่อ/ตัดการเชื่อมต่อ และบันทึก MAC Address ของอุปกรณ์ไคลเอนต์ได้ทันที
+3. **การสื่อสาร I2C บน ESP32-S3** สามารถกำหนดขา SDA และ SCL ไปยังขา GPIO ใดๆ ก็ได้ผ่านคำสั่ง `Wire.begin(SDA, SCL)` โดยโมดูล AHT25 ให้ค่าความแม่นยำสูงและมีความเสถียรต่อสัญญาณรบกวน
+4. **Asynchronous Polling ผ่าน JSON API** มีประสิทธิภาพเหนือกว่าการรีเฟรชหน้าเว็บแบบดั้งเดิมอย่างมหาศาล เนื่องจากลดขนาดข้อมูลรับส่งลงเหลือไม่ถึง 100 ไบต์ ขจัดปัญหาหน้าเว็บกะพริบ และตอบสนองต่อการสั่งงานได้ในระดับมิลลิวินาที
+5. **HTML5 Canvas Zero-Dependency** สามารถพล็อตกราฟแบบ Real-time พร้อมฟังก์ชัน Auto-scaling และการปรับเส้นโค้ง Cubic Bézier ได้อย่างลื่นไหลโดยไม่ต้องเชื่อมต่ออินเทอร์เน็ตภายนอกเพื่อโหลดไลบรารี
 
 ---
+
+## ตารางสรุป API Endpoints และโครงสร้างข้อมูล
+
+| Endpoint | Method | พารามิเตอร์ | ตัวอย่างการเรียกใช้งาน | ผลลัพธ์ (Response JSON) |
+|---|---|---|---|---|
+| `/` | `GET` | - | `http://192.168.4.1/` | HTML5 Document (Content-Type: text/html) |
+| `/data` | `GET` | - | `http://192.168.4.1/data` | `{"temp":29.10,"hum":58.40,"led1":false,"led2":true,"led3":false}` |
+| `/toggle` | `GET` | `led={1,2,3}` | `http://192.168.4.1/toggle?led=1` | JSON สถานะปัจจุบันหลังสลับสถานะ LED 1 |
+| `/setall` | `GET` | `state={0,1}` | `http://192.168.4.1/setall?state=1` | JSON สถานะปัจจุบันหลังสั่งเปิด LED ทั้งหมด |
+
+---
+
+## คู่มือตรวจสอบและแก้ไขข้อผิดพลาด (Troubleshooting Guide)
+
+| อาการผิดปกติ | สาเหตุที่เป็นไปได้ | แนวทางแก้ไขทางวิศวกรรม |
+|---|---|---|
+| **Serial ขึ้นข้อความ `❌ ตรวจไม่พบ AHT25`** | 1. ต่อสาย SDA / SCL สลับขากัน<br>2. ลืมต่อตัวต้านทาน Pull-up (กรณีใช้โมดูลไม่มี Pull-up ในตัว)<br>3. ไฟเลี้ยงไม่เพียงพอ | ตรวจสอบว่า SDA ต่อเข้า **GPIO 9** และ SCL ต่อเข้า **GPIO 8** แน่นหนาดีหรือไม่ และตรวจสอบแรงดันไฟฟ้าที่ขา VCC ว่าได้ 3.3V หรือไม่ |
+| **ค้นหาสัญญาณ Wi-Fi `ESP32S3_DASHBOARD` ไม่พบ** | 1. ชิป Wi-Fi ยังไม่เริ่มทำงาน หรือไฟจ่ายไม่พอ<br>2. กำลังส่งเสาอากาศต่ำ | กดปุ่ม Reset บนบอร์ด ESP32-S3 สังเกตข้อความบน Serial Monitor ตรวจสอบสาย USB ว่าจ่ายกระแสได้อย่างน้อย 500mA หรือไม่ |
+| **เชื่อมต่อ Wi-Fi สำเร็จแต่เปิดหน้าเว็บ `192.168.4.1` ไม่ได้** | 1. สมาร์ตโฟนสลับไปใช้เน็ตมือถือ (Mobile Data) อัตโนมัติเนื่องจากตรวจพบว่า Wi-Fi ไม่มีอินเทอร์เน็ต | ปิด Cellular Data (เน็ตมือถือ) บนโทรศัพท์ชั่วคราวขณะทดสอบ หรือกดยืนยันตัวเลือก "เชื่อมต่อกับเครือข่ายนี้ต่อไปแม้ไม่มีอินเทอร์เน็ต" |
+| **กดปุ่มบนหน้าเว็บแล้วไฟ LED ไม่ติด แต่สถานะบนเว็บเปลี่ยน** | 1. เสียบขา Anode/Cathode ของ LED สลับขั้ว<br>2. ตัวต้านทานต่อไม่ลงกราวด์<br>3. ต่อผิดขา GPIO | ตรวจสอบว่าขาขายาวของ LED ต่อเข้า GPIO 15, 16, 17 และขาสั้นผ่านตัวต้านทาน 220Ω ลงสู่ขา GND ร่วม |
 
 </div>
 
-<div class="chapter-tab-content" data-tab-name="Challenge" data-tab-icon="🏆" id="challenge" markdown="1">
-
-## แบบฝึกหัดท้ายบท (Exercises)
-
-**ข้อ 1:** ย่านความถี่ ISM Band มีจุดเด่นเชิงนโยบายอย่างไรในการส่งเสริมการพัฒนาอุปกรณ์ IoT และหากนำอุปกรณ์ส่งสัญญาณย่าน ISM 2.4 GHz ไปติดตั้งในอาคารที่มีเตาไมโครเวฟหรือระบบ Wi-Fi หนาแน่น จะส่งผลกระทบต่อประสิทธิภาพเชิงคลื่นอย่างไร และสามารถใช้วิธีทางวิศวกรรมใดเพื่อแก้ไข
-
-**ข้อ 2:** จงคำนวณหาค่าความสูญเสียในช่องทางฟรีสเปซ (FSPL) ในหน่วยเดซิเบล (dB) สำหรับระบบสื่อสารของเซ็นเซอร์ LoRaWAN ที่ความถี่ $923\text{ MHz}$ เมื่อระยะทาง $5\text{ km}$ และอธิบายว่าหากเปลี่ยนเป็น Wi-Fi ย่าน $2.4\text{ GHz}$ ที่ระยะทางเดียวกัน ค่าความสูญเสียจะเพิ่มขึ้นหรือลดลงกี่ dB
-
-**ข้อ 3:** จงอธิบายความแตกต่างเชิงวิศวกรรมระหว่างค่า RSSI และค่า SNR และยกตัวอย่างสถานการณ์ที่อุปกรณ์ IoT มีค่า RSSI สูง (เช่น -45 dBm) แต่ยังมีข้อผิดพลาดข้อมูลสูญหายจนถอดรหัสไม่ได้
-
-**ข้อ 4:** ในขั้นตอนการเชื่อมต่อ Wi-Fi กระบวนการ 4-Way Handshake ปกป้องความปลอดภัยในระดับใด และเพราะเหตุใดจึงไม่มีการส่งรหัสผ่านจริงผ่านอากาศ อธิบายว่า WPA3 ปรับปรุงจุดอ่อนของ WPA2 อย่างไรผ่านกลไก SAE
-
-**ข้อ 5:** จงเขียนแผนภาพสถาปัตยกรรมข้อมูล GATT สำหรับอุปกรณ์ BLE "ระบบควบคุมเครื่องจักรวิศวกรรม" ที่มี:
-1. บริการอ่านอุณหภูมิน้ำมันหล่อลื่น (Lubricant Temp Service)
-2. บริการเขียนคำสั่งมอเตอร์ปั๊มสูบฉีด (Pump Control Service)
-ระบุ Properties ของแต่ละ Characteristic พร้อม UUID
-
 ---
 
-## หัวข้อเพิ่มเติม: แนวโน้มเทคโนโลยีการสื่อสารไร้สายสำหรับ IoT
+<div class="chapter-tab-content" data-tab-name="Challenge" data-tab-icon="🏆" id="challenge" markdown="1">
 
-### โปรโตคอล Matter
-Matter เป็นมาตรฐานการเชื่อมต่อใหม่สำหรับ Smart Home และ IoT พัฒนาโดย Apple, Google, Amazon เพื่อให้อุปกรณ์จากต่างค่ายทำงานร่วมกันได้ ทำงานบน IP (Wi-Fi, Thread) ใช้ BLE ในการจับคู่อุปกรณ์
+## แบบฝึกหัดท้าทายเชิงวิศวกรรม (Engineering Challenges)
 
-### Wi-Fi 7 (802.11be) และ 6G
-Wi-Fi 7 ออกแบบมาให้มีความหน่วงต่ำและรองรับอุปกรณ์จำนวนมากขึ้น เหมาะสำหรับ Industrial IoT แบบ Real-time ส่วน 6G มุ่งเป้าไปที่การเชื่อมต่ออุปกรณ์ IoT ระดับไมโครที่ใช้พลังงานต่ำเป็นพิเศษ (Zero-energy devices)
+**ข้อ 1: การวิเคราะห์ระบบเครือข่ายและสถาปัตยกรรม SoftAP**  
+จงอธิบายว่าเหตุใดหมายเลข IP เริ่มต้นของบอร์ด ESP32 ในโหมด SoftAP จึงถูกกำหนดไว้ที่ `192.168.4.1` และหากมีวิศวกร 4 คนนำอุปกรณ์มาเชื่อมต่อพร้อมกัน ESP32-S3 จะจ่ายหมายเลข IP ใดให้อุปกรณ์แต่ละเครื่อง จงเขียนลำดับขั้นตอนการแจกจ่าย IP ผ่านโพรโทคอล DHCP
+
+**ข้อ 2: การคำนวณและวิเคราะห์แบนด์วิดท์ (Bandwidth & Resource Optimization)**  
+สมมติว่าในโรงงานมีช่างเทคนิคเปิดหน้าเว็บแดชบอร์ดนี้ค้างไว้พร้อมกัน 3 เครื่อง โดยแต่ละเครื่องส่งคำขอ `fetch('/data')` ทุกๆ 1.5 วินาที หากขนาดของ HTTP Header รวมกับ JSON Payload มีขนาดเฉลี่ย 180 ไบต์ต่อ Request จงคำนวณ:
+1. อัตราการส่งข้อมูลเฉลี่ยรวม (Throughput) ที่ ESP32-S3 ต้องประมวลผลต่อวินาที
+2. เปรียบเทียบกับวิธี Full Page Reload (ขนาดหน้าเว็บประมาณ 8.5 KB) ว่าระบบ SPA ประหยัดแบนด์วิดท์ของชิปคิดเป็นกี่เปอร์เซ็นต์
+
+**ข้อ 3: การประยุกต์ใช้วงจรป้องกันและระบบควบคุมอัตโนมัติ (Closed-loop Control)**  
+จงออกแบบและเขียนฟังก์ชันเพิ่มเติมลงในเฟิร์มแวร์ C++ เพื่อสร้างระบบ **Thermal Protection (การป้องกันความร้อนเกินพิกัด)**:
+- หากอุณหภูมิที่อ่านได้จากเซนเซอร์ AHT25 สูงเกิน **45.0°C** ให้ระบบสั่งงานตัดไฟ LED1, LED2 และสั่งเปิดไฟกระพริบฉุกเฉินที่ LED3 โดยอัตโนมัติ พร้อมส่งสถานะ Warning ไปแสดงบนหน้าปัด Web Dashboard
+
+**ข้อ 4: การรักษาความปลอดภัยเครือข่ายเฉพาะจุด (Local Security Enhancement)**  
+ในสถานการณ์จริงที่นำบอร์ดนี้ไปติดตั้งควบคุมเครื่องจักรในโรงงาน การใช้รหัสผ่านคงที่แบบธรรมดา (`password123`) อาจไม่ปลอดภัยเพียงพอ จงเสนอแนวทางปรับปรุงความปลอดภัยของระบบ Wi-Fi SoftAP และระบบ Web Server อย่างน้อย 2 วิธี พร้อมเขียนบล็อกโค้ดตัวอย่างประกอบ
 
 </div>

@@ -745,6 +745,85 @@ void loop() {
 5. **การทดสอบความทนทานต่อการตัดการเชื่อมต่อ:**
    - ทดลองปิด Wi-Fi บนโทรศัพท์มือถือ สังเกต Serial Monitor จะแสดงข้อความ `📴 [ALERT] อุปกรณ์ตัดการเชื่อมต่อออกไป` พร้อมอัปเดตจำนวนคงเหลือ
 
+---
+
+### 7.6.5 ลำดับการสอนและการอธิบายโค้ดอย่างละเอียด (Step-by-Step Teaching Sequence)
+
+เพื่อให้ผู้เรียนเข้าใจความสัมพันธ์ระหว่างฮาร์ดแวร์ เฟิร์มแวร์ C++ และหน้าเว็บ JavaScript ได้อย่างเป็นระบบ ให้จัดการสอนตาม 6 ลำดับขั้นตอนดังนี้:
+
+#### ขั้นที่ 1: การกำหนดขาฮาร์ดแวร์และตัวแปรสถานะ (Hardware Definition & State Tracking)
+- **แนวคิด:** การควบคุมอุปกรณ์แบบสลับสถานะ (Toggle) ต้องมีตัวแปรระดับ Global ในเฟิร์มแวร์เพื่อบันทึกสถานะปัจจุบัน (State Memory) ของหลอดไฟแต่ละดวง
+```cpp
+// 1. กำหนดหมายเลขขา GPIO ของหลอด LED
+#define LED1 15
+#define LED2 16
+#define LED3 17
+
+// 2. ตัวแปรเก็บสถานะไฟ (false = ดับ, true = ติด)
+bool led1State = false;
+bool led2State = false;
+bool led3State = false;
+```
+- **ในฟังก์ชัน `setup()`:**
+  - ตั้งค่าโหมดขาด้วย `pinMode(LEDx, OUTPUT)`
+  - กำหนดค่าเริ่มต้นเป็น `digitalWrite(LEDx, LOW)` ให้ไฟดับสนิทเมื่อเปิดเครื่อง
+
+#### ขั้นที่ 2: ฟังก์ชันประมวลผลคำสั่งฝั่ง Backend (Server-Side Logic Handlers)
+- **แนวคิด:** เมื่อไคลเอนต์ส่งคำขอ HTTP เข้ามา เซิร์ฟเวอร์ต้องแยกแยะพารามิเตอร์ (URL Query Parameters) เพื่อสั่งงานฮาร์ดแวร์
+- **การสลับสถานะรายดวง (`handleToggle()`):**
+  - ตรวจสอบพารามิเตอร์ `server.hasArg("led")` และอ่านค่าหมายเลขด้วย `server.arg("led").toInt()`
+  - สลับสถานะด้วยบูลีน `led1State = !led1State;` แล้วสั่งระดับแรงดัน `digitalWrite(LED1, led1State ? HIGH : LOW);`
+  - พิมพ์ยืนยันสถานะออก Serial Monitor
+- **การสั่งงานพร้อมกันทั้งหมด (`handleSetAll()`):**
+  - อ่านพารามิเตอร์ `state=1` (เปิดหมด) หรือ `state=0` (ปิดหมด)
+  - กำหนดค่าและสั่ง `digitalWrite()` พร้อมกันทั้ง 3 ขา
+
+#### ขั้นที่ 3: การสร้าง JSON Payload ส่งกลับหน้าเว็บ (Data Serialization)
+- **แนวคิด:** การตอบสนองต่อคำสั่งควบคุมต้องส่งโครงสร้างข้อมูลกลับเป็น JSON เพื่อให้เบราว์เซอร์นำไปอัปเดตหน้าปัดโดยไม่ต้องรีเฟรชหน้าเว็บ
+```cpp
+String getJsonPayload() {
+  String json = "{";
+  json += "\"temp\":" + String(lastTemp, 2) + ",";
+  json += "\"hum\":" + String(lastHum, 2) + ",";
+  json += "\"led1\":" + String(led1State ? "true" : "false") + ",";
+  json += "\"led2\":" + String(led2State ? "true" : "false") + ",";
+  json += "\"led3\":" + String(led3State ? "true" : "false");
+  json += "}";
+  return json;
+}
+
+void handleData() {
+  readSensors();
+  server.send(200, "application/json", getJsonPayload());
+}
+```
+- ในฟังก์ชัน `handleToggle()` และ `handleSetAll()` จะเรียก `handleData()` ทันทีหลังเปลี่ยนสถานะ เพื่อให้ไคลเอนต์ได้รับข้อมูลใหม่แบบเรียลไทม์ (Atomic Update)
+
+#### ขั้นที่ 4: การลงทะเบียน Routing บน WebServer (Endpoint Mapping)
+- **แนวคิด:** ผูกเส้นทาง URL ที่ไคลเอนต์เรียกให้ตรงกับฟังก์ชันประมวลผล
+```cpp
+server.on("/", handleRoot);        // ส่งหน้าเว็บหลัก MAIN_page
+server.on("/data", handleData);    // ให้บริการดึงข้อมูลสถานะ
+server.on("/toggle", handleToggle);// ผูก URL /toggle เข้ากับฟังก์ชัน handleToggle
+server.on("/setall", handleSetAll);// ผูก URL /setall เข้ากับฟังก์ชัน handleSetAll
+
+server.begin(); // เริ่มต้นการทำงานของ HTTP Server บน Port 80
+```
+
+#### ขั้นที่ 5: ส่วนหน้าเว็บ UI และ JavaScript (Frontend Interactivity)
+- **แนวคิด:** ฝั่ง Client ใช้ JavaScript ส่งคำขอเบื้องหลังผ่าน `fetch()` เพื่อไม่ให้หน้าจอกะพริบ
+- **โครงสร้างปุ่มบน HTML:**
+  - ปุ่ม Master: `<button onclick="setAllLED(1)">` และ `<button onclick="setAllLED(0)">`
+  - ปุ่มรายดวง: `<button id="btn1" class="led-btn" onclick="toggle(1)">`
+- **ฟังก์ชัน JavaScript:**
+  - `toggle(num)`: ส่ง `fetch('/toggle?led=' + num)` เมื่อได้ผลลัพธ์ JSON ก็นำไปเรียก `applyData(data)`
+  - `setAllLED(state)`: ส่ง `fetch('/setall?state=' + state)`
+  - `setButton(id, state)`: สลับ Class `.active` เพื่อให้ปุ่มและไฟสถานะเปลี่ยนเป็นสีเขียวเรืองแสง
+
+#### ขั้นที่ 6: การเชื่อมต่อระบบจนเสร็จสมบูรณ์ (End-to-End Execution Loop)
+- **แนวคิด:** วงจรชีวิตคำขอตั้งแต่ผู้ใช้กดปุ่มบนหน้าเว็บ -> ส่งคำขอผ่าน Wi-Fi -> ESP32-S3 สั่ง GPIO ไฟติด -> ส่ง JSON ตอบกลับ -> JavaScript อัปเดตหน้าจอ
+- ฟังก์ชัน `loop()` ทำหน้าที่เรียก `server.handleClient()` เพื่อคอยดักรับคำขอ HTTP ตลอดเวลา ควบคู่กับ Wi-Fi Event ที่คอยมอนิเตอร์การเชื่อมต่อและตัดการเชื่อมต่อของอุปกรณ์ไคลเอนต์
+
 </div>
 
 ---

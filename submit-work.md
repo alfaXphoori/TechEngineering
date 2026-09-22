@@ -49,10 +49,10 @@ assignments:
     due: 
     form: "https://docs.google.com/forms/d/e/1FAIpQLSeadXsnqewRjklvUZamMOEbfxDJxsWGUeiF55YD0N_MZ4ghVA/viewform?usp=dialog"
   - n: 9
-    topic: โพรโทคอลการสื่อสาร HTTP/REST
+    topic: ESP32-AHT25-Web_Dash
     work: ใบงานที่ 9 — การแลกเปลี่ยนข้อมูลผ่าน HTTP/REST และ JSON
     due: ก่อนคาบสัปดาห์ที่ 10
-    form: "#"
+    form: "https://docs.google.com/forms/d/e/1FAIpQLSc3qcEkqnSI2DvgbffJLDU1tRsWijhwp8dwhpP4o_HOMqI5FQ/viewform?usp=dialog"
   - n: 10
     topic: โพรโทคอล MQTT
     work: ใบงานที่ 10 — การรับส่งข้อมูลผ่านโพรโทคอล MQTT

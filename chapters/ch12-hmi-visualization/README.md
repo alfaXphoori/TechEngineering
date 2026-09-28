@@ -645,13 +645,15 @@ void loop() {
 
 ### 12.7.5 เชื่อม Grafana Cloud
 
-1. ใน Supabase คลิก **Connect** ด้านบนของหน้าโปรเจกต์ → เลือก **Session pooler** → จดค่า host (เช่น `aws-0-ap-southeast-1.pooler.supabase.com`), port `5432` และ project ref (ส่วนต่อท้ายของ user `postgres.xxxx`)
+1. ใน Supabase คลิก **Connect** ด้านบนของหน้าโปรเจกต์ → เลือก **Session pooler** → **คัดลอก** ค่า host (รูปแบบ `aws-[INDEX]-[REGION].pooler.supabase.com`), port `5432` และ project ref (ส่วนต่อท้ายของ user `postgres.xxxx`)
+
+   > ⚠️ `[INDEX]` คือหมายเลข cluster ของ pooler ซึ่ง **เดาจาก region ไม่ได้** (อาจเป็น `aws-0-...` หรือ `aws-1-...`) ต้องคัดลอก host จากหน้า Connect ของโปรเจกต์ตนเองเท่านั้น ([Supabase Docs: Connecting to Postgres](https://supabase.com/docs/guides/database/connecting-to-postgres))
 2. สมัครที่ [grafana.com](https://grafana.com) → แผน **Free** → สร้าง Stack
 3. **Connections → Data sources → Add data source → PostgreSQL** แล้วกรอกค่าดังนี้
 
 | ช่อง | ค่า |
 |:---|:---|
-| Host URL | `aws-0-ap-southeast-1.pooler.supabase.com:5432` (ตามโปรเจกต์ของตนเอง) |
+| Host URL | host ที่คัดลอกจากข้อ 1 ตามด้วย `:5432` เช่น `aws-[INDEX]-ap-southeast-1.pooler.supabase.com:5432` |
 | Database name | `postgres` |
 | Username | `grafana_ro.xxxx` (ชื่อ role + จุด + project ref) |
 | Password | รหัสผ่านของ `grafana_ro` |
@@ -985,7 +987,7 @@ Pending period ทำให้ต้องเกินเกณฑ์ **ต่�
 | I2C ของ AHT25 | address `0x38`, SDA = GPIO 8, SCL = GPIO 9 |
 | REST endpoint | `POST https://<ref>.supabase.co/rest/v1/<table>` |
 | HTTP สำเร็จ | `201 Created` |
-| Pooler สำหรับ Grafana | `aws-0-<region>.pooler.supabase.com:5432`, user `grafana_ro.<ref>`, SSL `require` |
+| Pooler สำหรับ Grafana | `aws-[INDEX]-[REGION].pooler.supabase.com:5432` (คัดลอกจาก Connect → Session pooler), user `grafana_ro.<ref>`, SSL `require` |
 | กรองช่วงเวลา | `$__timeFilter(created_at)` |
 | Downsampling | `$__timeGroupAlias(created_at, $__interval)` + `avg()` + `GROUP BY 1` |
 | เริ่มต้นวันตามเวลาไทย | `date_trunc('day', now() AT TIME ZONE 'Asia/Bangkok') AT TIME ZONE 'Asia/Bangkok'` |

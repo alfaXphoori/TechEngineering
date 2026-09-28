@@ -176,6 +176,8 @@ GROUP BY time(5m) fill(linear)
 
 ---
 
+> 📊 **บทเรียนเสริม:** ลองสร้างแดชบอร์ด Grafana จากฐานข้อมูล PostgreSQL จริง ด้วยเครื่องมือฟรีทั้งหมด (Wokwi + Supabase + Grafana Cloud) ได้ที่ [แดชบอร์ด IoT ด้วย Supabase + Grafana Cloud](supabase-grafana.md)
+
 ## 12.6 แดชบอร์ดของ ThingsBoard
 
 **ThingsBoard** เป็นแพลตฟอร์ม IoT ระดับอุตสาหกรรม (Industrial-grade IoT Platform) แบบโอเพนซอร์สที่ออกแบบมาเพื่อรองรับทั้งการเรียนรู้และงานจริงในระบบฝังตัว ผู้พัฒนาสามารถสร้างแดชบอร์ดเว็บแบบลากวาง (Drag-and-drop Web Dashboard) พร้อมวิดเจ็ตหลากหลาย เช่น เกจวัดค่า กราฟอนุกรมเวลา และ LED แสดงสถานะ นอกจากนี้ยังมีแอปมือถือ (ThingsBoard Mobile App) สำหรับ iOS และ Android อุปกรณ์เชื่อมต่อผ่านโปรโตคอล MQTT โดยส่งข้อมูลโทรมาตร (Telemetry) ขึ้นคลาวด์และรับคำสั่งควบคุมกลับมา (RPC) แบบสองทิศทาง ระบบมีฐานข้อมูลอนุกรมเวลา (Time-series Storage) และระบบแจ้งเตือน (Alarms) ในตัวโดยไม่ต้องติดตั้งซอฟต์แวร์เพิ่มเติม

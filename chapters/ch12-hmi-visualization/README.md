@@ -249,7 +249,18 @@ create table public.events (
 - ถ้ารหัสผ่านของ Grafana รั่ว ผู้ไม่หวังดีก็ **แก้ไขหรือลบ** ข้อมูลไม่ได้
 - policy ยังทำหน้าที่ **ตรวจความสมเหตุสมผลของข้อมูล** ได้ด้วย เช่น ปฏิเสธค่าอุณหภูมิที่อยู่นอกย่านวัดของ AHT25 (-40 ถึง 120 °C) ซึ่งมักเกิดจากเซนเซอร์เสีย
 
-> ⚠️ ห้ามนำ **Secret key** หรือ **`service_role` key** ของ Supabase ไปใส่ในอุปกรณ์หรือหน้าเว็บเด็ดขาด เพราะ key กลุ่มนี้ข้าม RLS ได้ทั้งหมด
+**API key ของ Supabase มี 4 แบบ** (ตาม [Supabase Docs: API keys](https://supabase.com/docs/guides/getting-started/api-keys))
+
+| Key | รูปแบบ | Role ที่ได้ | RLS | ใช้ในอุปกรณ์/หน้าเว็บได้? |
+|:---|:---|:---|:---|:---|
+| **Publishable key** ✅ | `sb_publishable_...` | `anon` (ยังไม่ login) | ถูกตรวจ | **ได้** ← ใช้ใน ESP32-S3 |
+| Secret key | `sb_secret_...` | `service_role` | **ข้าม RLS** | ห้ามเด็ดขาด |
+| `anon` (legacy) | JWT ขึ้นต้นด้วย `eyJ` | `anon` | ถูกตรวจ | ได้ แต่เป็นแบบเก่าที่กำลังจะเลิกใช้ |
+| `service_role` (legacy) | JWT ขึ้นต้นด้วย `eyJ` | `service_role` | **ข้าม RLS** | ห้ามเด็ดขาด |
+
+ในบทนี้ใช้ **Publishable key** เพราะเป็น key ที่ Supabase ออกแบบให้ฝังในอุปกรณ์หรือหน้าเว็บได้ ใครได้ key ไปก็ทำได้เฉพาะสิ่งที่ RLS policy อนุญาต ส่วน legacy key มีแผนจะถูกเลิกใช้ จึงควรใช้แบบใหม่ตั้งแต่ต้น
+
+> ⚠️ ห้ามนำ **Secret key** หรือ **`service_role` key** ของ Supabase ไปใส่ในอุปกรณ์ หน้าเว็บ หรือโค้ดที่ขึ้น GitHub เด็ดขาด เพราะ key กลุ่มนี้ข้าม RLS ได้ทั้งหมด
 
 ---
 
@@ -266,8 +277,8 @@ Supabase มีเครื่องมือชื่อ **PostgREST** ที�
 
 | Header | ค่า | หน้าที่ |
 |:---|:---|:---|
-| `apikey` | Publishable key (หรือ legacy `anon` key) | ระบุโปรเจกต์ และกำหนด role เป็น `anon` |
-| `Authorization` | `Bearer <key>` (เฉพาะ legacy key แบบ JWT) | ยืนยันตัวตนตามรูปแบบเดิม |
+| `apikey` | Publishable key (`sb_publishable_...`) | ระบุโปรเจกต์ และกำหนด role เป็น `anon` |
+| `Authorization` | **ไม่ต้องส่ง** เมื่อใช้ Publishable key (ส่งเป็น `Bearer <key>` เฉพาะ legacy `anon` key ที่เป็น JWT) | Publishable key ไม่ใช่ JWT ถ้าส่งใน `Authorization: Bearer` ระบบจะพยายามตรวจเป็น JWT แล้วล้มเหลว |
 | `Content-Type` | `application/json` | บอกว่า body เป็น JSON |
 | `Prefer` | `return=minimal` | ไม่ต้องส่งแถวที่บันทึกกลับมา ประหยัด bandwidth |
 
@@ -481,7 +492,9 @@ create policy "grafana read events" on public.events
 
 3. เปิด **Table Editor** → ตรวจว่ามีตาราง `telemetry` และ `events` ที่มีคอลัมน์ตรงกับโครงสร้างด้านบน และทั้งสองตารางแสดงสถานะ **RLS enabled**
 4. เมนูซ้าย **Integrations → Data API** → หน้า **Overview** → คัดลอก **Project URL** (เช่น `https://xxxx.supabase.co`) ซึ่งเป็นปลายทางของ REST API ที่ ESP32 ใช้ (URL ของหน้านี้คือ `supabase.com/dashboard/project/<project_ref>/integrations/data_api/overview`)
-5. **Project Settings → API Keys** → คัดลอก **Publishable key** (หรือ `anon` key ในแท็บ Legacy) เก็บไว้
+5. **Project Settings → API Keys** → คัดลอก **Publishable key** (ขึ้นต้นด้วย `sb_publishable_`) เก็บไว้ ห้ามคัดลอก Secret key (`sb_secret_`)
+
+> 💡 ปุ่ม **Connect** ด้านบนของหน้าโปรเจกต์แสดงทั้ง Project URL และ Publishable key ในหน้าเดียว ใช้แทนข้อ 4–5 ได้
 
 ### 12.7.4 โปรแกรม ESP32-S3 (`mcc_monitor.ino`)
 
@@ -496,7 +509,7 @@ create policy "grafana read events" on public.events
 const char* WIFI_SSID    = "YOUR_WIFI";
 const char* WIFI_PASS    = "YOUR_PASSWORD";
 const char* SUPABASE_URL = "https://YOUR_PROJECT_REF.supabase.co/rest/v1/";
-const char* SUPABASE_KEY = "YOUR_PUBLISHABLE_OR_ANON_KEY";
+const char* SUPABASE_KEY = "sb_publishable_xxxxxxxxxxxx";   // Publishable key
 const char* DEVICE_ID    = "mcc01";
 
 #define I2C_SDA 8
@@ -622,7 +635,7 @@ void loop() {
 | `btnState[i] = !btnState[i]` | ปุ่มแบบ Toggle กดแต่ละครั้งสลับสถานะของอุปกรณ์นั้น แล้วส่ง `state` เป็น JSON boolean (`true`/`false` ไม่มีเครื่องหมายคำพูด) ตัวแปรนี้แก้เฉพาะใน `loop()` จึงไม่ต้องเป็น `volatile` |
 | `millis()` แทน `delay()` | `loop()` ไม่ถูกบล็อก จึงตรวจ flag ของปุ่มได้ถี่ แม้ยังไม่ถึงรอบส่งเซนเซอร์ |
 | `snprintf` | สร้าง JSON ลงบัฟเฟอร์ขนาดคงที่ ช่วยเลี่ยงการจองหน่วยความจำซ้ำ ๆ ของ `String` ซึ่งทำให้ heap แตกกระจายเมื่อรันนาน ๆ |
-| `strncmp(SUPABASE_KEY, "eyJ", 3)` | key แบบ legacy เป็น JWT ซึ่งขึ้นต้นด้วย `eyJ` เสมอ จึงต้องส่ง `Authorization` เพิ่ม ส่วน Publishable key แบบใหม่ส่งแค่ `apikey` (รูปแบบ key ของ Supabase เปลี่ยนมาแล้วระยะหนึ่ง ควรตรวจกับ[เอกสารทางการ](https://supabase.com/docs/guides/api/api-keys)อีกครั้ง) |
+| `strncmp(SUPABASE_KEY, "eyJ", 3)` | Publishable key ส่งเฉพาะ header `apikey` ตาม[เอกสาร Supabase](https://supabase.com/docs/guides/getting-started/api-keys) และห้ามส่งใน `Authorization: Bearer` เพราะไม่ใช่ JWT เงื่อนไขนี้มีไว้รองรับกรณีที่ยังใช้ legacy `anon` key (JWT ขึ้นต้นด้วย `eyJ` เสมอ) ซึ่งต้องส่ง `Authorization` เพิ่ม |
 
 > **ข้อจำกัดด้านเวลา:** ฐานข้อมูลประทับเวลาตอนที่ข้อมูลมาถึง event จึงอาจช้ากว่าเวลากดจริงประมาณ 1–2 วินาทีตามเวลาส่ง HTTPS ซึ่งยอมรับได้สำหรับงานบำรุงรักษา ถ้าต้องการเวลาระดับมิลลิวินาที ให้ซิงก์นาฬิกาด้วย NTP แล้วส่ง `created_at` ไปเอง
 
@@ -745,7 +758,7 @@ Pending period ทำให้ต้องเกินเกณฑ์ **ต่�
 | `AHT25 not found` | สาย SDA/SCL สลับ หรือไม่ได้จ่ายไฟ | ตรวจขาตามที่พิมพ์ไว้บนโมดูล และใช้ 3V3 |
 | ต่อ Wi-Fi ไม่ขึ้น | เครือข่าย 5 GHz หรือเป็น WPA2-Enterprise | ใช้ Hotspot มือถือแบบ 2.4 GHz |
 | กดปุ่มครั้งเดียวได้ 2 event | ปุ่มเด้งนานกว่า 50 ms | เพิ่ม `DEBOUNCE_MS` เป็น 80–100 |
-| ได้ `401` ตลอด | key ผิด หรือใช้ legacy key แต่ไม่ส่ง `Authorization` | คัดลอก key ใหม่ และตรวจ header |
+| ได้ `401` ตลอด | key ผิด หรือคัดลอกมาไม่ครบ | คัดลอก Publishable key (`sb_publishable_...`) ใหม่ และตรวจว่าส่งใน header `apikey` |
 | ได้ `401/403` พร้อม code `42501` | ไม่ผ่าน RLS policy | ตรวจค่าที่ส่งกับ `with check` |
 | Grafana: connection timeout | ใช้ Direct connection (IPv6) | เปลี่ยนเป็น Session pooler |
 | Grafana: password authentication failed | Username ไม่มี `.project_ref` ต่อท้าย | ใช้รูปแบบ `grafana_ro.xxxx` |
@@ -817,7 +830,7 @@ Pending period ทำให้ต้องเกินเกณฑ์ **ต่�
    - ตาราง `telemetry` และ `events` พร้อม index
    - policy ให้ `anon` (ESP32) **INSERT ได้อย่างเดียว** และตรวจช่วงค่า `temp` / `hum`
    - role `grafana_ro` ที่ **SELECT ได้อย่างเดียว** (เปลี่ยนรหัสผ่านเป็นของตนเองก่อน Run)
-3. **Integrations → Data API → Overview** → คัดลอก **Project URL** และ **Project Settings → API Keys** → คัดลอก **Publishable key**
+3. **Integrations → Data API → Overview** → คัดลอก **Project URL** และ **Project Settings → API Keys** → คัดลอก **Publishable key** (`sb_publishable_...`)
 
 #### ตารางบันทึกผล — ส่วนที่ 2
 
@@ -942,7 +955,7 @@ Pending period ทำให้ต้องเกินเกณฑ์ **ต่�
 #### Checklist ก่อนส่ง
 
 - [ ] `DEVICE_ID` เป็นรูปแบบ `mcc-` ตามด้วยรหัสนักศึกษา 4 ตัวท้าย
-- [ ] ESP32-S3 ใช้ Publishable/anon key เท่านั้น ไม่ใช่ Secret หรือ `service_role` key
+- [ ] ESP32-S3 ใช้ Publishable key (`sb_publishable_...`) เท่านั้น ไม่ใช่ Secret key (`sb_secret_...`) หรือ `service_role` key
 - [ ] ทั้งสองตารางเปิด RLS และมี policy ครบ
 - [ ] Grafana เชื่อมต่อด้วย role `grafana_ro` ผ่าน Session pooler
 - [ ] กดปุ่ม 1 ครั้งได้ 1 event เสมอ

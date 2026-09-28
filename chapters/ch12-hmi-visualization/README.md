@@ -365,11 +365,11 @@ $$\$\_\_interval \approx \frac{7 \times 86{,}400\ s}{1{,}000\ px} \approx 605\ s
 
 | คอลัมน์ | ชนิดข้อมูล | ค่าเริ่มต้น / เงื่อนไข | ผู้กำหนดค่า | ความหมาย | ตัวอย่าง |
 |:---|:---|:---|:---|:---|:---|
-| `id` | `bigint` | Primary key, identity (เพิ่มอัตโนมัติ) | ฐานข้อมูล | เลขลำดับแถว | `1024` |
-| `created_at` | `timestamptz` | `not null`, `default now()` | ฐานข้อมูล | เวลาที่บันทึก (เก็บเป็น UTC) | `2026-09-28 03:15:05+00` |
-| `device_id` | `text` | `not null` | ESP32-S3 | รหัสอุปกรณ์ | `mcc01` |
-| `temp` | `real` | -40 ถึง 120 (ตรวจโดย RLS policy) | ESP32-S3 | อุณหภูมิ (°C) | `31.4` |
-| `hum` | `real` | 0 ถึง 100 (ตรวจโดย RLS policy) | ESP32-S3 | ความชื้นสัมพัทธ์ (%RH) | `58.2` |
+| `id` | `bigint` (`int8`) | Primary key, identity (เพิ่มอัตโนมัติ) | ฐานข้อมูล | เลขลำดับแถว | `1024` |
+| `created_at` | `timestamptz` (`timestamptz`) | `not null`, `default now()` | ฐานข้อมูล | เวลาที่บันทึก (เก็บเป็น UTC) | `2026-09-28 03:15:05+00` |
+| `device_id` | `text` (`text`) | `not null` | ESP32-S3 | รหัสอุปกรณ์ | `mcc01` |
+| `temp` | `real` (`float4`) | -40 ถึง 120 (ตรวจโดย RLS policy) | ESP32-S3 | อุณหภูมิ (°C) | `31.4` |
+| `hum` | `real` (`float4`) | 0 ถึง 100 (ตรวจโดย RLS policy) | ESP32-S3 | ความชื้นสัมพัทธ์ (%RH) | `58.2` |
 
 Index: `telemetry_device_time_idx` บนคอลัมน์ `(device_id, created_at desc)`
 
@@ -377,13 +377,26 @@ Index: `telemetry_device_time_idx` บนคอลัมน์ `(device_id, crea
 
 | คอลัมน์ | ชนิดข้อมูล | ค่าเริ่มต้น / เงื่อนไข | ผู้กำหนดค่า | ความหมาย | ตัวอย่าง |
 |:---|:---|:---|:---|:---|:---|
-| `id` | `bigint` | Primary key, identity (เพิ่มอัตโนมัติ) | ฐานข้อมูล | เลขลำดับแถว | `57` |
-| `created_at` | `timestamptz` | `not null`, `default now()` | ฐานข้อมูล | เวลาที่กดปุ่ม (เก็บเป็น UTC) | `2026-09-28 03:16:12+00` |
-| `device_id` | `text` | `not null` | ESP32-S3 | รหัสอุปกรณ์ | `mcc01` |
-| `event` | `text` | `not null`, รับเฉพาะ `light` / `pump` / `fan` | ESP32-S3 | อุปกรณ์ที่ถูกสั่ง (ปุ่ม GPIO 4 / 5 / 6) | `fan` |
-| `state` | `boolean` | `not null` | ESP32-S3 | สถานะหลังกดปุ่ม (`true` = เปิด, `false` = ปิด) | `true` |
+| `id` | `bigint` (`int8`) | Primary key, identity (เพิ่มอัตโนมัติ) | ฐานข้อมูล | เลขลำดับแถว | `57` |
+| `created_at` | `timestamptz` (`timestamptz`) | `not null`, `default now()` | ฐานข้อมูล | เวลาที่กดปุ่ม (เก็บเป็น UTC) | `2026-09-28 03:16:12+00` |
+| `device_id` | `text` (`text`) | `not null` | ESP32-S3 | รหัสอุปกรณ์ | `mcc01` |
+| `event` | `text` (`text`) | `not null`, รับเฉพาะ `light` / `pump` / `fan` | ESP32-S3 | อุปกรณ์ที่ถูกสั่ง (ปุ่ม GPIO 4 / 5 / 6) | `fan` |
+| `state` | `boolean` (`bool`) | `not null` | ESP32-S3 | สถานะหลังกดปุ่ม (`true` = เปิด, `false` = ปิด) | `true` |
 
 Index: `events_device_time_idx` บนคอลัมน์ `(device_id, created_at desc)`
+
+ชื่อในวงเล็บคือชื่อที่ **Table Editor** ของ Supabase แสดง (เป็นชื่อย่อของชนิดเดียวกันใน PostgreSQL)
+
+**เหตุผลการเลือกชนิดข้อมูล** (ตามคำแนะนำใน [Supabase Docs: Data types](https://supabase.com/docs/guides/database/tables#data-types))
+
+| ชนิดข้อมูล | ใช้กับ | เหตุผล |
+|:---|:---|:---|
+| `bigint` แทน `integer` | `id` | `integer` เก็บได้สูงสุดประมาณ 2.1 พันล้าน และ identity อาจข้ามเลข จึงอาจเต็มก่อนมีข้อมูลครบจำนวนนั้น ข้อมูลที่ส่งทุก 5 วินาทีจะสะสมเร็วมาก |
+| `generated always as identity` | `id` | ฐานข้อมูลเป็นผู้กำหนดเลขเท่านั้น ถ้า ESP32 ส่ง `id` มาเองจะถูกปฏิเสธ (แบบ `by default` ยอมให้ใส่เองได้) |
+| `timestamptz` แทน `timestamp` | `created_at` | เก็บเป็นช่วงเวลาจริง (UTC) แล้วแสดงตาม time zone ของผู้ดู ส่วน `timestamp` ไม่รู้ time zone จึงเทียบเวลาข้ามประเทศหรือข้ามระบบผิดได้ |
+| `text` แทน `varchar(n)` | `device_id`, `event` | ใช้พื้นที่เท่ากันแต่ไม่จำกัดความยาว ถ้าต้องการจำกัดค่าให้ใช้ `check` constraint แบบที่ใช้กับ `event` |
+| `boolean` | `state` | มีได้เพียง 2 สถานะ (เปิด/ปิด) ตรงกับความหมายของข้อมูล |
+| `real` แทน `numeric` | `temp`, `hum` | เอกสารแนะนำ `numeric` สำหรับเงินและทศนิยมที่ต้องแม่นยำแบบตรงเป๊ะ เพราะ `real` เก็บค่าบางค่า เช่น 0.10 แบบตรงเป๊ะไม่ได้ แต่ `real` แม่นยำประมาณ 6–7 หลักนัยสำคัญ ความคลาดเคลื่อนจึงเล็กกว่าความแม่นยำของ AHT25 (±0.3 °C, ±2 %RH) มาก และข้อมูลเซนเซอร์ไม่ได้ถูกบวกสะสมแบบยอดเงิน `real` ยังใช้เพียง 4 ไบต์และคำนวณเร็วกว่า |
 
 **ตัวอย่างข้อมูลหลังระบบทำงาน** (Table Editor แสดงเวลาเป็น UTC ดังนั้น `03:15` คือ 10:15 น. ตามเวลาไทย)
 

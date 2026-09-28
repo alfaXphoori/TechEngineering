@@ -74,8 +74,8 @@ assignments:
     due: ก่อนคาบสัปดาห์ที่ 14
     form: "#"
   - n: 14
-    topic: การเชื่อมต่อกับโปรแกรมของผู้ใช้ (User Interface)
-    work: ใบงานที่ 14 — การออกแบบ User Interface บนคลาวด์
+    topic: ฐานข้อมูลคลาวด์และแดชบอร์ด (Supabase + Grafana)
+    work: ใบงานที่ 14 — ระบบติดตามตู้ควบคุมด้วย Supabase + Grafana
     due: ก่อนคาบสัปดาห์ที่ 15
     form: "#"
   - n: 15

@@ -23,7 +23,7 @@
 | **11** | **แพลตฟอร์มคลาวด์และการจัดการข้อมูล** | บริการคลาวด์ (IaaS/PaaS/SaaS), แพลตฟอร์ม ThingsBoard, การส่งค่า Telemetry / Attributes | [Cloud](chapters/ch10-cloud/) |
 | **12** | **ระบบจัดการกฎและฐานข้อมูลอนุกรมเวลา** | การวิเคราะห์เงื่อนไขด้วย Rule Engine, ส่งแจ้งเตือน API/LINE Notify, ฐานข้อมูลอนุกรมเวลา | [Cloud](chapters/ch10-cloud/) |
 | **13** | **ระบบฐานข้อมูลและแดชบอร์ดแสดงผลท้องถิ่น** | การเขียนโฟลว์และโหนดเชื่อมโยงใน Node-RED, จัดเก็บข้อมูลลง SQLite และ InfluxDB | [Node-RED](chapters/ch11-node-red/) |
-| **14** | **การแสดงภาพข้อมูลและการออกแบบส่วนต่อประสานผู้ใช้** | หลักการแสดงภาพข้อมูลที่ดี, ออกแบบ HMI, การสร้างแดชบอร์ดด้วย Grafana, การควบคุมอุปกรณ์แบบย้อนกลับ | [HMI & UI](chapters/ch12-hmi-visualization/) |
+| **14** | **การแสดงภาพข้อมูลและการออกแบบส่วนต่อประสานผู้ใช้** | ESP32-S3 + AHT25 + ปุ่มกด ส่งข้อมูลผ่าน HTTPS สู่ฐานข้อมูลคลาวด์ Supabase (PostgreSQL + RLS), สร้างแดชบอร์ดและแจ้งเตือนด้วย Grafana Cloud | [Cloud DB & Dashboard](chapters/ch12-hmi-visualization/) |
 | **15** | **การเรียนรู้ของเครื่องและการประมวลผลอัจฉริยะที่ปลายขอบ** | แนวคิด ML, ขั้นตอนพัฒนาโมเดลบน Edge Impulse, TinyML/Edge AI วิเคราะห์มอเตอร์สั่นสะเทือน | [Machine Learning](chapters/ch13-machine-learning/) |
 | **—** | **🟧 สอบปลายภาค (Final Exam)** | **ครอบคลุมเนื้อหาสัปดาห์ที่ 9–15 \| สัดส่วน 25%** | [summary.md](chapters/summary.md) |
 

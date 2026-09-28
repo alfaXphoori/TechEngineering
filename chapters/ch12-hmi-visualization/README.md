@@ -1,12 +1,12 @@
 ---
 layout: default
-title: "บทที่ 12: การแสดงภาพข้อมูลและการออกแบบส่วนต่อประสานผู้ใช้"
+title: "บทที่ 12: ระบบ IoT สู่ฐานข้อมูลคลาวด์และแดชบอร์ด"
 permalink: /chapters/ch12-hmi-visualization/
 ---
 
-# Chapter 12: การแสดงภาพข้อมูลและการออกแบบส่วนต่อประสานผู้ใช้
+# Chapter 12: ระบบ IoT สู่ฐานข้อมูลคลาวด์และแดชบอร์ด
 
-## Data Visualization & Industrial HMI Design (ISA 101, ThingsBoard Dashboards, 2-Way RPC Control, Widgets)
+## Cloud Database & Dashboard (ESP32-S3, AHT25, Supabase/PostgreSQL, Grafana Cloud)
 
 ---
 
@@ -18,691 +18,698 @@ permalink: /chapters/ch12-hmi-visualization/
 
 > ### 🎯 ผลลัพธ์การเรียนรู้และการเชื่อมโยง (Constructive Alignment)
 >
-> - **สัปดาห์การเรียนรู้:** สัปดาห์ที่ 14 — การแสดงภาพข้อมูลและการออกแบบส่วนต่อประสานผู้ใช้ (Data Visualization & HMI Design)
+> - **สัปดาห์การเรียนรู้:** สัปดาห์ที่ 14 — การแสดงภาพข้อมูลและการออกแบบส่วนต่อประสานผู้ใช้ (Data Visualization & User Interface)
 > - **ผลลัพธ์การเรียนรู้ระดับรายวิชา (CLOs):**
 >   - **CLO3:** ออกแบบและพัฒนาระบบ IoT ที่เชื่อมต่อเซนเซอร์/ตัวกระทำ สื่อสารข้อมูล และแสดงผลผ่านโปรแกรมของผู้ใช้ได้
 >   - **CLO4:** ปฏิบัติการสร้าง ทดสอบ และประยุกต์ใช้ระบบ IoT พร้อมการเรียนรู้ของเครื่องเบื้องต้น และทำงานเป็นทีมอย่างรับผิดชอบ
 > - **ผลลัพธ์การเรียนรู้ระดับบทเรียน (LLOs):**
->   - **LLO14.1:** ออกแบบส่วนต่อประสานผู้ใช้ (UI/HMI) สำหรับควบคุมและติดตามระบบ IoT ตามหลักการ ISA 101 ได้ (CLO3)
->   - **LLO14.2:** สร้างแอปพลิเคชัน/แดชบอร์ดควบคุมอุปกรณ์สองทาง (2-way RPC Control) ผ่าน ThingsBoard ได้ (CLO3, CLO4)
+>   - **LLO14.1:** ออกแบบและพัฒนาระบบ IoT ที่ส่งข้อมูลเซนเซอร์และเหตุการณ์จากผู้ใช้ไปจัดเก็บในฐานข้อมูลคลาวด์ (Supabase/PostgreSQL) พร้อมกำหนดสิทธิ์อย่างปลอดภัยได้ (CLO3)
+>   - **LLO14.2:** สร้างแดชบอร์ดแสดงผลและระบบแจ้งเตือนด้วย Grafana ตามหลักการออกแบบแดชบอร์ดที่ดีได้ (CLO3, CLO4)
 >
+> **ฮาร์ดแวร์:** ESP32-S3 DevKit · เซนเซอร์อุณหภูมิ/ความชื้น AHT25 · ปุ่มกด 3 ปุ่ม  
+> **ซอฟต์แวร์ (ฟรีทั้งหมด):** Arduino IDE (ESP32 core) · Supabase Free Plan · Grafana Cloud Free Tier
+
 ---
 
 <div class="chapter-tab-content" data-tab-name="Concept" data-tab-icon="💡" id="concept" markdown="1">
 
-## 12.1 ความสำคัญของการแสดงผลข้อมูลใน IoT
+## 12.1 ภาพรวมระบบ: ตู้ควบคุมมอเตอร์ปั๊ม
 
-ระบบ IoT เก็บข้อมูลจากเซนเซอร์จำนวนมหาศาล — อุณหภูมิ ความชื้น แรงสั่นสะเทือน ค่ากระแสไฟฟ้า ฯลฯ ข้อมูลดิบ (Raw Data) เหล่านี้เป็นเพียงตัวเลขที่ไหลเข้ามาไม่หยุด หากไม่มี **การแสดงผลข้อมูล (Data Visualization)** ที่ดี ผู้ใช้จะไม่สามารถแปลงตัวเลขเหล่านั้นเป็น **ความเข้าใจ (Insight)** ได้
+ในโรงงาน มอเตอร์ปั๊มถูกควบคุมจาก **ตู้ควบคุมมอเตอร์ (Motor Control Cabinet)** ซึ่งภายในมีอินเวอร์เตอร์ คอนแทคเตอร์ และรีเลย์ ถ้าอุณหภูมิในตู้สูงเกินไป อุปกรณ์อิเล็กทรอนิกส์จะเสื่อมเร็วขึ้น และถ้าความชื้นสูงจนเกิดหยดน้ำเกาะ (Condensation) ก็อาจทำให้ไฟฟ้าลัดวงจรได้ ช่างซ่อมบำรุงจึงต้องการระบบที่
+1. **ติดตามอุณหภูมิและความชื้นในตู้** ตลอด 24 ชั่วโมง และดูแนวโน้มย้อนหลังได้
+2. **บันทึกเหตุการณ์จากผู้ควบคุม** เช่น เริ่มเดินเครื่อง หยุดเครื่อง และแจ้งซ่อม เพื่อนำไปเทียบกับข้อมูลเซนเซอร์
+3. **แจ้งเตือนอัตโนมัติ** เมื่ออุณหภูมิเกินเกณฑ์
 
-### ทำไมการแสดงผลจึงสำคัญ?
+ในบทนี้เราจะสร้างระบบทั้งหมดด้วยเครื่องมือฟรี ตามสถาปัตยกรรมด้านล่าง
 
-1. **เปลี่ยนข้อมูลดิบเป็นความเข้าใจ** — กราฟอุณหภูมิที่ไต่ขึ้นต่อเนื่องบอกได้ทันทีว่ามอเตอร์ร้อนผิดปกติ แต่ตารางตัวเลข 500 แถวบอกอะไรได้ยาก
-2. **ตัดสินใจเร็วขึ้น** — แดชบอร์ดเรียลไทม์ช่วยให้วิศวกรตอบสนองต่อเหตุการณ์ได้ภายในวินาที
-3. **สื่อสารกับทุกคน** — กราฟที่ชัดเจนทำให้ผู้จัดการที่ไม่ใช่วิศวกรเข้าใจสถานการณ์ได้
-4. **ค้นหาแนวโน้มและความผิดปกติ** — รูปแบบ (Pattern) ที่ซ่อนอยู่ในข้อมูลจะปรากฏชัดเมื่อแสดงเป็นภาพ
-
-> 💡 **หลักสำคัญ:** ข้อมูลที่ดีแต่แสดงผลแย่ = ไร้ประโยชน์ ในทางกลับกัน การแสดงผลสวยงามแต่ข้อมูลผิดพลาด = อันตราย ทั้งสองส่วนต้องถูกต้องควบคู่กัน
-
----
-
-## 12.2 หลักการนำเสนอข้อมูลที่ดี
-
-การออกแบบการแสดงผลข้อมูลที่ดีต้องยึดหลัก 3 ประการ:
-
-### 12.2.1 ความชัดเจน (Clarity)
-
-- ใช้กราฟที่เหมาะกับประเภทข้อมูล
-- ตั้งชื่อแกน (Axis Label) และหน่วยให้ครบถ้วน เช่น "อุณหภูมิ (°C)" ไม่ใช่แค่ "Temp"
-- หลีกเลี่ยงสี/ลวดลายที่ทำให้สับสน
-
-### 12.2.2 บริบท (Context)
-
-- แสดงช่วงเวลา (Time Range) ให้ชัดเจน
-- มีเส้นอ้างอิง (Reference Line) เช่น ค่าเกณฑ์สูงสุดที่ยอมรับได้
-- เปรียบเทียบกับค่าปกติ เช่น "วันนี้ vs. ค่าเฉลี่ย 7 วัน"
-
-### 12.2.3 ไม่บิดเบือน (No Distortion)
-
-- แกน Y ต้องเริ่มจาก 0 เมื่อเปรียบเทียบขนาด (Bar Chart)
-- ไม่ตัดข้อมูลบางส่วนออกเพื่อให้กราฟดูดีขึ้น
-- ใช้สเกลที่สม่ำเสมอ (Uniform Scale)
-
-| หลักการ | ✅ ทำ | ❌ อย่าทำ |
-|---------|------|----------|
-| ความชัดเจน | ใช้สีแยกแยะข้อมูลชัดเจน ติดป้ายกำกับ | ยัดข้อมูล 10 ชุดในกราฟเดียว |
-| บริบท | แสดงเส้นเกณฑ์เตือน (Threshold) | แสดงกราฟโดยไม่บอกช่วงเวลา |
-| ไม่บิดเบือน | แกน Y เริ่มจาก 0 ในกราฟแท่ง | ตัดแกน Y เพื่อขยายความแตกต่าง |
-
----
-
-## 12.3 ชนิดของกราฟและการเลือกใช้
-
-### 12.3.1 กราฟเส้น (Line Chart)
-
-เหมาะสำหรับข้อมูลแบบอนุกรมเวลา (Time-Series) เช่น อุณหภูมิทุก ๆ 5 วินาที แรงสั่นสะเทือนตลอดทั้งวัน แสดงให้เห็น **แนวโน้ม (Trend)** ได้ดีที่สุด
-
-### 12.3.2 กราฟแท่ง (Bar Chart)
-
-เหมาะสำหรับเปรียบเทียบค่าระหว่างหมวดหมู่ เช่น ปริมาณการใช้ไฟฟ้าของแต่ละเครื่องจักร พลังงานรายเดือน
-
-### 12.3.3 เกจ / มาตรวัด (Gauge)
-
-แสดงค่าปัจจุบันเทียบกับช่วงที่กำหนด เช่น ความเร็วรอบมอเตอร์ อุณหภูมิปัจจุบัน เหมาะกับแดชบอร์ดเรียลไทม์
-
-### 12.3.4 แผนภูมิวงกลม (Pie Chart)
-
-แสดงสัดส่วนของแต่ละส่วนเทียบกับทั้งหมด เช่น สัดส่วนพลังงานที่ใช้แต่ละระบบ ใช้เมื่อมีหมวดหมู่ไม่เกิน 5-6 รายการ
-
-### 12.3.5 แผนที่ความร้อน (Heatmap)
-
-แสดงข้อมูลเป็นตาราง 2 มิติที่ใช้สีแทนค่า เช่น อุณหภูมิของแต่ละจุดบนพื้นที่โรงงานในแต่ละชั่วโมง เหมาะกับข้อมูลที่มีตัวแปร 2 มิติ
-
-### ตารางสรุปการเลือกใช้กราฟ
-
-| ชนิดกราฟ | ใช้เมื่อ | ตัวอย่างข้อมูล IoT | ข้อควรระวัง |
-|----------|---------|-------------------|------------|
-| กราฟเส้น (Line) | ดูแนวโน้มตามเวลา | อุณหภูมิ, ความชื้น ตลอด 24 ชม. | จุดข้อมูลมากเกินทำให้กราฟรก |
-| กราฟแท่ง (Bar) | เปรียบเทียบระหว่างหมวดหมู่ | พลังงานแต่ละเครื่องจักร | แกน Y ต้องเริ่มจาก 0 |
-| เกจ (Gauge) | ค่าปัจจุบัน ณ ขณะนั้น | RPM มอเตอร์, อุณหภูมิ | แสดงได้ทีละ 1 ค่า |
-| วงกลม (Pie) | สัดส่วน | % พลังงานแต่ละระบบ | ไม่ควรเกิน 5-6 หมวด |
-| Heatmap | ข้อมูล 2 มิติ + ค่าเป็นสี | อุณหภูมิแต่ละจุดในโรงงาน | ต้องเลือกสเกลสีที่เข้าใจง่าย |
-
----
-
-## 12.4 แดชบอร์ด (Dashboard) และหลักการออกแบบ
-
-**แดชบอร์ด** คือหน้าจอรวมศูนย์ที่แสดงข้อมูลสำคัญทั้งหมดในที่เดียว เปรียบเหมือนแผงหน้าปัดรถยนต์ที่รวมความเร็ว รอบเครื่อง ระดับน้ำมัน และอุณหภูมิไว้ในจุดเดียว
-
-### หลักการออกแบบแดชบอร์ด
-
-1. **จัดลำดับความสำคัญ (Priority Layout)**
-   - ข้อมูลสำคัญที่สุดอยู่มุมซ้ายบน (ตาคนอ่านซ้ายไปขวา บนลงล่าง)
-   - ใช้ขนาดใหญ่สำหรับข้อมูลหลัก ขนาดเล็กสำหรับข้อมูลรอง
-   - จัดกลุ่มข้อมูลที่เกี่ยวข้องไว้ใกล้กัน
-
-2. **การแสดงผลเรียลไทม์ (Real-Time Display)**
-   - อัปเดตค่าทุก 1-5 วินาทีสำหรับข้อมูลวิกฤต
-   - แสดงเวลาอัปเดตล่าสุด (Last Updated) ให้ผู้ใช้ทราบ
-   - ใช้สีแจ้งเตือนสถานะ: เขียว = ปกติ, เหลือง = เฝ้าระวัง, แดง = อันตราย
-
-3. **ไม่แออัดเกินไป (Avoid Clutter)**
-   - แดชบอร์ดที่ดีควรมี Widget ไม่เกิน 7-10 ชิ้น
-   - ใช้แท็บ (Tab) แบ่งหน้าสำหรับข้อมูลรายละเอียด
-
-> 💡 **เคล็ดลับ:** ก่อนออกแบบแดชบอร์ด ให้ถามตัวเองว่า "ถ้ามีเวลาแค่ 3 วินาที ข้อมูลไหนที่ต้องเห็นก่อน?" คำตอบนั้นคือสิ่งที่ต้องอยู่ตำแหน่งเด่นที่สุด
-
----
-
-## 12.5 เครื่องมือสำหรับแสดงผลข้อมูล IoT
-
-
-## 12.5 การนำเสนอค่าทางสถิติด้วย Grafana
-
-**Grafana** เป็นแพลตฟอร์มการแสดงผลวิเคราะห์และติดตามข้อมูลระดับองค์กร (Enterprise Grade Analytics Engine) โดดเด่นด้านความสวยงาม ความยืดหยุ่นในการจัดการ และประสิทธิภาพที่โดดเด่นเมื่อใช้ประมวลผลข้อมูลอนุกรมเวลาขนาดใหญ่จากคลาวด์และโรงงานอุตสาหกรรม
-
-#### โครงสร้างและการจัดเลย์เอาต์ (Layout Structure)
-1. **Dashboards & Rows (กระดานควบคุมและแถวจัดระเบียบ):** 
-   - พื้นที่การทำงานสูงสุดคือ Dashboard ซึ่งภายในถูกแบ่งย่อยเป็นโครงสร้างแบบ Grid layout
-   - **Rows (แถว):** ใช้สำหรับจัดแบ่งกลุ่มพาเนลตามเนื้อหา และช่วยลดภาระการโหลดประมวลผลข้อมูลโดยสามารถกดพับเก็บ (Collapse) การประมวลผลพาเนลภายในแถวที่ไม่ถูกรับชมได้
-
-2. **Panels (พาเนลแสดงผลข้อมูลแบบจำแนกประเภท):**
-   - **Time Series (อนุกรมเวลา):** พาเนลหลักยอดนิยมที่วาดเส้นกราฟความเข้มข้นของจุดข้อมูลเทียบแกนเวลา (Time-based numeric data)
-   - **Stat (สถิติตัวเลขเดี่ยว):** วิดเจ็ตที่เน้นตัวเลขแสดงสถานะปัจจุบันขนาดใหญ่ เหมาะสำหรับตัวเลขสำคัญ เช่น อุณหภูมิสูงสุด หรือผลรวมยอดผลิต โดยสามารถกำหนดสีพื้นหลังหรือสีข้อความตามค่าอิมแพ็กต์ผ่าน Thresholds
-   - **Gauge (เกจวัดมาตรฐาน):** วิดเจ็ตมาตรวัดวงกลมหรือครึ่งวงกลม มีการแสดงส่วนของเฉดสีเตือนภัยเพื่อระบุระดับปริมาณ (เช่น เกจน้ำมัน เกจวัดรอบหมุนมอเตอร์)
-   - **Bar Gauge (เกจแท่งระดับ):** ใช้แถบขนานแนวนอนหรือแนวตั้งเพื่อเปรียบเทียบชุดข้อมูลที่คล้ายคลึงกัน (เช่น ระดับของเหลวในถังเก็บสารเคมี 5 ใบ)
-   - **Table (ตารางแจกแจงรายละเอียด):** แสดงผลตารางคอลัมน์และแถวข้อมูลดิบ เหมาะสำหรับรายการบันทึกเหตุการณ์ (Logs) หรือการเปรียบเทียบข้อมูลจำเพาะเชิงโครงสร้าง
-
-3. **Data Source Integration:**
-   - Grafana ไม่ได้ทำหน้าที่เก็บข้อมูลด้วยตนเอง แต่จะดึงข้อมูลผ่านการเชื่อมต่อปลั๊กอิน (Data Sources) ไปยังฐานข้อมูลภายนอก เช่น InfluxDB (ฐานข้อมูลอนุกรมเวลา), Prometheus (ฐานข้อมูลตรวจวัดระบบ), PostgreSQL, MySQL, หรือ MongoDB
-
-#### พื้นฐานการสืบค้นข้อมูลอนุกรมเวลาด้วย InfluxQL
-เมื่อฐานข้อมูลต้นทางคือ InfluxDB (ซึ่งเป็น Time-series Database ยอดนิยมในระบบ IoT) Grafana จะใช้ภาษา **InfluxQL** (Influx Query Language) ซึ่งมีไวยากรณ์คล้าย SQL เพื่อดึงค่าข้อมูล ตัวอย่างคำสั่งมาตรฐานที่สำคัญมีดังนี้:
-
-```sql
--- คำสั่งค้นหาค่าเฉลี่ยของอุณหภูมิทุกๆ 5 นาที โดยคัดกรองจากอุปกรณ์เฉพาะเจาะจง
-SELECT MEAN("temperature") 
-FROM "sensor_readings" 
-WHERE ("device_id" = 'ESP32_Office') AND $timeFilter 
-GROUP BY time(5m) fill(linear)
-```
-
-**คำอธิบายไวยากรณ์และสัญลักษณ์:**
-- **`SELECT MEAN("temperature")`:** การระบุฟิลด์ตัวเลขข้อมูลดิบที่อุณหภูมิถูกจัดเก็บ นำมาหาค่าเฉลี่ย (Mean) โดยสามารถใช้ฟังก์ชันอื่นได้ เช่น `MAX()`, `MIN()`, `LAST()`, หรือ `COUNT()`
-- **`FROM "sensor_readings"`:** ระบุชื่อ Measurement (เปรียบเทียบเหมือน Table ในฐานข้อมูลเชิงสัมพันธ์) ซึ่งจัดเก็บตัวแปรเซนเซอร์ตัวนั้นไว้
-- **`WHERE ("device_id" = 'ESP32_Office')`:** การกรองข้อมูลด้วยแถบป้ายข้อความ (Tags) ซึ่งเป็นดัชนีระบุตัวตนเฉพาะ
-- **`AND $timeFilter`:** คีย์เวิร์ดตัวแปรเฉพาะของ Grafana (Dashboard Global Macro) ที่ทำหน้าที่แปลงช่วงเวลาควบคุมที่ผู้ใช้เลือกในหน้า UI (เช่น ย้อนหลัง 1 ชม., 24 ชม., หรือ 7 วัน) ให้กลายเป็นช่วงเงื่อนไขเชิงวันเวลาสืบค้นโดยอัตโนมัติ
-- **`GROUP BY time(5m)`:** สั่งสรุปย่อขนาดข้อมูล (Downsampling) ให้เหลือจุดข้อมูลเพียงจุดเดียวต่อหน้าต่าง 5 นาที โดย Grafana จะสร้างจุดข้อมูลตามฟังก์ชันคณิตศาสตร์ที่กำหนด เช่น `MEAN()` ด้านบน
-- **`fill(linear)`:** การกำหนดค่าทดแทนข้อมูลกรณีในช่วงเวลาใดที่เซนเซอร์ไม่ได้อัปโหลดหรือสัญญาณขาดหาย เช่น `fill(linear)` ลากเส้นเชื่อมต่อจุดข้อมูลที่มีแบบเส้นตรง หรือ `fill(previous)` ใช้ค่าที่ปรากฏก่อนหน้า และ `fill(0)` ป้อนค่าเป็นศูนย์
-
----
-
-> 📊 **บทเรียนเสริม:** ลองสร้างแดชบอร์ด Grafana จากฐานข้อมูล PostgreSQL จริง ด้วยเครื่องมือฟรีทั้งหมด (Wokwi + Supabase + Grafana Cloud) ได้ที่ [แดชบอร์ด IoT ด้วย Supabase + Grafana Cloud](supabase-grafana.md)
-
-## 12.6 แดชบอร์ดของ ThingsBoard
-
-**ThingsBoard** เป็นแพลตฟอร์ม IoT ระดับอุตสาหกรรม (Industrial-grade IoT Platform) แบบโอเพนซอร์สที่ออกแบบมาเพื่อรองรับทั้งการเรียนรู้และงานจริงในระบบฝังตัว ผู้พัฒนาสามารถสร้างแดชบอร์ดเว็บแบบลากวาง (Drag-and-drop Web Dashboard) พร้อมวิดเจ็ตหลากหลาย เช่น เกจวัดค่า กราฟอนุกรมเวลา และ LED แสดงสถานะ นอกจากนี้ยังมีแอปมือถือ (ThingsBoard Mobile App) สำหรับ iOS และ Android อุปกรณ์เชื่อมต่อผ่านโปรโตคอล MQTT โดยส่งข้อมูลโทรมาตร (Telemetry) ขึ้นคลาวด์และรับคำสั่งควบคุมกลับมา (RPC) แบบสองทิศทาง ระบบมีฐานข้อมูลอนุกรมเวลา (Time-series Storage) และระบบแจ้งเตือน (Alarms) ในตัวโดยไม่ต้องติดตั้งซอฟต์แวร์เพิ่มเติม
-
----
-
-### ตารางเปรียบเทียบเครื่องมือ
-
-| คุณสมบัติ | Node-RED | Grafana | ThingsBoard |
-|----------|----------|---------|------------|
-| ประเภท | Self-hosted | Self-hosted | Cloud / Self-hosted |
-| ความยากในการเริ่มต้น | ง่าย | ปานกลาง | ปานกลาง |
-| ปรับแต่งกราฟ | ปานกลาง | สูงมาก | สูง |
-| รองรับ Real-Time | ✅ | ✅ | ✅ |
-| โมบายแอป | ❌ | จำกัด | ✅ |
-| ค่าใช้จ่าย | ฟรี | ฟรี (OSS) | ฟรี (จำกัด) / OSS |
-| เหมาะกับ | Prototype, งานขนาดเล็ก | Production, งานขนาดใหญ่ | การเรียนรู้ถึงงานอุตสาหกรรม |
-| ตั้ง Alert ได้ | ✅ (ผ่าน Flow) | ✅ (Built-in) | ✅ (Built-in Alarms) |
-
----
-
-</div>
-
-<div class="chapter-tab-content" data-tab-name="Interactive Sim" data-tab-icon="🎮" id="sim" markdown="1">
-## 12.6 ปฏิบัติการ Wokwi Lab 14: การสร้าง HMI อุตสาหกรรม และการควบคุมสองทาง 2-Way RPC บน ThingsBoard
-
-**รหัสปฏิบัติการ:** LAB-14 | **เวลาปฏิบัติการ:** 2 ชั่วโมง  
-**เป้าหมายการเรียนรู้:** LLO14.1, LLO14.2 (CLO3, CLO4)  
-**เครื่องมือที่ใช้:** Wokwi Simulator, ThingsBoard Dashboard Builder, ESP32, Relay, OLED SSD1306
-
----
-
-### 12.6.1 วัตถุประสงค์เชิงปฏิบัติการ
-1. ออกแบบส่วนต่อประสานผู้ใช้ (Industrial HMI Dashboard) ตามมาตรฐานความปลอดภัยและสรีรศาสตร์ทางการมองเห็น (ISA 101)
-2. พัฒนาระบบรับคำสั่งสั่งการสองทางระยะไกล (Two-Way Remote Procedure Calls: RPC) จากหน้าเว็บ ThingsBoard ไปยังอุปกรณ์จริง
-3. แสดงผลสถานะหน้าเครื่องจักรแบบ Local HMI ผ่านจอ OLED ไปพร้อมกับการแสดงผลบนคลาวด์
-
----
-
-### 12.6.2 แผนผังการต่อวงจร (Wiring Table)
-
-| อุปกรณ์ | ขาของอุปกรณ์ | ขาบนบอร์ด ESP32 DevKit | หน้าที่ / หมายเหตุ |
-|---|---|---|---|
-| **SSD1306 OLED (Local HMI)** | SDA / SCL | **GPIO 21 / GPIO 22** | แสดงผลหน้าเครื่องจักร (I2C) |
-| **Relay Module (Fan Driver)** | IN | **GPIO 13** | สั่งงานพัดลมจาก 2-Way RPC |
-| **Status LED** | Anode (+) | **GPIO 12** (ผ่าน R 330Ω) | ไฟแสดงสถานะ RPC Active |
-
----
-
-### 12.6.3 ไฟล์โครงสร้างวงจร `diagram.json` สำหรับ Wokwi
-
-```json
-{
-  "version": 1,
-  "author": "KSU TechEngineering",
-  "editor": "wokwi",
-  "parts": [
-    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
-    { "type": "wokwi-ssd1306", "id": "oled1", "top": -140, "left": 80, "attrs": { "i2cAddress": "0x3c" } },
-    { "type": "wokwi-relay-module", "id": "relay1", "top": 120, "left": 120, "attrs": {} },
-    { "type": "wokwi-led", "id": "led1", "top": 120, "left": -80, "attrs": { "color": "blue" } },
-    { "type": "wokwi-resistor", "id": "r1", "top": 170, "left": -80, "attrs": { "value": "330" } }
-  ],
-  "connections": [
-    [ "esp:3V3", "oled1:VCC", "red", [ "v0" ] ],
-    [ "esp:GND", "oled1:GND", "black", [ "v0" ] ],
-    [ "esp:21", "oled1:SDA", "green", [ "v0" ] ],
-    [ "esp:22", "oled1:SCL", "yellow", [ "v0" ] ],
-
-    [ "esp:5V", "relay1:VCC", "red", [ "v0" ] ],
-    [ "esp:GND", "relay1:GND", "black", [ "v0" ] ],
-    [ "esp:13", "relay1:IN", "purple", [ "v0" ] ],
-
-    [ "esp:12", "led1:A", "orange", [ "v0" ] ],
-    [ "led1:C", "r1:1", "black", [ "v0" ] ],
-    [ "r1:2", "esp:GND", "black", [ "v0" ] ]
-  ],
-  "dependencies": {}
-}
-```
-
----
-
-### 12.6.4 ซอร์สโค้ดภาษา C++ รองรับการสั่งการ Two-Way RPC
-
-```cpp
-/**
- * LAB 12: Industrial HMI & 2-Way RPC Control over ThingsBoard
- * Course: Digital Technology for Engineering, KSU
- */
-
-#include <WiFi.h>
-#include <PubSubClient.h>
-#include <ArduinoJson.h>
-
-const char* WIFI_SSID = "Wokwi-GUEST";
-const char* WIFI_PASS = "";
-
-const char* TB_SERVER = "thingsboard.cloud";
-const char* TB_TOKEN  = "YOUR_ACCESS_TOKEN_HERE";
-
-#define RELAY_FAN_PIN 13
-#define LED_STATUS_PIN 12
-
-WiFiClient espClient;
-PubSubClient client(espClient);
-
-void onRpcMessage(char* topic, byte* payload, unsigned int length) {
-  String responseTopic = String(topic);
-  responseTopic.replace("request", "response");
-
-  String msg = "";
-  for (unsigned int i = 0; i < length; i++) msg += (char)payload[i];
-
-  Serial.printf("\n[RPC RECEIVED] Topic: %s | Payload: %s\n", topic, msg.c_str());
-
-  JsonDocument doc;
-  if (!deserializeJson(doc, msg)) {
-    const char* method = doc["method"];
-
-    if (String(method) == "setFanState") {
-      bool state = doc["params"];
-      digitalWrite(RELAY_FAN_PIN, state ? HIGH : LOW);
-      digitalWrite(LED_STATUS_PIN, state ? HIGH : LOW);
-      Serial.printf("[ACTION] Fan Relay set to: %s\n", state ? "ON" : "OFF");
-
-      client.publish(responseTopic.c_str(), "{\"status\":\"SUCCESS\"}");
-    }
-  }
-}
-
-void setup() {
-  Serial.begin(115200);
-  pinMode(RELAY_FAN_PIN, OUTPUT);
-  pinMode(LED_STATUS_PIN, OUTPUT);
-  digitalWrite(RELAY_FAN_PIN, LOW);
-  digitalWrite(LED_STATUS_PIN, LOW);
-
-  WiFi.begin(WIFI_SSID, WIFI_PASS);
-  while (WiFi.status() != WL_CONNECTED) delay(500);
-
-  client.setServer(TB_SERVER, 1883);
-  client.setCallback(onRpcMessage);
-}
-
-void loop() {
-  if (!client.connected()) {
-    while (!client.connected()) {
-      if (client.connect("ESP32_HMI", TB_TOKEN, NULL)) {
-        Serial.println("[ThingsBoard] Connected & Subscribing to RPC Commands...");
-        client.subscribe("v1/devices/me/rpc/request/+");
-      } else {
-        delay(2000);
-      }
-    }
-  }
-  client.loop();
-}
-```
-</div>
-</div>
-
----
-
-#### 5. ขั้นตอนการจัดเตรียมและเชื่อมต่อโปรเจกต์ ThingsBoard
-1. **สร้างบัญชีคลาวด์:** สมัครลงทะเบียนฟรีที่ [thingsboard.cloud](https://thingsboard.cloud/)
-2. **สร้าง Device:** ไปที่เมนู Entities → Devices → เพิ่มอุปกรณ์ใหม่ เช่น ตั้งชื่อว่า `ESP32_Lab09`
-3. **คัดลอก Access Token:** เปิดหน้ารายละเอียดของ Device → แท็บ Credentials → คัดลอก **Access Token** (ใช้แทนรหัสผ่าน MQTT)
-4. **สร้าง Dashboard และเพิ่ม Widget:**
-   - ไปที่เมนู Dashboards → สร้าง Dashboard ใหม่
-   - เพิ่มวิดเจ็ต **Gauge** ผูกกับ Telemetry Key `temperature` เพื่อแสดงอุณหภูมิแบบเรียลไทม์
-   - เพิ่มวิดเจ็ต **Round Switch** และตั้งค่า RPC Method เป็น `setLed` เพื่อส่งคำสั่งควบคุม LED
-5. **เขียนและอัปโหลดโค้ด ESP32:** ใช้ Libraries `WiFi.h`, `PubSubClient.h`, `ArduinoJson.h` (ดูโค้ดตัวอย่างด้านล่าง) และใส่ Access Token ที่คัดลอกมาในตัวแปร `access_token`
-
----
-
-#### ตัวอย่างโค้ดสมบูรณ์: Telemetry, RPC และ Attribute Sync บน ESP32 กับ ThingsBoard
-
-ต่อไปนี้คือรูปแบบโปรแกรมภาษา C++ สำหรับ ESP32 ที่ส่งข้อมูลอุณหภูมิ (Telemetry) ขึ้นคลาวด์ รับคำสั่ง RPC สั่งงาน LED และดึงสถานะล่าสุดจาก Shared Attributes เมื่อบู๊ตระบบ:
-
-```cpp
-#include <WiFi.h>
-#include <PubSubClient.h>
-#include <ArduinoJson.h>
-
-// รายละเอียดการเชื่อมต่อ Wi-Fi (Wokwi ใช้ Wokwi-GUEST ไม่ต้องใส่รหัสผ่าน)
-const char* ssid         = "Wokwi-GUEST";
-const char* pass         = "";
-
-// รายละเอียด ThingsBoard MQTT Broker
-const char* tb_server    = "thingsboard.cloud";
-const int   tb_port      = 1883;
-const char* access_token = "Your_Access_Token_Here"; // ใส่ Access Token จากหน้า Device
-
-#define LED_PIN 2 // ขา GPIO ที่ต่อ LED
-
-WiFiClient   espClient;
-PubSubClient client(espClient);
-
-unsigned long lastSendTime    = 0;
-const unsigned long INTERVAL  = 3000; // ส่ง Telemetry ทุก 3 วินาที
-
-// ฟังก์ชัน Callback รับข้อความจาก ThingsBoard (RPC + Attribute Response)
-void onMqttMessage(char* topic, byte* payload, unsigned int length) {
-  StaticJsonDocument<256> doc;
-  if (deserializeJson(doc, payload, length) != DeserializationError::Ok) return;
-
-  String topicStr = String(topic);
-
-  // ---- จัดการ RPC Request ----
-  if (topicStr.startsWith("v1/devices/me/rpc/request/")) {
-    const char* method = doc["method"];
-
-    if (strcmp(method, "setLed") == 0) {
-      bool ledState = doc["params"];                    // รับค่า true/false จากสวิตช์แดชบอร์ด
-      digitalWrite(LED_PIN, ledState ? HIGH : LOW);    // สั่งงาน GPIO ตามคำสั่ง
-      Serial.printf("RPC setLed: %s\n", ledState ? "ON" : "OFF");
-
-      // ตอบกลับ ThingsBoard เพื่อยืนยันว่าดำเนินการสำเร็จ
-      String requestId    = topicStr.substring(topicStr.lastIndexOf('/') + 1);
-      String responseTopic = "v1/devices/me/rpc/response/" + requestId;
-      client.publish(responseTopic.c_str(), "{\"success\":true}");
-    }
-  }
-
-  // ---- จัดการ Shared Attribute Response (ซิงค์สถานะเมื่อบู๊ต) ----
-  if (topicStr.startsWith("v1/devices/me/attributes/response/")) {
-    JsonVariant shared = doc["shared"];
-    if (!shared.isNull() && shared.containsKey("ledState")) {
-      bool restoredState = shared["ledState"];
-      digitalWrite(LED_PIN, restoredState ? HIGH : LOW);
-      Serial.printf("Attr Sync: ledState = %s\n", restoredState ? "ON" : "OFF");
-    }
-  }
-}
-
-// เชื่อมต่อ ThingsBoard และ Subscribe หัวข้อที่จำเป็น
-void reconnect() {
-  while (!client.connected()) {
-    Serial.print("เชื่อมต่อ ThingsBoard...");
-    // Access Token ใช้เป็น Username, Password ให้เป็น NULL
-    if (client.connect("ESP32_Lab09", access_token, NULL)) {
-      Serial.println(" สำเร็จ!");
-      // Subscribe รับคำสั่ง RPC จากแดชบอร์ด
-      client.subscribe("v1/devices/me/rpc/request/+");
-      // Subscribe รับ Shared Attribute Response
-      client.subscribe("v1/devices/me/attributes/response/+");
-      // ร้องขอสถานะล่าสุดจากคลาวด์เมื่อเชื่อมต่อใหม่ (Digital Twin Sync)
-      client.publish("v1/devices/me/attributes/request/1",
-                     "{\"sharedKeys\":\"ledState\"}");
-    } else {
-      Serial.printf(" ล้มเหลว rc=%d ลองใหม่ใน 5 วินาที\n", client.state());
-      delay(5000);
-    }
-  }
-}
-
-// ส่งข้อมูลอุณหภูมิขึ้น ThingsBoard แบบ Non-blocking ด้วย millis()
-void sendTelemetry() {
-  float temperature = 24.0 + random(0, 120) / 10.0; // จำลองอุณหภูมิ 24.0–36.0 °C
-
-  StaticJsonDocument<128> doc;
-  doc["temperature"] = temperature;
-
-  char payload[128];
-  serializeJson(doc, payload);
-
-  client.publish("v1/devices/me/telemetry", payload);
-  Serial.printf("Telemetry: %s\n", payload);
-}
-
-void setup() {
-  Serial.begin(115200);
-  pinMode(LED_PIN, OUTPUT);
-
-  // เชื่อมต่อ Wi-Fi
-  WiFi.begin(ssid, pass);
-  Serial.print("เชื่อมต่อ Wi-Fi");
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println(" เชื่อมต่อแล้ว!");
-
-  // ตั้งค่า MQTT Broker และ Callback
-  client.setServer(tb_server, tb_port);
-  client.setCallback(onMqttMessage);
-}
-
-void loop() {
-  // เชื่อมต่อใหม่หากหลุด (Non-blocking ในรอบถัดไปเมื่อเวลาผ่าน)
-  if (!client.connected()) {
-    reconnect();
-  }
-  client.loop(); // ประมวลผลคิว MQTT และ Keep-alive
-
-  // ส่ง Telemetry ตามรอบเวลาโดยไม่ใช้ delay()
-  if (millis() - lastSendTime >= INTERVAL) {
-    lastSendTime = millis();
-    sendTelemetry();
-  }
-}
-```
-
-> 💡 **สำหรับ Wokwi:** ThingsBoard ใช้โปรโตคอล MQTT พอร์ต 1883 ซึ่ง Wokwi-GUEST รองรับการเชื่อมต่อออกอินเทอร์เน็ตจริง นักศึกษาสามารถทดสอบโค้ดนี้บน Wokwi ได้โดยตรง — กำหนด SSID เป็น `"Wokwi-GUEST"` และ Password เป็น `""` แล้วใส่ Access Token จากบัญชี ThingsBoard ของตนเอง บอร์ดจะเชื่อมต่อ thingsboard.cloud:1883 ได้จริงในโปรแกรมจำลอง
-
----
-
-## 12.8 ตัวอย่างการออกแบบแดชบอร์ดติดตามเครื่องจักร
-
-### สถานการณ์จำลอง
-
-โรงงานมีมอเตอร์ไฟฟ้า 1 ตัวที่ต้องติดตาม:
-- **อุณหภูมิตัวเรือน** (Body Temperature)
-- **ความเร็วรอบ** (RPM)
-- **กระแสไฟฟ้า** (Current)
-- **สถานะการทำงาน** (Running / Stopped / Error)
-
-### การออกแบบ Layout
-
-<div style="text-align: center; margin: 25px 0;">
-<svg viewBox="0 0 760 380" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif">
-  <title>แดชบอร์ดติดตามมอเตอร์ #1 (Layout Mockup)</title>
+<div style="text-align: center; margin: 20px 0;">
+<svg viewBox="0 0 900 345" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif" role="img" aria-label="ESP32-S3 ส่งข้อมูล AHT25 และเหตุการณ์ปุ่มผ่าน HTTPS ไปยัง REST API ของ Supabase ซึ่งบันทึกลง PostgreSQL ส่วน Grafana Cloud อ่านข้อมูลผ่าน Session Pooler ด้วย role อ่านอย่างเดียว แล้วแสดงแดชบอร์ดและส่งอีเมลแจ้งเตือน">
+  <title>สถาปัตยกรรมระบบ: เส้นทางเขียน ESP32-S3 → REST API → PostgreSQL และเส้นทางอ่าน PostgreSQL → Pooler → Grafana</title>
   <style>
-    .db-bg { fill: #0f172a; stroke: #1e293b; stroke-width: 2; rx: 12px; }
-    .card { fill: #1e293b; stroke: #334155; stroke-width: 1.5; rx: 8px; }
-    
-    .txt-header { font-size: 15px; font-weight: bold; fill: #f8fafc; }
-    .txt-lbl { font-size: 12px; fill: #94a3b8; }
-    .txt-val-temp { font-size: 24px; font-weight: bold; fill: #f97316; }
-    .txt-val-rpm { font-size: 24px; font-weight: bold; fill: #38bdf8; }
-    
-    .btn-estop { fill: #ef4444; stroke: #b91c1c; stroke-width: 1.5; rx: 6px; }
-    .btn-txt { font-size: 12px; font-weight: bold; fill: #ffffff; }
-    
-    .slider-track { fill: #475569; rx: 3px; }
-    .slider-fill { fill: #3b82f6; rx: 3px; }
-    
-    .chart-line { fill: none; stroke: #38bdf8; stroke-width: 2.5; stroke-linecap: round; }
-    .chart-line-sub { fill: none; stroke: #fb7185; stroke-width: 1.5; stroke-linecap: round; stroke-dasharray: 4 4; }
-    .chart-area { fill: url(#chart-grad); opacity: 0.15; }
-    .chart-grid { stroke: #334155; stroke-width: 1; stroke-dasharray: 2 4; }
+    .c12-bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1; }
+    .c12-box { fill: #ffffff; stroke: #475569; stroke-width: 2; }
+    .c12-esp { fill: #faf5ff; stroke: #7c3aed; stroke-width: 2.5; }
+    .c12-db { fill: #ecfdf5; stroke: #059669; stroke-width: 2.5; }
+    .c12-tb { fill: #ffffff; stroke: #059669; stroke-width: 1.5; }
+    .c12-gf { fill: #fff7ed; stroke: #ea580c; stroke-width: 2.5; }
+    .c12-cloud { fill: #f0fdf4; stroke: #059669; stroke-width: 1.5; stroke-dasharray: 6 5; }
+    .c12-w { fill: none; stroke: #059669; stroke-width: 4; stroke-dasharray: 8 10; stroke-linecap: round; animation: c12-flow 1.6s linear infinite; }
+    .c12-r { fill: none; stroke: #2f5597; stroke-width: 4; stroke-dasharray: 8 10; stroke-linecap: round; animation: c12-flow 1.6s linear infinite; }
+    .c12-a { fill: none; stroke: #ea580c; stroke-width: 3; stroke-dasharray: 6 8; stroke-linecap: round; animation: c12-flow 1.2s linear infinite; }
+    .c12-t { font-size: 14px; font-weight: 700; fill: #1e293b; }
+    .c12-l { font-size: 12px; fill: #64748b; font-weight: 500; }
+    .c12-c { font-size: 11px; font-family: monospace; font-weight: 700; fill: #475569; }
+    .c12-cw { font-size: 11px; font-family: monospace; font-weight: 700; fill: #059669; }
+    .c12-cr { font-size: 11px; font-family: monospace; font-weight: 700; fill: #2f5597; }
+    .c12-ca { font-size: 11px; font-family: monospace; font-weight: 700; fill: #ea580c; }
+    @keyframes c12-flow { to { stroke-dashoffset: -36; } }
+    @media (prefers-reduced-motion: reduce) { .c12-w, .c12-r, .c12-a { animation: none; } }
   </style>
-
-  <rect x="5" y="5" width="750" height="370" class="db-bg"/>
-  
-  <!-- Gradients -->
-  <defs>
-    <linearGradient id="chart-grad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#38bdf8"/>
-      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/>
-    </linearGradient>
-  </defs>
-
-  <!-- Header -->
-  <text x="30" y="38" class="txt-header">🏭 แดชบอร์ดติดตามมอเตอร์ #1 (Motor #1 Monitoring Dashboard)</text>
-  <rect x="620" y="22" width="110" height="24" rx="12" fill="#064e3b" stroke="#059669" stroke-width="1"/>
-  <text x="675" y="38" text-anchor="middle" font-size="11px" font-weight="bold" fill="#34d399">🟢 Connected</text>
-
-  <!-- Card 1: Temp -->
-  <rect x="30" y="65" width="220" height="110" class="card"/>
-  <text x="50" y="95" class="txt-lbl">🌡️ อุณหภูมิตัวเรือน (Body Temp)</text>
-  <text x="50" y="135" class="txt-val-temp">42.3 °C</text>
-  <text x="50" y="158" font-size="10.5px" fill="#64748b">ขีดจำกัดความร้อนสูงสุด: 65 °C</text>
-
-  <!-- Card 2: RPM -->
-  <rect x="270" y="65" width="220" height="110" class="card"/>
-  <text x="290" y="95" class="txt-lbl">🔄 ความเร็วรอบมอเตอร์ (RPM)</text>
-  <text x="290" y="135" class="txt-val-rpm">1,480 rpm</text>
-  <text x="290" y="158" font-size="10.5px" fill="#64748b">ความเร็วรอบใช้งานสูงสุด: 1800 rpm</text>
-
-  <!-- Card 3: Status -->
-  <rect x="510" y="65" width="220" height="110" class="card"/>
-  <text x="530" y="95" class="txt-lbl">⚙️ สถานะระบบ (System Status)</text>
-  <rect x="530" y="112" width="110" height="30" rx="6" fill="#064e3b" stroke="#10b981" stroke-width="1.5"/>
-  <text x="585" y="132" text-anchor="middle" font-size="13px" font-weight="bold" fill="#34d399">🟢 RUNNING</text>
-  <text x="530" y="158" font-size="10.5px" fill="#64748b">โหมดควบคุม: รีโมท (Auto)</text>
-
-  <!-- Card 4: Historical Chart -->
-  <rect x="30" y="195" width="460" height="150" class="card"/>
-  <text x="50" y="222" class="txt-lbl">📈 กราฟเส้นแสดงอุณหภูมิ &amp; กระแสไฟฟ้า (ย้อนหลัง 1 ชม.)</text>
-  
-  <!-- Chart Grid -->
-  <line x1="60" y1="245" x2="460" y2="245" class="chart-grid"/>
-  <line x1="60" y1="280" x2="460" y2="280" class="chart-grid"/>
-  <line x1="60" y1="315" x2="460" y2="315" class="chart-grid"/>
-  
-  <!-- Chart Lines & Area -->
-  <path d="M 60 300 Q 110 270 160 290 T 260 250 T 360 280 T 460 260 L 460 315 L 60 315 Z" class="chart-area"/>
-  <path d="M 60 300 Q 110 270 160 290 T 260 250 T 360 280 T 460 260" class="chart-line"/>
-  <path d="M 60 280 Q 110 290 160 260 T 260 280 T 360 250 T 460 270" class="chart-line-sub"/>
-  
-  <!-- Chart Legends -->
-  <circle cx="340" cy="220" r="4" fill="#38bdf8"/>
-  <text x="350" y="223" font-size="10px" fill="#94a3b8">อุณหภูมิ (°C)</text>
-  
-  <circle cx="410" cy="220" r="4" fill="#fb7185"/>
-  <text x="420" y="223" font-size="10px" fill="#94a3b8">กระแส (A)</text>
-
-  <!-- Card 5: Controls -->
-  <rect x="510" y="195" width="220" height="150" class="card"/>
-  <text x="530" y="222" class="txt-lbl">🕹️ แผงควบคุม (Control Panel)</text>
-  
-  <!-- E-Stop button -->
-  <rect x="530" y="240" width="180" height="34" class="btn-estop"/>
-  <text x="620" y="261" text-anchor="middle" class="btn-txt">🚨 หยุดฉุกเฉิน (EMERGENCY STOP)</text>
-
-  <!-- Slider -->
-  <text x="530" y="300" font-size="11px" fill="#94a3b8">ปรับความเร็วรอบพัดลม (Target: 60%)</text>
-  <rect x="530" y="312" width="180" height="6" class="slider-track"/>
-  <rect x="530" y="312" width="108" height="6" class="slider-fill"/>
-  <circle cx="638" cy="315" r="7" fill="#ffffff" stroke="#3b82f6" stroke-width="2.5"/>
+  <rect x="5" y="5" width="890" height="335" rx="10" class="c12-bg"/>
+  <!-- ESP32-S3 -->
+  <rect x="20" y="60" width="160" height="180" rx="8" class="c12-esp"/>
+  <text x="100" y="88" text-anchor="middle" class="c12-t">ESP32-S3</text>
+  <text x="100" y="116" text-anchor="middle" class="c12-l">AHT25 (I2C)</text>
+  <text x="100" y="134" text-anchor="middle" class="c12-c">temp, hum</text>
+  <text x="100" y="164" text-anchor="middle" class="c12-l">ปุ่ม 3 ปุ่ม</text>
+  <text x="100" y="182" text-anchor="middle" class="c12-c">start/stop/maint</text>
+  <text x="100" y="222" text-anchor="middle" class="c12-c">Wi-Fi 2.4 GHz</text>
+  <!-- write: ESP32 → REST -->
+  <path d="M 180 100 L 246 100" class="c12-w"/>
+  <polygon points="246,95 256,100 246,105" fill="#059669"/>
+  <text x="218" y="90" text-anchor="middle" class="c12-cw">HTTPS</text>
+  <text x="218" y="120" text-anchor="middle" class="c12-cw">POST</text>
+  <!-- Supabase container -->
+  <rect x="230" y="30" width="345" height="250" rx="12" class="c12-cloud"/>
+  <text x="246" y="52" class="c12-cw">SUPABASE</text>
+  <rect x="256" y="70" width="140" height="60" rx="8" class="c12-box"/>
+  <text x="326" y="96" text-anchor="middle" class="c12-t">REST API</text>
+  <text x="326" y="116" text-anchor="middle" class="c12-c">anon key</text>
+  <rect x="416" y="70" width="140" height="60" rx="8" class="c12-box"/>
+  <text x="486" y="96" text-anchor="middle" class="c12-t">Session Pooler</text>
+  <text x="486" y="116" text-anchor="middle" class="c12-c">port 5432</text>
+  <!-- PostgreSQL -->
+  <rect x="256" y="170" width="300" height="95" rx="8" class="c12-db"/>
+  <text x="406" y="188" text-anchor="middle" class="c12-c">PostgreSQL + RLS</text>
+  <rect x="268" y="198" width="132" height="56" rx="6" class="c12-tb"/>
+  <text x="334" y="220" text-anchor="middle" class="c12-t">telemetry</text>
+  <text x="334" y="242" text-anchor="middle" class="c12-l">ทุก 5 วินาที</text>
+  <rect x="412" y="198" width="132" height="56" rx="6" class="c12-tb"/>
+  <text x="478" y="220" text-anchor="middle" class="c12-t">events</text>
+  <text x="478" y="242" text-anchor="middle" class="c12-l">เมื่อกดปุ่ม</text>
+  <!-- write: REST → DB -->
+  <path d="M 326 130 L 326 160" class="c12-w"/>
+  <polygon points="321,160 326,170 331,160" fill="#059669"/>
+  <text x="336" y="154" class="c12-cw">INSERT</text>
+  <!-- read: DB → pooler -->
+  <path d="M 486 170 L 486 140" class="c12-r"/>
+  <polygon points="481,140 486,130 491,140" fill="#2f5597"/>
+  <text x="496" y="154" class="c12-cr">SELECT</text>
+  <!-- read: pooler → Grafana -->
+  <path d="M 556 100 L 620 100" class="c12-r"/>
+  <polygon points="620,95 630,100 620,105" fill="#2f5597"/>
+  <text x="593" y="90" text-anchor="middle" class="c12-cr">SQL+TLS</text>
+  <text x="593" y="120" text-anchor="middle" class="c12-c">grafana_ro</text>
+  <!-- Grafana -->
+  <rect x="630" y="60" width="130" height="170" rx="8" class="c12-gf"/>
+  <text x="695" y="88" text-anchor="middle" class="c12-t">Grafana Cloud</text>
+  <polyline points="648,170 666,160 684,164 702,146 720,150 742,128" fill="none" stroke="#ea580c" stroke-width="2.5"/>
+  <circle cx="742" cy="128" r="3.5" fill="#ea580c"/>
+  <line x1="702" y1="120" x2="702" y2="178" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <text x="695" y="212" text-anchor="middle" class="c12-c">refresh 10s</text>
+  <!-- Grafana → user -->
+  <path d="M 760 120 L 790 120" class="c12-r"/>
+  <polygon points="790,115 800,120 790,125" fill="#2f5597"/>
+  <rect x="800" y="70" width="85" height="100" rx="8" class="c12-box"/>
+  <text x="842" y="112" text-anchor="middle" class="c12-t">ช่าง</text>
+  <text x="842" y="134" text-anchor="middle" class="c12-l">เบราว์เซอร์</text>
+  <!-- Grafana → email -->
+  <path d="M 695 230 L 695 266" class="c12-a"/>
+  <polygon points="690,266 695,276 700,266" fill="#ea580c"/>
+  <text x="705" y="254" class="c12-ca">temp &gt; 35 °C</text>
+  <rect x="630" y="276" width="130" height="44" rx="8" class="c12-box"/>
+  <text x="695" y="303" text-anchor="middle" class="c12-t">อีเมลแจ้งเตือน</text>
+  <!-- legend -->
+  <line x1="30" y1="300" x2="62" y2="300" stroke="#059669" stroke-width="4" stroke-dasharray="8 10"/>
+  <text x="70" y="304" class="c12-l">เส้นทางเขียน</text>
+  <line x1="30" y1="322" x2="62" y2="322" stroke="#2f5597" stroke-width="4" stroke-dasharray="8 10"/>
+  <text x="70" y="326" class="c12-l">เส้นทางอ่าน</text>
+  <line x1="250" y1="311" x2="282" y2="311" stroke="#ea580c" stroke-width="3" stroke-dasharray="6 8"/>
+  <text x="290" y="315" class="c12-l">การแจ้งเตือน</text>
 </svg>
 </div>
 
-### ตัวอย่างโค้ดจำลองบน Wokwi (ESP32 + Serial Dashboard)
+ระบบแบ่งเป็น 4 ชั้นตามสถาปัตยกรรม IoT ที่เรียนในบทที่ 1
+
+| ชั้น (Layer) | องค์ประกอบในบทนี้ | หน้าที่ |
+|:---|:---|:---|
+| Perception | AHT25, ปุ่มกด 3 ปุ่ม | วัดอุณหภูมิ/ความชื้น และรับคำสั่งจากผู้ควบคุม |
+| Network | ESP32-S3 + Wi-Fi + HTTPS | ส่งข้อมูลขึ้นคลาวด์อย่างเข้ารหัส |
+| Middleware / Storage | Supabase (REST API + PostgreSQL) | ตรวจสิทธิ์ จัดเก็บ และให้บริการ query |
+| Application | Grafana Cloud | แสดงแดชบอร์ด และแจ้งเตือน |
+
+---
+
+## 12.2 ฮาร์ดแวร์ของระบบ
+
+### 12.2.1 ESP32-S3
+
+ESP32-S3 เป็นไมโครคอนโทรลเลอร์รุ่นใหม่ในตระกูล ESP32 ที่เหมาะกับงาน IoT
+
+| คุณสมบัติ | ESP32-S3 | ความสำคัญต่อระบบนี้ |
+|:---|:---|:---|
+| CPU | Xtensa LX7 ดูอัลคอร์ สูงสุด 240 MHz | ประมวลผล TLS (การเข้ารหัส HTTPS) ได้เร็ว |
+| การสื่อสารไร้สาย | Wi-Fi 2.4 GHz (802.11 b/g/n) + Bluetooth LE 5 | รองรับเฉพาะ **2.4 GHz** ใช้ Wi-Fi 5 GHz ไม่ได้ |
+| USB | Native USB (GPIO 19/20) | อัปโหลดโปรแกรมและใช้ Serial Monitor ผ่านสาย USB ได้โดยตรง |
+| ADC | 12 บิต | ไม่ได้ใช้ในบทนี้ เพราะ AHT25 ส่งค่าเป็นดิจิทัล |
+| ขาที่ควรเลี่ยง | 0, 3, 45, 46 (Strapping) · 19–20 (USB) · 35–37 (บอร์ดที่มี Octal PSRAM) | ต่อปุ่มผิดขาอาจทำให้บอร์ดบูตไม่ขึ้น |
+
+### 12.2.2 เซนเซอร์ AHT25 และโปรโตคอล I2C
+
+**AHT25** เป็นเซนเซอร์วัดอุณหภูมิและความชื้นสัมพัทธ์แบบดิจิทัล ภายในมีตัววัดความชื้นแบบ Capacitive (ค่าความจุไฟฟ้าเปลี่ยนตามปริมาณไอน้ำที่ถูกดูดซับ) ตัววัดอุณหภูมิ และวงจร ADC พร้อมสอบเทียบมาจากโรงงาน สื่อสารด้วย **I2C** ที่ address `0x38` (ทบทวนบทที่ 6) และใช้ชุดคำสั่งเดียวกับ AHT20
+
+**ขั้นตอนการวัด 1 ครั้ง** (ไลบรารีจัดการให้ แต่วิศวกรควรเข้าใจ)
+1. ESP32 ส่งคำสั่งเริ่มวัด `0xAC 0x33 0x00` ไปที่ address `0x38`
+2. รอประมาณ **80 ms** ให้เซนเซอร์วัดเสร็จ (บิตที่ 7 ของ status byte ต้องกลับเป็น `0`)
+3. อ่านข้อมูล 7 ไบต์: status (1) + ความชื้น 20 บิต + อุณหภูมิ 20 บิต + CRC (1)
+4. แปลงค่าดิบเป็นหน่วยทางกายภาพ
+
+$$RH\,[\%] = \frac{S_{RH}}{2^{20}} \times 100 \qquad T\,[^\circ C] = \frac{S_T}{2^{20}} \times 200 - 50$$
+
+**ตัวอย่าง:** ถ้าอ่านได้ $S_T = 393{,}216$ จะได้ $T = \frac{393216}{1048576} \times 200 - 50 = 75 - 50 = 25\ ^\circ C$
+
+> **ความละเอียด (Resolution) กับความแม่นยำ (Accuracy) ไม่เท่ากัน:** ค่า 20 บิตให้ความละเอียดของอุณหภูมิถึง $200 / 2^{20} \approx 0.0002\ ^\circ C$ แต่ datasheet ระบุความแม่นยำไว้ราว ±0.3 °C และ ±2 %RH (ควรตรวจสอบกับ datasheet ของรุ่นที่ใช้) ทศนิยมเกิน 1 ตำแหน่งจึงไม่มีความหมายทางวิศวกรรม เราจึงส่งข้อมูลแค่ทศนิยม 1 ตำแหน่ง
+
+### 12.2.3 ปุ่มกด: Pull-up, การเด้งของหน้าสัมผัส และ Interrupt
+
+**วงจร Pull-up ภายใน:** เมื่อตั้ง `pinMode(pin, INPUT_PULLUP)` ชิปจะต่อตัวต้านทานภายในค่าประมาณ 45 kΩ จากขาไปยัง 3.3 V ขณะปล่อยปุ่มขาจึงอ่านได้ `HIGH` เมื่อกดปุ่ม (ปุ่มต่อลง GND) ขาจะถูกดึงเป็น `LOW` โดยมีกระแสไหลเพียง $3.3 / 45\text{k} \approx 73\ \mu A$
+
+**การเด้งของหน้าสัมผัส (Contact Bounce):** ปุ่มกลไกมีแผ่นโลหะที่กระทบกันแล้วเด้งหลายครั้งในช่วงประมาณ 1–20 ms ไมโครคอนโทรลเลอร์ที่อ่านค่าได้ระดับไมโครวินาทีจะเห็นเป็นการกดหลายครั้ง จึงต้องทำ **Debounce** คือทิ้งขอบสัญญาณที่เกิดถี่เกินช่วงเวลาที่กำหนด
+
+**ทำไมต้องใช้ Interrupt?** การส่ง HTTPS แต่ละครั้งต้องทำ TLS handshake ซึ่งทำให้ `http.POST()` ค้างอยู่ประมาณ 0.5–2 วินาที
+
+| วิธีอ่านปุ่ม | ถ้าผู้ใช้กดปุ่มระหว่าง ESP32 กำลังส่งข้อมูล |
+|:---|:---|
+| **Polling** (อ่าน `digitalRead` ใน `loop()`) | การกดสั้น ๆ ช่วงนั้นจะ **หายไป** เพราะ `loop()` ยังไม่วนกลับมาอ่าน |
+| **Interrupt** (ISR ทำงานทันทีที่ขาเปลี่ยนสถานะ) | ISR จำการกดไว้ใน flag แล้ว `loop()` จะส่งในรอบถัดไป **ไม่หาย** |
+
+---
+
+## 12.3 การออกแบบข้อมูลและความปลอดภัย
+
+### 12.3.1 ข้อมูล 2 ประเภท: Telemetry และ Event
+
+| | Telemetry | Event |
+|:---|:---|:---|
+| ตัวอย่าง | อุณหภูมิ 31.4 °C, ความชื้น 58 %RH | ผู้ควบคุมกด "เริ่มเดินเครื่อง" |
+| รูปแบบการเกิด | เป็นรอบคงที่ (Periodic) ทุก 5 วินาที | เกิดเมื่อใดก็ได้ (Event-driven) |
+| ค่าที่เก็บ | ตัวเลขต่อเนื่อง | ข้อความจากชุดค่าที่กำหนดไว้ (`start`, `stop`, `maintenance`) |
+| การแสดงผล | กราฟเส้น, เกจ | แถบสถานะ (State timeline), เส้นหมายเหตุบนกราฟ (Annotation) |
+
+เราแยกข้อมูลสองประเภทนี้ไว้คนละตาราง (`telemetry` และ `events`) เพราะโครงสร้างและวิธี query ต่างกัน ถ้ารวมในตารางเดียว จะมีคอลัมน์ว่างจำนวนมาก และ query แต่ละแบบจะซับซ้อนขึ้น
+
+### 12.3.2 โครงสร้างตาราง
+
+```sql
+create table public.telemetry (
+  id         bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  device_id  text not null,
+  temp       real,        -- อุณหภูมิ (°C)
+  hum        real         -- ความชื้นสัมพัทธ์ (%RH)
+);
+
+create table public.events (
+  id         bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  device_id  text not null,
+  event      text not null check (event in ('start', 'stop', 'maintenance'))
+);
+```
+
+- **`created_at ... default now()`** ให้ฐานข้อมูลเป็นผู้ประทับเวลา ESP32 จึงไม่ต้องมีนาฬิกาที่แม่นยำ ส่วน `timestamptz` เก็บเวลาเป็น UTC แล้วแสดงตาม time zone ของผู้ใช้
+- **`check (event in (...))`** ทำให้ฐานข้อมูลรับเฉพาะชื่อเหตุการณ์ที่กำหนด ถ้าสะกดผิดจะถูกปฏิเสธ
+- **Index `(device_id, created_at desc)`** แดชบอร์ดเกือบทุก query จะถามว่า "อุปกรณ์ X ในช่วงเวลา Y" B-tree index ที่เรียงตามคอลัมน์ทั้งสองจะช่วยให้ PostgreSQL กระโดดไปยังช่วงข้อมูลนั้นได้ทันที ไม่ต้องอ่านทั้งตาราง (Sequential Scan)
+
+**ประเมินปริมาณข้อมูล:** ถ้าส่งทุก 5 วินาที จะได้ $86{,}400 / 5 = 17{,}280$ แถวต่อวัน ถ้าแต่ละแถวรวม index ใช้พื้นที่ราว 100 ไบต์ จะใช้พื้นที่ประมาณ 1.7 MB ต่อวัน หรือราว 50 MB ต่อเดือนต่ออุปกรณ์ ตัวเลขนี้ใช้เทียบกับพื้นที่ฐานข้อมูลของแผนฟรี เพื่อตัดสินใจเรื่องความถี่ในการส่งและการลบข้อมูลเก่า
+
+### 12.3.3 Row Level Security และหลัก Least Privilege
+
+ระบบแยกเส้นทางข้อมูลเป็น 2 เส้น และให้แต่ละเส้นมีสิทธิ์เท่าที่จำเป็นต่อหน้าที่เท่านั้น (**Principle of Least Privilege**)
+
+| เส้นทาง | ผู้ใช้ | ช่องทาง | สิทธิ์ |
+|:---|:---|:---|:---|
+| เขียน (Write) | ESP32-S3 | HTTPS → REST API ด้วย role `anon` | `INSERT` เท่านั้น |
+| อ่าน (Read) | Grafana Cloud | PostgreSQL + TLS ด้วย role `grafana_ro` | `SELECT` เท่านั้น |
+
+**Row Level Security (RLS)** เป็นกฎที่ PostgreSQL ตรวจทุกครั้งที่มีการอ่านหรือเขียนแถว ถ้าเปิด RLS แล้วไม่มี policy อนุญาต คำขอนั้นจะถูกปฏิเสธทั้งหมด (**Deny by Default**) ผลของการออกแบบนี้คือ
+- ถ้า key ใน ESP32 ถูกดึงออกจากเฟิร์มแวร์ ผู้ไม่หวังดีก็ **อ่าน** ข้อมูลย้อนหลังของโรงงานไม่ได้
+- ถ้ารหัสผ่านของ Grafana รั่ว ผู้ไม่หวังดีก็ **แก้ไขหรือลบ** ข้อมูลไม่ได้
+- policy ยังทำหน้าที่ **ตรวจความสมเหตุสมผลของข้อมูล** ได้ด้วย เช่น ปฏิเสธค่าอุณหภูมิที่อยู่นอกย่านวัดของ AHT25 (-40 ถึง 120 °C) ซึ่งมักเกิดจากเซนเซอร์เสีย
+
+> ⚠️ ห้ามนำ **Secret key** หรือ **`service_role` key** ของ Supabase ไปใส่ในอุปกรณ์หรือหน้าเว็บเด็ดขาด เพราะ key กลุ่มนี้ข้าม RLS ได้ทั้งหมด
+
+---
+
+## 12.4 เส้นทางเขียน: HTTPS และ REST API
+
+Supabase มีเครื่องมือชื่อ **PostgREST** ที่สร้าง REST API ให้ทุกตารางโดยอัตโนมัติ ด้วยการแปลงคำขอ HTTP เป็นคำสั่ง SQL (ทบทวนบทที่ 8)
+
+| คำขอ HTTP จาก ESP32 | คำสั่ง SQL ที่ PostgREST สร้าง |
+|:---|:---|
+| `POST /rest/v1/telemetry` body `{"device_id":"mcc01","temp":31.4,"hum":58.2}` | `INSERT INTO telemetry (device_id, temp, hum) VALUES ('mcc01', 31.4, 58.2)` |
+| `POST /rest/v1/events` body `{"device_id":"mcc01","event":"start"}` | `INSERT INTO events (device_id, event) VALUES ('mcc01', 'start')` |
+
+**Header ที่ต้องส่ง**
+
+| Header | ค่า | หน้าที่ |
+|:---|:---|:---|
+| `apikey` | Publishable key (หรือ legacy `anon` key) | ระบุโปรเจกต์ และกำหนด role เป็น `anon` |
+| `Authorization` | `Bearer <key>` (เฉพาะ legacy key แบบ JWT) | ยืนยันตัวตนตามรูปแบบเดิม |
+| `Content-Type` | `application/json` | บอกว่า body เป็น JSON |
+| `Prefer` | `return=minimal` | ไม่ต้องส่งแถวที่บันทึกกลับมา ประหยัด bandwidth |
+
+**รหัสสถานะที่ต้องรู้จัก:** `201` บันทึกสำเร็จ · `400` JSON หรือชื่อคอลัมน์ผิด · `401/403` key ผิดหรือไม่ผ่าน RLS · `404` URL หรือชื่อตารางผิด · ค่าติดลบ ESP32 เชื่อมต่อไม่ได้ (Wi-Fi หลุด หรือ TLS ล้มเหลว)
+
+> **HTTPS กับการยืนยันใบรับรอง:** ในห้องแล็บเราใช้ `tls.setInsecure()` ข้อมูลยังถูกเข้ารหัส แต่ ESP32 จะไม่ตรวจว่ากำลังคุยกับเซิร์ฟเวอร์ตัวจริงหรือไม่ งานจริงต้องใช้ `tls.setCACert(rootCA)` เพื่อป้องกันการโจมตีแบบ Man-in-the-Middle
+
+---
+
+## 12.5 เส้นทางอ่าน: Grafana และ SQL
+
+**Grafana** ไม่ได้เก็บข้อมูลเอง แต่ส่ง query ไปถามฐานข้อมูลทุกครั้งที่แดชบอร์ด refresh แล้วนำผลลัพธ์มาวาดเป็น panel เราจึงสร้างบัญชี `grafana_ro` ไว้ให้ Grafana ใช้โดยเฉพาะ
+
+**ทำไมต้องใช้ Session Pooler?** ที่อยู่ Direct connection ของ Supabase (`db.xxxx.supabase.co`) ใช้ IPv6 ขณะที่บริการคลาวด์หลายแห่ง รวมถึง Grafana Cloud เชื่อมต่อออกด้วย IPv4 จึงต้องต่อผ่าน **Session Pooler** (Supavisor) ซึ่งรองรับ IPv4 และช่วยจำกัดจำนวน connection ไม่ให้ฐานข้อมูลรับภาระเกิน
+
+### 12.5.1 Macro ของ Grafana
+
+| Macro | หน้าที่ | ตัวอย่างผลลัพธ์ที่ Grafana แทนให้ |
+|:---|:---|:---|
+| `$__timeFilter(created_at)` | กรองตามช่วงเวลาที่เลือกบนแดชบอร์ด | `created_at BETWEEN '2026-09-28T01:00:00Z' AND '2026-09-28T07:00:00Z'` |
+| `$__timeGroupAlias(created_at, $__interval)` | ปัดเวลาลงเป็นช่วง (bucket) และตั้งชื่อคอลัมน์ว่า `time` | ใช้คู่กับ `GROUP BY 1` และ `avg()` |
+| `$__interval` | ขนาดช่วงที่ Grafana คำนวณจากช่วงเวลาที่เลือก หารด้วยความกว้างของกราฟ | `5m`, `10m`, `1h` |
+| `$device` | ตัวแปรที่ผู้ใช้เลือกจาก dropdown บนแดชบอร์ด | `'mcc01'` |
+
+### 12.5.2 Downsampling
+
+ถ้าเลือกดูย้อนหลัง 7 วัน จะมีข้อมูล $17{,}280 \times 7 \approx 121{,}000$ จุด แต่กราฟกว้างราว 1,000 พิกเซลแสดงได้ไม่เกินราว 1,000 จุด Grafana จะคำนวณ
+
+$$\$\_\_interval \approx \frac{7 \times 86{,}400\ s}{1{,}000\ px} \approx 605\ s \approx 10\ \text{นาที}$$
+
+จากนั้น `avg()` จะรวมข้อมูลราว 120 จุดในแต่ละช่วง 10 นาทีให้เหลือจุดเดียว query จึงเร็วขึ้น ส่งข้อมูลผ่านเครือข่ายน้อยลง และกราฟไม่รก เทคนิคนี้เรียกว่า **Downsampling** แบบเดียวกับ `GROUP BY time()` ของ InfluxDB ในบทที่ 10
+
+---
+
+## 12.6 หลักการออกแบบแดชบอร์ด
+
+แดชบอร์ดที่ดีต้องให้ช่างเข้าใจสถานะของตู้ควบคุมได้ **ภายใน 3 วินาที** โดยไม่ต้องอ่านคู่มือ จึงใช้หลักการต่อไปนี้
+
+1. **ภาพรวมอยู่บน รายละเอียดอยู่ล่าง** แถวบนสุดเป็นค่าปัจจุบันและสถานะ ถัดลงมาเป็นแนวโน้ม และล่างสุดเป็นประวัติเหตุการณ์
+2. **สีมีความหมายเสมอ** ใช้เขียว เหลือง และแดงเฉพาะเพื่อบอกสถานะ (ปกติ เฝ้าระวัง ผิดปกติ) ไม่ใช้สีเพื่อความสวยงาม ช่างจะได้มองหาสีแดงเป็นอันดับแรก
+3. **เลือกชนิด panel ตามคำถาม**
+
+| คำถามของช่าง | Panel ที่เหมาะ | เหตุผล |
+|:---|:---|:---|
+| ตอนนี้ร้อนแค่ไหน? | Gauge | เห็นตำแหน่งเทียบกับเกณฑ์ทันที |
+| อุปกรณ์ยังส่งข้อมูลอยู่ไหม? | Stat (วินาทีตั้งแต่ข้อมูลล่าสุด) | ตัวเลขเดียวพร้อมสีสถานะ |
+| อุณหภูมิเพิ่มขึ้นเรื่อย ๆ หรือไม่? | Time series | กราฟเส้นแสดงแนวโน้มตามเวลาได้ดีที่สุด |
+| เครื่องเดินหรือหยุดช่วงไหน? | State timeline | แถบสีต่อเนื่องแสดงช่วงเวลาของแต่ละสถานะ |
+| อุณหภูมิขึ้นหลังการซ่อมหรือไม่? | Annotation บน Time series | วางเหตุการณ์ลงบนกราฟเดียวกันเพื่อเทียบเหตุกับผล |
+
+4. **ข้อมูลต้องไม่บิดเบือน** ติดหน่วยทุก panel (°C, %RH) ใช้แกนแยกเมื่อหน่วยต่างกัน และตั้งช่วงแกนของ Gauge ให้คงที่ (เช่น 0–60 °C) เพื่อไม่ให้การเปลี่ยนแปลงเล็กน้อยดูเหมือนรุนแรง
+
+**Layout ของแดชบอร์ด `MCC Monitor`**
+
+| แถว | Panel |
+|:---|:---|
+| 1 (ภาพรวม) | Gauge อุณหภูมิ · Gauge ความชื้น · Stat สถานะการเชื่อมต่อ · Stat แจ้งซ่อมวันนี้ |
+| 2 (แนวโน้ม) | Time series อุณหภูมิ + ความชื้น พร้อม Annotation แจ้งซ่อม |
+| 3 (เหตุการณ์) | State timeline เดินเครื่อง/หยุดเครื่อง |
+
+</div>
+
+<div class="chapter-tab-content" data-tab-name="Hands-on" data-tab-icon="🔧" id="handson" markdown="1">
+
+## 12.7 ปฏิบัติการ: สร้างระบบตั้งแต่ต้นจนจบ
+
+> ใบงานพร้อมตารางบันทึกผลอยู่ที่ **Lab 14** หัวข้อนี้อธิบายโค้ดและขั้นตอนทั้งหมดแบบละเอียด
+
+### 12.7.1 ต่อวงจร
+
+| อุปกรณ์ | ขาอุปกรณ์ | ESP32-S3 |
+|:---|:---|:---|
+| AHT25 | VDD / GND | 3V3 / GND |
+| AHT25 | SDA / SCL | GPIO 8 / GPIO 9 |
+| ปุ่ม 1 (เริ่มเดินเครื่อง) | ขาหนึ่ง / อีกขา | GPIO 4 / GND |
+| ปุ่ม 2 (หยุดเครื่อง) | ขาหนึ่ง / อีกขา | GPIO 5 / GND |
+| ปุ่ม 3 (แจ้งซ่อม) | ขาหนึ่ง / อีกขา | GPIO 6 / GND |
+
+- ลำดับขาของโมดูล AHT25 แต่ละยี่ห้อไม่เหมือนกัน ให้ดูตามที่พิมพ์ไว้บนบอร์ด และห้ามต่อเข้า 5V
+- ปุ่มไม่ต้องต่อตัวต้านทานเพิ่ม เพราะใช้ `INPUT_PULLUP` ภายในชิป
+
+### 12.7.2 ตั้งค่า Arduino IDE
+
+1. **Boards Manager** → ติดตั้ง **esp32 by Espressif Systems**
+2. **Library Manager** → ติดตั้ง **Adafruit AHTX0** (จะติดตั้ง Adafruit BusIO และ Adafruit Unified Sensor ให้ด้วย)
+3. **Tools** → Board: **ESP32S3 Dev Module** → **USB CDC On Boot: Enabled** ถ้าไม่เปิด Serial Monitor จะไม่แสดงอะไรเมื่อเสียบสายที่พอร์ต USB ตรงของชิป
+4. Wi-Fi: ESP32-S3 รองรับเฉพาะ 2.4 GHz และใช้กับเครือข่ายแบบ WPA2-Enterprise หรือแบบที่ต้อง login ผ่านหน้าเว็บ (Captive Portal) ไม่ได้ ถ้า Wi-Fi มหาวิทยาลัยเป็นแบบนั้น ให้ใช้ Hotspot จากมือถือแทน
+
+### 12.7.3 สร้างฐานข้อมูลบน Supabase
+
+1. สมัครที่ [supabase.com](https://supabase.com) → **New project** → ตั้งชื่อ `mcc-monitor` → ตั้ง Database Password → Region **Southeast Asia (Singapore)**
+2. เมนู **SQL Editor** → **New query** → วางคำสั่งทั้งหมดด้านล่าง → **Run**
+
+```sql
+-- ===== ตาราง =====
+create table public.telemetry (
+  id         bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  device_id  text not null,
+  temp       real,
+  hum        real
+);
+create index telemetry_device_time_idx on public.telemetry (device_id, created_at desc);
+
+create table public.events (
+  id         bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  device_id  text not null,
+  event      text not null check (event in ('start', 'stop', 'maintenance'))
+);
+create index events_device_time_idx on public.events (device_id, created_at desc);
+
+-- ===== เส้นทางเขียน: anon (ESP32) INSERT ได้อย่างเดียว =====
+alter table public.telemetry enable row level security;
+alter table public.events    enable row level security;
+
+grant insert on public.telemetry, public.events to anon;
+
+create policy "esp32 insert telemetry" on public.telemetry
+  for insert to anon
+  with check (device_id is not null
+              and temp between -40 and 120
+              and hum  between 0 and 100);
+
+create policy "esp32 insert events" on public.events
+  for insert to anon
+  with check (device_id is not null);
+
+-- ===== เส้นทางอ่าน: grafana_ro SELECT ได้อย่างเดียว =====
+create role grafana_ro with login password 'ChangeMe-Strong-2026';
+grant usage on schema public to grafana_ro;
+grant select on public.telemetry, public.events to grafana_ro;
+
+create policy "grafana read telemetry" on public.telemetry
+  for select to grafana_ro using (true);
+create policy "grafana read events" on public.events
+  for select to grafana_ro using (true);
+```
+
+3. **Project Settings → API Keys** → คัดลอก **Publishable key** (หรือ `anon` key ในแท็บ Legacy) และ **Project URL** เก็บไว้
+
+### 12.7.4 โปรแกรม ESP32-S3 (`mcc_monitor.ino`)
 
 ```cpp
-#include <Arduino.h>
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <HTTPClient.h>
+#include <Wire.h>
+#include <Adafruit_AHTX0.h>
 
-// จำลองเซนเซอร์
-float readTemperature() { return 40.0 + random(0, 80) / 10.0; }
-int readRPM()           { return 1400 + random(0, 200); }
-float readCurrent()     { return 3.5 + random(0, 20) / 10.0; }
+// ===== ตั้งค่าให้ตรงกับของตนเอง =====
+const char* WIFI_SSID    = "YOUR_WIFI";
+const char* WIFI_PASS    = "YOUR_PASSWORD";
+const char* SUPABASE_URL = "https://YOUR_PROJECT_REF.supabase.co/rest/v1/";
+const char* SUPABASE_KEY = "YOUR_PUBLISHABLE_OR_ANON_KEY";
+const char* DEVICE_ID    = "mcc01";
 
-void printDashboard(float temp, int rpm, float current) {
-  Serial.println("╔══════════════════════════════════╗");
-  Serial.println("║   แดชบอร์ดมอเตอร์ #1              ║");
-  Serial.println("╠══════════════════════════════════╣");
-  Serial.print("║  อุณหภูมิ:  ");
-  Serial.print(temp, 1);
-  Serial.println(" °C");
-  Serial.print("║  RPM:       ");
-  Serial.println(rpm);
-  Serial.print("║  กระแส:     ");
-  Serial.print(current, 1);
-  Serial.println(" A");
-  Serial.print("║  สถานะ:     ");
-  if (temp > 45.0) {
-    Serial.println("⚠️  เตือน: อุณหภูมิสูง!");
-  } else {
-    Serial.println("✅ ปกติ");
+#define I2C_SDA 8
+#define I2C_SCL 9
+const uint8_t BTN_PINS[3]   = {4, 5, 6};
+const char*   BTN_EVENTS[3] = {"start", "stop", "maintenance"};
+
+const unsigned long SEND_INTERVAL = 5000;   // ms
+const unsigned long DEBOUNCE_MS   = 50;     // ms
+
+Adafruit_AHTX0   aht;
+WiFiClientSecure tls;
+unsigned long    lastSend = 0;
+
+// ตัวแปรที่ใช้ร่วมกับ ISR ต้องเป็น volatile
+volatile bool          btnPending[3]  = {false, false, false};
+volatile unsigned long btnLastEdge[3] = {0, 0, 0};
+
+// ISR: เรียกทุกครั้งที่ขาเปลี่ยนสถานะ (กดหรือปล่อย)
+void IRAM_ATTR onButtonChange(void* arg) {
+  int i = (int)(intptr_t)arg;
+  unsigned long now = millis();
+  if (now - btnLastEdge[i] < DEBOUNCE_MS) {   // ยังอยู่ในช่วงหน้าสัมผัสเด้ง
+    btnLastEdge[i] = now;                     // ขยายช่วงเงียบออกไป
+    return;
   }
-  Serial.println("╚══════════════════════════════════╝");
-  Serial.println();
+  btnLastEdge[i] = now;
+  if (digitalRead(BTN_PINS[i]) == LOW) btnPending[i] = true;   // นับเฉพาะจังหวะกด
+}
+
+void connectWiFi() {
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+  Serial.print("Connecting WiFi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(250);
+    Serial.print(".");
+  }
+  Serial.printf(" OK  IP=%s\n", WiFi.localIP().toString().c_str());
+}
+
+int postJson(const char* table, const char* body) {
+  HTTPClient http;
+  http.begin(tls, String(SUPABASE_URL) + table);
+  http.addHeader("Content-Type", "application/json");
+  http.addHeader("Prefer", "return=minimal");
+  http.addHeader("apikey", SUPABASE_KEY);
+  if (strncmp(SUPABASE_KEY, "eyJ", 3) == 0) {           // legacy anon key (JWT)
+    http.addHeader("Authorization", String("Bearer ") + SUPABASE_KEY);
+  }
+  int code = http.POST(String(body));
+  Serial.printf("POST %s %s -> %d\n", table, body, code);
+  if (code >= 400) Serial.println(http.getString());    // ข้อความ error จาก Supabase
+  http.end();
+  return code;
 }
 
 void setup() {
   Serial.begin(115200);
-  randomSeed(analogRead(0));
-  Serial.println("เริ่มระบบติดตามมอเตอร์...");
+  delay(500);
+
+  Wire.begin(I2C_SDA, I2C_SCL);
+  if (!aht.begin(&Wire)) {
+    Serial.println("AHT25 not found: check wiring SDA=8 SCL=9");
+    while (true) delay(1000);
+  }
+
+  for (int i = 0; i < 3; i++) {
+    pinMode(BTN_PINS[i], INPUT_PULLUP);
+    attachInterruptArg(BTN_PINS[i], onButtonChange, (void*)(intptr_t)i, CHANGE);
+  }
+
+  tls.setInsecure();   // สำหรับห้องแล็บ งานจริงให้ใช้ tls.setCACert(rootCA)
+  connectWiFi();
 }
 
 void loop() {
-  float temp    = readTemperature();
-  int rpm       = readRPM();
-  float current = readCurrent();
+  if (WiFi.status() != WL_CONNECTED) connectWiFi();
 
-  printDashboard(temp, rpm, current);
-  delay(3000);  // อัปเดตทุก 3 วินาที
+  // 1) เหตุการณ์จากปุ่ม: ส่งทันที
+  for (int i = 0; i < 3; i++) {
+    if (btnPending[i]) {
+      btnPending[i] = false;
+      char body[80];
+      snprintf(body, sizeof(body),
+               "{\"device_id\":\"%s\",\"event\":\"%s\"}", DEVICE_ID, BTN_EVENTS[i]);
+      postJson("events", body);
+    }
+  }
+
+  // 2) ค่าเซนเซอร์: ส่งทุก SEND_INTERVAL
+  if (millis() - lastSend >= SEND_INTERVAL) {
+    lastSend = millis();
+    sensors_event_t hum, temp;
+    if (aht.getEvent(&hum, &temp)) {
+      char body[96];
+      snprintf(body, sizeof(body),
+               "{\"device_id\":\"%s\",\"temp\":%.1f,\"hum\":%.1f}",
+               DEVICE_ID, temp.temperature, hum.relative_humidity);
+      postJson("telemetry", body);
+    } else {
+      Serial.println("AHT25 read failed");
+    }
+  }
 }
 ```
 
-**ลิงก์ทดลองบน Wokwi:** สร้างโปรเจกต์ใหม่ → เลือกบอร์ด ESP32 → วางโค้ดด้านบน → กด Run → ดูผลลัพธ์ใน Serial Monitor
+**คำอธิบายโค้ด**
 
----
+| ส่วนของโค้ด | การทำงาน |
+|:---|:---|
+| `Wire.begin(8, 9)` | ESP32-S3 เลือกขา I2C ได้อิสระ จึงต้องระบุ SDA/SCL ให้ตรงกับที่ต่อจริง |
+| `aht.getEvent(&hum, &temp)` | ส่งคำสั่งวัด รอราว 80 ms อ่าน 7 ไบต์ แล้วแปลงค่าตามสูตรในหัวข้อ 12.2.2 |
+| `attachInterruptArg(..., CHANGE)` | ใช้ ISR ตัวเดียวกับทั้ง 3 ปุ่ม โดยส่งหมายเลขปุ่ม `i` เป็นอาร์กิวเมนต์ |
+| `IRAM_ATTR` | เก็บ ISR ไว้ใน RAM ภายใน เพื่อให้ตอบสนองได้เร็ว และทำงานได้แม้ cache ของ flash ถูกปิดชั่วคราว |
+| Debounce ใน ISR | ขอบสัญญาณที่ห่างจากครั้งก่อนไม่ถึง 50 ms ถูกทิ้ง และช่วงเงียบถูกยืดออก ขอบแรกที่ผ่านเงื่อนไขจะนับเป็นการกดเมื่อขาอ่านได้ `LOW` เท่านั้น กดหนึ่งครั้งจึงได้หนึ่ง event การปล่อยปุ่มหรือกดค้างไม่ทำให้นับซ้ำ |
+| `volatile` | บอกคอมไพเลอร์ว่าตัวแปรถูกแก้จาก ISR ได้ทุกเมื่อ ต้องอ่านจากหน่วยความจำจริงทุกครั้ง |
+| `millis()` แทน `delay()` | `loop()` ไม่ถูกบล็อก จึงตรวจ flag ของปุ่มได้ถี่ แม้ยังไม่ถึงรอบส่งเซนเซอร์ |
+| `snprintf` | สร้าง JSON ลงบัฟเฟอร์ขนาดคงที่ ช่วยเลี่ยงการจองหน่วยความจำซ้ำ ๆ ของ `String` ซึ่งทำให้ heap แตกกระจายเมื่อรันนาน ๆ |
+| `strncmp(SUPABASE_KEY, "eyJ", 3)` | key แบบ legacy เป็น JWT ซึ่งขึ้นต้นด้วย `eyJ` เสมอ จึงต้องส่ง `Authorization` เพิ่ม ส่วน Publishable key แบบใหม่ส่งแค่ `apikey` (รูปแบบ key ของ Supabase เปลี่ยนมาแล้วระยะหนึ่ง ควรตรวจกับ[เอกสารทางการ](https://supabase.com/docs/guides/api/api-keys)อีกครั้ง) |
 
-## สรุปบทเรียน
+> **ข้อจำกัดด้านเวลา:** ฐานข้อมูลประทับเวลาตอนที่ข้อมูลมาถึง event จึงอาจช้ากว่าเวลากดจริงประมาณ 1–2 วินาทีตามเวลาส่ง HTTPS ซึ่งยอมรับได้สำหรับงานบำรุงรักษา ถ้าต้องการเวลาระดับมิลลิวินาที ให้ซิงก์นาฬิกาด้วย NTP แล้วส่ง `created_at` ไปเอง
 
-บทนี้กล่าวถึงการเปลี่ยนข้อมูลดิบจากเซนเซอร์ IoT ให้เป็นภาพและส่วนติดต่อผู้ใช้ที่เข้าใจง่าย:
+> **ไม่มีบอร์ดจริง?** ใช้ [Wokwi](https://wokwi.com) เลือกบอร์ด ESP32-S3 แทนได้ AHT25 ไม่มีใน Wokwi จึงต้องใช้ DHT22 แทน โดยเปลี่ยนเฉพาะส่วนอ่านเซนเซอร์เป็น `dht.readTemperature()` / `dht.readHumidity()` และใช้ Wi-Fi `Wokwi-GUEST`
 
-- **การแสดงผลข้อมูล** เป็นสะพานระหว่างข้อมูลดิบกับการตัดสินใจ ต้องยึดหลักความชัดเจน มีบริบท และไม่บิดเบือน
-- **กราฟแต่ละชนิด** มีจุดประสงค์เฉพาะ: กราฟเส้นสำหรับแนวโน้ม กราฟแท่งสำหรับเปรียบเทียบ เกจสำหรับค่าปัจจุบัน
-- **แดชบอร์ด** ต้องจัดลำดับความสำคัญ แสดงผลเรียลไทม์ และไม่แออัด
-- **เครื่องมือ** มีหลายตัวเลือก: Node-RED (ง่าย), Grafana (ปรับแต่งสูง), ThingsBoard (Cloud + แดชบอร์ด/แอปมือถือผ่าน MQTT/RPC) เลือกใช้ตามความเหมาะสม
-- **UI/UX สำหรับ IoT** ต้องเรียบง่าย ตอบสนองทันที และป้องกันข้อผิดพลาด
-- **ThingsBoard** ช่วยสร้างแดชบอร์ดและแอปมือถือสำหรับ IoT ได้รวดเร็ว รองรับการควบคุมสองทิศทางผ่าน MQTT และ RPC
+### 12.7.5 เชื่อม Grafana Cloud
 
-> 💡 **จำไว้:** แดชบอร์ดที่ดีที่สุดคือแดชบอร์ดที่ผู้ใช้ "เข้าใจภายใน 3 วินาที" โดยไม่ต้องมีคู่มือ
+1. ใน Supabase คลิก **Connect** ด้านบนของหน้าโปรเจกต์ → เลือก **Session pooler** → จดค่า host (เช่น `aws-0-ap-southeast-1.pooler.supabase.com`), port `5432` และ project ref (ส่วนต่อท้ายของ user `postgres.xxxx`)
+2. สมัครที่ [grafana.com](https://grafana.com) → แผน **Free** → สร้าง Stack
+3. **Connections → Data sources → Add data source → PostgreSQL** แล้วกรอกค่าดังนี้
 
----
+| ช่อง | ค่า |
+|:---|:---|
+| Host URL | `aws-0-ap-southeast-1.pooler.supabase.com:5432` (ตามโปรเจกต์ของตนเอง) |
+| Database name | `postgres` |
+| Username | `grafana_ro.xxxx` (ชื่อ role + จุด + project ref) |
+| Password | รหัสผ่านของ `grafana_ro` |
+| TLS/SSL Mode | `require` |
+| TimescaleDB | ปิด |
 
-## แบบฝึกหัดท้ายบท
+4. **Save & test** → ต้องขึ้น ✅ *Database Connection OK*
 
-**ข้อ 1:** จงอธิบายว่าทำไม "ข้อมูลดิบ" จากเซนเซอร์จึงไม่เพียงพอสำหรับการตัดสินใจ และการแสดงผลข้อมูลช่วยแก้ปัญหานี้อย่างไร พร้อมยกตัวอย่างในบริบทวิศวกรรมเครื่องกล
+### 12.7.6 สร้าง Panel ตาม Layout ในหัวข้อ 12.6
 
-**ข้อ 2:** กำหนดข้อมูลต่อไปนี้ จงเลือกชนิดกราฟที่เหมาะสมที่สุดพร้อมให้เหตุผล:
-- (ก) อุณหภูมิน้ำหล่อเย็นทุก 10 วินาทีตลอด 8 ชั่วโมง
-- (ข) เปรียบเทียบพลังงานที่ใช้ของเครื่องจักร 5 เครื่อง
-- (ค) สัดส่วนเวลาที่เครื่องจักรอยู่ในสถานะ: Running, Idle, Maintenance
-- (ง) ค่าแรงสั่นสะเทือน ณ ตำแหน่งต่าง ๆ บนเครื่องจักรในแต่ละชั่วโมง
+**ตัวแปร `device`:** Dashboard **Settings → Variables → Add variable** → Type **Query** → `SELECT DISTINCT device_id FROM telemetry ORDER BY 1;`
 
-**ข้อ 3:** จงออกแบบ Layout แดชบอร์ดสำหรับห้องเซิร์ฟเวอร์ที่มีเซนเซอร์วัดอุณหภูมิ 4 จุด เซนเซอร์ความชื้น 2 จุด และสถานะเครื่องปรับอากาศ 2 เครื่อง วาดแผนผังตำแหน่ง Widget ที่จะใช้ พร้อมอธิบายเหตุผลการจัดวาง
+**Gauge อุณหภูมิ** (Min 0, Max 60, Unit Celsius, Thresholds เขียว → เหลือง `30` → แดง `35`) และ **Gauge ความชื้น** (เปลี่ยน `temp` เป็น `hum`, Max 100, Unit Humidity (%H), เหลือง `60` → แดง `70`)
 
-**ข้อ 4:** เปรียบเทียบ Node-RED, Grafana และ ThingsBoard ในแง่ต่อไปนี้ โดยสรุปเป็นตาราง:
-- ความง่ายในการติดตั้ง
-- ความสามารถในการปรับแต่งกราฟ
-- ความเหมาะสมกับงาน Production ขนาดใหญ่
-- จงแนะนำว่านักศึกษาปี 1 ควรเริ่มจากเครื่องมือใดและเพราะอะไร
+```sql
+SELECT created_at AS time, temp
+FROM telemetry
+WHERE device_id = '$device'
+ORDER BY created_at DESC
+LIMIT 1;
+```
 
-**ข้อ 5:** เขียนโปรแกรม ESP32 บน Wokwi ที่อ่านค่าจาก Potentiometer (ต่อที่ GPIO34) แล้วแสดงผลเป็น "มาตรวัด" แบบข้อความใน Serial Monitor โดยใช้อักขระ `█` และ `░` แสดงระดับ 0-100% เช่น `████████░░░░░░░░░░░░ 40%`
+**Stat สถานะการเชื่อมต่อ** (Unit seconds, แดงที่ `30` ขึ้นไป ค่าเกิน 30 วินาทีแปลว่าขาดข้อมูลไปอย่างน้อย 5 รอบ)
 
----
+```sql
+SELECT EXTRACT(EPOCH FROM now() - max(created_at)) AS "วินาทีที่แล้ว"
+FROM telemetry
+WHERE device_id = '$device';
+```
+
+**Stat แจ้งซ่อมวันนี้** (นับตามเวลาไทย)
+
+```sql
+SELECT count(*) AS "แจ้งซ่อมวันนี้"
+FROM events
+WHERE device_id = '$device' AND event = 'maintenance'
+  AND created_at >= date_trunc('day', now() AT TIME ZONE 'Asia/Bangkok') AT TIME ZONE 'Asia/Bangkok';
+```
+
+`AT TIME ZONE` สองชั้นคือ แปลงเวลาปัจจุบันเป็นเวลาไทย ตัดให้เหลือเที่ยงคืน แล้วแปลงกลับเป็น `timestamptz` ถ้าใช้ `date_trunc('day', now())` ตรง ๆ วันใหม่จะเริ่มตอน 07:00 น. ตามเวลาไทย เพราะ `now()` เป็นเวลา UTC
+
+**Time series แนวโน้ม** (Format: Time series ตั้ง Override ให้ซีรีส์ความชื้นใช้แกน Y ด้านขวา)
+
+```sql
+SELECT
+  $__timeGroupAlias(created_at, $__interval),
+  avg(temp) AS "อุณหภูมิ (°C)",
+  avg(hum)  AS "ความชื้น (%RH)"
+FROM telemetry
+WHERE device_id = '$device' AND $__timeFilter(created_at)
+GROUP BY 1
+ORDER BY 1;
+```
+
+**Annotation แจ้งซ่อม:** Dashboard **Settings → Annotations → New** → เลือก data source PostgreSQL
+
+```sql
+SELECT created_at AS time, 'แจ้งซ่อม' AS text, event AS tags
+FROM events
+WHERE device_id = '$device' AND event = 'maintenance'
+  AND $__timeFilter(created_at);
+```
+
+**State timeline เดิน/หยุดเครื่อง** (Value mappings: `start` → "เดินเครื่อง" สีเขียว, `stop` → "หยุด" สีแดง)
+
+```sql
+SELECT created_at AS time, event AS "สถานะ"
+FROM events
+WHERE device_id = '$device' AND event IN ('start', 'stop')
+  AND $__timeFilter(created_at)
+ORDER BY 1;
+```
+
+ตั้ง Auto-refresh ที่มุมขวาบนเป็น **10s** แล้ว **Save dashboard** ชื่อ `MCC Monitor`
+
+### 12.7.7 ตั้งการแจ้งเตือน
+
+1. **Alerting → Contact points → Add contact point** → Integration **Email** → ใส่อีเมล → **Test** → **Save**
+2. **Alerting → Alert rules → New alert rule** → ชื่อ `MCC overheat` → Query:
+
+```sql
+SELECT $__timeGroupAlias(created_at, 1m), avg(temp) AS temp
+FROM telemetry
+WHERE device_id = 'mcc01' AND $__timeFilter(created_at)
+GROUP BY 1
+ORDER BY 1;
+```
+
+3. Expressions: **Reduce** = `Last` → **Threshold** = `IS ABOVE 35`
+4. Evaluation ทุก `1m`, Pending period `2m` → เลือก Contact point → **Save rule**
+
+Pending period ทำให้ต้องเกินเกณฑ์ **ต่อเนื่อง** 2 นาทีจึงจะแจ้งเตือน จึงไม่แจ้งเตือนผิดจากค่ากระโดดเพียงครั้งเดียว นอกจากนี้ Alert rule ใช้ตัวแปร `$device` ของแดชบอร์ดไม่ได้ จึงต้องระบุชื่ออุปกรณ์ตรง ๆ
+
+### 12.7.8 การแก้ปัญหาที่พบบ่อย
+
+| อาการ | สาเหตุที่เป็นไปได้ | วิธีแก้ |
+|:---|:---|:---|
+| Serial Monitor ไม่แสดงอะไร | ปิด USB CDC On Boot | ตั้ง **USB CDC On Boot: Enabled** แล้วอัปโหลดใหม่ |
+| `AHT25 not found` | สาย SDA/SCL สลับ หรือไม่ได้จ่ายไฟ | ตรวจขาตามที่พิมพ์ไว้บนโมดูล และใช้ 3V3 |
+| ต่อ Wi-Fi ไม่ขึ้น | เครือข่าย 5 GHz หรือเป็น WPA2-Enterprise | ใช้ Hotspot มือถือแบบ 2.4 GHz |
+| กดปุ่มครั้งเดียวได้ 2 event | ปุ่มเด้งนานกว่า 50 ms | เพิ่ม `DEBOUNCE_MS` เป็น 80–100 |
+| ได้ `401` ตลอด | key ผิด หรือใช้ legacy key แต่ไม่ส่ง `Authorization` | คัดลอก key ใหม่ และตรวจ header |
+| ได้ `401/403` พร้อม code `42501` | ไม่ผ่าน RLS policy | ตรวจค่าที่ส่งกับ `with check` |
+| Grafana: connection timeout | ใช้ Direct connection (IPv6) | เปลี่ยนเป็น Session pooler |
+| Grafana: password authentication failed | Username ไม่มี `.project_ref` ต่อท้าย | ใช้รูปแบบ `grafana_ro.xxxx` |
+| Grafana: เชื่อมต่อได้แต่ไม่มีข้อมูล | ไม่มี policy `select` ให้ `grafana_ro` | รัน `create policy "grafana read ..."` |
+| Grafana: *Data is missing a time field* | Format ไม่ตรง หรือไม่มีคอลัมน์เวลา | ตั้ง Format เป็น Time series และตั้งชื่อคอลัมน์เวลาว่า `time` |
 
 </div>
 
-<div class="chapter-tab-content" data-tab-name="Reference / Summary" data-tab-icon="📊" id="waveform" markdown="1">
+<div class="chapter-tab-content" data-tab-name="Reference / Summary" data-tab-icon="📊" id="summary" markdown="1">
 
-## 12.9 สรุปประจำบทที่ 12 (Summary)
+## 12.8 สรุปประจำบทที่ 12 (Summary)
 
-1.  **การแสดงผลข้อมูลที่ดี** ต้องให้ลำดับความสำคัญของตัวชี้วัด (KPIs) ชัดเจน สามารถสื่อสารถึงความผิดปกติของสภาวะเครื่องจักรให้กับทีมช่างเทคนิคได้ใน 3 วินาทีแรก
-2.  **หลักการของ Tufte (Data-Ink Ratio)** แนะนำให้นักออกแบบตัดแต่งขอบเส้น แถบสีพื้น หรือลวดลายตกแต่งที่ฟุ่มเฟือยทิ้งไป เพื่อรักษาโฟกัสของข้อมูลจริงให้เด่นชัดที่สุด
-3.  **Grafana** เป็นเครื่องมือสืบค้นข้อมูลเชิงวิเคราะห์และดึงค่าจากแหล่งฐานข้อมูลที่หลากหลาย มาทำหน้ารายงานภาพระดับโปรเจกต์ ได้แก่ การวิเคราะห์แนวโน้ม (Trending) และการทำนายความล้มเหลว
-4.  **ส่วนควบคุม HMI** จะมีทิศทางการไหลข้อนกลับ โดยรองรับคำสั่งจากผู้ใช้งานส่งผ่านโปรโตคอลย้อนกลับไปขับระบบกระทำ (Actuators) เช่น ปล่อยกระแสกระตุ้นคอยล์รีเลย์เปิดพัดลมดูดอากาศ
+1. **ระบบ IoT แบบครบวงจร** ประกอบด้วย 4 ชั้น ได้แก่ เซนเซอร์และปุ่ม (AHT25) อุปกรณ์เครือข่าย (ESP32-S3 + HTTPS) ฐานข้อมูลคลาวด์ (Supabase/PostgreSQL) และแอปพลิเคชันแสดงผล (Grafana)
+2. **AHT25** สื่อสารผ่าน I2C ที่ address `0x38` ให้ค่าดิบ 20 บิต ซึ่งแปลงเป็นหน่วยจริงได้ด้วย $RH = S_{RH}/2^{20} \times 100$ และ $T = S_T/2^{20} \times 200 - 50$ ความละเอียดของค่าไม่ใช่ความแม่นยำ
+3. **ปุ่มกด** ต้องใช้ Pull-up และ Debounce และควรอ่านด้วย **Interrupt** เมื่อโปรแกรมมีงานที่บล็อกนาน เช่น การส่ง HTTPS
+4. **Telemetry กับ Event** เป็นข้อมูลต่างประเภทกัน จึงควรแยกตาราง และเลือก panel ให้ตรงกับประเภทข้อมูล
+5. **Row Level Security และ Least Privilege** แยกสิทธิ์ของเส้นทางเขียน (`anon` → `INSERT`) กับเส้นทางอ่าน (`grafana_ro` → `SELECT`) ข้อมูลจึงยังปลอดภัยแม้ key ตัวใดตัวหนึ่งรั่ว
+6. **Grafana** ดึงข้อมูลด้วย SQL และ Macro (`$__timeFilter`, `$__timeGroupAlias`, `$__interval`) พร้อมทำ Downsampling ให้พอดีกับความกว้างของกราฟ
+7. **แดชบอร์ดที่ดี** ต้องเข้าใจได้ใน 3 วินาที วางภาพรวมไว้บน ใช้สีเพื่อบอกสถานะเท่านั้น และติดหน่วยทุก panel
 
----
+### ตารางอ้างอิงด่วน
+
+| หัวข้อ | ค่า / คำสั่ง |
+|:---|:---|
+| I2C ของ AHT25 | address `0x38`, SDA = GPIO 8, SCL = GPIO 9 |
+| REST endpoint | `POST https://<ref>.supabase.co/rest/v1/<table>` |
+| HTTP สำเร็จ | `201 Created` |
+| Pooler สำหรับ Grafana | `aws-0-<region>.pooler.supabase.com:5432`, user `grafana_ro.<ref>`, SSL `require` |
+| กรองช่วงเวลา | `$__timeFilter(created_at)` |
+| Downsampling | `$__timeGroupAlias(created_at, $__interval)` + `avg()` + `GROUP BY 1` |
+| เริ่มต้นวันตามเวลาไทย | `date_trunc('day', now() AT TIME ZONE 'Asia/Bangkok') AT TIME ZONE 'Asia/Bangkok'` |
+
+> ℹ️ **แผนฟรี:** Supabase Free Plan และ Grafana Cloud Free Tier มีโควตาจำกัด เช่น พื้นที่ฐานข้อมูล จำนวนผู้ใช้ และการ pause โปรเจกต์ที่ไม่มีการใช้งาน เงื่อนไขเหล่านี้อาจเปลี่ยนได้ ควรตรวจสอบหน้าราคาของผู้ให้บริการก่อนเริ่มภาคการศึกษา
 
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Challenge" data-tab-icon="🏆" id="challenge" markdown="1">
 
-## 12.10 แบบฝึกหัดท้ายบทที่ 12 (Exercises)
+## 12.9 แบบฝึกหัดท้ายบทที่ 12 (Exercises)
 
-**ข้อ 1:** จงอธิบายความสำคัญของการคำนึงถึงทฤษฎีสีในการออกแบบแดชบอร์ดระดับอุตสาหกรรมในห้องควบคุมกลาง
-**ข้อ 2:** ทฤษฎีอัตราส่วนข้อมูลต่อหมึกพิมพ์ (Data-Ink Ratio) มีกฎเหล็กสำคัญอย่างไรในการพล็อตและแสดงผลกราฟสถิติ?
-**ข้อ 3:** สถาปัตยกรรมแบบการควบคุมย้อนกลับ (RPC - Remote Procedure Call) ในคลาวด์ ThingsBoard มีความสำคัญอย่างไรในการควบคุมอุปกรณ์ตัวกระทำภายนอกผ่านหน้าแดชบอร์ด?
+**ข้อ 1:** AHT25 ส่งค่าดิบของความชื้น $S_{RH} = 629{,}146$ และอุณหภูมิ $S_T = 419{,}430$ จงคำนวณความชื้นสัมพัทธ์ (%RH) และอุณหภูมิ (°C) พร้อมอธิบายว่าทำไมจึงควรรายงานผลเพียงทศนิยม 1 ตำแหน่ง
+
+**ข้อ 2:** อธิบายว่าถ้าเปลี่ยนการอ่านปุ่มจาก Interrupt เป็น Polling ใน `loop()` จะเกิดปัญหาอะไรกับระบบนี้ และปัญหานั้นเกี่ยวข้องกับการส่ง HTTPS อย่างไร
+
+**ข้อ 3:** ถ้าเปลี่ยนให้ Grafana เชื่อมต่อด้วย user `postgres` แทน `grafana_ro` ระบบยังทำงานได้ แต่ความเสี่ยงเพิ่มขึ้นอย่างไร? ยกตัวอย่างเหตุการณ์ที่อาจเกิดขึ้นในโรงงาน
+
+**ข้อ 4:** ถ้าเลือกช่วงเวลา Last 30 days บนกราฟกว้าง 1,200 พิกเซล จะมีข้อมูลดิบในตาราง `telemetry` กี่แถว และ `$__interval` ควรมีค่าประมาณเท่าใด? แสดงวิธีคำนวณ
+
+**ข้อ 5:** ความชื้นในตู้ควบคุมจะเสี่ยงเกิดหยดน้ำเมื่ออุณหภูมิลดลงถึงจุดน้ำค้าง (Dew Point) จงเขียนคำสั่ง SQL สำหรับ Grafana ที่คำนวณ Dew Point จากคอลัมน์ `temp` และ `hum` ด้วยสมการ Magnus โดยประมาณ $T_d = \frac{b\,\gamma}{a - \gamma}$ เมื่อ $\gamma = \ln(RH/100) + \frac{a\,T}{b + T}$, $a = 17.62$, $b = 243.12\ ^\circ C$
+
+**ข้อ 6 (ออกแบบ):** โรงงานมีตู้ควบคุม 20 ตู้ แต่ละตู้มี ESP32-S3 หนึ่งตัว จงออกแบบ
+- (ก) ค่า `device_id` ที่สื่อความหมาย
+- (ข) Layout แดชบอร์ดภาพรวมที่ให้หัวหน้าช่างเห็นได้ทันทีว่าตู้ใดผิดปกติ
+- (ค) คำนวณพื้นที่ฐานข้อมูลที่ใช้ต่อเดือน แล้วเสนอแนวทางลดขนาดข้อมูลเก่า
 
 </div>

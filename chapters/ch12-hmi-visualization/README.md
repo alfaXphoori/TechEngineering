@@ -37,7 +37,7 @@ permalink: /chapters/ch12-hmi-visualization/
 
 ในโรงงาน มอเตอร์ปั๊มถูกควบคุมจาก **ตู้ควบคุมมอเตอร์ (Motor Control Cabinet)** ซึ่งภายในมีอินเวอร์เตอร์ คอนแทคเตอร์ และรีเลย์ ถ้าอุณหภูมิในตู้สูงเกินไป อุปกรณ์อิเล็กทรอนิกส์จะเสื่อมเร็วขึ้น และถ้าความชื้นสูงจนเกิดหยดน้ำเกาะ (Condensation) ก็อาจทำให้ไฟฟ้าลัดวงจรได้ ช่างซ่อมบำรุงจึงต้องการระบบที่
 1. **ติดตามอุณหภูมิและความชื้นในตู้** ตลอด 24 ชั่วโมง และดูแนวโน้มย้อนหลังได้
-2. **บันทึกเหตุการณ์จากผู้ควบคุม** เช่น เริ่มเดินเครื่อง หยุดเครื่อง และแจ้งซ่อม เพื่อนำไปเทียบกับข้อมูลเซนเซอร์
+2. **บันทึกการเปิด/ปิดอุปกรณ์จากผู้ควบคุม** ได้แก่ ไฟส่องสว่างในตู้ (`light`) ปั๊ม (`pump`) และพัดลมระบายอากาศ (`fan`) เพื่อนำไปเทียบกับข้อมูลเซนเซอร์ เช่น เปิดพัดลมแล้วอุณหภูมิในตู้ลดลงเท่าใด
 3. **แจ้งเตือนอัตโนมัติ** เมื่ออุณหภูมิเกินเกณฑ์
 
 ในบทนี้เราจะสร้างระบบทั้งหมดด้วยเครื่องมือฟรี ตามสถาปัตยกรรมด้านล่าง
@@ -72,7 +72,7 @@ permalink: /chapters/ch12-hmi-visualization/
   <text x="100" y="116" text-anchor="middle" class="c12-l">AHT25 (I2C)</text>
   <text x="100" y="134" text-anchor="middle" class="c12-c">temp, hum</text>
   <text x="100" y="164" text-anchor="middle" class="c12-l">ปุ่ม 3 ปุ่ม</text>
-  <text x="100" y="182" text-anchor="middle" class="c12-c">start/stop/maint</text>
+  <text x="100" y="182" text-anchor="middle" class="c12-c">light/pump/fan</text>
   <text x="100" y="222" text-anchor="middle" class="c12-c">Wi-Fi 2.4 GHz</text>
   <!-- write: ESP32 → REST -->
   <path d="M 180 100 L 246 100" class="c12-w"/>
@@ -201,9 +201,9 @@ $$RH\,[\%] = \frac{S_{RH}}{2^{20}} \times 100 \qquad T\,[^\circ C] = \frac{S_T}{
 
 | | Telemetry | Event |
 |:---|:---|:---|
-| ตัวอย่าง | อุณหภูมิ 31.4 °C, ความชื้น 58 %RH | ผู้ควบคุมกด "เริ่มเดินเครื่อง" |
+| ตัวอย่าง | อุณหภูมิ 31.4 °C, ความชื้น 58 %RH | ผู้ควบคุมกดปุ่มเปิดพัดลม |
 | รูปแบบการเกิด | เป็นรอบคงที่ (Periodic) ทุก 5 วินาที | เกิดเมื่อใดก็ได้ (Event-driven) |
-| ค่าที่เก็บ | ตัวเลขต่อเนื่อง | ข้อความจากชุดค่าที่กำหนดไว้ (`start`, `stop`, `maintenance`) |
+| ค่าที่เก็บ | ตัวเลขต่อเนื่อง | ชื่ออุปกรณ์จากชุดค่าที่กำหนดไว้ (`light`, `pump`, `fan`) + สถานะเปิด/ปิด |
 | การแสดงผล | กราฟเส้น, เกจ | แถบสถานะ (State timeline), เส้นหมายเหตุบนกราฟ (Annotation) |
 
 เราแยกข้อมูลสองประเภทนี้ไว้คนละตาราง (`telemetry` และ `events`) เพราะโครงสร้างและวิธี query ต่างกัน ถ้ารวมในตารางเดียว จะมีคอลัมน์ว่างจำนวนมาก และ query แต่ละแบบจะซับซ้อนขึ้น
@@ -223,12 +223,14 @@ create table public.events (
   id         bigint generated always as identity primary key,
   created_at timestamptz not null default now(),
   device_id  text not null,
-  event      text not null check (event in ('start', 'stop', 'maintenance'))
+  event      text not null check (event in ('light', 'pump', 'fan')),
+  state      boolean not null      -- true = เปิด, false = ปิด
 );
 ```
 
 - **`created_at ... default now()`** ให้ฐานข้อมูลเป็นผู้ประทับเวลา ESP32 จึงไม่ต้องมีนาฬิกาที่แม่นยำ ส่วน `timestamptz` เก็บเวลาเป็น UTC แล้วแสดงตาม time zone ของผู้ใช้
-- **`check (event in (...))`** ทำให้ฐานข้อมูลรับเฉพาะชื่อเหตุการณ์ที่กำหนด ถ้าสะกดผิดจะถูกปฏิเสธ
+- **`check (event in (...))`** ทำให้ฐานข้อมูลรับเฉพาะชื่ออุปกรณ์ที่กำหนด ถ้าสะกดผิดจะถูกปฏิเสธ
+- **`state boolean`** เก็บสถานะหลังการกดปุ่ม (`true` = เปิด, `false` = ปิด) การรู้แค่ว่า "มีการกดปุ่ม" ไม่พอ เพราะต้องรู้ว่าอุปกรณ์ถูกเปิดหรือปิด จึงจะวาดช่วงเวลาที่อุปกรณ์ทำงานได้
 - **Index `(device_id, created_at desc)`** แดชบอร์ดเกือบทุก query จะถามว่า "อุปกรณ์ X ในช่วงเวลา Y" B-tree index ที่เรียงตามคอลัมน์ทั้งสองจะช่วยให้ PostgreSQL กระโดดไปยังช่วงข้อมูลนั้นได้ทันที ไม่ต้องอ่านทั้งตาราง (Sequential Scan)
 
 **ประเมินปริมาณข้อมูล:** ถ้าส่งทุก 5 วินาที จะได้ $86{,}400 / 5 = 17{,}280$ แถวต่อวัน ถ้าแต่ละแถวรวม index ใช้พื้นที่ราว 100 ไบต์ จะใช้พื้นที่ประมาณ 1.7 MB ต่อวัน หรือราว 50 MB ต่อเดือนต่ออุปกรณ์ ตัวเลขนี้ใช้เทียบกับพื้นที่ฐานข้อมูลของแผนฟรี เพื่อตัดสินใจเรื่องความถี่ในการส่งและการลบข้อมูลเก่า
@@ -258,7 +260,7 @@ Supabase มีเครื่องมือชื่อ **PostgREST** ที�
 | คำขอ HTTP จาก ESP32 | คำสั่ง SQL ที่ PostgREST สร้าง |
 |:---|:---|
 | `POST /rest/v1/telemetry` body `{"device_id":"mcc01","temp":31.4,"hum":58.2}` | `INSERT INTO telemetry (device_id, temp, hum) VALUES ('mcc01', 31.4, 58.2)` |
-| `POST /rest/v1/events` body `{"device_id":"mcc01","event":"start"}` | `INSERT INTO events (device_id, event) VALUES ('mcc01', 'start')` |
+| `POST /rest/v1/events` body `{"device_id":"mcc01","event":"fan","state":true}` | `INSERT INTO events (device_id, event, state) VALUES ('mcc01', 'fan', true)` |
 
 **Header ที่ต้องส่ง**
 
@@ -313,8 +315,8 @@ $$\$\_\_interval \approx \frac{7 \times 86{,}400\ s}{1{,}000\ px} \approx 605\ s
 | ตอนนี้ร้อนแค่ไหน? | Gauge | เห็นตำแหน่งเทียบกับเกณฑ์ทันที |
 | อุปกรณ์ยังส่งข้อมูลอยู่ไหม? | Stat (วินาทีตั้งแต่ข้อมูลล่าสุด) | ตัวเลขเดียวพร้อมสีสถานะ |
 | อุณหภูมิเพิ่มขึ้นเรื่อย ๆ หรือไม่? | Time series | กราฟเส้นแสดงแนวโน้มตามเวลาได้ดีที่สุด |
-| เครื่องเดินหรือหยุดช่วงไหน? | State timeline | แถบสีต่อเนื่องแสดงช่วงเวลาของแต่ละสถานะ |
-| อุณหภูมิขึ้นหลังการซ่อมหรือไม่? | Annotation บน Time series | วางเหตุการณ์ลงบนกราฟเดียวกันเพื่อเทียบเหตุกับผล |
+| ไฟ ปั๊ม และพัดลม เปิดอยู่ช่วงไหน? | State timeline | แถบสีต่อเนื่องแสดงช่วงเวลาเปิด/ปิดของแต่ละอุปกรณ์ |
+| เปิดพัดลมแล้วอุณหภูมิลดลงหรือไม่? | Annotation บน Time series | วางเหตุการณ์ลงบนกราฟเดียวกันเพื่อเทียบเหตุกับผล |
 
 4. **ข้อมูลต้องไม่บิดเบือน** ติดหน่วยทุก panel (°C, %RH) ใช้แกนแยกเมื่อหน่วยต่างกัน และตั้งช่วงแกนของ Gauge ให้คงที่ (เช่น 0–60 °C) เพื่อไม่ให้การเปลี่ยนแปลงเล็กน้อยดูเหมือนรุนแรง
 
@@ -322,9 +324,9 @@ $$\$\_\_interval \approx \frac{7 \times 86{,}400\ s}{1{,}000\ px} \approx 605\ s
 
 | แถว | Panel |
 |:---|:---|
-| 1 (ภาพรวม) | Gauge อุณหภูมิ · Gauge ความชื้น · Stat สถานะการเชื่อมต่อ · Stat แจ้งซ่อมวันนี้ |
-| 2 (แนวโน้ม) | Time series อุณหภูมิ + ความชื้น พร้อม Annotation แจ้งซ่อม |
-| 3 (เหตุการณ์) | State timeline เดินเครื่อง/หยุดเครื่อง |
+| 1 (ภาพรวม) | Gauge อุณหภูมิ · Gauge ความชื้น · Stat สถานะการเชื่อมต่อ · Stat เปิดพัดลมวันนี้ |
+| 2 (แนวโน้ม) | Time series อุณหภูมิ + ความชื้น พร้อม Annotation เปิด/ปิดพัดลม |
+| 3 (เหตุการณ์) | State timeline ไฟ · ปั๊ม · พัดลม |
 
 </div>
 
@@ -340,12 +342,13 @@ $$\$\_\_interval \approx \frac{7 \times 86{,}400\ s}{1{,}000\ px} \approx 605\ s
 |:---|:---|:---|
 | AHT25 | VDD / GND | 3V3 / GND |
 | AHT25 | SDA / SCL | GPIO 8 / GPIO 9 |
-| ปุ่ม 1 (เริ่มเดินเครื่อง) | ขาหนึ่ง / อีกขา | GPIO 4 / GND |
-| ปุ่ม 2 (หยุดเครื่อง) | ขาหนึ่ง / อีกขา | GPIO 5 / GND |
-| ปุ่ม 3 (แจ้งซ่อม) | ขาหนึ่ง / อีกขา | GPIO 6 / GND |
+| ปุ่ม 1 ไฟ (`light`) | ขาหนึ่ง / อีกขา | GPIO 4 / GND |
+| ปุ่ม 2 ปั๊ม (`pump`) | ขาหนึ่ง / อีกขา | GPIO 5 / GND |
+| ปุ่ม 3 พัดลม (`fan`) | ขาหนึ่ง / อีกขา | GPIO 6 / GND |
 
 - ลำดับขาของโมดูล AHT25 แต่ละยี่ห้อไม่เหมือนกัน ให้ดูตามที่พิมพ์ไว้บนบอร์ด และห้ามต่อเข้า 5V
 - ปุ่มไม่ต้องต่อตัวต้านทานเพิ่ม เพราะใช้ `INPUT_PULLUP` ภายในชิป
+- ปุ่มทำงานแบบ **Toggle** กดครั้งแรกเป็นการเปิด กดอีกครั้งเป็นการปิด ทุกครั้งที่กดจะบันทึกลงตาราง `events` 1 แถว
 
 ### 12.7.2 ตั้งค่า Arduino IDE
 
@@ -370,14 +373,15 @@ $$\$\_\_interval \approx \frac{7 \times 86{,}400\ s}{1{,}000\ px} \approx 605\ s
 
 Index: `telemetry_device_time_idx` บนคอลัมน์ `(device_id, created_at desc)`
 
-**ตาราง `events`: เหตุการณ์จากการกดปุ่ม**
+**ตาราง `events`: การเปิด/ปิดอุปกรณ์จากการกดปุ่ม**
 
 | คอลัมน์ | ชนิดข้อมูล | ค่าเริ่มต้น / เงื่อนไข | ผู้กำหนดค่า | ความหมาย | ตัวอย่าง |
 |:---|:---|:---|:---|:---|:---|
 | `id` | `bigint` | Primary key, identity (เพิ่มอัตโนมัติ) | ฐานข้อมูล | เลขลำดับแถว | `57` |
 | `created_at` | `timestamptz` | `not null`, `default now()` | ฐานข้อมูล | เวลาที่กดปุ่ม (เก็บเป็น UTC) | `2026-09-28 03:16:12+00` |
 | `device_id` | `text` | `not null` | ESP32-S3 | รหัสอุปกรณ์ | `mcc01` |
-| `event` | `text` | `not null`, รับเฉพาะ `start` / `stop` / `maintenance` | ESP32-S3 | ชนิดเหตุการณ์ | `start` |
+| `event` | `text` | `not null`, รับเฉพาะ `light` / `pump` / `fan` | ESP32-S3 | อุปกรณ์ที่ถูกสั่ง (ปุ่ม GPIO 4 / 5 / 6) | `fan` |
+| `state` | `boolean` | `not null` | ESP32-S3 | สถานะหลังกดปุ่ม (`true` = เปิด, `false` = ปิด) | `true` |
 
 Index: `events_device_time_idx` บนคอลัมน์ `(device_id, created_at desc)`
 
@@ -393,12 +397,14 @@ Index: `events_device_time_idx` บนคอลัมน์ `(device_id, created
 
 `events`
 
-| id | created_at | device_id | event |
-|---:|:---|:---|:---|
-| 57 | 2026-09-28 03:16:12+00 | mcc01 | start |
-| 58 | 2026-09-28 05:42:30+00 | mcc01 | maintenance |
+| id | created_at | device_id | event | state | มาจาก |
+|---:|:---|:---|:---|:---|:---|
+| 57 | 2026-09-28 03:16:12+00 | mcc01 | light | true | ปุ่ม GPIO 4 (เปิดไฟ) |
+| 58 | 2026-09-28 03:20:45+00 | mcc01 | fan | true | ปุ่ม GPIO 6 (เปิดพัดลม) |
+| 59 | 2026-09-28 03:48:02+00 | mcc01 | fan | false | ปุ่ม GPIO 6 (ปิดพัดลม) |
+| 60 | 2026-09-28 05:42:30+00 | mcc01 | pump | true | ปุ่ม GPIO 5 (เปิดปั๊ม) |
 
-ทั้งสองตารางไม่ได้เชื่อมกันด้วย Foreign key แต่เชื่อมกันด้วย `device_id` และช่วงเวลา `created_at` เช่น Annotation บน Grafana จะนำ event `maintenance` ไปวางบนกราฟ `telemetry` ของอุปกรณ์เดียวกัน ณ เวลาเดียวกัน
+ทั้งสองตารางไม่ได้เชื่อมกันด้วย Foreign key แต่เชื่อมกันด้วย `device_id` และช่วงเวลา `created_at` เช่น Annotation บน Grafana จะนำ event `fan` ไปวางบนกราฟ `telemetry` ของอุปกรณ์เดียวกัน ณ เวลาเดียวกัน
 
 **สิทธิ์ของแต่ละ role** (หลัก Least Privilege ในหัวข้อ 12.3.3)
 
@@ -428,7 +434,8 @@ create table public.events (
   id         bigint generated always as identity primary key,
   created_at timestamptz not null default now(),
   device_id  text not null,
-  event      text not null check (event in ('start', 'stop', 'maintenance'))
+  event      text not null check (event in ('light', 'pump', 'fan')),
+  state      boolean not null      -- true = เปิด, false = ปิด
 );
 create index events_device_time_idx on public.events (device_id, created_at desc);
 
@@ -481,7 +488,7 @@ const char* DEVICE_ID    = "mcc01";
 #define I2C_SDA 8
 #define I2C_SCL 9
 const uint8_t BTN_PINS[3]   = {4, 5, 6};
-const char*   BTN_EVENTS[3] = {"start", "stop", "maintenance"};
+const char*   BTN_EVENTS[3] = {"light", "pump", "fan"};   // GPIO 4 / 5 / 6
 
 const unsigned long SEND_INTERVAL = 5000;   // ms
 const unsigned long DEBOUNCE_MS   = 50;     // ms
@@ -493,6 +500,9 @@ unsigned long    lastSend = 0;
 // ตัวแปรที่ใช้ร่วมกับ ISR ต้องเป็น volatile
 volatile bool          btnPending[3]  = {false, false, false};
 volatile unsigned long btnLastEdge[3] = {0, 0, 0};
+
+// สถานะเปิด/ปิดของ light, pump, fan (เริ่มต้นปิดทั้งหมด)
+bool btnState[3] = {false, false, false};
 
 // ISR: เรียกทุกครั้งที่ขาเปลี่ยนสถานะ (กดหรือปล่อย)
 void IRAM_ATTR onButtonChange(void* arg) {
@@ -555,13 +565,15 @@ void setup() {
 void loop() {
   if (WiFi.status() != WL_CONNECTED) connectWiFi();
 
-  // 1) เหตุการณ์จากปุ่ม: ส่งทันที
+  // 1) เหตุการณ์จากปุ่ม: สลับสถานะเปิด/ปิด แล้วส่งทันที
   for (int i = 0; i < 3; i++) {
     if (btnPending[i]) {
       btnPending[i] = false;
-      char body[80];
+      btnState[i] = !btnState[i];                        // Toggle
+      char body[96];
       snprintf(body, sizeof(body),
-               "{\"device_id\":\"%s\",\"event\":\"%s\"}", DEVICE_ID, BTN_EVENTS[i]);
+               "{\"device_id\":\"%s\",\"event\":\"%s\",\"state\":%s}",
+               DEVICE_ID, BTN_EVENTS[i], btnState[i] ? "true" : "false");
       postJson("events", body);
     }
   }
@@ -593,11 +605,14 @@ void loop() {
 | `IRAM_ATTR` | เก็บ ISR ไว้ใน RAM ภายใน เพื่อให้ตอบสนองได้เร็ว และทำงานได้แม้ cache ของ flash ถูกปิดชั่วคราว |
 | Debounce ใน ISR | ขอบสัญญาณที่ห่างจากครั้งก่อนไม่ถึง 50 ms ถูกทิ้ง และช่วงเงียบถูกยืดออก ขอบแรกที่ผ่านเงื่อนไขจะนับเป็นการกดเมื่อขาอ่านได้ `LOW` เท่านั้น กดหนึ่งครั้งจึงได้หนึ่ง event การปล่อยปุ่มหรือกดค้างไม่ทำให้นับซ้ำ |
 | `volatile` | บอกคอมไพเลอร์ว่าตัวแปรถูกแก้จาก ISR ได้ทุกเมื่อ ต้องอ่านจากหน่วยความจำจริงทุกครั้ง |
+| `btnState[i] = !btnState[i]` | ปุ่มแบบ Toggle กดแต่ละครั้งสลับสถานะของอุปกรณ์นั้น แล้วส่ง `state` เป็น JSON boolean (`true`/`false` ไม่มีเครื่องหมายคำพูด) ตัวแปรนี้แก้เฉพาะใน `loop()` จึงไม่ต้องเป็น `volatile` |
 | `millis()` แทน `delay()` | `loop()` ไม่ถูกบล็อก จึงตรวจ flag ของปุ่มได้ถี่ แม้ยังไม่ถึงรอบส่งเซนเซอร์ |
 | `snprintf` | สร้าง JSON ลงบัฟเฟอร์ขนาดคงที่ ช่วยเลี่ยงการจองหน่วยความจำซ้ำ ๆ ของ `String` ซึ่งทำให้ heap แตกกระจายเมื่อรันนาน ๆ |
 | `strncmp(SUPABASE_KEY, "eyJ", 3)` | key แบบ legacy เป็น JWT ซึ่งขึ้นต้นด้วย `eyJ` เสมอ จึงต้องส่ง `Authorization` เพิ่ม ส่วน Publishable key แบบใหม่ส่งแค่ `apikey` (รูปแบบ key ของ Supabase เปลี่ยนมาแล้วระยะหนึ่ง ควรตรวจกับ[เอกสารทางการ](https://supabase.com/docs/guides/api/api-keys)อีกครั้ง) |
 
 > **ข้อจำกัดด้านเวลา:** ฐานข้อมูลประทับเวลาตอนที่ข้อมูลมาถึง event จึงอาจช้ากว่าเวลากดจริงประมาณ 1–2 วินาทีตามเวลาส่ง HTTPS ซึ่งยอมรับได้สำหรับงานบำรุงรักษา ถ้าต้องการเวลาระดับมิลลิวินาที ให้ซิงก์นาฬิกาด้วย NTP แล้วส่ง `created_at` ไปเอง
+
+> **ข้อจำกัดของ Toggle:** `btnState` เก็บอยู่ใน RAM เมื่อ ESP32-S3 รีบูต สถานะจะกลับเป็นปิดทั้งหมด ถ้าก่อนรีบูตอุปกรณ์เปิดอยู่ การกดครั้งถัดไปจะบันทึกเป็น `true` ซ้ำ ในงานจริงควรเก็บสถานะไว้ใน flash (ไลบรารี `Preferences`) หรืออ่านสถานะล่าสุดจากตาราง `events` ตอนเริ่มทำงาน
 
 > **ไม่มีบอร์ดจริง?** ใช้ [Wokwi](https://wokwi.com) เลือกบอร์ด ESP32-S3 แทนได้ AHT25 ไม่มีใน Wokwi จึงต้องใช้ DHT22 แทน โดยเปลี่ยนเฉพาะส่วนอ่านเซนเซอร์เป็น `dht.readTemperature()` / `dht.readHumidity()` และใช้ Wi-Fi `Wokwi-GUEST`
 
@@ -640,12 +655,12 @@ FROM telemetry
 WHERE device_id = '$device';
 ```
 
-**Stat แจ้งซ่อมวันนี้** (นับตามเวลาไทย)
+**Stat เปิดพัดลมวันนี้** (นับจำนวนครั้งที่เปิดพัดลมตามเวลาไทย)
 
 ```sql
-SELECT count(*) AS "แจ้งซ่อมวันนี้"
+SELECT count(*) AS "เปิดพัดลมวันนี้"
 FROM events
-WHERE device_id = '$device' AND event = 'maintenance'
+WHERE device_id = '$device' AND event = 'fan' AND state = true
   AND created_at >= date_trunc('day', now() AT TIME ZONE 'Asia/Bangkok') AT TIME ZONE 'Asia/Bangkok';
 ```
 
@@ -664,24 +679,29 @@ GROUP BY 1
 ORDER BY 1;
 ```
 
-**Annotation แจ้งซ่อม:** Dashboard **Settings → Annotations → New** → เลือก data source PostgreSQL
+**Annotation เปิด/ปิดพัดลม:** Dashboard **Settings → Annotations → New** → เลือก data source PostgreSQL
 
 ```sql
-SELECT created_at AS time, 'แจ้งซ่อม' AS text, event AS tags
+SELECT created_at AS time,
+       CASE WHEN state THEN 'เปิดพัดลม' ELSE 'ปิดพัดลม' END AS text,
+       event AS tags
 FROM events
-WHERE device_id = '$device' AND event = 'maintenance'
+WHERE device_id = '$device' AND event = 'fan'
   AND $__timeFilter(created_at);
 ```
 
-**State timeline เดิน/หยุดเครื่อง** (Value mappings: `start` → "เดินเครื่อง" สีเขียว, `stop` → "หยุด" สีแดง)
+เส้นหมายเหตุนี้ช่วยให้เห็นเหตุกับผลบนกราฟเดียวกัน เช่น หลังเส้น "เปิดพัดลม" อุณหภูมิในตู้ควรค่อย ๆ ลดลง
+
+**State timeline ไฟ · ปั๊ม · พัดลม** (Format: Time series, Value mappings: `1` → "เปิด" สีเขียว, `0` → "ปิด" สีเทา)
 
 ```sql
-SELECT created_at AS time, event AS "สถานะ"
+SELECT created_at AS time, event AS metric, state::int AS value
 FROM events
-WHERE device_id = '$device' AND event IN ('start', 'stop')
-  AND $__timeFilter(created_at)
+WHERE device_id = '$device' AND $__timeFilter(created_at)
 ORDER BY 1;
 ```
+
+คอลัมน์ชื่อ `metric` บอก Grafana ให้แยกข้อมูลเป็นซีรีส์ตามชื่ออุปกรณ์ จึงได้แถบ 3 แถว (light, pump, fan) ส่วน `state::int` แปลง `true`/`false` เป็น `1`/`0` ให้ใช้กับ Value mappings ได้
 
 ตั้ง Auto-refresh ที่มุมขวาบนเป็น **10s** แล้ว **Save dashboard** ชื่อ `MCC Monitor`
 
@@ -738,7 +758,7 @@ Pending period ทำให้ต้องเกินเกณฑ์ **ต่�
 - เชื่อม Grafana Cloud ด้วย role อ่านอย่างเดียว แล้วสร้างแดชบอร์ดตามหลักการออกแบบที่ดีได้
 - ตั้งการแจ้งเตือนอุณหภูมิสูงทางอีเมลได้
 
-**สถานการณ์:** ติดตั้งอุปกรณ์ในตู้ควบคุมมอเตอร์ปั๊ม (MCC) เพื่อวัดอุณหภูมิและความชื้นภายในตู้ ปุ่มทั้ง 3 ปุ่มให้ผู้ควบคุมบันทึกว่า **เริ่มเดินเครื่อง** (`start`), **หยุดเครื่อง** (`stop`) และ **แจ้งซ่อม** (`maintenance`)
+**สถานการณ์:** ติดตั้งอุปกรณ์ในตู้ควบคุมมอเตอร์ปั๊ม (MCC) เพื่อวัดอุณหภูมิและความชื้นภายในตู้ ปุ่มทั้ง 3 ปุ่มให้ผู้ควบคุมเปิด/ปิด **ไฟ** (`light`, GPIO 4), **ปั๊ม** (`pump`, GPIO 5) และ **พัดลม** (`fan`, GPIO 6) แบบ Toggle โดยทุกการกดจะถูกบันทึกพร้อมสถานะ
 
 ---
 
@@ -754,9 +774,9 @@ Pending period ทำให้ต้องเกินเกณฑ์ **ต่�
 | อุปกรณ์ | ขาอุปกรณ์ | ESP32-S3 |
 |:---|:---|:---|
 | AHT25 | VDD / GND / SDA / SCL | 3V3 / GND / GPIO 8 / GPIO 9 |
-| ปุ่ม 1 `start` | ขาหนึ่ง / อีกขา | GPIO 4 / GND |
-| ปุ่ม 2 `stop` | ขาหนึ่ง / อีกขา | GPIO 5 / GND |
-| ปุ่ม 3 `maintenance` | ขาหนึ่ง / อีกขา | GPIO 6 / GND |
+| ปุ่ม 1 `light` | ขาหนึ่ง / อีกขา | GPIO 4 / GND |
+| ปุ่ม 2 `pump` | ขาหนึ่ง / อีกขา | GPIO 5 / GND |
+| ปุ่ม 3 `fan` | ขาหนึ่ง / อีกขา | GPIO 6 / GND |
 
 1. ต่อวงจรตามตาราง โดยดูลำดับขาตามที่พิมพ์ไว้บนโมดูล AHT25 และ **ห้ามต่อเข้า 5V**
 2. Arduino IDE → **Boards Manager** → ติดตั้ง **esp32 by Espressif Systems**
@@ -816,9 +836,10 @@ Pending period ทำให้ต้องเกินเกณฑ์ **ต่�
 | การทดลอง | ผลใน Serial Monitor | แถวใหม่ใน Table Editor? |
 |:---|:---|:---|
 | รอ 30 วินาที | ได้ `201` กี่ครั้ง: ________ | ________ |
-| กดปุ่ม `start` 1 ครั้ง | ________ | ________ |
-| กดปุ่ม `maintenance` ค้างไว้ 3 วินาทีแล้วปล่อย | ได้ event กี่ครั้ง: ________ | ________ |
-| กดปุ่ม `stop` ขณะ Serial กำลังพิมพ์ `POST telemetry` | event หายหรือไม่: ________ | ________ |
+| กดปุ่ม `light` 1 ครั้ง | ค่า `state`: ________ | ________ |
+| กดปุ่ม `light` อีก 1 ครั้ง | ค่า `state`: ________ | ________ |
+| กดปุ่ม `fan` ค้างไว้ 3 วินาทีแล้วปล่อย | ได้ event กี่ครั้ง: ________ | ________ |
+| กดปุ่ม `pump` ขณะ Serial กำลังพิมพ์ `POST telemetry` | event หายหรือไม่: ________ | ________ |
 | ใช้นิ้วจับ AHT25 นาน 30 วินาที | temp เปลี่ยนจาก ____ เป็น ____ °C | ________ |
 | แก้ key ผิด 1 ตัวอักษร แล้วอัปโหลดใหม่ | Status code: ________ | ________ |
 
@@ -834,9 +855,9 @@ Pending period ทำให้ต้องเกินเกณฑ์ **ต่�
 
 | แถว | Panel |
 |:---|:---|
-| 1 | Gauge อุณหภูมิ · Gauge ความชื้น · Stat สถานะการเชื่อมต่อ · Stat แจ้งซ่อมวันนี้ |
-| 2 | Time series อุณหภูมิ + ความชื้น พร้อม Annotation แจ้งซ่อม |
-| 3 | State timeline เดินเครื่อง/หยุดเครื่อง |
+| 1 | Gauge อุณหภูมิ · Gauge ความชื้น · Stat สถานะการเชื่อมต่อ · Stat เปิดพัดลมวันนี้ |
+| 2 | Time series อุณหภูมิ + ความชื้น พร้อม Annotation เปิด/ปิดพัดลม |
+| 3 | State timeline ไฟ · ปั๊ม · พัดลม |
 
 4. ตั้ง Auto-refresh **10s** → **Save dashboard** ชื่อ `MCC Monitor`
 
@@ -845,8 +866,9 @@ Pending period ทำให้ต้องเกินเกณฑ์ **ต่�
 | การทดลอง | ผลที่เห็นบน Dashboard |
 |:---|:---|
 | Save & test ของ data source | ________ |
-| กด `start` → รอ 1 นาที → กด `stop` | State timeline: ________ |
-| กด `maintenance` 2 ครั้ง | ค่า Stat แจ้งซ่อมวันนี้: ____ และเส้น Annotation: ________ |
+| กด `pump` → รอ 1 นาที → กด `pump` อีกครั้ง | State timeline แถว pump: ________ |
+| กด `fan` เปิด-ปิด 2 รอบ | ค่า Stat เปิดพัดลมวันนี้: ____ และเส้น Annotation: ________ |
+| เปิด `fan` แล้วใช้มือบังอากาศรอบ AHT25 เทียบกับตอนปิด | แนวโน้มอุณหภูมิบนกราฟ: ________ |
 | ถอดสาย USB ของ ESP32-S3 แล้วรอ 40 วินาที | ค่าและสีของ Stat สถานะการเชื่อมต่อ: ________ |
 | เปลี่ยนช่วงเวลาจาก Last 15 minutes เป็น Last 24 hours | กราฟเปลี่ยนอย่างไร: ________ |
 
@@ -873,11 +895,11 @@ Pending period ทำให้ต้องเกินเกณฑ์ **ต่�
 
 ### แบบฝึกหัดท้ายใบงาน
 
-1. **Interrupt กับ Polling:** จากผลการทดลองในส่วนที่ 3 (กด `stop` ขณะกำลังส่งข้อมูล) อธิบายว่าถ้าโปรแกรมอ่านปุ่มด้วย `digitalRead()` ใน `loop()` แทน Interrupt ผลจะต่างไปอย่างไร เพราะเหตุใด
+1. **Interrupt กับ Polling:** จากผลการทดลองในส่วนที่ 3 (กด `pump` ขณะกำลังส่งข้อมูล) อธิบายว่าถ้าโปรแกรมอ่านปุ่มด้วย `digitalRead()` ใน `loop()` แทน Interrupt ผลจะต่างไปอย่างไร เพราะเหตุใด
 
    > คำตอบ: _______________________________________________________________
 
-2. **Debounce:** จากการกดปุ่ม `maintenance` ค้างไว้ 3 วินาที ทำไมโปรแกรมจึงนับเป็นเพียง 1 event? อธิบายโดยอ้างอิงเงื่อนไขในฟังก์ชัน `onButtonChange()`
+2. **Debounce:** จากการกดปุ่ม `fan` ค้างไว้ 3 วินาที ทำไมโปรแกรมจึงนับเป็นเพียง 1 event? อธิบายโดยอ้างอิงเงื่อนไขในฟังก์ชัน `onButtonChange()`
 
    > คำตอบ: _______________________________________________________________
 
@@ -885,7 +907,7 @@ Pending period ทำให้ต้องเกินเกณฑ์ **ต่�
 
    > คำตอบ: _______________________________________________________________
 
-4. **ประยุกต์งานเครื่องกล:** ถ้าต้องการรู้ว่า "หลังจากแจ้งซ่อมและซ่อมเสร็จแล้ว อุณหภูมิเฉลี่ยในตู้ลดลงหรือไม่" จะใช้ panel ใดบนแดชบอร์ด และเขียน SQL เปรียบเทียบอุณหภูมิเฉลี่ย 1 ชั่วโมงก่อนและหลัง event `maintenance` ล่าสุดอย่างไร
+4. **ประยุกต์งานเครื่องกล:** ถ้าต้องการรู้ว่า "เปิดพัดลมระบายอากาศแล้ว อุณหภูมิเฉลี่ยในตู้ลดลงหรือไม่" จะใช้ panel ใดบนแดชบอร์ด และเขียน SQL เปรียบเทียบอุณหภูมิเฉลี่ย 10 นาทีก่อนและหลัง event `fan` ที่ `state = true` ล่าสุดอย่างไร
 
    > คำตอบ: _______________________________________________________________
 

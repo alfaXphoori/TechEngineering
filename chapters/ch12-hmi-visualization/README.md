@@ -356,6 +356,60 @@ $$\$\_\_interval \approx \frac{7 \times 86{,}400\ s}{1{,}000\ px} \approx 605\ s
 
 ### 12.7.3 สร้างฐานข้อมูลบน Supabase
 
+ฐานข้อมูลของระบบนี้มี 2 ตาราง (ดูเหตุผลที่แยกตารางในหัวข้อ 12.3.1) โดยคำสั่ง SQL ในข้อ 2 จะสร้างตารางตามโครงสร้างด้านล่าง
+
+**ตาราง `telemetry`: ค่าเซนเซอร์ที่ส่งทุก 5 วินาที**
+
+| คอลัมน์ | ชนิดข้อมูล | ค่าเริ่มต้น / เงื่อนไข | ผู้กำหนดค่า | ความหมาย | ตัวอย่าง |
+|:---|:---|:---|:---|:---|:---|
+| `id` | `bigint` | Primary key, identity (เพิ่มอัตโนมัติ) | ฐานข้อมูล | เลขลำดับแถว | `1024` |
+| `created_at` | `timestamptz` | `not null`, `default now()` | ฐานข้อมูล | เวลาที่บันทึก (เก็บเป็น UTC) | `2026-09-28 03:15:05+00` |
+| `device_id` | `text` | `not null` | ESP32-S3 | รหัสอุปกรณ์ | `mcc01` |
+| `temp` | `real` | -40 ถึง 120 (ตรวจโดย RLS policy) | ESP32-S3 | อุณหภูมิ (°C) | `31.4` |
+| `hum` | `real` | 0 ถึง 100 (ตรวจโดย RLS policy) | ESP32-S3 | ความชื้นสัมพัทธ์ (%RH) | `58.2` |
+
+Index: `telemetry_device_time_idx` บนคอลัมน์ `(device_id, created_at desc)`
+
+**ตาราง `events`: เหตุการณ์จากการกดปุ่ม**
+
+| คอลัมน์ | ชนิดข้อมูล | ค่าเริ่มต้น / เงื่อนไข | ผู้กำหนดค่า | ความหมาย | ตัวอย่าง |
+|:---|:---|:---|:---|:---|:---|
+| `id` | `bigint` | Primary key, identity (เพิ่มอัตโนมัติ) | ฐานข้อมูล | เลขลำดับแถว | `57` |
+| `created_at` | `timestamptz` | `not null`, `default now()` | ฐานข้อมูล | เวลาที่กดปุ่ม (เก็บเป็น UTC) | `2026-09-28 03:16:12+00` |
+| `device_id` | `text` | `not null` | ESP32-S3 | รหัสอุปกรณ์ | `mcc01` |
+| `event` | `text` | `not null`, รับเฉพาะ `start` / `stop` / `maintenance` | ESP32-S3 | ชนิดเหตุการณ์ | `start` |
+
+Index: `events_device_time_idx` บนคอลัมน์ `(device_id, created_at desc)`
+
+**ตัวอย่างข้อมูลหลังระบบทำงาน** (Table Editor แสดงเวลาเป็น UTC ดังนั้น `03:15` คือ 10:15 น. ตามเวลาไทย)
+
+`telemetry`
+
+| id | created_at | device_id | temp | hum |
+|---:|:---|:---|---:|---:|
+| 1024 | 2026-09-28 03:15:05+00 | mcc01 | 31.4 | 58.2 |
+| 1025 | 2026-09-28 03:15:10+00 | mcc01 | 31.5 | 58.0 |
+| 1026 | 2026-09-28 03:15:15+00 | mcc01 | 31.5 | 57.9 |
+
+`events`
+
+| id | created_at | device_id | event |
+|---:|:---|:---|:---|
+| 57 | 2026-09-28 03:16:12+00 | mcc01 | start |
+| 58 | 2026-09-28 05:42:30+00 | mcc01 | maintenance |
+
+ทั้งสองตารางไม่ได้เชื่อมกันด้วย Foreign key แต่เชื่อมกันด้วย `device_id` และช่วงเวลา `created_at` เช่น Annotation บน Grafana จะนำ event `maintenance` ไปวางบนกราฟ `telemetry` ของอุปกรณ์เดียวกัน ณ เวลาเดียวกัน
+
+**สิทธิ์ของแต่ละ role** (หลัก Least Privilege ในหัวข้อ 12.3.3)
+
+| Role | `telemetry` | `events` | ใช้โดย |
+|:---|:---|:---|:---|
+| `anon` | `INSERT` เท่านั้น | `INSERT` เท่านั้น | ESP32-S3 (ผ่าน Publishable key) |
+| `grafana_ro` | `SELECT` เท่านั้น | `SELECT` เท่านั้น | Grafana Cloud (ผ่าน Session Pooler) |
+| `postgres` | ทั้งหมด | ทั้งหมด | ผู้ดูแลระบบ (SQL Editor / Table Editor) |
+
+**ขั้นตอน**
+
 1. สมัครที่ [supabase.com](https://supabase.com) → **New project** → ตั้งชื่อ `mcc-monitor` → ตั้ง Database Password → Region **Southeast Asia (Singapore)**
 2. เมนู **SQL Editor** → **New query** → วางคำสั่งทั้งหมดด้านล่าง → **Run**
 
@@ -405,7 +459,8 @@ create policy "grafana read events" on public.events
   for select to grafana_ro using (true);
 ```
 
-3. **Project Settings → API Keys** → คัดลอก **Publishable key** (หรือ `anon` key ในแท็บ Legacy) และ **Project URL** เก็บไว้
+3. เปิด **Table Editor** → ตรวจว่ามีตาราง `telemetry` และ `events` ที่มีคอลัมน์ตรงกับโครงสร้างด้านบน และทั้งสองตารางแสดงสถานะ **RLS enabled**
+4. **Project Settings → API Keys** → คัดลอก **Publishable key** (หรือ `anon` key ในแท็บ Legacy) และ **Project URL** เก็บไว้
 
 ### 12.7.4 โปรแกรม ESP32-S3 (`mcc_monitor.ino`)
 

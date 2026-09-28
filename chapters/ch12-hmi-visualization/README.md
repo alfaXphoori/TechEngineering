@@ -480,7 +480,8 @@ create policy "grafana read events" on public.events
 ```
 
 3. เปิด **Table Editor** → ตรวจว่ามีตาราง `telemetry` และ `events` ที่มีคอลัมน์ตรงกับโครงสร้างด้านบน และทั้งสองตารางแสดงสถานะ **RLS enabled**
-4. **Project Settings → API Keys** → คัดลอก **Publishable key** (หรือ `anon` key ในแท็บ Legacy) และ **Project URL** เก็บไว้
+4. เมนูซ้าย **Integrations → Data API** → หน้า **Overview** → คัดลอก **Project URL** (เช่น `https://xxxx.supabase.co`) ซึ่งเป็นปลายทางของ REST API ที่ ESP32 ใช้ (URL ของหน้านี้คือ `supabase.com/dashboard/project/<project_ref>/integrations/data_api/overview`)
+5. **Project Settings → API Keys** → คัดลอก **Publishable key** (หรือ `anon` key ในแท็บ Legacy) เก็บไว้
 
 ### 12.7.4 โปรแกรม ESP32-S3 (`mcc_monitor.ino`)
 
@@ -816,7 +817,7 @@ Pending period ทำให้ต้องเกินเกณฑ์ **ต่�
    - ตาราง `telemetry` และ `events` พร้อม index
    - policy ให้ `anon` (ESP32) **INSERT ได้อย่างเดียว** และตรวจช่วงค่า `temp` / `hum`
    - role `grafana_ro` ที่ **SELECT ได้อย่างเดียว** (เปลี่ยนรหัสผ่านเป็นของตนเองก่อน Run)
-3. **Project Settings → API Keys** → คัดลอก **Publishable key** และ **Project URL**
+3. **Integrations → Data API → Overview** → คัดลอก **Project URL** และ **Project Settings → API Keys** → คัดลอก **Publishable key**
 
 #### ตารางบันทึกผล — ส่วนที่ 2
 

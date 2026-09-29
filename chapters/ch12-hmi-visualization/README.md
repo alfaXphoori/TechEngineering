@@ -1496,7 +1496,10 @@ WHERE device_id = '$device' AND event = 'fan' AND state = true
 | 1 | ได้ `401` พร้อมข้อความ *new row violates row-level security policy* และค่าผิดปกติ (เช่น `temp` เกิน 120) | ค่าไม่ผ่านเงื่อนไข `with check` (มักเกิดจากเซนเซอร์เสียหรือต่อสายผิด) | ตรวจเซนเซอร์และค่าที่ส่งใน Serial Monitor |
 | 1 | ได้ `401` พร้อมข้อความ *permission denied for table telemetry* | `anon` ไม่มีสิทธิ์ `INSERT` (เช่น ปิด Data API access ตอนสร้างตาราง หรือลืม `grant insert`) | รัน `grant insert on public.telemetry to anon;` |
 | 1 | Grafana: connection timeout | ใช้ Direct connection (IPv6) | เปลี่ยนเป็น Session pooler |
-| 1 | Grafana: password authentication failed | Username ไม่มี `.project_ref` ต่อท้าย | ใช้รูปแบบ `grafana_ro.xxxx` หรือ `grafana_ctl.xxxx` |
+| 1 | Grafana: *password authentication failed for user "postgres"* (SQLSTATE `28P01`) | กรอก Username เป็น `postgres.xxxx` ตามช่อง `user` ในหน้า Connect ซึ่งเป็นของผู้ดูแลระบบ | เปลี่ยน Username เป็น `grafana_ro.xxxx` (คงส่วน project ref หลังจุดไว้) |
+| 1 | Grafana: *password authentication failed for user "grafana_ro"* | รหัสผ่านไม่ตรงกับที่ตั้งไว้ในหัวข้อ 12.8.4 | รัน `alter role grafana_ro with password '...';` ใน SQL Editor แล้วกรอกรหัสใหม่ใน Grafana |
+| 1 | Grafana: password authentication failed (ข้อความไม่ระบุ project) หรือ *Tenant or user not found* | Username ไม่มี `.project_ref` ต่อท้าย | ใช้รูปแบบ `grafana_ro.xxxx` หรือ `grafana_ctl.xxxx` |
+| 1 | Grafana: ข้อความ error มี `database=telemetry` | กรอก **Database name** เป็นชื่อตาราง | เปลี่ยนเป็น `postgres` (ลำดับชั้นคือ ฐานข้อมูล `postgres` → schema `public` → ตาราง `telemetry` ชื่อตารางใส่ใน SQL ของ panel) |
 | 1 | Grafana: เชื่อมต่อได้แต่ไม่มีข้อมูล | ไม่มี policy `select` ให้ role นั้น | รัน `create policy "grafana read ..."` |
 | 1 | Grafana: *Data is missing a time field* | Format ไม่ตรง หรือไม่มีคอลัมน์เวลา | ตั้ง Format เป็น Time series และตั้งชื่อคอลัมน์เวลาว่า `time` |
 | 2 | LED ไม่ติดเลย | ต่อ LED กลับขั้ว หรือลืมตัวต้านทาน | ขายาวต่อฝั่ง GPIO ผ่าน 220 Ω ขาสั้นต่อ GND |

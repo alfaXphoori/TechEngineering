@@ -537,7 +537,7 @@ Index: `telemetry_device_time_idx` บนคอลัมน์ `(device_id, crea
 **ขั้นตอน**
 
 1. สมัครที่ [supabase.com](https://supabase.com) → **New project** → ตั้งชื่อ `mcc-monitor` → ตั้ง Database Password → Region **Southeast Asia (Singapore)**
-2. เมนู **SQL Editor** → **New query** → วางคำสั่งทั้งหมดด้านล่าง (เปลี่ยนรหัสผ่านของ `grafana_ro` เป็นของตนเองก่อน) → **Run**
+2. เมนู **SQL Editor** → **New query** → วางคำสั่งทั้งหมดด้านล่าง → **Run**
 
 ```sql
 -- ===== ส่วนที่ 1: ตาราง telemetry =====
@@ -563,8 +563,57 @@ create policy "esp32 insert telemetry" on public.telemetry
   with check (device_id is not null
               and temp between -40 and 120
               and hum  between 0 and 100);
+```
 
--- ===== เส้นทางอ่าน: grafana_ro SELECT ได้อย่างเดียว =====
+3. เปิด **Table Editor** → ตรวจว่ามีตาราง `telemetry` ที่มีคอลัมน์ตรงกับโครงสร้างด้านบน และแสดงสถานะ **RLS enabled**
+4. เมนูซ้าย **Integrations → Data API** → หน้า **Overview** → คัดลอก **Project URL** (เช่น `https://xxxx.supabase.co`) ซึ่งเป็นปลายทางของ REST API ที่ ESP32 ใช้ (URL ของหน้านี้คือ `supabase.com/dashboard/project/<project_ref>/integrations/data_api/overview`)
+5. **Project Settings → API Keys** → คัดลอก **Publishable key** (ขึ้นต้นด้วย `sb_publishable_`) เก็บไว้ ห้ามคัดลอก Secret key (`sb_secret_`)
+
+> 💡 ปุ่ม **Connect** ด้านบนของหน้าโปรเจกต์แสดงทั้ง Project URL และ Publishable key ในหน้าเดียว ใช้แทนข้อ 4–5 ได้
+
+### 12.8.4 ตั้งค่า user `grafana_ro` บน Supabase
+
+Grafana ต้องมีบัญชีฐานข้อมูลของตนเองเพื่ออ่านตาราง `telemetry` (หลัก Least Privilege ในหัวข้อ 12.3.3) บัญชีนี้ใน PostgreSQL เรียกว่า **role** ซึ่ง user กับ role คือสิ่งเดียวกัน user ก็คือ role ที่ login ได้
+
+**user `grafana_ro`**
+
+| รายการ | ค่า | เหตุผล |
+|:---|:---|:---|
+| Name | `grafana_ro` | `ro` = read-only |
+| Login | ได้ | Grafana ต้อง login ผ่าน Session Pooler |
+| Password | ตั้งเอง ยาวอย่างน้อย 16 ตัวอักษร | ใช้กรอกใน data source ของ Grafana (หัวข้อ 12.8.6) |
+| Bypass RLS · Superuser · Create role · Create DB | ปิดทั้งหมด | ให้สิทธิ์เท่าที่จำเป็นเท่านั้น |
+| Username ที่กรอกใน Grafana | `grafana_ro.<project_ref>` | Session Pooler ใช้ project ref ต่อท้ายเพื่อรู้ว่าเป็นโปรเจกต์ใด |
+
+**สิทธิ์ที่ต้องให้**
+
+| คำสั่ง | ความหมาย |
+|:---|:---|
+| `grant usage on schema public` | ให้มองเห็นตารางใน schema `public` (เหมือนได้สิทธิ์เข้าห้อง แต่ยังเปิดตู้ไม่ได้) |
+| `grant select on public.telemetry` | อ่านตาราง `telemetry` ได้ แต่เพิ่ม แก้ หรือลบไม่ได้ |
+| `create policy ... for select to grafana_ro using (true)` | RLS อนุญาตให้อ่านได้ทุกแถว ถ้าไม่มี policy นี้ query จะได้ 0 แถว แม้มีสิทธิ์ `select` แล้วก็ตาม |
+
+**วิธีที่ 1: สร้าง user ผ่านหน้าเว็บ Supabase แล้วให้สิทธิ์ด้วย SQL**
+
+1. เมนูซ้าย **Database** → กลุ่ม **Access Control** → **Roles** → **Add role**
+2. **Name** = `grafana_ro` → เปิดสวิตช์ **User can login** เพียงข้อเดียว (สวิตช์อื่น โดยเฉพาะ *User bypasses every row level security policy* ต้องปิดไว้) → **Save**
+3. ตรวจว่า `grafana_ro` ปรากฏในหน้า **Roles** หัวข้อ *Other database roles*
+4. หน้าเว็บยังไม่มีช่องตั้งรหัสผ่าน และไม่มีเมนูให้สิทธิ์ schema/ตารางแก่ role ที่สร้างเอง (หน้า **Column Privileges** แก้ได้เฉพาะ `anon`, `authenticated` และ `service_role`) จึงต้องไปที่ **SQL Editor → New query** → เปลี่ยนรหัสผ่านเป็นของตนเอง → **Run**
+
+```sql
+alter role grafana_ro with password 'ChangeMe-Strong-2026';
+grant usage on schema public to grafana_ro;
+grant select on public.telemetry to grafana_ro;
+
+create policy "grafana read telemetry" on public.telemetry
+  for select to grafana_ro using (true);
+```
+
+**วิธีที่ 2: ใช้ SQL ทั้งหมด**
+
+**SQL Editor → New query** → เปลี่ยนรหัสผ่านเป็นของตนเอง → **Run** (ต่างจากวิธีที่ 1 เฉพาะบรรทัดแรก ที่ใช้ `create role` สร้าง user พร้อมตั้งรหัสผ่านในคำสั่งเดียว)
+
+```sql
 create role grafana_ro with login password 'ChangeMe-Strong-2026';
 grant usage on schema public to grafana_ro;
 grant select on public.telemetry to grafana_ro;
@@ -573,25 +622,22 @@ create policy "grafana read telemetry" on public.telemetry
   for select to grafana_ro using (true);
 ```
 
-> **ทางเลือก: สร้าง role `grafana_ro` ผ่านหน้าเว็บ Supabase** (ทำ **ก่อน** Run ชุดคำสั่งด้านบน)
->
-> 1. เมนูซ้าย **Database** → กลุ่ม **Access Control** → **Roles** → **Add role**
-> 2. **Name** = `grafana_ro` → เปิดสวิตช์ **User can login** เพียงข้อเดียว (สวิตช์อื่น โดยเฉพาะ *User bypasses every row level security policy* ต้องปิดไว้) → **Save**
-> 3. หน้าเว็บยังไม่มีช่องตั้งรหัสผ่าน และไม่มีเมนูให้สิทธิ์ schema/ตารางแก่ role ที่สร้างเอง (หน้า **Column Privileges** แก้ได้เฉพาะ `anon`, `authenticated` และ `service_role`) ในชุดคำสั่งด้านบนจึงต้อง **เปลี่ยนบรรทัด `create role ...` เป็น**
->
-> ```sql
-> alter role grafana_ro with password 'ChangeMe-Strong-2026';
-> ```
->
-> ส่วนบรรทัด `grant usage ...`, `grant select ...` และ `create policy ...` ให้คงไว้ตามเดิม แล้วจึง Run ถ้าไม่เปลี่ยนบรรทัดนี้ จะเกิด error *role "grafana_ro" already exists* และคำสั่งทั้งชุดจะไม่ถูกบันทึก ภายหลังถ้าต้องการเปลี่ยนรหัสผ่าน ให้รันเฉพาะคำสั่ง `alter role` นี้ได้ทุกเมื่อ และตรวจว่าสร้าง role สำเร็จได้ที่หน้า **Roles** หัวข้อ *Other database roles*
+> ⚠️ เลือกใช้วิธีใดวิธีหนึ่งเท่านั้น ถ้าสร้าง user ผ่านหน้าเว็บแล้วมารันวิธีที่ 2 จะเกิด error *role "grafana_ro" already exists* และคำสั่งทั้งชุดจะไม่ถูกบันทึก ภายหลังถ้าต้องการเปลี่ยนรหัสผ่าน ให้รันเฉพาะคำสั่ง `alter role grafana_ro with password '...';`
 
-3. เปิด **Table Editor** → ตรวจว่ามีตาราง `telemetry` ที่มีคอลัมน์ตรงกับโครงสร้างด้านบน และแสดงสถานะ **RLS enabled**
-4. เมนูซ้าย **Integrations → Data API** → หน้า **Overview** → คัดลอก **Project URL** (เช่น `https://xxxx.supabase.co`) ซึ่งเป็นปลายทางของ REST API ที่ ESP32 ใช้ (URL ของหน้านี้คือ `supabase.com/dashboard/project/<project_ref>/integrations/data_api/overview`)
-5. **Project Settings → API Keys** → คัดลอก **Publishable key** (ขึ้นต้นด้วย `sb_publishable_`) เก็บไว้ ห้ามคัดลอก Secret key (`sb_secret_`)
+**ตรวจสอบ**
 
-> 💡 ปุ่ม **Connect** ด้านบนของหน้าโปรเจกต์แสดงทั้ง Project URL และ Publishable key ในหน้าเดียว ใช้แทนข้อ 4–5 ได้
+- **Database → Access Control → Policies** → ตาราง `telemetry` ต้องมี 2 policy คือ `esp32 insert telemetry` (role `anon`) และ `grafana read telemetry` (role `grafana_ro`)
+- **SQL Editor** → รันคำสั่งด้านล่าง ต้องได้ 1 แถวคือ `grafana_ro | SELECT`
 
-### 12.8.4 โปรแกรม ESP32-S3 ส่วนที่ 1 (`mcc_monitor.ino`)
+```sql
+select grantee, privilege_type
+from information_schema.table_privileges
+where table_name = 'telemetry' and grantee = 'grafana_ro';
+```
+
+การทดสอบจริงว่า login ได้ คือขั้น **Save & test** ของ data source ในหัวข้อ 12.8.6
+
+### 12.8.5 โปรแกรม ESP32-S3 ส่วนที่ 1 (`mcc_monitor.ino`)
 
 ```cpp
 #include <WiFi.h>
@@ -696,7 +742,7 @@ void loop() {
 
 > **ไม่มีบอร์ดจริง?** ใช้ [Wokwi](https://wokwi.com) เลือกบอร์ด ESP32-S3 แทนได้ AHT25 ไม่มีใน Wokwi จึงต้องใช้ DHT22 แทน โดยเปลี่ยนเฉพาะส่วนอ่านเซนเซอร์เป็น `dht.readTemperature()` / `dht.readHumidity()` และใช้ Wi-Fi `Wokwi-GUEST`
 
-### 12.8.5 เชื่อม Grafana Cloud
+### 12.8.6 เชื่อม Grafana Cloud
 
 1. ใน Supabase คลิก **Connect** ด้านบนของหน้าโปรเจกต์ → เลือก **Session pooler** → **คัดลอก** ค่า host (รูปแบบ `aws-[INDEX]-[REGION].pooler.supabase.com`), port `5432` และ project ref (ส่วนต่อท้ายของ user `postgres.xxxx`)
 
@@ -715,7 +761,7 @@ void loop() {
 
 4. **Save & test** → ต้องขึ้น ✅ *Database Connection OK*
 
-### 12.8.6 สร้าง Panel ของส่วนที่ 1
+### 12.8.7 สร้าง Panel ของส่วนที่ 1
 
 ทุก panel ในหัวข้อนี้ใช้ data source `Supabase` (role `grafana_ro`)
 
@@ -754,7 +800,7 @@ ORDER BY 1;
 
 ตั้ง Auto-refresh ที่มุมขวาบนเป็น **10s** แล้ว **Save dashboard** ชื่อ `MCC Monitor`
 
-### 12.8.7 ตั้งการแจ้งเตือน
+### 12.8.8 ตั้งการแจ้งเตือน
 
 1. **Alerting → Contact points → Add contact point** → Integration **Email** → ใส่อีเมล → **Test** → **Save**
 2. **Alerting → Alert rules → New alert rule** → ชื่อ `MCC overheat` → เลือก data source `Supabase` → Query:
@@ -841,7 +887,7 @@ Index: `events_device_time_idx` บนคอลัมน์ `(device_id, created
 
 **ขั้นตอน**
 
-1. **SQL Editor → New query** → วางคำสั่งด้านล่าง → เปลี่ยน `'mcc01'` ในคำสั่ง `insert` ท้ายสุดเป็น `DEVICE_ID` ของตนเอง และเปลี่ยนรหัสผ่านของ `grafana_ctl` → **Run**
+1. **SQL Editor → New query** → วางคำสั่งด้านล่าง → เปลี่ยน `'mcc01'` ในคำสั่ง `insert` ท้ายสุดเป็น `DEVICE_ID` ของตนเอง → **Run**
 
 ```sql
 -- ===== ส่วนที่ 2: ตาราง controls (สถานะที่สั่ง) =====
@@ -910,29 +956,9 @@ create policy "esp32 update controls" on public.controls
   using (true)
   with check (updated_by = 'button');
 
--- ===== grafana_ro อ่าน events เพิ่ม (State timeline, Annotation) =====
-grant select on public.events to grafana_ro;
-create policy "grafana read events" on public.events
-  for select to grafana_ro using (true);
-
--- ===== grafana_ctl: ฟอร์มสั่งการ อ่าน/แก้ controls ได้อย่างเดียว =====
-create role grafana_ctl with login password 'ChangeMe-Control-2026';
-grant usage on schema public to grafana_ctl;
-grant select on public.controls to grafana_ctl;
-grant update (light, pump, fan, updated_by) on public.controls to grafana_ctl;
-
-create policy "grafana read controls" on public.controls
-  for select to grafana_ctl using (true);
-create policy "grafana update controls" on public.controls
-  for update to grafana_ctl
-  using (true)
-  with check (updated_by = 'dashboard');
-
 -- ===== สร้างแถวเริ่มต้นของอุปกรณ์ (เปลี่ยนเป็น DEVICE_ID ของตนเอง) =====
 insert into public.controls (device_id) values ('mcc01');
 ```
-
-> **ทางเลือก: สร้าง role `grafana_ctl` ผ่านหน้าเว็บ** ทำเหมือนกับ `grafana_ro` ในหัวข้อ 12.8.3 คือ **Database → Roles → Add role** → Name `grafana_ctl` → เปิดเฉพาะ **User can login** → Save แล้วเปลี่ยนบรรทัด `create role grafana_ctl ...` ในชุดคำสั่งด้านบนเป็น `alter role grafana_ctl with password 'ChangeMe-Control-2026';` ก่อน Run
 
 2. **Table Editor** → ตรวจว่ามีตาราง `controls` (1 แถว ค่าเป็น `false` ทั้งหมด) และ `events` (ว่าง) และทั้งสองตารางแสดงสถานะ **RLS enabled**
 3. ทดสอบ trigger ใน SQL Editor: รัน `update controls set fan = true, updated_by = 'dashboard' where device_id = 'mcc01';` แล้วเปิด `events` ต้องเห็น 1 แถว (`fan`, `true`, `dashboard`) จากนั้นรัน `update controls set fan = false where device_id = 'mcc01';` เพื่อคืนค่า
@@ -944,10 +970,90 @@ insert into public.controls (device_id) values ('mcc01');
 | `before update ... for each row` | trigger ทำงานก่อนบันทึกแต่ละแถว จึงแก้ `new.updated_at` ได้ และถ้าคำสั่ง `UPDATE` ถูกปฏิเสธด้วย RLS แถวใน `events` ก็จะถูกยกเลิกไปด้วย เพราะอยู่ใน transaction เดียวกัน |
 | `is distinct from` | เปรียบเทียบค่าเก่ากับค่าใหม่ บันทึกเฉพาะอุปกรณ์ที่เปลี่ยนจริง ฟอร์มของ Grafana ส่งค่าทั้ง 3 อุปกรณ์ทุกครั้ง แต่ `events` จะได้เฉพาะแถวของอุปกรณ์ที่ถูกเปลี่ยน |
 | `security definer` + `set search_path = ''` | ฟังก์ชันทำงานด้วยสิทธิ์ของเจ้าของ (`postgres`) ESP32 และ Grafana จึงไม่ต้องมีสิทธิ์เขียน `events` เอง การกำหนด `search_path` ว่างและเขียนชื่อเต็ม `public.events` ป้องกันการหลอกให้ฟังก์ชันเขียนตารางอื่น |
-| `grant update (light, pump, fan, updated_by)` | สิทธิ์ระดับคอลัมน์ ผู้สั่งแก้ได้เฉพาะสถานะและผู้สั่ง แก้ `device_id` หรือ `updated_at` เองไม่ได้ |
+| `grant update (light, pump, fan, updated_by)` | สิทธิ์ระดับคอลัมน์ ESP32 แก้ได้เฉพาะสถานะและผู้สั่ง แก้ `device_id` หรือ `updated_at` เองไม่ได้ (`grafana_ctl` ในหัวข้อ 12.9.3 ได้สิทธิ์แบบเดียวกัน) |
 | `with check (updated_by = 'button')` | ESP32 ต้องระบุตัวเองว่า `button` เสมอ อ้างเป็น `dashboard` ไม่ได้ ประวัติใน `events` จึงเชื่อถือได้ |
 
-### 12.9.3 โปรแกรม ESP32-S3 ส่วนที่ 2 (`mcc_control.ino`)
+### 12.9.3 ตั้งค่า user `grafana_ctl` และเพิ่มสิทธิ์ `grafana_ro` บน Supabase
+
+ส่วนที่ 2 ต้องตั้งค่า user 2 ราย
+
+- **`grafana_ctl` (user ใหม่):** ใช้กับฟอร์มสั่งการบน Grafana เท่านั้น อ่านและแก้ได้เฉพาะตาราง `controls` (`ctl` = control)
+- **`grafana_ro` (user เดิมจากหัวข้อ 12.8.4):** เพิ่มสิทธิ์อ่านตาราง `events` สำหรับ State timeline, Annotation และ Stat
+
+**user `grafana_ctl`**
+
+| รายการ | ค่า | เหตุผล |
+|:---|:---|:---|
+| Name | `grafana_ctl` | แยกจาก `grafana_ro` เพื่อให้ panel แสดงผลเขียนฐานข้อมูลไม่ได้ |
+| Login | ได้ | Grafana ต้อง login ผ่าน Session Pooler |
+| Password | ตั้งเอง และต้องไม่ซ้ำกับของ `grafana_ro` | ใช้กรอกใน data source `Supabase-Control` (หัวข้อ 12.9.5) |
+| Bypass RLS · Superuser · Create role · Create DB | ปิดทั้งหมด | ให้สิทธิ์เท่าที่จำเป็นเท่านั้น |
+| Username ที่กรอกใน Grafana | `grafana_ctl.<project_ref>` | รูปแบบเดียวกับ `grafana_ro` |
+
+**สิทธิ์ที่ต้องให้**
+
+| User | ตาราง | สิทธิ์ | RLS policy |
+|:---|:---|:---|:---|
+| `grafana_ctl` | `controls` | `SELECT` + `UPDATE` เฉพาะคอลัมน์ `light`, `pump`, `fan`, `updated_by` | อ่านได้ทุกแถว · แก้ได้เมื่อ `updated_by = 'dashboard'` เท่านั้น |
+| `grafana_ro` | `events` | `SELECT` | อ่านได้ทุกแถว |
+
+`grafana_ctl` ไม่มีสิทธิ์ใด ๆ กับ `telemetry` และ `events` เพราะฟอร์มสั่งการไม่ต้องใช้ ส่วนแถวใน `events` ที่เกิดจากการสั่งผ่านแดชบอร์ด trigger เป็นผู้เขียนให้ (หัวข้อ 12.6.4)
+
+**วิธีที่ 1: สร้าง user ผ่านหน้าเว็บ Supabase แล้วให้สิทธิ์ด้วย SQL**
+
+1. **Database → Access Control → Roles → Add role**
+2. **Name** = `grafana_ctl` → เปิดสวิตช์ **User can login** เพียงข้อเดียว → **Save**
+3. **SQL Editor → New query** → เปลี่ยนรหัสผ่านเป็นของตนเอง → **Run**
+
+```sql
+-- ===== grafana_ctl: ฟอร์มสั่งการ อ่าน/แก้ controls ได้อย่างเดียว =====
+alter role grafana_ctl with password 'ChangeMe-Control-2026';
+grant usage on schema public to grafana_ctl;
+grant select on public.controls to grafana_ctl;
+grant update (light, pump, fan, updated_by) on public.controls to grafana_ctl;
+
+create policy "grafana read controls" on public.controls
+  for select to grafana_ctl using (true);
+create policy "grafana update controls" on public.controls
+  for update to grafana_ctl
+  using (true)
+  with check (updated_by = 'dashboard');
+
+-- ===== grafana_ro อ่าน events เพิ่ม (State timeline, Annotation) =====
+grant select on public.events to grafana_ro;
+create policy "grafana read events" on public.events
+  for select to grafana_ro using (true);
+```
+
+**วิธีที่ 2: ใช้ SQL ทั้งหมด**
+
+ใช้ชุดคำสั่งเดียวกับวิธีที่ 1 แต่เปลี่ยนบรรทัด `alter role ...` เป็น
+
+```sql
+create role grafana_ctl with login password 'ChangeMe-Control-2026';
+```
+
+> ⚠️ เช่นเดียวกับหัวข้อ 12.8.4 ให้เลือกใช้วิธีใดวิธีหนึ่งเท่านั้น ถ้ามี user `grafana_ctl` อยู่แล้ว คำสั่ง `create role` จะ error และคำสั่งทั้งชุดจะไม่ถูกบันทึก
+
+**ตรวจสอบ**
+
+- **Database → Access Control → Roles** → หัวข้อ *Other database roles* ต้องมีทั้ง `grafana_ro` และ `grafana_ctl`
+- **Database → Access Control → Policies** → ตาราง `controls` ต้องมี 4 policy (`esp32 read controls`, `esp32 update controls`, `grafana read controls`, `grafana update controls`) และตาราง `events` ต้องมี `grafana read events`
+- **SQL Editor** → รันคำสั่งด้านล่าง ต้องได้ 3 แถวคือ `controls | grafana_ctl | SELECT`, `controls | grafana_ctl | UPDATE` และ `events | grafana_ro | SELECT`
+
+```sql
+select table_name, grantee, privilege_type
+from information_schema.table_privileges
+where grantee in ('grafana_ro', 'grafana_ctl')
+  and table_name in ('controls', 'events')
+union
+select distinct table_name, grantee, privilege_type
+from information_schema.column_privileges
+where grantee = 'grafana_ctl' and table_name = 'controls' and privilege_type = 'UPDATE'
+order by 1, 2, 3;
+```
+
+### 12.9.4 โปรแกรม ESP32-S3 ส่วนที่ 2 (`mcc_control.ino`)
 
 ติดตั้งไลบรารีเพิ่ม: **Library Manager** → **ArduinoJson** (by Benoit Blanchon, เวอร์ชัน 7) โปรแกรมนี้รวมงานของส่วนที่ 1 ไว้ด้วย จึงใช้แทน `mcc_monitor.ino` ได้ทันที
 
@@ -1162,14 +1268,14 @@ void loop() {
 
 > **ใช้ Wokwi:** LED ปุ่มกด และไลบรารี ArduinoJson ใช้ใน Wokwi ได้ตามปกติ ต่อ LED ผ่านตัวต้านทาน 220 Ω ที่ GPIO 10/11/12 ได้เหมือนบอร์ดจริง
 
-### 12.9.4 สร้างฟอร์มสั่งการด้วย Business Forms
+### 12.9.5 สร้างฟอร์มสั่งการด้วย Business Forms
 
 **Business Forms** (plugin id `volkovlabs-form-panel`) เป็น panel plugin ที่ Grafana Labs ดูแล ใช้สร้างฟอร์มที่อ่านค่าจาก data source แล้วส่งค่าที่แก้ไขกลับไปเขียน data source ได้ ([Grafana Docs: Business Forms](https://grafana.com/docs/plugins/volkovlabs-form-panel/latest/)) ขั้นตอนด้านล่างอ้างอิงเวอร์ชัน 6.x ชื่อเมนูอาจต่างเล็กน้อยในเวอร์ชันอื่น
 
 **ก. ติดตั้ง plugin และเพิ่ม data source สำหรับสั่งการ**
 
 1. **Administration → Plugins and data → Plugins** → ค้นหา **Business Forms** → **Install** (ต้องเป็นผู้ดูแล Stack ซึ่งเจ้าของ Stack เป็นอยู่แล้ว)
-2. **Connections → Data sources → Add data source → PostgreSQL** → ตั้งชื่อ `Supabase-Control` → กรอกค่าเหมือนหัวข้อ 12.8.5 ยกเว้น **Username** = `grafana_ctl.xxxx` และ **Password** = รหัสผ่านของ `grafana_ctl` → **Save & test**
+2. **Connections → Data sources → Add data source → PostgreSQL** → ตั้งชื่อ `Supabase-Control` → กรอกค่าเหมือนหัวข้อ 12.8.6 ยกเว้น **Username** = `grafana_ctl.xxxx` และ **Password** = รหัสผ่านของ `grafana_ctl` → **Save & test**
 
 > data source `Supabase` (`grafana_ro`) ใช้กับ panel แสดงผลทั้งหมด ส่วน `Supabase-Control` (`grafana_ctl`) ใช้กับฟอร์มสั่งการเท่านั้น ถ้าเลือกผิดเป็น `Supabase` ฟอร์มจะขึ้น *permission denied for table controls*
 
@@ -1233,7 +1339,7 @@ RETURNING light, pump, fan;
 
 **ลำดับเหตุการณ์เมื่อกด "ส่งคำสั่ง":** Grafana ส่ง `UPDATE` ด้วย role `grafana_ctl` → RLS ตรวจว่า `updated_by = 'dashboard'` → trigger บันทึก `events` ของอุปกรณ์ที่เปลี่ยน → ภายในราว 2 วินาที ESP32 `GET` ได้ค่าใหม่แล้วขับ LED → แดชบอร์ด refresh แล้ว State timeline แสดงช่วงเวลาใหม่
 
-### 12.9.5 Panel ประวัติการสั่ง (State timeline, Annotation, Stat)
+### 12.9.6 Panel ประวัติการสั่ง (State timeline, Annotation, Stat)
 
 panel ในหัวข้อนี้อ่าน `events` จึงใช้ data source `Supabase` (`grafana_ro`)
 
@@ -1358,16 +1464,16 @@ WHERE device_id = '$device' AND event = 'fan' AND state = true
 | ติดตั้ง ESP32 core และ Adafruit AHTX0 สำเร็จ | ________ |
 | ชื่อ Wi-Fi ที่ใช้ และย่านความถี่ | ________ |
 
-### ขั้นที่ 1.2: สร้างตาราง `telemetry` บน Supabase (20 นาที)
+### ขั้นที่ 1.2: สร้างตาราง `telemetry` และ user `grafana_ro` บน Supabase (20 นาที)
 
 #### ขั้นตอนปฏิบัติ
 
 1. สมัครที่ [supabase.com](https://supabase.com) → **New project** → ชื่อ `mcc-monitor` → ตั้ง Database Password → Region **Southeast Asia (Singapore)**
-2. **SQL Editor → New query** → วางชุดคำสั่ง SQL ส่วนที่ 1 จาก **หัวข้อ 12.8.3** → เปลี่ยนรหัสผ่านของ `grafana_ro` เป็นของตนเอง → **Run** ชุดคำสั่งนี้สร้าง
+2. **SQL Editor → New query** → วางชุดคำสั่ง SQL ส่วนที่ 1 จาก **หัวข้อ 12.8.3** → **Run** ชุดคำสั่งนี้สร้าง
    - ตาราง `telemetry` พร้อม index
    - policy ให้ `anon` (ESP32) **INSERT ได้อย่างเดียว** และตรวจช่วงค่า `temp` / `hum`
-   - role `grafana_ro` ที่ **SELECT ได้อย่างเดียว**
-3. **Integrations → Data API → Overview** → คัดลอก **Project URL** และ **Project Settings → API Keys** → คัดลอก **Publishable key** (`sb_publishable_...`)
+3. สร้าง user `grafana_ro` ที่ **SELECT ได้อย่างเดียว** ตาม **หัวข้อ 12.8.4** (วิธีที่ 1 ผ่านหน้าเว็บ หรือวิธีที่ 2 ด้วย SQL) โดยตั้งรหัสผ่านเป็นของตนเอง
+4. **Integrations → Data API → Overview** → คัดลอก **Project URL** และ **Project Settings → API Keys** → คัดลอก **Publishable key** (`sb_publishable_...`)
 
 #### ตารางบันทึกผล — ขั้นที่ 1.2
 
@@ -1375,6 +1481,7 @@ WHERE device_id = '$device' AND event = 'fan' AND state = true
 |:---|:---|
 | เห็นตาราง `telemetry` ใน Table Editor | ________ |
 | RLS ของตาราง `telemetry` แสดงสถานะ Enabled | ________ |
+| วิธีที่ใช้สร้าง `grafana_ro` (หน้าเว็บ / SQL) และผลคำสั่งตรวจสิทธิ์ | ________ |
 | Project URL ของฉัน | ________ |
 
 ### ขั้นที่ 1.3: โปรแกรม ESP32-S3 ส่งค่าเซนเซอร์ (25 นาที)
@@ -1386,7 +1493,7 @@ WHERE device_id = '$device' AND event = 'fan' AND state = true
 
 #### ขั้นตอนปฏิบัติ
 
-1. สร้าง sketch ใหม่ชื่อ `mcc_monitor` → คัดลอกโค้ดจาก **หัวข้อ 12.8.4**
+1. สร้าง sketch ใหม่ชื่อ `mcc_monitor` → คัดลอกโค้ดจาก **หัวข้อ 12.8.5**
 2. แก้ค่า `WIFI_SSID`, `WIFI_PASS`, `SUPABASE_URL` (ต้องลงท้ายด้วย `/rest/v1/`) และ `SUPABASE_KEY`
 3. เปลี่ยน `DEVICE_ID` เป็น `mcc-` ตามด้วยรหัสนักศึกษา 4 ตัวท้าย เช่น `mcc-1234`
 4. อัปโหลด → เปิด Serial Monitor ที่ **115200** ต้องเห็น `WiFi OK` แล้วตามด้วย `POST telemetry ... -> 201` ทุก 5 วินาที
@@ -1405,8 +1512,8 @@ WHERE device_id = '$device' AND event = 'fan' AND state = true
 #### ขั้นตอนปฏิบัติ
 
 1. Supabase → **Connect** → **Session pooler** → จด host, port และ project ref
-2. สมัคร [grafana.com](https://grafana.com) แผน **Free** → **Connections → Data sources → PostgreSQL** → ตั้งชื่อ `Supabase` → กรอกค่าตาม **หัวข้อ 12.8.5** (Username = `grafana_ro.<project_ref>`, TLS/SSL Mode = `require`) → **Save & test**
-3. สร้างแดชบอร์ดใหม่ → เพิ่มตัวแปร `device` → สร้าง panel ตาม query ใน **หัวข้อ 12.8.6** โดยจัด Layout ดังนี้ (เว้นที่ว่างสำหรับ panel ของส่วนที่ 2)
+2. สมัคร [grafana.com](https://grafana.com) แผน **Free** → **Connections → Data sources → PostgreSQL** → ตั้งชื่อ `Supabase` → กรอกค่าตาม **หัวข้อ 12.8.6** (Username = `grafana_ro.<project_ref>`, TLS/SSL Mode = `require`) → **Save & test**
+3. สร้างแดชบอร์ดใหม่ → เพิ่มตัวแปร `device` → สร้าง panel ตาม query ใน **หัวข้อ 12.8.7** โดยจัด Layout ดังนี้ (เว้นที่ว่างสำหรับ panel ของส่วนที่ 2)
 
 | แถว | Panel |
 |:---|:---|
@@ -1429,7 +1536,7 @@ WHERE device_id = '$device' AND event = 'fan' AND state = true
 #### ขั้นตอนปฏิบัติ
 
 1. **Alerting → Contact points** → เพิ่ม Email ของตนเอง → **Test**
-2. **Alerting → Alert rules → New alert rule** → ใช้ query ใน **หัวข้อ 12.8.7** (เปลี่ยน `'mcc01'` เป็น `DEVICE_ID` ของตนเอง)
+2. **Alerting → Alert rules → New alert rule** → ใช้ query ใน **หัวข้อ 12.8.8** (เปลี่ยน `'mcc01'` เป็น `DEVICE_ID` ของตนเอง)
 3. **Reduce** = `Last` → **Threshold** `IS ABOVE 35` → Evaluation ทุก `1m`, Pending period `2m` → **Save rule**
 4. ทดสอบ: เปลี่ยน Threshold เป็นค่าที่สูงกว่าอุณหภูมิห้องเล็กน้อย เช่น `32` แล้วใช้นิ้วจับหรือเป่าลมอุ่นใส่ AHT25 ต่อเนื่อง
 
@@ -1447,7 +1554,7 @@ WHERE device_id = '$device' AND event = 'fan' AND state = true
 
 > เริ่มส่วนที่ 2 ได้เมื่อแดชบอร์ดของส่วนที่ 1 แสดงข้อมูลได้แล้วเท่านั้น
 
-### ขั้นที่ 2.1: ต่อ LED + ปุ่ม และสร้างตาราง `controls` (25 นาที)
+### ขั้นที่ 2.1: ต่อ LED + ปุ่ม สร้างตาราง `controls` และ user `grafana_ctl` (25 นาที)
 
 #### ความรู้เบื้องต้น
 
@@ -1463,8 +1570,9 @@ WHERE device_id = '$device' AND event = 'fan' AND state = true
 | LED `light` / `pump` / `fan` (ขายาวผ่าน R 220 Ω, ขาสั้นต่อ GND) | GPIO 10 / 11 / 12 |
 
 1. ต่อวงจรเพิ่มตามตาราง โดยไม่ต้องถอด AHT25
-2. **SQL Editor → New query** → วางชุดคำสั่ง SQL ส่วนที่ 2 จาก **หัวข้อ 12.9.2** → เปลี่ยน `'mcc01'` ในคำสั่ง `insert` เป็น `DEVICE_ID` ของตนเอง และเปลี่ยนรหัสผ่านของ `grafana_ctl` → **Run**
+2. **SQL Editor → New query** → วางชุดคำสั่ง SQL ส่วนที่ 2 จาก **หัวข้อ 12.9.2** → เปลี่ยน `'mcc01'` ในคำสั่ง `insert` เป็น `DEVICE_ID` ของตนเอง → **Run**
 3. ทดสอบ trigger ด้วยคำสั่ง `update` ในข้อ 3 ของหัวข้อ 12.9.2 แล้วตรวจตาราง `events`
+4. สร้าง user `grafana_ctl` และเพิ่มสิทธิ์อ่าน `events` ให้ `grafana_ro` ตาม **หัวข้อ 12.9.3** โดยตั้งรหัสผ่านเป็นของตนเอง
 
 #### ตารางบันทึกผล — ขั้นที่ 2.1
 
@@ -1473,6 +1581,7 @@ WHERE device_id = '$device' AND event = 'fan' AND state = true
 | ตาราง `controls` มี 1 แถวของ `DEVICE_ID` ของฉัน | ________ |
 | RLS ของ `controls` และ `events` แสดงสถานะ Enabled | ________ |
 | หลังทดสอบ `update` ตาราง `events` มีกี่แถว และค่า `source` คือ | ________ |
+| ผลคำสั่งตรวจสิทธิ์ในหัวข้อ 12.9.3 ได้กี่แถว | ________ |
 
 ### ขั้นที่ 2.2: โปรแกรม ESP32-S3 รับคำสั่งและปุ่มหน้าตู้ (25 นาที)
 
@@ -1484,7 +1593,7 @@ WHERE device_id = '$device' AND event = 'fan' AND state = true
 #### ขั้นตอนปฏิบัติ
 
 1. **Library Manager** → ติดตั้ง **ArduinoJson** (by Benoit Blanchon, v7)
-2. สร้าง sketch ใหม่ชื่อ `mcc_control` → คัดลอกโค้ดจาก **หัวข้อ 12.9.3** → ใส่ค่า Wi-Fi, URL, key และ `DEVICE_ID` เดิมจากขั้นที่ 1.3
+2. สร้าง sketch ใหม่ชื่อ `mcc_control` → คัดลอกโค้ดจาก **หัวข้อ 12.9.4** → ใส่ค่า Wi-Fi, URL, key และ `DEVICE_ID` เดิมจากขั้นที่ 1.3
 3. อัปโหลด → Serial Monitor ต้องเห็น `POST telemetry ... -> 201` ทุก 5 วินาทีเหมือนเดิม และไม่มีข้อความ `controls: no row ...`
 4. กดปุ่มแต่ละปุ่ม 1 ครั้ง → LED ต้องติดทันที และเห็น `PATCH controls ... -> 204` **ครั้งเดียวต่อการกด**
 5. SQL Editor → รัน `update controls set pump = true, updated_by = 'dashboard' where device_id = '<DEVICE_ID>';` → ภายในไม่กี่วินาทีต้องเห็น `CMD pump -> ON` และ LED ปั๊มติด
@@ -1504,9 +1613,9 @@ WHERE device_id = '$device' AND event = 'fan' AND state = true
 
 #### ขั้นตอนปฏิบัติ
 
-1. ติดตั้ง plugin **Business Forms** และเพิ่ม data source `Supabase-Control` (Username = `grafana_ctl.<project_ref>`) ตาม **หัวข้อ 12.9.4 ก**
-2. สร้าง panel `สั่งการอุปกรณ์` ตาม **หัวข้อ 12.9.4 ข** (element 3 ตัว, Initial Action = Query, Update Action = Data Source, Confirmation Window = Enabled)
-3. สร้าง State timeline, Annotation และ Stat เปิดพัดลมวันนี้ ตาม **หัวข้อ 12.9.5** แล้วจัด Layout ให้ครบ
+1. ติดตั้ง plugin **Business Forms** และเพิ่ม data source `Supabase-Control` (Username = `grafana_ctl.<project_ref>`) ตาม **หัวข้อ 12.9.5 ก**
+2. สร้าง panel `สั่งการอุปกรณ์` ตาม **หัวข้อ 12.9.5 ข** (element 3 ตัว, Initial Action = Query, Update Action = Data Source, Confirmation Window = Enabled)
+3. สร้าง State timeline, Annotation และ Stat เปิดพัดลมวันนี้ ตาม **หัวข้อ 12.9.6** แล้วจัด Layout ให้ครบ
 
 | แถว | Panel |
 |:---|:---|

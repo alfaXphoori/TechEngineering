@@ -74,8 +74,8 @@ assignments:
     due: ก่อนคาบสัปดาห์ที่ 14
     form: "#"
   - n: 14
-    topic: ฐานข้อมูลคลาวด์และแดชบอร์ด (Supabase + Grafana)
-    work: ใบงานที่ 14 — ระบบติดตามตู้ควบคุมด้วย Supabase + Grafana
+    topic: แพลตฟอร์ม IoT คลาวด์และแดชบอร์ด (Arduino Cloud)
+    work: ใบงานที่ 14 — ระบบติดตามและสั่งการตู้ควบคุมด้วย Arduino Cloud
     due: ก่อนคาบสัปดาห์ที่ 15
     form: "#"
   - n: 15

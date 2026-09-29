@@ -1,12 +1,12 @@
 ---
 layout: default
-title: "บทที่ 12: ระบบ IoT สู่ฐานข้อมูลคลาวด์และแดชบอร์ด"
+title: "บทที่ 12: ระบบ IoT สู่คลาวด์และแดชบอร์ด"
 permalink: /chapters/ch12-hmi-visualization/
 ---
 
-# Chapter 12: ระบบ IoT สู่ฐานข้อมูลคลาวด์และแดชบอร์ด
+# Chapter 12: ระบบ IoT สู่คลาวด์และแดชบอร์ด
 
-## Cloud Database, Web Dashboard & Remote Control (ESP32-S3, AHT25, Supabase/PostgreSQL, Vercel)
+## IoT Cloud Platform, Dashboard & Remote Control (ESP32-S3, AHT25, Arduino Cloud)
 
 ---
 
@@ -23,12 +23,11 @@ permalink: /chapters/ch12-hmi-visualization/
 >   - **CLO3:** ออกแบบและพัฒนาระบบ IoT ที่เชื่อมต่อเซนเซอร์/ตัวกระทำ สื่อสารข้อมูล และแสดงผลผ่านโปรแกรมของผู้ใช้ได้
 >   - **CLO4:** ปฏิบัติการสร้าง ทดสอบ และประยุกต์ใช้ระบบ IoT พร้อมการเรียนรู้ของเครื่องเบื้องต้น และทำงานเป็นทีมอย่างรับผิดชอบ
 > - **ผลลัพธ์การเรียนรู้ระดับบทเรียน (LLOs):**
->   - **LLO14.1:** ออกแบบและพัฒนาระบบ IoT ที่ส่งข้อมูลเซนเซอร์และเหตุการณ์จากผู้ใช้ไปจัดเก็บในฐานข้อมูลคลาวด์ (Supabase/PostgreSQL) พร้อมกำหนดสิทธิ์อย่างปลอดภัยได้ (CLO3)
->   - **LLO14.2:** ใช้เว็บแดชบอร์ดบน Vercel แสดงผล แจ้งเตือน และสั่งการอุปกรณ์กลับไปยัง ESP32 ตามหลักการออกแบบแดชบอร์ดที่ดีได้ (CLO3, CLO4)
+>   - **LLO14.1:** ออกแบบและพัฒนาระบบ IoT ที่ส่งข้อมูลเซนเซอร์และรับคำสั่งจากผู้ใช้ผ่านแพลตฟอร์มคลาวด์ (Arduino Cloud) โดยกำหนดตัวแปร สิทธิ์ และการยืนยันตัวตนของอุปกรณ์อย่างถูกต้องได้ (CLO3)
+>   - **LLO14.2:** สร้างแดชบอร์ดแสดงผล แจ้งเตือน และสั่งการอุปกรณ์กลับไปยัง ESP32 ตามหลักการออกแบบแดชบอร์ดที่ดีได้ (CLO3, CLO4)
 >
 > **ฮาร์ดแวร์:** ESP32-S3 DevKit · เซนเซอร์อุณหภูมิ/ความชื้น AHT25 · ปุ่มกด 3 ปุ่ม · LED 3 ดวง + ตัวต้านทาน 220 Ω  
-> **ซอฟต์แวร์ (ฟรีทั้งหมด):** Arduino IDE (ESP32 core) · Supabase Free Plan · เว็บแดชบอร์ด Next.js บน Vercel (ลิงก์จากผู้สอน นักศึกษาไม่ต้องสมัคร Vercel)  
-> **Lab 15 (ทางเลือกเปรียบเทียบ):** สร้างระบบเดียวกันบน [Arduino Cloud](https://cloud.arduino.cc/) Free Plan ด้วยฮาร์ดแวร์ชุดเดิม
+> **ซอฟต์แวร์ (ฟรีทั้งหมด):** Arduino IDE (ESP32 core + ไลบรารี ArduinoIoTCloud) · [Arduino Cloud](https://cloud.arduino.cc/) Free Plan · แอป Arduino IoT Remote บนมือถือ (ไม่บังคับ)
 
 ---
 
@@ -37,149 +36,124 @@ permalink: /chapters/ch12-hmi-visualization/
 ## 12.1 ภาพรวมระบบ: ตู้ควบคุมมอเตอร์ปั๊ม
 
 ในโรงงาน มอเตอร์ปั๊มถูกควบคุมจาก **ตู้ควบคุมมอเตอร์ (Motor Control Cabinet)** ซึ่งภายในมีอินเวอร์เตอร์ คอนแทคเตอร์ และรีเลย์ ถ้าอุณหภูมิในตู้สูงเกินไป อุปกรณ์อิเล็กทรอนิกส์จะเสื่อมเร็วขึ้น และถ้าความชื้นสูงจนเกิดหยดน้ำเกาะ (Condensation) ก็อาจทำให้ไฟฟ้าลัดวงจรได้ ช่างซ่อมบำรุงจึงต้องการระบบที่
-1. **ติดตามอุณหภูมิและความชื้นในตู้** ตลอด 24 ชั่วโมง ดูแนวโน้มย้อนหลังได้ และ **แจ้งเตือนอัตโนมัติ** เมื่ออุณหภูมิเกินเกณฑ์
-2. **สั่งเปิด/ปิดอุปกรณ์จากระยะไกล** ได้แก่ ไฟส่องสว่างในตู้ (`light`) ปั๊ม (`pump`) และพัดลมระบายอากาศ (`fan`) ผ่านแดชบอร์ด โดยยังมีปุ่มหน้าตู้ให้ช่างสั่งเองได้ และทุกการสั่งจะถูกบันทึกไว้เทียบกับข้อมูลเซนเซอร์ เช่น เปิดพัดลมแล้วอุณหภูมิในตู้ลดลงเท่าใด
+1. **ติดตามอุณหภูมิและความชื้นในตู้** ตลอด 24 ชั่วโมง ดูแนวโน้มย้อนหลังได้ และ **แจ้งเตือน** เมื่ออุณหภูมิเกินเกณฑ์
+2. **สั่งเปิด/ปิดอุปกรณ์จากระยะไกล** ได้แก่ ไฟส่องสว่างในตู้ (`light`) ปั๊ม (`pump`) และพัดลมระบายอากาศ (`fan`) ผ่านแดชบอร์ดบนคอมพิวเตอร์หรือมือถือ โดยยังมีปุ่มหน้าตู้ให้ช่างสั่งเองได้ และแดชบอร์ดต้องแสดงสถานะที่ตรงกับหน้าตู้เสมอ
 
 ข้อกำหนดทั้งสองข้อมีทิศทางของข้อมูลตรงข้ามกัน บทนี้จึงแบ่งการสร้างระบบเป็น **2 ส่วน**
 
 | ส่วน | ทิศทางข้อมูล | สิ่งที่สร้าง |
 |:---|:---|:---|
-| **ส่วนที่ 1: ติดตาม (Monitoring)** | เซนเซอร์ → ESP32-S3 → Supabase → แดชบอร์ดบน Vercel | ส่งค่า AHT25 ขึ้น Supabase แล้วแสดงผลและแจ้งเตือนบนเว็บแดชบอร์ด |
-| **ส่วนที่ 2: สั่งการ (Control)** | แดชบอร์ดบน Vercel → Supabase → ESP32-S3 → อุปกรณ์ | สั่ง LED แทนไฟ ปั๊ม และพัดลม จากปุ่มบนแดชบอร์ด (ใช้บนมือถือได้) และจากปุ่มหน้าตู้ |
+| **ส่วนที่ 1: ติดตาม (Monitoring)** | เซนเซอร์ → ESP32-S3 → Arduino Cloud → แดชบอร์ด | ส่งค่า AHT25 ขึ้น Arduino Cloud แล้วแสดงผลด้วย Gauge และ Chart พร้อมสถานะแจ้งเตือน |
+| **ส่วนที่ 2: สั่งการ (Control)** | แดชบอร์ด ↔ Arduino Cloud ↔ ESP32-S3 → อุปกรณ์ | สั่ง LED แทนไฟ ปั๊ม และพัดลม จาก Switch บนแดชบอร์ด และจากปุ่มหน้าตู้ โดยทั้งสองทางซิงก์กัน |
 
-ทั้งหมดสร้างด้วยเครื่องมือฟรี ตามสถาปัตยกรรมด้านล่าง
+ทั้งหมดสร้างบน **Arduino Cloud** ซึ่งเป็น **แพลตฟอร์ม IoT สำเร็จรูป (IoT Platform)** ที่รวมการยืนยันตัวตนของอุปกรณ์ การสื่อสาร การเก็บข้อมูล และแดชบอร์ดไว้ในที่เดียว ตามสถาปัตยกรรมด้านล่าง
 
 <div style="text-align: center; margin: 20px 0;">
-<svg viewBox="0 0 900 425" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif" role="img" aria-label="ส่วนที่ 1: ESP32-S3 ส่งค่า AHT25 ผ่าน HTTPS POST ไปยัง REST API ของ Supabase ลงตาราง telemetry เบราว์เซอร์ของช่างโหลดหน้าแดชบอร์ดจาก Vercel แล้ว login กับ Supabase Auth และอ่านข้อมูลจาก REST API โดยตรง ส่วนที่ 2: ช่างกดสวิตช์บนแดชบอร์ดซึ่งแก้ตาราง controls ESP32-S3 อ่านตาราง controls ทุก 2 วินาทีแล้วขับ LED ส่วนปุ่มหน้าตู้แก้ตาราง controls ด้วย PATCH และ trigger บันทึกทุกการเปลี่ยนแปลงลงตาราง events">
-  <title>สถาปัตยกรรมระบบ: ESP32-S3 → Supabase → เว็บแดชบอร์ดบน Vercel และเส้นทางสั่งการกลับ</title>
+<svg viewBox="0 0 900 400" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif" role="img" aria-label="ESP32-S3 เชื่อมต่อ Arduino Cloud ด้วย MQTT over TLS ค้างไว้ตลอด ส่งค่า temp และ hum ขึ้นไปทุก 5 วินาที ส่วนตัวแปร light pump fan ซิงก์สองทาง ช่างเปิด Dashboard ผ่านเบราว์เซอร์หรือแอป IoT Remote บนมือถือ เมื่อกด Switch คลาวด์จะ push ค่าใหม่ลงมาที่ ESP32 ทันที">
+  <title>สถาปัตยกรรมระบบ: ESP32-S3 ↔ Arduino Cloud (Device, Thing, Dashboard) ↔ เบราว์เซอร์และแอปมือถือ</title>
   <style>
-    .c12-bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1; }
-    .c12-box { fill: #ffffff; stroke: #475569; stroke-width: 2; }
-    .c12-esp { fill: #faf5ff; stroke: #7c3aed; stroke-width: 2.5; }
-    .c12-db { fill: #ecfdf5; stroke: #059669; stroke-width: 2.5; }
-    .c12-tb { fill: #ffffff; stroke: #059669; stroke-width: 1.5; }
-    .c12-tk { fill: #ffffff; stroke: #db2777; stroke-width: 2; }
-    .c12-vc { fill: #f1f5f9; stroke: #0f172a; stroke-width: 2.5; }
-    .c12-web { fill: #fff7ed; stroke: #ea580c; stroke-width: 2.5; }
-    .c12-cloud { fill: #f0fdf4; stroke: #059669; stroke-width: 1.5; stroke-dasharray: 6 5; }
-    .c12-w { fill: none; stroke: #059669; stroke-width: 4; stroke-dasharray: 8 10; stroke-linecap: round; animation: c12-flow 1.6s linear infinite; }
-    .c12-r { fill: none; stroke: #2f5597; stroke-width: 4; stroke-dasharray: 8 10; stroke-linecap: round; animation: c12-flow 1.6s linear infinite; }
-    .c12-k { fill: none; stroke: #db2777; stroke-width: 4; stroke-dasharray: 8 10; stroke-linecap: round; animation: c12-flow 1.6s linear infinite; }
-    .c12-g { fill: none; stroke: #64748b; stroke-width: 3; stroke-dasharray: 6 8; stroke-linecap: round; animation: c12-flow 1.6s linear infinite; }
-    .c12-t { font-size: 14px; font-weight: 700; fill: #1e293b; }
-    .c12-l { font-size: 12px; fill: #64748b; font-weight: 500; }
-    .c12-c { font-size: 11px; font-family: monospace; font-weight: 700; fill: #475569; }
-    .c12-cw { font-size: 11px; font-family: monospace; font-weight: 700; fill: #059669; }
-    .c12-cr { font-size: 11px; font-family: monospace; font-weight: 700; fill: #2f5597; }
-    .c12-ck { font-size: 11px; font-family: monospace; font-weight: 700; fill: #db2777; }
-    @keyframes c12-flow { to { stroke-dashoffset: -36; } }
-    @media (prefers-reduced-motion: reduce) { .c12-w, .c12-r, .c12-k, .c12-g { animation: none; } }
+    .a12-bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1; }
+    .a12-box { fill: #ffffff; stroke: #475569; stroke-width: 2; }
+    .a12-esp { fill: #faf5ff; stroke: #7c3aed; stroke-width: 2.5; }
+    .a12-cloud { fill: #ecfeff; stroke: #0e7490; stroke-width: 1.5; stroke-dasharray: 6 5; }
+    .a12-thing { fill: #ffffff; stroke: #0e7490; stroke-width: 2.5; }
+    .a12-ro { fill: #ecfdf5; stroke: #059669; stroke-width: 1.5; }
+    .a12-rw { fill: #fdf2f8; stroke: #db2777; stroke-width: 1.5; }
+    .a12-web { fill: #fff7ed; stroke: #ea580c; stroke-width: 2.5; }
+    .a12-w { fill: none; stroke: #059669; stroke-width: 4; stroke-dasharray: 8 10; stroke-linecap: round; animation: a12-flow 1.6s linear infinite; }
+    .a12-k { fill: none; stroke: #db2777; stroke-width: 4; stroke-dasharray: 8 10; stroke-linecap: round; animation: a12-flow 1.6s linear infinite; }
+    .a12-r { fill: none; stroke: #2f5597; stroke-width: 4; stroke-dasharray: 8 10; stroke-linecap: round; animation: a12-flow 1.6s linear infinite; }
+    .a12-t { font-size: 14px; font-weight: 700; fill: #1e293b; }
+    .a12-l { font-size: 12px; fill: #64748b; font-weight: 500; }
+    .a12-c { font-size: 11px; font-family: monospace; font-weight: 700; fill: #475569; }
+    .a12-cw { font-size: 11px; font-family: monospace; font-weight: 700; fill: #059669; }
+    .a12-ck { font-size: 11px; font-family: monospace; font-weight: 700; fill: #db2777; }
+    .a12-cr { font-size: 11px; font-family: monospace; font-weight: 700; fill: #2f5597; }
+    .a12-cc { font-size: 11px; font-family: monospace; font-weight: 700; fill: #0e7490; }
+    @keyframes a12-flow { to { stroke-dashoffset: -36; } }
+    @media (prefers-reduced-motion: reduce) { .a12-w, .a12-k, .a12-r { animation: none; } }
   </style>
-  <rect x="5" y="5" width="890" height="415" rx="10" class="c12-bg"/>
-  <!-- Supabase container -->
-  <rect x="230" y="30" width="330" height="345" rx="12" class="c12-cloud"/>
-  <text x="246" y="52" class="c12-cw">SUPABASE</text>
+  <rect x="5" y="5" width="890" height="390" rx="10" class="a12-bg"/>
+  <!-- Arduino Cloud container (drawn first so labels stay on top) -->
+  <rect x="250" y="30" width="370" height="310" rx="12" class="a12-cloud"/>
+  <text x="266" y="52" class="a12-cc">ARDUINO CLOUD</text>
   <!-- ESP32-S3 -->
-  <rect x="20" y="60" width="160" height="250" rx="8" class="c12-esp"/>
-  <text x="100" y="88" text-anchor="middle" class="c12-t">ESP32-S3</text>
-  <text x="100" y="116" text-anchor="middle" class="c12-l">AHT25 (I2C)</text>
-  <text x="100" y="134" text-anchor="middle" class="c12-c">temp, hum</text>
-  <text x="100" y="166" text-anchor="middle" class="c12-l">ปุ่มหน้าตู้ 3 ปุ่ม</text>
-  <text x="100" y="184" text-anchor="middle" class="c12-c">GPIO 4/5/6</text>
-  <text x="100" y="216" text-anchor="middle" class="c12-l">LED 3 ดวง</text>
-  <text x="100" y="234" text-anchor="middle" class="c12-c">GPIO 10/11/12</text>
-  <text x="100" y="256" text-anchor="middle" class="c12-c">light/pump/fan</text>
-  <text x="100" y="292" text-anchor="middle" class="c12-c">role: anon</text>
-  <!-- ESP32 ↔ REST -->
-  <path d="M 180 95 L 246 95" class="c12-w"/>
-  <polygon points="246,90 256,95 246,100" fill="#059669"/>
-  <text x="218" y="85" text-anchor="middle" class="c12-cw">POST</text>
-  <text x="218" y="114" text-anchor="middle" class="c12-c">HTTPS</text>
-  <path d="M 256 140 L 190 140" class="c12-k"/>
-  <polygon points="190,135 180,140 190,145" fill="#db2777"/>
-  <text x="218" y="132" text-anchor="middle" class="c12-ck">GET 2s</text>
-  <path d="M 180 160 L 246 160" class="c12-k"/>
-  <polygon points="246,155 256,160 246,165" fill="#db2777"/>
-  <text x="218" y="178" text-anchor="middle" class="c12-ck">PATCH</text>
-  <rect x="256" y="70" width="170" height="100" rx="8" class="c12-box"/>
-  <text x="341" y="102" text-anchor="middle" class="c12-t">REST API</text>
-  <text x="341" y="124" text-anchor="middle" class="c12-c">Publishable key</text>
-  <text x="341" y="142" text-anchor="middle" class="c12-c">+ RLS</text>
-  <rect x="440" y="70" width="104" height="100" rx="8" class="c12-box"/>
-  <text x="492" y="102" text-anchor="middle" class="c12-t">Auth</text>
-  <text x="492" y="124" text-anchor="middle" class="c12-c">email+pass</text>
-  <text x="492" y="142" text-anchor="middle" class="c12-c">→ JWT</text>
-  <!-- PostgreSQL -->
-  <rect x="256" y="215" width="288" height="145" rx="8" class="c12-db"/>
-  <text x="484" y="233" text-anchor="middle" class="c12-c">PostgreSQL + RLS</text>
-  <rect x="264" y="245" width="86" height="55" rx="6" class="c12-tb"/>
-  <text x="307" y="268" text-anchor="middle" class="c12-t">telemetry</text>
-  <text x="307" y="288" text-anchor="middle" class="c12-l">ทุก 5 วินาที</text>
-  <rect x="357" y="245" width="86" height="55" rx="6" class="c12-tk"/>
-  <text x="400" y="268" text-anchor="middle" class="c12-t">controls</text>
-  <text x="400" y="288" text-anchor="middle" class="c12-l">สถานะที่สั่ง</text>
-  <rect x="450" y="245" width="86" height="55" rx="6" class="c12-tb"/>
-  <text x="493" y="268" text-anchor="middle" class="c12-t">events</text>
-  <text x="493" y="288" text-anchor="middle" class="c12-l">ประวัติการสั่ง</text>
-  <!-- trigger: controls → events -->
-  <path d="M 414 300 L 414 324 L 486 324 L 486 310" fill="none" stroke="#db2777" stroke-width="2"/>
-  <polygon points="481,310 486,301 491,310" fill="#db2777"/>
-  <text x="450" y="344" text-anchor="middle" class="c12-ck">trigger</text>
-  <!-- REST ↔ DB -->
-  <path d="M 290 170 L 290 237" class="c12-w"/>
-  <polygon points="285,237 290,245 295,237" fill="#059669"/>
-  <text x="285" y="200" text-anchor="end" class="c12-cw">INSERT</text>
-  <path d="M 330 245 L 330 178" class="c12-r"/>
-  <polygon points="325,178 330,170 335,178" fill="#2f5597"/>
-  <text x="336" y="200" class="c12-cr">SELECT</text>
-  <path d="M 400 170 L 400 237" class="c12-k"/>
-  <polygon points="395,178 400,170 405,178" fill="#db2777"/>
-  <polygon points="395,237 400,245 405,237" fill="#db2777"/>
-  <!-- Vercel -->
-  <rect x="610" y="40" width="150" height="80" rx="8" class="c12-vc"/>
-  <text x="685" y="70" text-anchor="middle" class="c12-t">▲ Vercel</text>
-  <text x="685" y="92" text-anchor="middle" class="c12-c">Next.js</text>
-  <text x="685" y="108" text-anchor="middle" class="c12-l">ไฟล์หน้าเว็บ</text>
-  <path d="M 685 120 L 685 160" class="c12-g"/>
-  <polygon points="680,160 685,170 690,160" fill="#64748b"/>
-  <text x="693" y="148" class="c12-c">HTML/JS</text>
-  <!-- Browser dashboard -->
-  <rect x="610" y="170" width="275" height="190" rx="8" class="c12-web"/>
-  <text x="747" y="192" text-anchor="middle" class="c12-t">แดชบอร์ดบนเบราว์เซอร์</text>
-  <rect x="624" y="202" width="247" height="16" rx="4" fill="#fee2e2"/>
-  <text x="747" y="214" text-anchor="middle" class="c12-c" style="fill:#991b1b">temp &gt; 35 °C</text>
-  <path d="M 632 262 A 22 22 0 0 1 676 262" fill="none" stroke="#e2e8f0" stroke-width="7"/>
-  <path d="M 632 262 A 22 22 0 0 1 668 247" fill="none" stroke="#dc2626" stroke-width="7"/>
-  <path d="M 690 262 A 22 22 0 0 1 734 262" fill="none" stroke="#e2e8f0" stroke-width="7"/>
-  <path d="M 690 262 A 22 22 0 0 1 718 241" fill="none" stroke="#16a34a" stroke-width="7"/>
-  <polyline points="748,264 766,252 784,256 802,238 820,244 842,228 862,236" fill="none" stroke="#ea580c" stroke-width="2.5"/>
-  <line x1="802" y1="228" x2="802" y2="268" stroke="#db2777" stroke-width="1.5" stroke-dasharray="3 3"/>
-  <rect x="628" y="288" width="72" height="30" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
-  <text x="664" y="308" text-anchor="middle" class="c12-c">light</text>
-  <rect x="711" y="288" width="72" height="30" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
-  <text x="747" y="308" text-anchor="middle" class="c12-c">pump</text>
-  <rect x="794" y="288" width="72" height="30" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
-  <text x="830" y="308" text-anchor="middle" class="c12-c">fan</text>
-  <text x="747" y="344" text-anchor="middle" class="c12-c">role: authenticated</text>
-  <!-- Browser ↔ Supabase -->
-  <path d="M 610 250 L 574 250 L 574 150 L 552 150" class="c12-g"/>
-  <polygon points="552,145 544,150 552,155" fill="#64748b"/>
-  <text x="590" y="140" text-anchor="middle" class="c12-c">login</text>
-  <path d="M 420 170 L 420 185 L 602 185" class="c12-r"/>
-  <polygon points="602,180 610,185 602,190" fill="#2f5597"/>
-  <text x="500" y="180" text-anchor="middle" class="c12-cr">GET ทุก 5s</text>
-  <path d="M 610 205 L 412 205 L 412 178" class="c12-k"/>
-  <polygon points="407,178 412,170 417,178" fill="#db2777"/>
-  <text x="515" y="200" text-anchor="middle" class="c12-ck">PATCH</text>
+  <rect x="20" y="60" width="160" height="250" rx="8" class="a12-esp"/>
+  <text x="100" y="88" text-anchor="middle" class="a12-t">ESP32-S3</text>
+  <text x="100" y="116" text-anchor="middle" class="a12-l">AHT25 (I2C)</text>
+  <text x="100" y="134" text-anchor="middle" class="a12-c">GPIO 8/9</text>
+  <text x="100" y="166" text-anchor="middle" class="a12-l">ปุ่มหน้าตู้ 3 ปุ่ม</text>
+  <text x="100" y="184" text-anchor="middle" class="a12-c">GPIO 4/5/6</text>
+  <text x="100" y="216" text-anchor="middle" class="a12-l">LED 3 ดวง</text>
+  <text x="100" y="234" text-anchor="middle" class="a12-c">GPIO 10/11/12</text>
+  <text x="100" y="266" text-anchor="middle" class="a12-c">ArduinoIoTCloud</text>
+  <text x="100" y="284" text-anchor="middle" class="a12-c">update()</text>
+  <!-- ESP32 ↔ Cloud -->
+  <path d="M 180 130 L 262 130" class="a12-w"/>
+  <polygon points="262,125 272,130 262,135" fill="#059669"/>
+  <text x="222" y="120" text-anchor="middle" class="a12-cw">temp, hum</text>
+  <text x="222" y="150" text-anchor="middle" class="a12-cw">ทุก 5 s</text>
+  <path d="M 272 220 L 190 220" class="a12-k"/>
+  <polygon points="190,215 180,220 190,225" fill="#db2777"/>
+  <path d="M 180 240 L 262 240" class="a12-k"/>
+  <polygon points="262,235 272,240 262,245" fill="#db2777"/>
+  <text x="222" y="210" text-anchor="middle" class="a12-ck">push</text>
+  <text x="222" y="262" text-anchor="middle" class="a12-ck">ปุ่มหน้าตู้</text>
+  <text x="215" y="325" text-anchor="middle" class="a12-c">MQTT + TLS</text>
+  <text x="215" y="340" text-anchor="middle" class="a12-c">port 8884</text>
+  <!-- Device -->
+  <rect x="272" y="70" width="120" height="70" rx="8" class="a12-box"/>
+  <text x="332" y="96" text-anchor="middle" class="a12-t">Device</text>
+  <text x="332" y="116" text-anchor="middle" class="a12-c">Device ID</text>
+  <text x="332" y="130" text-anchor="middle" class="a12-c">+ Secret Key</text>
+  <!-- Thing -->
+  <rect x="272" y="160" width="210" height="165" rx="8" class="a12-thing"/>
+  <text x="377" y="182" text-anchor="middle" class="a12-t">Thing: MCC Monitor</text>
+  <rect x="284" y="194" width="186" height="46" rx="6" class="a12-ro"/>
+  <text x="377" y="212" text-anchor="middle" class="a12-cw">temp · hum</text>
+  <text x="377" y="230" text-anchor="middle" class="a12-l">Read Only · Periodically 5 s</text>
+  <rect x="284" y="250" width="186" height="46" rx="6" class="a12-rw"/>
+  <text x="377" y="268" text-anchor="middle" class="a12-ck">light · pump · fan</text>
+  <text x="377" y="286" text-anchor="middle" class="a12-l">Read &amp; Write · On Change</text>
+  <text x="377" y="315" text-anchor="middle" class="a12-c">ค่าย้อนหลัง 1 วัน (แผนฟรี)</text>
+  <line x1="332" y1="140" x2="332" y2="160" stroke="#475569" stroke-width="2"/>
+  <!-- Dashboard -->
+  <rect x="500" y="70" width="108" height="255" rx="8" class="a12-box"/>
+  <text x="554" y="94" text-anchor="middle" class="a12-t">Dashboard</text>
+  <path d="M 520 140 A 18 18 0 0 1 556 140" fill="none" stroke="#e2e8f0" stroke-width="6"/>
+  <path d="M 520 140 A 18 18 0 0 1 548 126" fill="none" stroke="#16a34a" stroke-width="6"/>
+  <text x="554" y="160" text-anchor="middle" class="a12-c">Gauge</text>
+  <polyline points="516,205 530,196 544,200 558,186 572,190 590,178" fill="none" stroke="#ea580c" stroke-width="2.5"/>
+  <text x="554" y="222" text-anchor="middle" class="a12-c">Chart</text>
+  <rect x="524" y="244" width="30" height="16" rx="8" fill="#16a34a"/>
+  <circle cx="546" cy="252" r="6" fill="#ffffff"/>
+  <rect x="560" y="244" width="30" height="16" rx="8" fill="#94a3b8"/>
+  <circle cx="568" cy="252" r="6" fill="#ffffff"/>
+  <text x="554" y="280" text-anchor="middle" class="a12-c">Switch</text>
+  <line x1="482" y1="217" x2="500" y2="217" stroke="#0e7490" stroke-width="2"/>
+  <line x1="482" y1="273" x2="500" y2="273" stroke="#0e7490" stroke-width="2"/>
+  <!-- Users -->
+  <path d="M 608 150 L 672 150" class="a12-r"/>
+  <polygon points="672,145 682,150 672,155" fill="#2f5597"/>
+  <text x="645" y="140" text-anchor="middle" class="a12-cr">แสดงผล</text>
+  <path d="M 682 250 L 618 250" class="a12-k"/>
+  <polygon points="618,245 608,250 618,255" fill="#db2777"/>
+  <text x="645" y="240" text-anchor="middle" class="a12-ck">สั่งการ</text>
+  <rect x="682" y="70" width="200" height="110" rx="8" class="a12-web"/>
+  <text x="782" y="98" text-anchor="middle" class="a12-t">เบราว์เซอร์</text>
+  <text x="782" y="120" text-anchor="middle" class="a12-c">app.arduino.cc</text>
+  <text x="782" y="146" text-anchor="middle" class="a12-l">login บัญชี Arduino</text>
+  <rect x="682" y="200" width="200" height="110" rx="8" class="a12-web"/>
+  <text x="782" y="228" text-anchor="middle" class="a12-t">มือถือ</text>
+  <text x="782" y="250" text-anchor="middle" class="a12-c">Arduino IoT Remote</text>
+  <text x="782" y="276" text-anchor="middle" class="a12-l">Dashboard เดียวกัน</text>
   <!-- legend -->
-  <line x1="30" y1="400" x2="62" y2="400" stroke="#059669" stroke-width="4" stroke-dasharray="8 10"/>
-  <text x="70" y="404" class="c12-l">เขียน (ส่วนที่ 1)</text>
-  <line x1="215" y1="400" x2="247" y2="400" stroke="#2f5597" stroke-width="4" stroke-dasharray="8 10"/>
-  <text x="255" y="404" class="c12-l">อ่าน (ส่วนที่ 1)</text>
-  <line x1="390" y1="400" x2="422" y2="400" stroke="#db2777" stroke-width="4" stroke-dasharray="8 10"/>
-  <text x="430" y="404" class="c12-l">สั่งการ (ส่วนที่ 2)</text>
-  <line x1="590" y1="400" x2="622" y2="400" stroke="#64748b" stroke-width="3" stroke-dasharray="6 8"/>
-  <text x="630" y="404" class="c12-l">โหลดหน้าเว็บ / login</text>
+  <line x1="30" y1="378" x2="62" y2="378" stroke="#059669" stroke-width="4" stroke-dasharray="8 10"/>
+  <text x="70" y="382" class="a12-l">ค่าเซนเซอร์ (ส่วนที่ 1)</text>
+  <line x1="250" y1="378" x2="282" y2="378" stroke="#2f5597" stroke-width="4" stroke-dasharray="8 10"/>
+  <text x="290" y="382" class="a12-l">แสดงผล (ส่วนที่ 1)</text>
+  <line x1="450" y1="378" x2="482" y2="378" stroke="#db2777" stroke-width="4" stroke-dasharray="8 10"/>
+  <text x="490" y="382" class="a12-l">สั่งการสองทาง (ส่วนที่ 2)</text>
 </svg>
 </div>
 
@@ -188,9 +162,9 @@ permalink: /chapters/ch12-hmi-visualization/
 | ชั้น (Layer) | องค์ประกอบในบทนี้ | หน้าที่ |
 |:---|:---|:---|
 | Perception | AHT25, ปุ่มกด 3 ปุ่ม, LED 3 ดวง | วัดอุณหภูมิ/ความชื้น รับคำสั่งจากช่างหน้าตู้ และขับอุปกรณ์ปลายทาง |
-| Network | ESP32-S3 + Wi-Fi + HTTPS | ส่งข้อมูลขึ้นคลาวด์ และรับคำสั่งลงมาอย่างเข้ารหัส |
-| Middleware / Storage | Supabase (REST API + PostgreSQL) | ตรวจสิทธิ์ จัดเก็บ ให้บริการ query และเป็นจุดพักคำสั่ง |
-| Application | เว็บแดชบอร์ด Next.js บน Vercel + Supabase Auth | แสดงผล แจ้งเตือน และรับคำสั่งจากช่างผ่านเบราว์เซอร์หรือมือถือ |
+| Network | ESP32-S3 + Wi-Fi + MQTT over TLS | รักษาการเชื่อมต่อกับคลาวด์ไว้ตลอด ส่งค่าขึ้นและรับคำสั่งลงอย่างเข้ารหัส |
+| Middleware / Storage | Arduino Cloud (Device, Thing, Cloud Variables) | ยืนยันตัวตนอุปกรณ์ ซิงก์ตัวแปร และเก็บค่าย้อนหลัง |
+| Application | Dashboard บนเว็บ + แอป Arduino IoT Remote | แสดงผล แจ้งเตือน และรับคำสั่งจากช่าง |
 
 ---
 
@@ -202,7 +176,7 @@ ESP32-S3 เป็นไมโครคอนโทรลเลอร์รุ�
 
 | คุณสมบัติ | ESP32-S3 | ความสำคัญต่อระบบนี้ |
 |:---|:---|:---|
-| CPU | Xtensa LX7 ดูอัลคอร์ สูงสุด 240 MHz | ประมวลผล TLS (การเข้ารหัส HTTPS) ได้เร็ว |
+| CPU | Xtensa LX7 ดูอัลคอร์ สูงสุด 240 MHz | ประมวลผล TLS (การเข้ารหัสการเชื่อมต่อกับ Arduino Cloud) ได้เร็ว |
 | การสื่อสารไร้สาย | Wi-Fi 2.4 GHz (802.11 b/g/n) + Bluetooth LE 5 | รองรับเฉพาะ **2.4 GHz** ใช้ Wi-Fi 5 GHz ไม่ได้ |
 | USB | Native USB (GPIO 19/20) | อัปโหลดโปรแกรมและใช้ Serial Monitor ผ่านสาย USB ได้โดยตรง |
 | ADC | 12 บิต | ไม่ได้ใช้ในบทนี้ เพราะ AHT25 ส่งค่าเป็นดิจิทัล |
@@ -232,11 +206,11 @@ $$RH\,[\%] = \frac{S_{RH}}{2^{20}} \times 100 \qquad T\,[^\circ C] = \frac{S_T}{
 
 **การเด้งของหน้าสัมผัส (Contact Bounce):** ปุ่มกลไกมีแผ่นโลหะที่กระทบกันแล้วเด้งหลายครั้งในช่วงประมาณ 1–20 ms ไมโครคอนโทรลเลอร์ที่อ่านค่าได้ระดับไมโครวินาทีจะเห็นเป็นการกดหลายครั้ง จึงต้องทำ **Debounce** คือทิ้งขอบสัญญาณที่เกิดถี่เกินช่วงเวลาที่กำหนด
 
-**ทำไมต้องใช้ Interrupt?** การส่ง HTTPS แต่ละครั้งต้องทำ TLS handshake ซึ่งทำให้ `http.POST()` หรือ `http.GET()` ค้างอยู่ประมาณ 0.5–2 วินาที และในส่วนที่ 2 ESP32 ต้องส่ง HTTPS แทบตลอดเวลา (ส่งค่าเซนเซอร์ทุก 5 วินาที และถามคำสั่งทุก 2 วินาที)
+**ทำไมต้องใช้ Interrupt?** `loop()` ต้องเรียก `ArduinoCloud.update()` ตลอดเวลา ปกติฟังก์ชันนี้ทำงานเสร็จเร็ว แต่ช่วงที่ Wi-Fi หลุดหรือกำลังเชื่อมต่อ Arduino Cloud ใหม่ (ต้องทำ TLS handshake) อาจค้างนานหลายร้อยมิลลิวินาทีถึงหลายวินาที
 
-| วิธีอ่านปุ่ม | ถ้าผู้ใช้กดปุ่มระหว่าง ESP32 กำลังส่งข้อมูล |
+| วิธีอ่านปุ่ม | ถ้าผู้ใช้กดปุ่มระหว่าง ESP32 กำลังเชื่อมต่อหรือส่งข้อมูล |
 |:---|:---|
-| **Polling** (อ่าน `digitalRead` ใน `loop()`) | การกดสั้น ๆ ช่วงนั้นจะ **หายไป** เพราะ `loop()` ยังไม่วนกลับมาอ่าน |
+| **Polling** (อ่าน `digitalRead` ใน `loop()`) | การกดสั้น ๆ ช่วงที่ `update()` ค้างจะ **หายไป** เพราะ `loop()` ยังไม่วนกลับมาอ่าน |
 | **Interrupt** (ISR ทำงานทันทีที่ขาเปลี่ยนสถานะ) | ISR จำการกดไว้ใน flag แล้ว `loop()` จะจัดการในรอบถัดไป **ไม่หาย** |
 
 ### 12.2.4 เอาต์พุต: LED แทนคอนแทคเตอร์
@@ -251,284 +225,172 @@ $$I = \frac{V_{GPIO} - V_F}{R} = \frac{3.3 - 2.0}{220} \approx 5.9\ \text{mA}$$
 
 ---
 
-## 12.3 การออกแบบข้อมูลและความปลอดภัย
+## 12.3 แนวคิดของ Arduino Cloud
 
-### 12.3.1 ข้อมูล 3 ประเภท: Telemetry, Command State และ Event
+### 12.3.1 Device, Thing, Cloud Variable และ Dashboard
 
-| | Telemetry | Command State | Event |
-|:---|:---|:---|:---|
-| ตาราง | `telemetry` (ส่วนที่ 1) | `controls` (ส่วนที่ 2) | `events` (ส่วนที่ 2) |
-| ตัวอย่าง | อุณหภูมิ 31.4 °C, ความชื้น 58 %RH | ตอนนี้สั่งให้พัดลม **เปิด** | 10:20 น. พัดลมถูกเปิดจากแดชบอร์ด |
-| รูปแบบการเกิด | เป็นรอบคงที่ (Periodic) ทุก 5 วินาที | ถูกแก้เมื่อมีการสั่ง | เกิดเมื่อสถานะเปลี่ยน (Event-driven) |
-| จำนวนแถว | เพิ่มขึ้นเรื่อย ๆ | **1 แถวต่ออุปกรณ์** (แก้ทับแถวเดิม) | เพิ่มขึ้นเรื่อย ๆ |
-| คำถามที่ตอบ | ตอนนั้นร้อนแค่ไหน? | ตอนนี้อุปกรณ์ควรอยู่สถานะใด? | ใครสั่งอะไร เมื่อไร? |
-| การแสดงผล | กราฟเส้น, เกจ | ฟอร์มสั่งการ | แถบสถานะ (State timeline), เส้นหมายเหตุบนกราฟ (Annotation) |
+Arduino Cloud แบ่งระบบเป็น 4 องค์ประกอบ ซึ่งต้องสร้างตามลำดับนี้
 
-เราแยกข้อมูลไว้คนละตาราง เพราะโครงสร้าง วิธีเขียน และวิธี query ต่างกัน ถ้ารวมในตารางเดียว จะมีคอลัมน์ว่างจำนวนมาก และ query แต่ละแบบจะซับซ้อนขึ้น โดยเฉพาะ `controls` ที่ถูก **แก้ทับ (UPDATE)** ขณะที่อีกสองตารางถูก **เพิ่มแถว (INSERT)** เท่านั้น
+| องค์ประกอบ | คืออะไร | ในบทนี้ |
+|:---|:---|:---|
+| **Device** | บอร์ดจริงที่ลงทะเบียนกับคลาวด์ ระบุด้วย **Device ID** และพิสูจน์ตัวตนด้วย **Secret Key** | ESP32-S3 ชื่อ `MCC-1234` |
+| **Thing** | "ฝาแฝดดิจิทัล (Digital Twin)" ของอุปกรณ์บนคลาวด์ ประกอบด้วยตัวแปรที่ซิงก์กับบอร์ด ผูกกับ Device ได้ 1 เครื่อง | `MCC Monitor` |
+| **Cloud Variable** | ตัวแปรที่มีค่าเดียวกันทั้งในบอร์ดและบนคลาวด์ เขียนในโปรแกรมเหมือนตัวแปร C++ ธรรมดา เช่น `temp = 31.4;` | `temp`, `hum`, `light`, `pump`, `fan` |
+| **Dashboard** | หน้าจอที่ประกอบจาก **Widget** แต่ละ Widget ผูกกับ Cloud Variable 1 ตัว | `MCC Monitor` บนเว็บและแอปมือถือ |
 
-### 12.3.2 โครงสร้างตาราง
+แนวคิด **Digital Twin** คือ คลาวด์เก็บ "สำเนา" ของสถานะอุปกรณ์ไว้เสมอ แดชบอร์ดอ่านและเขียนสำเนานี้ ไม่ได้คุยกับบอร์ดโดยตรง ส่วนไลบรารีในบอร์ดมีหน้าที่ทำให้ค่าในบอร์ดกับสำเนาบนคลาวด์ตรงกัน ถ้าบอร์ดออฟไลน์ แดชบอร์ดก็ยังแสดงค่าล่าสุดที่รู้ได้
 
-```sql
--- ส่วนที่ 1
-create table public.telemetry (
-  id         bigint generated always as identity primary key,
-  created_at timestamptz not null default now(),
-  device_id  text not null,
-  temp       real,        -- อุณหภูมิ (°C)
-  hum        real         -- ความชื้นสัมพัทธ์ (%RH)
-);
+### 12.3.2 ข้อมูล 2 ประเภท: Telemetry และ Command State
 
--- ส่วนที่ 2
-create table public.controls (
-  device_id  text primary key,                   -- 1 แถวต่ออุปกรณ์
-  light      boolean not null default false,     -- true = สั่งเปิด
-  pump       boolean not null default false,
-  fan        boolean not null default false,
-  updated_by text not null default 'dashboard'
-             check (updated_by in ('button', 'dashboard')),
-  updated_at timestamptz not null default now()
-);
+| | Telemetry | Command State |
+|:---|:---|:---|
+| ตัวอย่าง | อุณหภูมิ 31.4 °C, ความชื้น 58 %RH | ตอนนี้สั่งให้พัดลม **เปิด** |
+| ผู้เปลี่ยนค่า | บอร์ดฝ่ายเดียว | ทั้งแดชบอร์ดและบอร์ด (ปุ่มหน้าตู้) |
+| รูปแบบการเกิด | เป็นรอบคงที่ (Periodic) ทุก 5 วินาที | เมื่อมีการสั่ง (Event-driven) |
+| Permission | **Read Only** | **Read & Write** |
+| Update Policy | **Periodically** ทุก 5 วินาที | **On Change** |
+| Widget | Gauge, Chart | Switch |
 
-create table public.events (
-  id         bigint generated always as identity primary key,
-  created_at timestamptz not null default now(),
-  device_id  text not null,
-  event      text not null check (event in ('light', 'pump', 'fan')),
-  state      boolean not null,     -- true = เปิด, false = ปิด
-  source     text not null check (source in ('button', 'dashboard'))
-);
-```
+**ตัวแปรของ Thing `MCC Monitor`**
 
-- **`created_at ... default now()`** ให้ฐานข้อมูลเป็นผู้ประทับเวลา ESP32 จึงไม่ต้องมีนาฬิกาที่แม่นยำ ส่วน `timestamptz` เก็บเวลาเป็น UTC แล้วแสดงตาม time zone ของผู้ใช้
-- **`controls.device_id` เป็น Primary key** จึงมีได้เพียง 1 แถวต่ออุปกรณ์ แถวนี้คือ "สถานะที่สั่งล่าสุด" ของอุปกรณ์นั้น
-- **`check (... in (...))`** ทำให้ฐานข้อมูลรับเฉพาะค่าที่กำหนด ถ้าสะกดผิดจะถูกปฏิเสธ
-- **`state` และ `source` ใน `events`** เก็บทั้งสถานะหลังเปลี่ยน และแหล่งที่สั่ง (`button` = ปุ่มหน้าตู้, `dashboard` = เว็บแดชบอร์ด) การรู้แค่ว่า "มีการสั่ง" ไม่พอ ต้องรู้ว่าเปิดหรือปิด จึงจะวาดช่วงเวลาที่อุปกรณ์ทำงานได้ และต้องรู้ว่าใครสั่ง จึงจะตรวจสอบย้อนหลังได้ (Audit trail)
-- **Index `(device_id, created_at desc)`** แดชบอร์ดเกือบทุก query จะถามว่า "อุปกรณ์ X ในช่วงเวลา Y" B-tree index ที่เรียงตามคอลัมน์ทั้งสองจะช่วยให้ PostgreSQL กระโดดไปยังช่วงข้อมูลนั้นได้ทันที ไม่ต้องอ่านทั้งตาราง (Sequential Scan)
-
-**ประเมินปริมาณข้อมูล:** ถ้าส่งทุก 5 วินาที จะได้ $86{,}400 / 5 = 17{,}280$ แถวต่อวัน ถ้าแต่ละแถวรวม index ใช้พื้นที่ราว 100 ไบต์ จะใช้พื้นที่ประมาณ 1.7 MB ต่อวัน หรือราว 50 MB ต่อเดือนต่ออุปกรณ์ ตัวเลขนี้ใช้เทียบกับพื้นที่ฐานข้อมูลของแผนฟรี เพื่อตัดสินใจเรื่องความถี่ในการส่งและการลบข้อมูลเก่า ส่วน `controls` มีขนาดคงที่ และ `events` เพิ่มเฉพาะเมื่อมีการสั่ง จึงเล็กมากเมื่อเทียบกับ `telemetry`
-
-### 12.3.3 Row Level Security และหลัก Least Privilege
-
-ระบบมีผู้ใช้ฐานข้อมูล 2 กลุ่ม และให้แต่ละกลุ่มมีสิทธิ์เท่าที่จำเป็นต่อหน้าที่เท่านั้น (**Principle of Least Privilege**)
-
-| ผู้ใช้ | role ใน PostgreSQL | วิธียืนยันตัวตน | `telemetry` | `controls` | `events` |
-|:---|:---|:---|:---|:---|:---|
-| ESP32-S3 | `anon` | Publishable key อย่างเดียว (ไม่ login) | `INSERT` | `SELECT` + `UPDATE` ได้เฉพาะเมื่อ `updated_by = 'button'` | ไม่มีสิทธิ์ (trigger เป็นผู้เขียน) |
-| ช่างที่ใช้แดชบอร์ด | `authenticated` | Publishable key + login ด้วยอีเมลและรหัสผ่าน (Supabase Auth) | `SELECT` | `SELECT` + `UPDATE` ได้เฉพาะเมื่อ `updated_by = 'dashboard'` | `SELECT` |
-
-ทั้ง ESP32 และหน้าเว็บใช้ **Publishable key ตัวเดียวกัน** สิ่งที่ทำให้สิทธิ์ต่างกันคือ **การ login** คำขอที่ไม่มี login จะได้ role `anon` ส่วนคำขอที่แนบ token จากการ login จะได้ role `authenticated` (รายละเอียดในหัวข้อ 12.5.2)
-
-**Row Level Security (RLS)** เป็นกฎที่ PostgreSQL ตรวจทุกครั้งที่มีการอ่านหรือเขียนแถว ถ้าเปิด RLS แล้วไม่มี policy อนุญาต คำขอนั้นจะถูกปฏิเสธทั้งหมด (**Deny by Default**) ผลของการออกแบบนี้คือ
-- ถ้า key ใน ESP32 ถูกดึงออกจากเฟิร์มแวร์ ผู้ไม่หวังดีก็ **อ่าน** ข้อมูลเซนเซอร์ย้อนหลังของโรงงานไม่ได้ เพราะไม่มีบัญชี login และ **ลบหรือปลอมประวัติ** ใน `events` ไม่ได้ (แต่ยังสั่งอุปกรณ์ผ่าน `controls` ได้ ซึ่งเป็นข้อจำกัดของการใช้ key เดียวร่วมกันทุกอุปกรณ์ ดูแบบฝึกหัดท้ายบท)
-- ถ้ารหัสผ่านของบัญชีแดชบอร์ดรั่ว ผู้ไม่หวังดีก็ **ลบ** ข้อมูล หรือ **ปลอม** ค่าเซนเซอร์ไม่ได้ เพราะ `authenticated` ไม่มีสิทธิ์ `INSERT`/`DELETE`
-- policy ยังทำหน้าที่ **ตรวจความสมเหตุสมผลของข้อมูล** ได้ด้วย เช่น ปฏิเสธค่าอุณหภูมิที่อยู่นอกย่านวัดของ AHT25 (-40 ถึง 120 °C) ซึ่งมักเกิดจากเซนเซอร์เสีย และบังคับให้ผู้สั่งระบุ `updated_by` ตามตัวตนจริง (ESP32 อ้างเป็น `dashboard` ไม่ได้ และแดชบอร์ดอ้างเป็น `button` ไม่ได้)
-
-> ⚠️ role `authenticated` หมายถึง **ทุกคนที่ login ได้** จึงต้อง **ปิดการสมัครสมาชิกเอง (Sign up)** ใน Supabase Auth และให้ผู้ดูแลเป็นผู้สร้างบัญชีให้ช่างเท่านั้น (หัวข้อ 12.8.4) มิฉะนั้นใครที่มี Publishable key ก็สมัครบัญชีเองแล้วอ่านข้อมูลได้
-
-**API key ของ Supabase มี 4 แบบ** (ตาม [Supabase Docs: API keys](https://supabase.com/docs/guides/getting-started/api-keys))
-
-| Key | รูปแบบ | Role ที่ได้ | RLS | ใช้ในอุปกรณ์/หน้าเว็บได้? |
+| Name | Type (ชื่อใน C++) | Permission | Update Policy | ความหมาย |
 |:---|:---|:---|:---|:---|
-| **Publishable key** ✅ | `sb_publishable_...` | `anon` (ถ้า login แล้วเป็น `authenticated`) | ถูกตรวจ | **ได้** ← ใช้ใน ESP32-S3 และแดชบอร์ด |
-| Secret key | `sb_secret_...` | `service_role` | **ข้าม RLS** | ห้ามเด็ดขาด |
-| `anon` (legacy) | JWT ขึ้นต้นด้วย `eyJ` | `anon` | ถูกตรวจ | ได้ แต่เป็นแบบเก่าที่กำลังจะเลิกใช้ |
-| `service_role` (legacy) | JWT ขึ้นต้นด้วย `eyJ` | `service_role` | **ข้าม RLS** | ห้ามเด็ดขาด |
+| `temp` | Temperature Sensor (`CloudTemperatureSensor`) | Read Only | Periodically 5 s | อุณหภูมิในตู้ (°C) |
+| `hum` | Relative Humidity (`CloudRelativeHumidity`) | Read Only | Periodically 5 s | ความชื้นสัมพัทธ์ (%RH) |
+| `light` | Boolean (`bool`) | Read & Write | On Change | สั่งไฟ (`true` = เปิด) |
+| `pump` | Boolean (`bool`) | Read & Write | On Change | สั่งปั๊ม |
+| `fan` | Boolean (`bool`) | Read & Write | On Change | สั่งพัดลม |
 
-ในบทนี้ใช้ **Publishable key** เพราะเป็น key ที่ Supabase ออกแบบให้ฝังในอุปกรณ์หรือหน้าเว็บได้ ใครได้ key ไปก็ทำได้เฉพาะสิ่งที่ RLS policy อนุญาต ส่วน legacy key มีแผนจะถูกเลิกใช้ จึงควรใช้แบบใหม่ตั้งแต่ต้น
+- **ชนิดข้อมูลแบบ Specialized** เช่น `CloudTemperatureSensor` ภายในเป็น `float` ธรรมดา แต่คลาวด์รู้หน่วยของค่า จึงแสดงหน่วย (°C, %) บน Widget ได้เอง ถ้าหาชนิดนี้ไม่พบ ใช้ **Floating Point Number** (`float`) แทนได้
+- **Read Only** ป้องกันไม่ให้ใครเปลี่ยนค่าเซนเซอร์จากแดชบอร์ด ค่าวัดจึงมาจากบอร์ดเท่านั้น
+- **Read & Write** ทำให้ไลบรารีสร้าง **Callback** เช่น `onFanChange()` ซึ่งถูกเรียกเมื่อแดชบอร์ดเปลี่ยนค่า
 
-> ⚠️ ห้ามนำ **Secret key** หรือ **`service_role` key** ของ Supabase ไปใส่ในอุปกรณ์ หน้าเว็บ หรือโค้ดที่ขึ้น GitHub เด็ดขาด เพราะ key กลุ่มนี้ข้าม RLS ได้ทั้งหมด
+**Periodically กับ On Change:** ตัวแปรแบบ On Change มีค่า **threshold** (ค่าเริ่มต้นคือ 0) ถ้าตั้ง threshold ของ `temp` เป็น 0.2 °C บอร์ดจะส่งค่าก็ต่อเมื่ออุณหภูมิเปลี่ยนเกิน 0.2 °C จากค่าที่ส่งครั้งก่อน เรียกว่า **Deadband** ช่วยลดจำนวนข้อความเมื่อค่าคงที่ แต่กราฟจะไม่มีจุดใหม่ในช่วงที่ค่าไม่เปลี่ยน บทนี้ใช้ Periodically 5 วินาทีกับค่าเซนเซอร์ เพื่อให้กราฟมีจุดสม่ำเสมอ และใช้การที่ข้อมูลหยุดมาเป็นสัญญาณว่าอุปกรณ์ขัดข้องได้
+
+**ประเมินปริมาณข้อมูล:** ตัวแปร 2 ตัวส่งทุก 5 วินาที เท่ากับ $2 \times 86{,}400 / 5 = 34{,}560$ ค่าต่อวัน แผนฟรีเก็บค่าย้อนหลังเพียง **1 วัน** กราฟจึงดูย้อนหลังได้ไม่เกิน 24 ชั่วโมง ถ้าต้องเก็บนานกว่านั้นต้องดาวน์โหลดข้อมูลเก็บเอง (Widget Chart มีปุ่ม Download Historical Data) หรือใช้แผนที่สูงขึ้น
+
+### 12.3.3 ความปลอดภัย: Device ID, Secret Key และบัญชีผู้ใช้
+
+| ผู้เข้าถึง | ยืนยันตัวตนด้วย | ทำอะไรได้ |
+|:---|:---|:---|
+| ESP32-S3 | **Device ID + Secret Key** เฉพาะเครื่อง (เก็บใน `arduino_secrets.h`) | อ่าน/เขียนตัวแปรของ Thing ที่ผูกกับเครื่องนี้เท่านั้น |
+| ช่าง | **บัญชี Arduino** (อีเมล + รหัสผ่าน หรือ Google) | เห็นและแก้ Thing, Dashboard ในบัญชีของตนเอง หรือที่ถูกแชร์ให้ |
+
+- **Secret Key ใช้กับอุปกรณ์เดียว** ถ้ารั่ว ผู้ไม่หวังดีปลอมตัวเป็นบอร์ดเครื่องนั้นได้ เช่น ส่งค่าอุณหภูมิปลอม หรือเปลี่ยนสถานะ `fan` ในนามบอร์ด แต่ **เข้าบัญชีของเรา ลบ Dashboard หรือเข้าถึงอุปกรณ์เครื่องอื่นไม่ได้** และแก้ได้โดยลบอุปกรณ์แล้วลงทะเบียนใหม่เพื่อออก key ใหม่
+- การเชื่อมต่อทั้งหมดเข้ารหัสด้วย **TLS** ผู้ที่ดักฟัง Wi-Fi จึงอ่านค่าหรือ Secret Key ไม่ได้
+- **Secret Key แสดงเพียงครั้งเดียว** ตอนลงทะเบียนอุปกรณ์ ต้องเก็บให้ดี และห้ามนำไฟล์ `arduino_secrets.h` ขึ้น GitHub
+- บัญชี Arduino ควรใช้รหัสผ่านที่แข็งแรง เพราะใครเข้าบัญชีได้ก็สั่งอุปกรณ์ได้ทุกเครื่อง
 
 ---
 
-## 12.4 เส้นทางเขียน: HTTPS และ REST API
+## 12.4 การสื่อสาร: MQTT และ `ArduinoCloud.update()`
 
-Supabase มีเครื่องมือชื่อ **PostgREST** ที่สร้าง REST API ให้ทุกตารางโดยอัตโนมัติ ด้วยการแปลงคำขอ HTTP เป็นคำสั่ง SQL (ทบทวนบทที่ 8) ESP32 ใช้ REST API ทั้งในส่วนที่ 1 และส่วนที่ 2
+ไลบรารี `ArduinoIoTCloud` สื่อสารกับคลาวด์ด้วย **MQTT** (ทบทวนบทที่ 9) โดยมี Arduino Cloud เป็น **Broker** ESP32 เปิดการเชื่อมต่อแบบ TLS ไปยัง Broker **ค้างไว้ตลอด** (port 8884 สำหรับอุปกรณ์ที่ใช้ Device ID + Secret Key) แล้วใช้การเชื่อมต่อเดียวนี้ทั้งส่งค่าขึ้น (Publish) และรับค่าลง (Subscribe) ไลบรารีจัดการชื่อ topic และเข้ารหัสข้อมูล (รูปแบบ CBOR ซึ่งเป็น JSON แบบไบนารีที่เล็กกว่า) ให้ทั้งหมด
 
-| ส่วน | คำขอ HTTP จาก ESP32 | คำสั่ง SQL ที่ PostgREST สร้าง |
-|:---|:---|:---|
-| 1 | `POST /rest/v1/telemetry` body `{"device_id":"mcc01","temp":31.4,"hum":58.2}` | `INSERT INTO telemetry (device_id, temp, hum) VALUES ('mcc01', 31.4, 58.2)` |
-| 2 | `GET /rest/v1/controls?device_id=eq.mcc01&select=light,pump,fan` | `SELECT light, pump, fan FROM controls WHERE device_id = 'mcc01'` |
-| 2 | `PATCH /rest/v1/controls?device_id=eq.mcc01` body `{"fan":true,"updated_by":"button"}` | `UPDATE controls SET fan = true, updated_by = 'button' WHERE device_id = 'mcc01'` |
+| สิ่งที่เราเขียนในโปรแกรม | สิ่งที่ไลบรารีทำให้ |
+|:---|:---|
+| `ArduinoCloud.begin(ArduinoIoTPreferredConnection)` | เชื่อม Wi-Fi, ทำ TLS handshake, login ด้วย Device ID + Secret Key, subscribe ตัวแปร Read & Write |
+| `temp = 31.4;` | จำค่าไว้ แล้ว publish เมื่อถึงรอบ 5 วินาที |
+| `ArduinoCloud.update();` | ส่งค่าที่ถึงรอบ/เปลี่ยนแปลง, รับค่าที่แดชบอร์ดเปลี่ยนแล้วเรียก Callback, ส่ง keep-alive, ต่อใหม่อัตโนมัติเมื่อหลุด |
+| `void onFanChange() { ... }` | ถูกเรียกหลังเขียนค่าใหม่จากคลาวด์ลงตัวแปร `fan` แล้ว |
 
-ใน URL ของ PostgREST ตัวกรอง `device_id=eq.mcc01` หมายถึง `device_id = 'mcc01'` (`eq` = equal) และ `select=` ระบุคอลัมน์ที่ต้องการ ผลลัพธ์ของ `GET` เป็น JSON array เสมอ เช่น `[{"light":false,"pump":false,"fan":true}]` ถ้าไม่มีแถวที่ตรงเงื่อนไขจะได้ `[]`
-
-**Header ที่ต้องส่ง**
-
-| Header | ค่า | หน้าที่ |
-|:---|:---|:---|
-| `apikey` | Publishable key (`sb_publishable_...`) | ระบุโปรเจกต์ และกำหนด role เป็น `anon` |
-| `Authorization` | **ไม่ต้องส่ง** เมื่อใช้ Publishable key (ส่งเป็น `Bearer <key>` เฉพาะ legacy `anon` key ที่เป็น JWT) | Publishable key ไม่ใช่ JWT ถ้าส่งใน `Authorization: Bearer` ระบบจะพยายามตรวจเป็น JWT แล้วล้มเหลว |
-| `Content-Type` | `application/json` | บอกว่า body เป็น JSON (ใช้กับ `POST` และ `PATCH`) |
-| `Prefer` | `return=minimal` | ไม่ต้องส่งแถวที่บันทึกกลับมา ประหยัด bandwidth |
-
-**รหัสสถานะที่ต้องรู้จัก:** `200` อ่านสำเร็จ (`GET`) · `201` เพิ่มแถวสำเร็จ (`POST`) · `204` แก้ไขสำเร็จ (`PATCH` แบบ `return=minimal`) · `400` JSON หรือชื่อคอลัมน์ผิด · `401/403` key ผิดหรือไม่ผ่าน RLS · `404` URL หรือชื่อตารางผิด · ค่าติดลบ ESP32 เชื่อมต่อไม่ได้ (Wi-Fi หลุด หรือ TLS ล้มเหลว)
-
-> ⚠️ `PATCH` ที่ไม่พบแถวตรงเงื่อนไขก็ได้ `204` เช่นกัน เพราะ SQL `UPDATE` ที่แก้ 0 แถวไม่ถือว่าผิดพลาด ถ้ากดปุ่มแล้วได้ `204` แต่แดชบอร์ดไม่เปลี่ยน ให้ตรวจว่ามีแถวของ `DEVICE_ID` นี้ในตาราง `controls` แล้วหรือไม่
-
-> **HTTPS กับการยืนยันใบรับรอง:** ในห้องแล็บเราใช้ `tls.setInsecure()` ข้อมูลยังถูกเข้ารหัส แต่ ESP32 จะไม่ตรวจว่ากำลังคุยกับเซิร์ฟเวอร์ตัวจริงหรือไม่ งานจริงต้องใช้ `tls.setCACert(rootCA)` เพื่อป้องกันการโจมตีแบบ Man-in-the-Middle ซึ่งสำคัญยิ่งขึ้นเมื่อระบบรับคำสั่งควบคุมอุปกรณ์
+**กฎสำคัญ:** `ArduinoCloud.update()` ต้องถูกเรียก **บ่อย ๆ** ใน `loop()` ถ้าใส่ `delay(10000)` ไว้ ค่าจะไม่ถูกส่ง คำสั่งจากแดชบอร์ดจะมาช้า และถ้าเงียบนานเกินช่วง keep-alive คลาวด์จะถือว่าอุปกรณ์ **Offline** โปรแกรมจึงใช้ `millis()` จับเวลาแทน `delay()` เหมือนบทที่ผ่านมา
 
 ---
 
-## 12.5 เส้นทางอ่าน: เว็บแดชบอร์ดบน Vercel
+## 12.5 เส้นทางสั่งการ: Push, Callback และ Sync
 
-แดชบอร์ดในบทนี้เป็น **เว็บแอปพลิเคชัน** ที่เขียนด้วย **Next.js** (เฟรมเวิร์กของ React) และใช้ไลบรารี **`supabase-js`** คุยกับ Supabase โค้ดแม่แบบอยู่ใน repo ของรายวิชา โฟลเดอร์ [`dashboard/`](https://github.com/alfaXphoori/TechEngineering/tree/main/dashboard) นักศึกษาไม่ต้องเขียนเว็บเอง แต่ต้องเข้าใจว่าข้อมูลเดินทางอย่างไร และอ่านโค้ดส่วนสำคัญได้
+### 12.5.1 ทำไมคลาวด์สั่ง ESP32 ได้ทันที
 
-### 12.5.1 Vercel ทำหน้าที่อะไร
+ESP32-S3 อยู่หลังเราเตอร์ที่ทำ **NAT** จึงไม่มี IP สาธารณะ คลาวด์เปิดการเชื่อมต่อใหม่เข้าหาบอร์ดไม่ได้ แต่เพราะ **บอร์ดเป็นฝ่ายเปิดการเชื่อมต่อ MQTT ออกไปค้างไว้** คลาวด์จึง **ส่งข้อความกลับมาทางการเชื่อมต่อเดิมได้ทันที (Push)** เมื่อช่างกด Switch
 
-**Vercel** เป็นบริการฝากเว็บ (Web Hosting) ที่นำโค้ด Next.js ไป build และให้บริการไฟล์หน้าเว็บผ่าน URL เช่น `https://mcc-dashboard.vercel.app` สิ่งที่มักเข้าใจผิดคือ **Vercel ไม่ได้ดึงข้อมูลจากฐานข้อมูลแทนเรา**
-
-| ขั้น | เกิดที่ใด | สิ่งที่เกิดขึ้น |
-|:---|:---|:---|
-| 1 | เบราว์เซอร์ → Vercel | เปิด URL ของแดชบอร์ด Vercel ส่งไฟล์ HTML, CSS และ JavaScript มาให้ **ครั้งเดียว** |
-| 2 | เบราว์เซอร์ → Supabase Auth | ช่าง login ด้วยอีเมลและรหัสผ่าน ได้ token กลับมา |
-| 3 | เบราว์เซอร์ → Supabase REST API | JavaScript ในหน้าเว็บขอข้อมูล `telemetry`, `controls`, `events` **โดยตรง** ทุก 5 วินาที |
-| 4 | เบราว์เซอร์ → Supabase REST API | เมื่อกดสวิตช์ JavaScript ส่งคำขอแก้ `controls` (ส่วนที่ 2) |
-
-ผลของสถาปัตยกรรมนี้คือ
-- Vercel **ไม่ต้องรู้รหัสผ่านฐานข้อมูล** และไม่ต้องเชื่อมต่อ PostgreSQL โดยตรง เพราะทั้ง ESP32 และหน้าเว็บใช้ **REST API ตัวเดียวกัน** (หัวข้อ 12.4) ผ่าน HTTPS
-- ความปลอดภัยทั้งหมดขึ้นกับ **RLS + การ login** (หัวข้อ 12.3.3) ไม่ได้ขึ้นกับการซ่อนโค้ด เพราะใครก็เปิดดูโค้ด JavaScript ของหน้าเว็บได้
-- หน้าเว็บ 1 ชุดใช้กับหลายโปรเจกต์ได้ ผู้ใช้กรอก Project URL, Publishable key และ `DEVICE_ID` ของตนเองในหน้า **ตั้งค่า** ค่าจะถูกเก็บไว้ในเบราว์เซอร์ของผู้ใช้คนนั้นเท่านั้น (หรือผู้ Deploy จะกำหนดเป็น Environment Variables ไว้ล่วงหน้าก็ได้)
-
-### 12.5.2 Login และ role `authenticated`
-
-1. หน้าเว็บส่งอีเมลและรหัสผ่านไปที่ Supabase Auth ด้วย `supabase.auth.signInWithPassword()`
-2. ถ้าถูกต้อง Supabase Auth ตอบ **access token** ซึ่งเป็น **JWT (JSON Web Token)** ที่มีข้อมูล `"role": "authenticated"` และลายเซ็นดิจิทัลของ Supabase (ปลอมไม่ได้) พร้อมอายุการใช้งาน (ค่าเริ่มต้น 1 ชั่วโมง `supabase-js` ต่ออายุให้อัตโนมัติ)
-3. ทุกคำขอหลังจากนั้น `supabase-js` แนบ header `apikey: <Publishable key>` และ `Authorization: Bearer <JWT>`
-4. PostgREST ตรวจลายเซ็นของ JWT แล้วรัน SQL ด้วย role `authenticated` RLS policy ที่เขียน `to authenticated` จึงมีผล
-
-เปรียบเทียบกับ ESP32 ที่ส่งเฉพาะ `apikey` โดยไม่มี JWT จึงได้ role `anon` เสมอ
-
-### 12.5.3 จาก `supabase-js` เป็น REST และ SQL
-
-`supabase-js` เป็นเพียงตัวช่วยสร้างคำขอ REST แบบเดียวกับที่ ESP32 เขียนเองด้วย `HTTPClient` เช่น คำสั่งอ่านค่าล่าสุดในแดชบอร์ด
-
-```js
-supabase.from('telemetry')
-  .select('created_at, temp, hum')
-  .eq('device_id', 'mcc01')
-  .order('created_at', { ascending: false })
-  .limit(1)
-```
-
-| โค้ด `supabase-js` | คำขอ REST ที่ส่งจริง | SQL ที่ PostgREST สร้าง |
-|:---|:---|:---|
-| `.from('telemetry').select('created_at, temp, hum')` | `GET /rest/v1/telemetry?select=created_at,temp,hum` | `SELECT created_at, temp, hum FROM telemetry` |
-| `.eq('device_id', 'mcc01')` | `&device_id=eq.mcc01` | `WHERE device_id = 'mcc01'` |
-| `.gte('created_at', since)` | `&created_at=gte.2026-09-28T03:00:00Z` | `AND created_at >= '2026-09-28T03:00:00Z'` |
-| `.order('created_at', { ascending: false })` | `&order=created_at.desc` | `ORDER BY created_at DESC` |
-| `.limit(1)` | `&limit=1` | `LIMIT 1` |
-| `.update({ fan: true, updated_by: 'dashboard' }).eq('device_id', 'mcc01')` | `PATCH /rest/v1/controls?device_id=eq.mcc01` | `UPDATE controls SET fan = true, updated_by = 'dashboard' WHERE device_id = 'mcc01'` |
-
-Index `(device_id, created_at desc)` ในหัวข้อ 12.3.2 ทำให้คำขอเหล่านี้ตอบได้เร็ว แม้ตารางจะมีหลายแสนแถว
-
-### 12.5.4 ปริมาณข้อมูลของกราฟและ Downsampling
-
-กราฟในแดชบอร์ดเลือกดูได้ 15 นาที, 30 นาที และ 1 ชั่วโมง ข้อมูล 1 ชั่วโมงมี $3{,}600 / 5 = 720$ แถว ซึ่งต่ำกว่าเพดาน **Max rows = 1,000 แถวต่อคำขอ** ที่ Supabase ตั้งไว้เป็นค่าเริ่มต้น (ปรับได้ที่ **Integrations → Data API → Settings**)
-
-ถ้าต้องการดูย้อนหลัง 7 วัน จะมีข้อมูล $17{,}280 \times 7 \approx 121{,}000$ จุด แต่กราฟกว้างราว 1,000 พิกเซลแสดงได้ไม่เกินราว 1,000 จุด การดึงข้อมูลดิบทั้งหมดมาวาดจึงช้าและเปลือง ต้องให้ฐานข้อมูลรวมข้อมูลเป็นช่วงก่อนส่ง เรียกว่า **Downsampling** ขนาดช่วงที่เหมาะสมคำนวณได้จาก
-
-$$\Delta t \approx \frac{\text{ช่วงเวลาที่ดู}}{\text{ความกว้างของกราฟ}} = \frac{7 \times 86{,}400\ s}{1{,}000\ px} \approx 605\ s \approx 10\ \text{นาที}$$
-
-แล้วใช้ `avg()` ร่วมกับ `GROUP BY` ช่วงเวลา 10 นาที ให้ข้อมูลราว 120 จุดเหลือจุดเดียว เทคนิคเดียวกับ `GROUP BY time()` ของ InfluxDB ในบทที่ 10 ใน Supabase ทำได้โดยสร้าง **SQL function** แล้วเรียกผ่าน `supabase.rpc()` (โจทย์ท้าทายท้ายบท)
-
-### 12.5.5 การ refresh ของแดชบอร์ด: Polling หรือ Realtime
-
-แดชบอร์ดดึงข้อมูลใหม่ทุก 5 วินาที (`REFRESH_MS` ใน `lib/config.js`) เท่ากับรอบส่งของ ESP32 ด้วยวิธี **Polling** แบบเดียวกับที่ ESP32 ถามคำสั่ง (หัวข้อ 12.6.3) ทุกเบราว์เซอร์ที่เปิดแดชบอร์ดอยู่จะส่ง 5 คำขอทุก 5 วินาที ถ้าเปิดทิ้งไว้ 10 เครื่อง ก็คือ 10 คำขอต่อวินาที
-
-อีกทางเลือกคือ **Supabase Realtime** ซึ่งให้ฐานข้อมูลส่งแถวใหม่มายังเบราว์เซอร์ทันทีผ่าน WebSocket ไม่ต้องถามซ้ำ ตอบสนองเร็วกว่าและประหยัดคำขอ แต่ต้องเปิด Realtime ให้ตาราง และต้องจัดการการเชื่อมต่อที่หลุด บทนี้ใช้ Polling เพราะเข้าใจง่ายและเพียงพอกับข้อมูลที่เปลี่ยนทุก 5 วินาที
-
----
-
-## 12.6 เส้นทางสั่งการ: Desired State และ Polling
-
-### 12.6.1 ทำไมแดชบอร์ดสั่ง ESP32 ตรง ๆ ไม่ได้
-
-ESP32-S3 ต่อ Wi-Fi อยู่หลังเราเตอร์ที่ทำ **NAT** จึงไม่มี IP สาธารณะ แดชบอร์ดบนอินเทอร์เน็ตจึงเปิดการเชื่อมต่อเข้าหา ESP32 ไม่ได้ ในทางกลับกัน ESP32 เป็นฝ่ายเชื่อมต่อ **ออก** ไปหาเซิร์ฟเวอร์ได้เสมอ ระบบจึงใช้ฐานข้อมูลเป็น **จุดพักคำสั่ง** ตรงกลาง
-
-1. ช่างกดสวิตช์บนแดชบอร์ดแล้วยืนยัน → เบราว์เซอร์ส่ง `PATCH /rest/v1/controls ...` (= `UPDATE controls ...`) ด้วย role `authenticated`
-2. ESP32 ถามตาราง `controls` ทุก 2 วินาที (`GET`) → ถ้าค่าต่างจากสถานะปัจจุบันก็ขับ LED ตามค่านั้น
-3. trigger ในฐานข้อมูลบันทึกการเปลี่ยนแปลงลง `events` โดยอัตโนมัติ
-
-แนวคิดนี้เป็นรูปแบบเดียวกับ **Device Shadow / Digital Twin** ของแพลตฟอร์ม IoT เชิงพาณิชย์ และ Shared Attributes ของ ThingsBoard ในบทที่ 10
-
-### 12.6.2 เก็บ "สถานะที่ต้องการ" ไม่ใช่ "คำสั่ง"
-
-| แนวทาง | ข้อมูลที่เก็บ | ถ้า ESP32 พลาดการอ่าน 1 รอบ หรือรีบูต |
-|:---|:---|:---|
-| เก็บคำสั่ง (Command) | "สลับสถานะพัดลม" | คำสั่งอาจหายหรือถูกทำซ้ำ สถานะจริงจะผิดจากที่ช่างตั้งใจ |
-| **เก็บสถานะที่ต้องการ (Desired State)** ✅ | "พัดลมต้อง **เปิด**" | อ่านรอบถัดไปก็ได้ค่าเดิม ขับซ้ำกี่ครั้งผลก็เหมือนเดิม |
-
-คุณสมบัติที่ "ทำซ้ำกี่ครั้งผลก็เหมือนเดิม" เรียกว่า **Idempotent** ทำให้ระบบทนต่อเครือข่ายที่ไม่เสถียร และเมื่อ ESP32 รีบูต ก็เพียงอ่านแถวใน `controls` ครั้งแรกตอนเริ่มทำงาน แล้วขับ LED ให้ตรงกับสถานะล่าสุดได้ทันที
-
-### 12.6.3 ความหน่วงของ Polling
-
-ESP32 ถาม `controls` ทุก $T_{poll} = 2$ วินาที ช่างอาจกดส่งคำสั่ง ณ จุดใดของรอบก็ได้ เวลารอจึงกระจายสม่ำเสมอระหว่าง $0$ ถึง $T_{poll}$ ความหน่วงเฉลี่ยตั้งแต่กดส่งจนถึง LED ติดคือ
-
-$$\bar{t}_{delay} \approx t_{submit} + \frac{T_{poll}}{2} + t_{GET} \approx 0.3 + 1 + 1 \approx 2.3\ \text{วินาที}$$
-
-เมื่อ $t_{submit}$ คือเวลาที่แดชบอร์ดเขียนฐานข้อมูล และ $t_{GET}$ คือเวลาของคำขอ HTTPS กรณีแย่ที่สุดอาจถึง 4–6 วินาที ถ้าคำสั่งมาถึงขณะ ESP32 กำลังส่งค่าเซนเซอร์อยู่
-
-**ราคาของการ Poll:** $86{,}400 / 2 = 43{,}200$ คำขอต่อวัน ถ้าคำตอบพร้อม header ใช้ราว 0.5 KB จะได้ข้อมูลขาออก (Egress) ราว 21 MB ต่อวันต่ออุปกรณ์ ตัวเลขนี้ใช้เทียบกับโควตาของแผนฟรี
-
-| วิธีรับคำสั่ง | ความหน่วง | ความซับซ้อน | เหมาะกับ |
+| วิธีรับคำสั่ง | หลักการ | ความหน่วงโดยประมาณ | ภาระเครือข่าย |
 |:---|:---|:---|:---|
-| **HTTP Polling** (บทนี้) | วินาที | ต่ำ ใช้ REST เดิม | ไฟ พัดลม การตั้งค่าที่เปลี่ยนไม่บ่อย |
-| Push ผ่าน MQTT (บทที่ 9) หรือ WebSocket (Supabase Realtime) | ต่ำกว่า 1 วินาที | สูงขึ้น ต้องรักษา connection ตลอดเวลา | งานที่ต้องตอบสนองเร็ว หรืออุปกรณ์จำนวนมาก |
+| **HTTP Polling** | บอร์ดถามเซิร์ฟเวอร์ซ้ำทุก $T_{poll}$ วินาที (เช่นระบบ REST ในบทที่ 8) | $\bar{t} \approx \frac{T_{poll}}{2} + t_{HTTPS}$ เช่น $T_{poll} = 2$ s ได้ราว 2 วินาที | ถามตลอดแม้ไม่มีคำสั่ง $86{,}400/2 = 43{,}200$ ครั้งต่อวัน |
+| **MQTT Push** (บทนี้) | คลาวด์ส่งลงมาทันทีผ่านการเชื่อมต่อที่เปิดค้างไว้ | $\bar{t} \approx t_{\text{dashboard→cloud}} + t_{\text{cloud→board}}$ ปกติต่ำกว่า 1 วินาที | ส่งเฉพาะเมื่อมีคำสั่ง + keep-alive เล็ก ๆ |
 
-> ⚠️ **ความปลอดภัยของเครื่องจักร:** การสั่งผ่านคลาวด์มีความหน่วงหลายวินาที และหยุดทำงานเมื่อเครือข่ายขัดข้อง จึง **ห้ามใช้เป็นระบบหยุดฉุกเฉิน (Emergency Stop)** ซึ่งต้องเป็นวงจรเดินสายตรง (Hardwired) ตามมาตรฐานความปลอดภัยของเครื่องจักรเสมอ ระบบในบทนี้เหมาะกับงานที่ไม่วิกฤต เช่น เปิดไฟส่องสว่างหรือพัดลมระบายอากาศ
+ข้อแลกเปลี่ยนของ Push คือ บอร์ดต้องรักษาการเชื่อมต่อไว้ตลอด (ใช้พลังงานและหน่วยความจำมากกว่า) และต้องจัดการการเชื่อมต่อใหม่เมื่อ Wi-Fi หลุด ซึ่งไลบรารีทำให้แล้ว
 
-### 12.6.4 สองผู้สั่ง หนึ่งความจริง
+### 12.5.2 สองผู้สั่ง หนึ่งความจริง
 
-ระบบมีผู้สั่ง 2 ทาง คือสวิตช์บนแดชบอร์ดและปุ่มหน้าตู้ ทั้งสองทางต้องเขียนลงแถวเดียวกันใน `controls` ซึ่งเป็น **แหล่งความจริงเพียงแหล่งเดียว (Single Source of Truth)**
+ระบบมีผู้สั่ง 2 ทาง และทั้งสองทางเปลี่ยน **ตัวแปรเดียวกัน** ซึ่งเป็น **แหล่งความจริงเพียงแหล่งเดียว (Single Source of Truth)**
 
-- **ช่างกดปุ่มหน้าตู้:** ESP32 สลับ LED ทันที (ไม่ต้องรอเครือข่าย) แล้ว `PATCH` ค่าใหม่ขึ้น `controls` แดชบอร์ดจึงเห็นสถานะเดียวกัน
-- **ช่างสั่งจากแดชบอร์ด:** เบราว์เซอร์แก้ `controls` แล้ว ESP32 เห็นในรอบ poll ถัดไป และแดชบอร์ดเครื่องอื่นเห็นในรอบ refresh ถัดไป
-- ถ้าสั่งพร้อมกันทั้งสองทาง ค่าที่เขียนทีหลังจะชนะ (**Last Write Wins**)
+- **ช่างกด Switch บนแดชบอร์ด:** คลาวด์ push ค่าใหม่ลงบอร์ด → ไลบรารีเขียนค่าลงตัวแปร `fan` → เรียก `onFanChange()` → โปรแกรมขับ LED
+- **ช่างกดปุ่มหน้าตู้:** โปรแกรมสลับค่าตัวแปร `fan` ในบอร์ด และขับ LED ทันที (ไม่ต้องรอเครือข่าย) → ในการเรียก `update()` ครั้งถัดไป ไลบรารีพบว่าค่าเปลี่ยน (On Change) จึง publish ขึ้นคลาวด์ → Switch บนแดชบอร์ดเปลี่ยนตาม
+- ถ้าสั่งพร้อมกันทั้งสองทาง ค่าที่ถึงคลาวด์ทีหลังจะชนะ (**Last Write Wins**)
 
-**Trigger** คือฟังก์ชันที่ PostgreSQL เรียกให้อัตโนมัติเมื่อตารางถูกแก้ไข เราใช้ trigger เปรียบเทียบค่าเก่า (`old`) กับค่าใหม่ (`new`) ของแต่ละอุปกรณ์ ถ้าเปลี่ยนก็เพิ่มแถวลง `events` พร้อม `source` ผลคือไม่ว่าคำสั่งจะมาจากทางใด ประวัติก็ถูกบันทึกครบ และทั้ง ESP32 และแดชบอร์ดไม่ต้องมีสิทธิ์เขียน `events` เลย
+### 12.5.3 Sync เมื่อเชื่อมต่อใหม่: ค่าของใครชนะ
+
+เมื่อบอร์ดรีบูตหรือ Wi-Fi หลุดแล้วกลับมา ค่าตัวแปร Read & Write ในบอร์ดกับบนคลาวด์อาจไม่ตรงกัน ตอนเชื่อมต่อ คลาวด์จะส่งค่าล่าสุดลงมาในข้อความ **Sync** แล้วไลบรารีตัดสินตามนโยบายของตัวแปรนั้น
+
+| นโยบาย | ผลเมื่อค่าไม่ตรงกัน | เหมาะกับ |
+|:---|:---|:---|
+| **`CLOUD_WINS`** (ค่าเริ่มต้นของโค้ดที่ Arduino Cloud สร้างให้) | ใช้ค่าบนคลาวด์ แล้วเรียก Callback ให้ LED กลับไปตรงกับที่สั่งไว้ | ไฟส่องสว่าง พัดลมระบายความร้อน ที่ควรกลับมาทำงานต่อหลังไฟดับ |
+| **`DEVICE_WINS`** | ใช้ค่าในบอร์ด (ที่เพิ่งบูต = ปิด) แล้วส่งขึ้นไปแทนค่าบนคลาวด์ | ปั๊มหรือเครื่องจักรที่ต้องให้คนยืนยันก่อนเริ่มเดินใหม่ (Fail-safe) |
+
+แนวคิดที่คลาวด์เก็บ **"สถานะที่ต้องการ" (Desired State)** แทน "คำสั่งให้สลับ" ทำให้ระบบทนต่อเครือข่ายที่ไม่เสถียร เพราะไม่ว่าบอร์ดจะพลาดข้อความกี่ครั้ง เมื่อเชื่อมต่อใหม่ก็ได้สถานะล่าสุดเสมอ คุณสมบัติที่ "ทำซ้ำกี่ครั้งผลก็เหมือนเดิม" นี้เรียกว่า **Idempotent** และเป็นเหตุผลที่ `light`, `pump`, `fan` เป็น `bool` ที่บอกสถานะ ไม่ใช่ปุ่ม "Toggle"
+
+> ⚠️ **ความปลอดภัยของเครื่องจักร:** การสั่งผ่านคลาวด์หยุดทำงานเมื่ออินเทอร์เน็ตขัดข้อง และมีความหน่วงที่ควบคุมไม่ได้ จึง **ห้ามใช้เป็นระบบหยุดฉุกเฉิน (Emergency Stop)** ซึ่งต้องเป็นวงจรเดินสายตรง (Hardwired) ตามมาตรฐานความปลอดภัยของเครื่องจักรเสมอ ระบบในบทนี้เหมาะกับงานที่ไม่วิกฤต เช่น เปิดไฟส่องสว่างหรือพัดลมระบายอากาศ
 
 ---
 
-## 12.7 หลักการออกแบบแดชบอร์ด
+## 12.6 หลักการออกแบบแดชบอร์ด
 
 แดชบอร์ดที่ดีต้องให้ช่างเข้าใจสถานะของตู้ควบคุมได้ **ภายใน 3 วินาที** โดยไม่ต้องอ่านคู่มือ จึงใช้หลักการต่อไปนี้
 
-1. **ภาพรวมอยู่บน รายละเอียดอยู่ล่าง** แถวบนสุดเป็นค่าปัจจุบันและสถานะ ถัดลงมาเป็นแนวโน้ม และล่างสุดเป็นส่วนสั่งการและประวัติเหตุการณ์
-2. **สีมีความหมายเสมอ** ใช้เขียว เหลือง และแดงเฉพาะเพื่อบอกสถานะ (ปกติ เฝ้าระวัง ผิดปกติ) ไม่ใช้สีเพื่อความสวยงาม ช่างจะได้มองหาสีแดงเป็นอันดับแรก
-3. **เลือกรูปแบบการแสดงผลตามคำถาม**
+1. **ภาพรวมอยู่บน รายละเอียดอยู่ล่าง** แถวบนสุดเป็นค่าปัจจุบันและสถานะ ถัดลงมาเป็นแนวโน้ม และล่างสุดเป็นส่วนสั่งการ
+2. **สีมีความหมายเสมอ** ใช้เขียว เหลือง และแดงเฉพาะเพื่อบอกสถานะ (ปกติ เฝ้าระวัง ผิดปกติ) ไม่ใช้สีเพื่อความสวยงาม
+3. **เลือก Widget ตามคำถาม**
 
-| คำถามของช่าง | รูปแบบที่เหมาะ | เหตุผล |
+| คำถามของช่าง | Widget ที่เหมาะ | เหตุผล |
 |:---|:---|:---|
-| ตอนนี้ร้อนแค่ไหน? | Gauge | เห็นตำแหน่งเทียบกับเกณฑ์ทันที |
-| อุปกรณ์ยังส่งข้อมูลอยู่ไหม? | Stat (วินาทีตั้งแต่ข้อมูลล่าสุด) | ตัวเลขเดียวพร้อมสีสถานะ |
-| อุณหภูมิเพิ่มขึ้นเรื่อย ๆ หรือไม่? | กราฟเส้นตามเวลา (Time series) | กราฟเส้นแสดงแนวโน้มตามเวลาได้ดีที่สุด |
-| จะสั่งเปิด/ปิดไฟ ปั๊ม พัดลม? | ปุ่มสวิตช์ที่แสดงสถานะ (Toggle button) | แสดงสถานะที่สั่งอยู่ และกดเปลี่ยนได้ในที่เดียว ปุ่มใหญ่พอกดบนมือถือ |
-| ใครสั่งอะไร เมื่อไร? | ตารางประวัติ (Event log) พร้อมป้ายสีเปิด/ปิด | อ่านลำดับเหตุการณ์และผู้สั่งได้ทันที |
-| เปิดพัดลมแล้วอุณหภูมิลดลงหรือไม่? | เส้นหมายเหตุ (Annotation) บนกราฟ | วางเหตุการณ์ลงบนกราฟเดียวกันเพื่อเทียบเหตุกับผล |
+| ตอนนี้ร้อนแค่ไหน? | **Gauge** | เห็นตำแหน่งเทียบกับช่วงค่าทันที |
+| ค่าแม่นยำเท่าไร? | **Value** | ตัวเลขชัดเจนพร้อมหน่วย |
+| อุณหภูมิเพิ่มขึ้นเรื่อย ๆ หรือไม่? | **Chart** | กราฟเส้นแสดงแนวโน้มตามเวลาได้ดีที่สุด |
+| จะสั่งเปิด/ปิดไฟ ปั๊ม พัดลม? | **Switch** | แสดงสถานะที่สั่งอยู่ และกดเปลี่ยนได้ในที่เดียว |
+| ตู้ร้อนเกินเกณฑ์หรือไม่? | **Status** หรือ **LED** (ผูกกับตัวแปร `bool`) | บอกได้ทันทีด้วยสีและสัญลักษณ์ |
 
-4. **ข้อมูลต้องไม่บิดเบือน** ติดหน่วยทุกส่วน (°C, %RH) ใช้กราฟหรือแกนแยกเมื่อหน่วยต่างกัน และตั้งช่วงแกนของ Gauge ให้คงที่ (เช่น 0–60 °C) เพื่อไม่ให้การเปลี่ยนแปลงเล็กน้อยดูเหมือนรุนแรง
-5. **ส่วนสั่งการต้องป้องกันการกดพลาด** แยกปุ่มสั่งการออกจากส่วนแสดงผล ใช้ป้ายกำกับชัดเจนว่ากำลังสั่งอุปกรณ์ใด ให้ **ยืนยันก่อนส่ง (Confirmation)** ทุกครั้ง และวางประวัติการสั่งไว้ข้างปุ่ม เพื่อให้ช่างเห็นผลของคำสั่งทันที
+4. **ข้อมูลต้องไม่บิดเบือน** ติดหน่วยทุก Widget (°C, %RH) แยก Chart เมื่อหน่วยต่างกัน และตั้งช่วง Gauge ให้คงที่ (เช่น 0–60 °C) เพื่อไม่ให้การเปลี่ยนแปลงเล็กน้อยดูเหมือนรุนแรง
+5. **ส่วนสั่งการต้องป้องกันการกดพลาด** แยก Switch ไว้แถวล่าง ตั้งชื่อให้ชัดว่าสั่งอุปกรณ์ใด และขยาย Widget ให้ใหญ่พอกดบนมือถือได้โดยไม่โดนปุ่มข้างเคียง
 
-**Layout ของแดชบอร์ด `MCC Monitor`** (แม่แบบในโฟลเดอร์ `dashboard/` จัดไว้ให้แล้ว)
+**Layout ของ Dashboard `MCC Monitor`**
 
-| แถว | ส่วนประกอบ | ใช้งานได้ตั้งแต่ส่วนที่ |
+| แถว | Widget | สร้างในส่วนที่ |
 |:---|:---|:---|
-| 1 (ภาพรวม) | Gauge อุณหภูมิ · Gauge ความชื้น · สถานะการเชื่อมต่อ | 1 |
-| | เปิดพัดลมวันนี้ (จำนวนครั้ง) | 2 |
-| 2 (แนวโน้ม) | กราฟอุณหภูมิ · กราฟความชื้น (เลือกช่วง 15 นาที / 30 นาที / 1 ชั่วโมง) | 1 |
-| | เส้นหมายเหตุเปิด/ปิดพัดลมบนกราฟอุณหภูมิ | 2 |
-| 3 (สั่งการและเหตุการณ์) | ปุ่มสั่งการ ไฟ · ปั๊ม · พัดลม · ประวัติการสั่ง | 2 |
-| แถบบนสุด | แถบเตือนอุณหภูมิสูง / ขาดการเชื่อมต่อ / ข้อผิดพลาด | 1 |
+| 1 (ภาพรวม) | Gauge `temp` · Gauge `hum` · Status `overheat` (ไม่บังคับ) | 1 |
+| 2 (แนวโน้ม) | Chart `temp` · Chart `hum` | 1 |
+| 3 (สั่งการ) | Switch `light` · Switch `pump` · Switch `fan` | 2 |
+
+---
+
+## 12.7 ข้อจำกัดของแพลตฟอร์มสำเร็จรูปและแผนฟรี
+
+**แผนฟรีของ Arduino Cloud** (ข้อมูล ณ ปี 2025 อาจเปลี่ยนได้ ควรตรวจสอบที่ [cloud.arduino.cc/plans](https://cloud.arduino.cc/plans) ก่อนเริ่มภาคการศึกษา)
+
+| ข้อจำกัด | ผลต่อบทนี้ | แนวทาง |
+|:---|:---|:---|
+| อุปกรณ์ได้ไม่เกิน **2 เครื่อง** ต่อบัญชี | นักศึกษาแต่ละคนใช้บัญชีของตนเอง | ลบอุปกรณ์ทดลองที่ไม่ใช้ออก |
+| เก็บค่าตัวแปรย้อนหลัง **1 วัน** | Chart ดูย้อนหลังได้ไม่เกิน 24 ชั่วโมง | ดาวน์โหลดข้อมูลเก็บเอง ถ้าต้องวิเคราะห์ต่อ |
+| compile ใน Cloud Editor ได้ **25 ครั้งต่อวัน** | ถ้าแก้โค้ดบ่อยจะติดเพดาน | compile ด้วย **Arduino IDE บนเครื่อง** (หัวข้อ 12.8.2) ไม่ติดเพดานนี้ |
+| **Triggers** (แจ้งเตือนทางอีเมล/แอป) ต้องใช้แผน Maker และรองรับเฉพาะตัวแปร `bool` และ `String` | ส่งอีเมลเมื่อร้อนเกินเกณฑ์ไม่ได้ในแผนฟรี | ใช้ตัวแปร `overheat` + Widget Status บนแดชบอร์ดแทน (หัวข้อ 12.8.7) |
+| อาจจำกัดจำนวนตัวแปรต่อ Thing | บทนี้ใช้ตัวแปรหลักเพียง 5 ตัว | ตัวแปรที่ 6 (`overheat`) เป็นส่วนไม่บังคับ |
+
+**ข้อจำกัดของแพลตฟอร์มสำเร็จรูป (เทียบกับการสร้างระบบเองด้วยฐานข้อมูล):**
+- **ไม่มีประวัติว่าใครสั่งอะไรเมื่อไร (Audit trail)** เห็นเพียงค่าบนกราฟ ถ้าโรงงานต้องการตรวจสอบย้อนหลัง ต้องเก็บเหตุการณ์เองในฐานข้อมูลภายนอก
+- **ออกแบบโครงสร้างข้อมูลเองไม่ได้** เช่น รวมข้อมูลหลายตู้เพื่อวิเคราะห์ด้วย SQL
+- **ผูกกับผู้ให้บริการ (Vendor Lock-in)** ถ้าเงื่อนไขหรือราคาเปลี่ยน การย้ายระบบต้องแก้ทั้งโปรแกรมในบอร์ดและแดชบอร์ด
+
+ในทางกลับกัน ข้อดีคือ **เริ่มใช้งานได้เร็วมาก** ไม่ต้องเขียน SQL, REST, หรือเว็บ และได้การยืนยันตัวตนต่ออุปกรณ์ การเข้ารหัส การเชื่อมต่อใหม่อัตโนมัติ และแอปมือถือมาพร้อมกัน การเลือกระหว่าง "ใช้แพลตฟอร์ม" กับ "สร้างเอง" จึงเป็นการตัดสินใจทางวิศวกรรม (แบบฝึกหัดข้อ 8)
 
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Hands-on" data-tab-icon="🔧" id="handson" markdown="1">
 
-## 12.8 ปฏิบัติการส่วนที่ 1: ติดตาม (Sensor → ESP32 → Dashboard)
+## 12.8 ปฏิบัติการส่วนที่ 1: ติดตาม (Sensor → ESP32 → Arduino Cloud → Dashboard)
 
 > ใบงานพร้อมตารางบันทึกผลอยู่ในแท็บ **Lab 14** (หัวข้อ 12.11) หัวข้อ 12.8–12.10 อธิบายโค้ดและขั้นตอนทั้งหมดแบบละเอียด ส่วนที่ 1 ต้องทำงานได้ก่อน แล้วจึงต่อยอดเป็นส่วนที่ 2
 
-**เป้าหมายของส่วนที่ 1:** ESP32-S3 อ่าน AHT25 แล้วส่งขึ้นตาราง `telemetry` ทุก 5 วินาที จากนั้นเว็บแดชบอร์ดบน Vercel แสดงค่าปัจจุบัน แนวโน้ม สถานะการเชื่อมต่อ และแจ้งเตือนเมื่ออุณหภูมิสูง
+**เป้าหมายของส่วนที่ 1:** ESP32-S3 อ่าน AHT25 แล้วส่งค่า `temp` และ `hum` ขึ้น Arduino Cloud ทุก 5 วินาที จากนั้น Dashboard แสดงค่าปัจจุบันด้วย Gauge และแนวโน้มด้วย Chart บนเว็บและมือถือ
 
 ### 12.8.1 ต่อวงจร
 
@@ -543,269 +405,124 @@ $$\bar{t}_{delay} \approx t_{submit} + \frac{T_{poll}}{2} + t_{GET} \approx 0.3 
 
 1. **Boards Manager** → ติดตั้ง **esp32 by Espressif Systems**
 2. **Library Manager** → ติดตั้ง **Adafruit AHTX0** (จะติดตั้ง Adafruit BusIO และ Adafruit Unified Sensor ให้ด้วย)
-3. **Tools** → Board: **ESP32S3 Dev Module** → **USB CDC On Boot: Enabled** ถ้าไม่เปิด Serial Monitor จะไม่แสดงอะไรเมื่อเสียบสายที่พอร์ต USB ตรงของชิป
-4. Wi-Fi: ESP32-S3 รองรับเฉพาะ 2.4 GHz และใช้กับเครือข่ายแบบ WPA2-Enterprise หรือแบบที่ต้อง login ผ่านหน้าเว็บ (Captive Portal) ไม่ได้ ถ้า Wi-Fi มหาวิทยาลัยเป็นแบบนั้น ให้ใช้ Hotspot จากมือถือแทน
+3. **Library Manager** → ติดตั้ง **ArduinoIoTCloud** (by Arduino) → เมื่อถามให้ติดตั้งไลบรารีที่เกี่ยวข้อง (dependencies เช่น Arduino_ConnectionHandler) เลือก **Install All**
+4. **Tools** → Board: **ESP32S3 Dev Module** → **USB CDC On Boot: Enabled** ถ้าไม่เปิด Serial Monitor จะไม่แสดงอะไรเมื่อเสียบสายที่พอร์ต USB ตรงของชิป
+5. Wi-Fi: ESP32-S3 รองรับเฉพาะ 2.4 GHz และใช้กับเครือข่ายแบบ WPA2-Enterprise หรือแบบที่ต้อง login ผ่านหน้าเว็บ (Captive Portal) ไม่ได้ ถ้า Wi-Fi มหาวิทยาลัยเป็นแบบนั้น ให้ใช้ Hotspot จากมือถือแทน
 
-### 12.8.3 สร้างตาราง `telemetry` บน Supabase
+> **ทำไมใช้ Arduino IDE แทน Cloud Editor?** Arduino Cloud มี Cloud Editor บนเว็บที่ compile และอัปโหลดได้ (ต้องติดตั้งโปรแกรม **Arduino Cloud Agent**) แต่แผนฟรี compile ได้ 25 ครั้งต่อวัน การใช้ Arduino IDE บนเครื่องจึงไม่ติดเพดานนี้ และใช้ ESP32 core ชุดเดียวกับบทก่อน ๆ
 
-**ตาราง `telemetry`: ค่าเซนเซอร์ที่ส่งทุก 5 วินาที**
+### 12.8.3 ลงทะเบียนอุปกรณ์ (Device)
 
-| คอลัมน์ | ชนิดข้อมูล | ค่าเริ่มต้น / เงื่อนไข | ผู้กำหนดค่า | ความหมาย | ตัวอย่าง |
-|:---|:---|:---|:---|:---|:---|
-| `id` | `bigint` (`int8`) | Primary key, identity (เพิ่มอัตโนมัติ) | ฐานข้อมูล | เลขลำดับแถว | `1024` |
-| `created_at` | `timestamptz` (`timestamptz`) | `not null`, `default now()` | ฐานข้อมูล | เวลาที่บันทึก (เก็บเป็น UTC) | `2026-09-28 03:15:05+00` |
-| `device_id` | `text` (`text`) | `not null` | ESP32-S3 | รหัสอุปกรณ์ | `mcc01` |
-| `temp` | `real` (`float4`) | -40 ถึง 120 (ตรวจโดย RLS policy) | ESP32-S3 | อุณหภูมิ (°C) | `31.4` |
-| `hum` | `real` (`float4`) | 0 ถึง 100 (ตรวจโดย RLS policy) | ESP32-S3 | ความชื้นสัมพัทธ์ (%RH) | `58.2` |
+1. สมัครหรือ login ที่ [cloud.arduino.cc](https://cloud.arduino.cc/) (ใช้บัญชี Google ได้)
+2. เมนู **Devices** → **Add Device** → **Third Party Device** → เลือก **ESP32** → รุ่น **ESP32S3 Dev Module** (หรือชื่อรุ่น ESP32-S3 ที่ใกล้เคียงที่สุดในรายการ) → **Continue**
+3. ตั้งชื่ออุปกรณ์เป็น `MCC-` ตามด้วยรหัสนักศึกษา 4 ตัวท้าย เช่น `MCC-1234` → **Next**
+4. หน้าจอจะแสดง **Device ID** และ **Secret Key** → คัดลอกเก็บไว้ (หรือดาวน์โหลดเป็นไฟล์ PDF ที่หน้าจอเสนอให้) → ยืนยันว่าบันทึกแล้ว → **Continue**
 
-Index: `telemetry_device_time_idx` บนคอลัมน์ `(device_id, created_at desc)`
+> ⚠️ **Secret Key แสดงเพียงครั้งเดียว** ถ้าทำหาย ต้องลบอุปกรณ์แล้วลงทะเบียนใหม่ และห้ามนำ Secret Key ขึ้น GitHub หรือส่งให้ผู้อื่น (หัวข้อ 12.3.3)
 
-ชื่อในวงเล็บคือชื่อที่ **Table Editor** ของ Supabase แสดง (เป็นชื่อย่อของชนิดเดียวกันใน PostgreSQL)
+### 12.8.4 สร้าง Thing และตัวแปรของส่วนที่ 1
 
-**เหตุผลการเลือกชนิดข้อมูล** (ตามคำแนะนำใน [Supabase Docs: Data types](https://supabase.com/docs/guides/database/tables#data-types)) ใช้กับตารางในส่วนที่ 2 ด้วย
+1. เมนู **Things** → **Create Thing** (หรือ **+ Thing**) → ตั้งชื่อ `MCC Monitor`
+2. ส่วน **Associated Device** → **Select Device** → เลือก `MCC-1234` → **Associate**
+3. ส่วน **Network** → **Configure** → กรอก **Wi-Fi Name**, **Password** (Wi-Fi 2.4 GHz) และ **Secret Key** จากหัวข้อ 12.8.3 → **Save**
+4. ส่วน **Cloud Variables** → **Add** เพิ่มตัวแปร 2 ตัว (ชื่อต้องตรงทุกตัวอักษร เพราะโปรแกรมใช้ชื่อเหล่านี้)
 
-| ชนิดข้อมูล | ใช้กับ | เหตุผล |
-|:---|:---|:---|
-| `bigint` แทน `integer` | `id` | `integer` เก็บได้สูงสุดประมาณ 2.1 พันล้าน และ identity อาจข้ามเลข จึงอาจเต็มก่อนมีข้อมูลครบจำนวนนั้น ข้อมูลที่ส่งทุก 5 วินาทีจะสะสมเร็วมาก |
-| `generated always as identity` | `id` | ฐานข้อมูลเป็นผู้กำหนดเลขเท่านั้น ถ้า ESP32 ส่ง `id` มาเองจะถูกปฏิเสธ (แบบ `by default` ยอมให้ใส่เองได้) |
-| `timestamptz` แทน `timestamp` | `created_at`, `updated_at` | เก็บเป็นช่วงเวลาจริง (UTC) แล้วแสดงตาม time zone ของผู้ดู ส่วน `timestamp` ไม่รู้ time zone จึงเทียบเวลาข้ามประเทศหรือข้ามระบบผิดได้ |
-| `text` แทน `varchar(n)` | `device_id`, `event`, `source`, `updated_by` | ใช้พื้นที่เท่ากันแต่ไม่จำกัดความยาว ถ้าต้องการจำกัดค่าให้ใช้ `check` constraint แบบที่ใช้กับ `event` |
-| `boolean` | `light`, `pump`, `fan`, `state` | มีได้เพียง 2 สถานะ (เปิด/ปิด) ตรงกับความหมายของข้อมูล |
-| `real` แทน `numeric` | `temp`, `hum` | เอกสารแนะนำ `numeric` สำหรับเงินและทศนิยมที่ต้องแม่นยำแบบตรงเป๊ะ เพราะ `real` เก็บค่าบางค่า เช่น 0.10 แบบตรงเป๊ะไม่ได้ แต่ `real` แม่นยำประมาณ 6–7 หลักนัยสำคัญ ความคลาดเคลื่อนจึงเล็กกว่าความแม่นยำของ AHT25 (±0.3 °C, ±2 %RH) มาก และข้อมูลเซนเซอร์ไม่ได้ถูกบวกสะสมแบบยอดเงิน `real` ยังใช้เพียง 4 ไบต์และคำนวณเร็วกว่า |
-
-**ตัวอย่างข้อมูลหลังระบบทำงาน** (Table Editor แสดงเวลาเป็น UTC ดังนั้น `03:15` คือ 10:15 น. ตามเวลาไทย)
-
-| id | created_at | device_id | temp | hum |
-|---:|:---|:---|---:|---:|
-| 1024 | 2026-09-28 03:15:05+00 | mcc01 | 31.4 | 58.2 |
-| 1025 | 2026-09-28 03:15:10+00 | mcc01 | 31.5 | 58.0 |
-| 1026 | 2026-09-28 03:15:15+00 | mcc01 | 31.5 | 57.9 |
-
-**ขั้นตอน**
-
-1. สมัครที่ [supabase.com](https://supabase.com) → **New project** → ตั้งชื่อ `mcc-monitor` → ตั้ง Database Password → Region **Southeast Asia (Singapore)**
-2. สร้างตาราง `telemetry` และสิทธิ์ของ ESP32 ด้วย **วิธีใดวิธีหนึ่ง** ด้านล่าง
-
-**วิธีที่ 1: สร้างผ่านหน้าเว็บ Supabase**
-
-*ก. สร้างตาราง*
-
-1. เมนูซ้าย **Table Editor** → **New table** (หรือ **Create a new table**)
-2. **Name** = `telemetry` → ให้ช่อง **Enable Row Level Security (RLS)** ถูกเลือกไว้ (ค่าเริ่มต้น) และเปิดสวิตช์ **Data API access** ไว้ เพราะ ESP32 ส่งข้อมูลผ่าน Data API
-3. ส่วน **Columns** มีคอลัมน์ `id` (`int8`, Primary, Identity) และ `created_at` (`timestamptz`, Default value `now()`) ให้แล้ว ไม่ต้องแก้ไข จากนั้นกด **Add column** เพิ่มอีก 3 คอลัมน์
-
-| Name | Type | Default value | Extra options (ปุ่ม ⚙ ท้ายแถว) |
+| Name | Type | Permission | Update Policy |
 |:---|:---|:---|:---|
-| `device_id` | `text` | (ว่าง) | **ยกเลิก** เครื่องหมายที่ **Is nullable** (= `not null`) |
-| `temp` | `float4` | (ว่าง) | คงค่าเดิม (nullable) |
-| `hum` | `float4` | (ว่าง) | คงค่าเดิม (nullable) |
+| `temp` | Temperature Sensor (°C) | Read Only | Periodically ทุก **5** วินาที |
+| `hum` | Relative Humidity | Read Only | Periodically ทุก **5** วินาที |
 
-4. กด **Save** → หน้าเว็บจะเตือนว่า *Policies are required to query data* ซึ่งเราจะสร้าง policy ในขั้น ง.
+5. เปิดแท็บ **Sketch** ของ Thing → ดูไฟล์ `thingProperties.h` ที่ระบบสร้างให้ ต้องมีตัวแปร `temp` และ `hum`
 
-> `id` ที่สร้างจากหน้าเว็บเป็นแบบ `generated by default as identity` (ใส่ `id` เองได้) ส่วนวิธีที่ 2 ใช้ `generated always` (ใส่เองไม่ได้) ทั้งสองแบบใช้กับบทนี้ได้เหมือนกัน เพราะ ESP32 ไม่ส่ง `id` มา
+### 12.8.5 โปรแกรม ESP32-S3 ส่วนที่ 1 (`mcc_cloud_monitor.ino`)
 
-*ข. สร้าง Index*
+โปรแกรมประกอบด้วย 3 ไฟล์ในโฟลเดอร์ sketch เดียวกัน
 
-1. เมนูซ้าย **Database** → **Indexes** → **Create index**
-2. **Select a schema** = `public` → **Select a table** = `telemetry` → **Select up to 32 columns** = `device_id` แล้วตามด้วย `created_at` (ลำดับการเลือกมีผล) → **Select an index type** = `B-Tree`
-3. ตรวจช่อง *Preview of SQL statement* แล้วกด **Create index**
+| ไฟล์ | ผู้สร้าง | เนื้อหา |
+|:---|:---|:---|
+| `thingProperties.h` | Arduino Cloud สร้างให้ (**ห้ามแก้เอง**) | Device ID, ตัวแปร Cloud, การลงทะเบียน Callback |
+| `arduino_secrets.h` | เราสร้างเอง | ชื่อและรหัส Wi-Fi, Secret Key |
+| `mcc_cloud_monitor.ino` | เราเขียนเอง | อ่าน AHT25 แล้วเขียนค่าลงตัวแปร Cloud |
 
-> หน้าเว็บสร้าง index แบบเรียงจากน้อยไปมาก (ไม่มี `desc`) ซึ่งเร็วพอ ๆ กับวิธีที่ 2 เพราะ PostgreSQL อ่าน B-tree ย้อนหลังได้ query แบบ `ORDER BY created_at DESC` จึงยังใช้ index นี้ได้
-
-*ค. จำกัดสิทธิ์ของ `anon` ให้ INSERT ได้อย่างเดียว*
-
-สวิตช์ **Data API access** ในขั้น ก. ให้สิทธิ์ทุกอย่าง (`SELECT`, `INSERT`, `UPDATE`, `DELETE`) กับ `anon` และ `authenticated` และหน้าเว็บยังเลือกให้เฉพาะบางสิทธิ์ไม่ได้ ขั้นนี้จึงต้องใช้ **SQL Editor → New query → Run**
-
-```sql
-revoke all on public.telemetry from anon, authenticated;
-grant insert on public.telemetry to anon;
-```
-
-> ถ้าข้ามขั้นนี้ ระบบยังปลอดภัยในระดับหนึ่ง เพราะ RLS จะอนุญาตเฉพาะการกระทำที่มี policy รองรับ (มีเฉพาะ `INSERT` ในขั้น ง.) แต่การถอนสิทธิ์ที่ไม่ใช้ออกเป็นการป้องกันอีกชั้น (Defense in Depth) ถ้าวันหนึ่งมีคนเพิ่ม policy ผิดพลาด `anon` ก็ยังอ่านหรือลบข้อมูลไม่ได้
-
-*ง. สร้าง RLS policy ให้ ESP32 เพิ่มแถวได้*
-
-1. เมนูซ้าย **Database** → กลุ่ม **Access Control** → **Policies** → ที่ตาราง `telemetry` กด **Create policy**
-2. กรอกค่าในแผง *Create a new Row Level Security policy*
-
-| ช่อง | ค่าที่เลือก / กรอก |
-|:---|:---|
-| **Policy Name** | `esp32 insert telemetry` |
-| **Table** | `public.telemetry` (เลือกไว้ให้แล้ว) |
-| **Policy Behavior** (`as` clause) | `permissive` (ค่าเริ่มต้น) |
-| **Policy Command** (`for` clause) | **INSERT** |
-| **Target Roles** (`to` clause) | **anon** (ต้องเลือกเอง ถ้าเว้นว่างจะเป็น `public` คือทุก role) |
-
-3. ในช่องแก้ SQL ด้านล่าง ระบบเขียนคำสั่ง `create policy ... with check ( ... );` ไว้ให้แล้ว ให้พิมพ์เงื่อนไขนี้ลงใน **วงเล็บของ `with check`**
-
-```sql
-device_id is not null
-and temp between -40 and 120
-and hum  between 0 and 100
-```
-
-4. กด **Save policy** → ต้องขึ้นข้อความ *Successfully created new policy* และตาราง `telemetry` ในหน้า Policies มีแถว `esp32 insert telemetry` ที่แสดงคำสั่ง `INSERT` และ role `anon`
-
-> ถ้ามี policy ชื่อนี้อยู่แล้วแต่ตั้งค่าผิด เช่น Target Roles ไม่ใช่ `anon` ให้กด **⋯ → Edit policy** แล้วแก้ไข ไม่ต้องสร้างใหม่ เพราะในตารางเดียวกันตั้งชื่อ policy ซ้ำไม่ได้ ถ้าไม่มี policy นี้ ESP32 จะได้ error `401` พร้อมข้อความ *new row violates row-level security policy for table "telemetry"*
-
-**วิธีที่ 2: ใช้ SQL ทั้งหมด**
-
-เมนู **SQL Editor** → **New query** → วางคำสั่งทั้งหมดด้านล่าง → **Run** ชุดคำสั่งนี้ทำขั้น ก.–ง. ของวิธีที่ 1 ครบในครั้งเดียว
-
-```sql
--- ===== ส่วนที่ 1: ตาราง telemetry =====
-create table public.telemetry (
-  id         bigint generated always as identity primary key,
-  created_at timestamptz not null default now(),
-  device_id  text not null,
-  temp       real,
-  hum        real
-);
-create index telemetry_device_time_idx on public.telemetry (device_id, created_at desc);
-
--- ===== เส้นทางเขียน: anon (ESP32) INSERT ได้อย่างเดียว =====
-alter table public.telemetry enable row level security;
-
--- Supabase ให้สิทธิ์ทุกอย่างกับ anon/authenticated บนตารางใหม่โดยอัตโนมัติ
--- จึงถอนออกก่อน แล้วให้เฉพาะสิทธิ์ที่จำเป็น
-revoke all on public.telemetry from anon, authenticated;
-grant insert on public.telemetry to anon;
-
-create policy "esp32 insert telemetry" on public.telemetry
-  for insert to anon
-  with check (device_id is not null
-              and temp between -40 and 120
-              and hum  between 0 and 100);
-```
-
-**ตรวจสอบและเก็บค่าที่ใช้ต่อ**
-
-1. เปิด **Table Editor** → ตรวจว่ามีตาราง `telemetry` ที่มีคอลัมน์ตรงกับโครงสร้างด้านบน และแสดงสถานะ **RLS enabled**
-2. **Database → Access Control → Policies** → ตาราง `telemetry` ต้องมี policy `esp32 insert telemetry` (คำสั่ง `INSERT`, role `anon`)
-3. เมนูซ้าย **Integrations → Data API** → หน้า **Overview** → คัดลอก **Project URL** (เช่น `https://xxxx.supabase.co`) ซึ่งเป็นปลายทางของ REST API ที่ ESP32 ใช้ (URL ของหน้านี้คือ `supabase.com/dashboard/project/<project_ref>/integrations/data_api/overview`)
-4. **Project Settings → API Keys** → คัดลอก **Publishable key** (ขึ้นต้นด้วย `sb_publishable_`) เก็บไว้ ห้ามคัดลอก Secret key (`sb_secret_`)
-
-> 💡 ใช้ปุ่ม **Connect** ด้านบนของหน้าโปรเจกต์แทนข้อ 3–4 ได้ โดยเลือกแท็บ **Framework** แล้วดูไฟล์ env ในขั้น *Add files* ค่า `..._SUPABASE_URL` คือ Project URL และ `..._SUPABASE_PUBLISHABLE_KEY` คือ Publishable key (framework ที่เลือกไม่มีผล เพราะ ESP32 ใช้เฉพาะ 2 ค่านี้)
-
-### 12.8.4 สร้างบัญชีผู้ใช้แดชบอร์ดด้วย Supabase Auth
-
-แดชบอร์ดต้อง login ก่อนจึงจะอ่านข้อมูลได้ (หัวข้อ 12.3.3 และ 12.5.2) ขั้นนี้มี 3 ส่วน คือ ปิดการสมัครเอง สร้างบัญชีให้ช่าง และให้สิทธิ์อ่าน `telemetry` แก่ role `authenticated`
-
-**ก. ปิดการสมัครสมาชิกเอง (ทำก่อนเสมอ)**
-
-1. เมนูซ้าย **Authentication** → **Sign In / Providers**
-2. ปิดสวิตช์ **Allow new users to sign up** → **Save changes**
-
-> ถ้าไม่ปิด ใครก็ตามที่มี Publishable key (ซึ่งอยู่ในเฟิร์มแวร์ ESP32 และในหน้าเว็บ) สามารถสมัครบัญชีเองผ่าน API แล้วได้ role `authenticated` ทันที ซึ่งแปลว่าอ่านข้อมูลของโรงงานได้
-
-**ข. สร้างบัญชีให้ช่าง**
-
-1. **Authentication** → **Users** → **Add user** → **Create new user**
-2. **Email address** = อีเมลของตนเอง (เช่น อีเมลมหาวิทยาลัย) · **User Password** = รหัสผ่านอย่างน้อย 8 ตัวอักษร · เลือก **Auto confirm user?** ไว้ (ไม่ต้องยืนยันทางอีเมล)
-3. กด **Create user** → บัญชีใหม่จะแสดงในรายการ Users
-
-**ค. ให้สิทธิ์อ่าน `telemetry` แก่ผู้ที่ login**
-
-ในหัวข้อ 12.8.3 เราถอนสิทธิ์ทั้งหมดของ `authenticated` ออกแล้ว จึงต้องให้กลับเฉพาะสิทธิ์อ่าน **SQL Editor → New query → Run**
-
-```sql
-grant select on public.telemetry to authenticated;
-
-create policy "dashboard read telemetry" on public.telemetry
-  for select to authenticated using (true);
-```
-
-> **ทางเลือก: สร้าง policy ผ่านหน้าเว็บ** ที่ **Database → Access Control → Policies** → ตาราง `telemetry` → **Create policy** → Policy Name `dashboard read telemetry` → Policy Command **SELECT** → Target Roles **authenticated** → พิมพ์ `true` ในวงเล็บของ `using` → **Save policy** แต่คำสั่ง `grant select ...` บรรทัดแรกยังต้องรันใน SQL Editor เพราะหน้าเว็บยังไม่มีเมนูให้สิทธิ์ระดับตาราง
-
-**ตรวจสอบ**
-
-- **Authentication → Users** มีบัญชีของตนเอง และ **Sign In / Providers** แสดงว่าปิด *Allow new users to sign up* แล้ว
-- **Database → Access Control → Policies** ตาราง `telemetry` มี 2 policy คือ `esp32 insert telemetry` (INSERT, `anon`) และ `dashboard read telemetry` (SELECT, `authenticated`)
-
-### 12.8.5 โปรแกรม ESP32-S3 ส่วนที่ 1 (`mcc_monitor.ino`)
+1. Arduino IDE → สร้าง sketch ใหม่ชื่อ `mcc_cloud_monitor` → เพิ่มแท็บไฟล์ใหม่ (ปุ่ม **⋯** หรือ **▾** ข้างแท็บ → **New Tab**) 2 ไฟล์ ชื่อ `thingProperties.h` และ `arduino_secrets.h`
+2. **`thingProperties.h`:** คัดลอกเนื้อหาทั้งหมดจากแท็บ **Sketch** ของ Thing บน Arduino Cloud มาวาง (ตัวอย่างด้านล่างใช้ตรวจเทียบ ค่า `DEVICE_LOGIN_NAME` ต้องเป็น Device ID ของตนเอง)
 
 ```cpp
-#include <WiFi.h>
-#include <WiFiClientSecure.h>
-#include <HTTPClient.h>
+// Code generated by Arduino IoT Cloud, DO NOT EDIT.
+
+#include <ArduinoIoTCloud.h>
+#include <Arduino_ConnectionHandler.h>
+
+const char DEVICE_LOGIN_NAME[]  = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx";
+
+const char SSID[]               = SECRET_SSID;          // Network SSID (name)
+const char PASS[]               = SECRET_OPTIONAL_PASS; // Network password (use for WPA, or use as key for WEP)
+const char DEVICE_KEY[]         = SECRET_DEVICE_KEY;    // Secret device password
+
+
+CloudTemperatureSensor temp;
+CloudRelativeHumidity hum;
+
+void initProperties(){
+
+  ArduinoCloud.setBoardId(DEVICE_LOGIN_NAME);
+  ArduinoCloud.setSecretDeviceKey(DEVICE_KEY);
+  ArduinoCloud.addProperty(temp, READ, 5 * SECONDS, NULL);
+  ArduinoCloud.addProperty(hum, READ, 5 * SECONDS, NULL);
+
+}
+
+WiFiConnectionHandler ArduinoIoTPreferredConnection(SSID, PASS);
+```
+
+3. **`arduino_secrets.h`:** ใส่ค่าของตนเอง (ชื่อ macro ต้องตรงกับที่ `thingProperties.h` ใช้)
+
+```cpp
+#define SECRET_SSID          "YOUR_WIFI"
+#define SECRET_OPTIONAL_PASS "YOUR_PASSWORD"
+#define SECRET_DEVICE_KEY    "YOUR_SECRET_KEY"   // Secret Key จากหัวข้อ 12.8.3
+```
+
+4. **`mcc_cloud_monitor.ino`:** วางโค้ดด้านล่าง → อัปโหลด → เปิด Serial Monitor ที่ **115200**
+
+```cpp
+#include "arduino_secrets.h"   // ชื่อ/รหัส Wi-Fi และ Secret Key ของอุปกรณ์
+#include "thingProperties.h"   // สร้างโดย Arduino Cloud: ตัวแปร temp, hum
 #include <Wire.h>
 #include <Adafruit_AHTX0.h>
 
-// ===== ตั้งค่าให้ตรงกับของตนเอง =====
-const char* WIFI_SSID    = "YOUR_WIFI";
-const char* WIFI_PASS    = "YOUR_PASSWORD";
-const char* SUPABASE_URL = "https://YOUR_PROJECT_REF.supabase.co/rest/v1/";
-const char* SUPABASE_KEY = "sb_publishable_xxxxxxxxxxxx";   // Publishable key
-const char* DEVICE_ID    = "mcc01";
-
 #define I2C_SDA 8
 #define I2C_SCL 9
+const unsigned long READ_INTERVAL = 5000;   // ms อ่าน AHT25 (เท่ากับรอบส่งของตัวแปร)
 
-const unsigned long SEND_INTERVAL = 5000;   // ms
-
-Adafruit_AHTX0   aht;
-WiFiClientSecure tls;
-unsigned long    lastSend = 0;
-
-void connectWiFi() {
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASS);
-  Serial.print("Connecting WiFi");
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(250);
-    Serial.print(".");
-  }
-  Serial.printf(" OK  IP=%s\n", WiFi.localIP().toString().c_str());
-}
-
-// header ที่ทุกคำขอไป Supabase ต้องมี
-void addAuthHeaders(HTTPClient& http) {
-  http.addHeader("apikey", SUPABASE_KEY);
-  if (strncmp(SUPABASE_KEY, "eyJ", 3) == 0) {           // legacy anon key (JWT)
-    http.addHeader("Authorization", String("Bearer ") + SUPABASE_KEY);
-  }
-}
-
-int postJson(const char* table, const char* body) {
-  HTTPClient http;
-  http.begin(tls, String(SUPABASE_URL) + table);
-  http.addHeader("Content-Type", "application/json");
-  http.addHeader("Prefer", "return=minimal");
-  addAuthHeaders(http);
-  int code = http.POST(String(body));
-  Serial.printf("POST %s %s -> %d\n", table, body, code);
-  if (code >= 400) Serial.println(http.getString());    // ข้อความ error จาก Supabase
-  http.end();
-  return code;
-}
+Adafruit_AHTX0 aht;
+unsigned long  lastRead = 0;
 
 void setup() {
   Serial.begin(115200);
-  delay(500);
+  delay(1500);                           // รอให้เปิด Serial Monitor ทัน
 
   Wire.begin(I2C_SDA, I2C_SCL);
   if (!aht.begin(&Wire)) {
     Serial.println("AHT25 not found: check wiring SDA=8 SCL=9");
-    while (true) delay(1000);
   }
 
-  tls.setInsecure();   // สำหรับห้องแล็บ งานจริงให้ใช้ tls.setCACert(rootCA)
-  connectWiFi();
+  initProperties();                      // ประกาศตัวแปร Cloud (thingProperties.h)
+  ArduinoCloud.begin(ArduinoIoTPreferredConnection);
+  setDebugMessageLevel(2);               // 0 = เฉพาะ error ... 4 = ละเอียดที่สุด
+  ArduinoCloud.printDebugInfo();
 }
 
 void loop() {
-  if (WiFi.status() != WL_CONNECTED) connectWiFi();
+  ArduinoCloud.update();                 // ต้องเรียกบ่อย ๆ ห้ามใช้ delay() ยาว ๆ
 
-  // ค่าเซนเซอร์: ส่งทุก SEND_INTERVAL
-  if (millis() - lastSend >= SEND_INTERVAL) {
-    lastSend = millis();
-    sensors_event_t hum, temp;
-    if (aht.getEvent(&hum, &temp)) {
-      char body[96];
-      snprintf(body, sizeof(body),
-               "{\"device_id\":\"%s\",\"temp\":%.1f,\"hum\":%.1f}",
-               DEVICE_ID, temp.temperature, hum.relative_humidity);
-      postJson("telemetry", body);
+  if (millis() - lastRead >= READ_INTERVAL) {
+    lastRead = millis();
+    sensors_event_t h, t;
+    if (aht.getEvent(&h, &t)) {
+      temp = roundf(t.temperature * 10) / 10.0f;          // ทศนิยม 1 ตำแหน่ง
+      hum  = roundf(h.relative_humidity * 10) / 10.0f;
+      Serial.printf("temp=%.1f hum=%.1f\n", t.temperature, h.relative_humidity);
     } else {
       Serial.println("AHT25 read failed");
     }
@@ -813,117 +530,78 @@ void loop() {
 }
 ```
 
+5. รอประมาณ 10–30 วินาที Serial Monitor ต้องแสดง `Connected to Arduino IoT Cloud` และค่า `temp=... hum=...` ทุก 5 วินาที หน้า **Devices** ต้องแสดงสถานะ **Online** และหน้า Thing แสดง **Last Value** ของ `temp` และ `hum`
+
 **คำอธิบายโค้ด**
 
 | ส่วนของโค้ด | การทำงาน |
 |:---|:---|
-| `Wire.begin(8, 9)` | ESP32-S3 เลือกขา I2C ได้อิสระ จึงต้องระบุ SDA/SCL ให้ตรงกับที่ต่อจริง |
-| `aht.getEvent(&hum, &temp)` | ส่งคำสั่งวัด รอราว 80 ms อ่าน 7 ไบต์ แล้วแปลงค่าตามสูตรในหัวข้อ 12.2.2 |
-| `millis()` แทน `delay()` | `loop()` ไม่ถูกบล็อกระหว่างรอรอบส่ง ส่วนที่ 2 จึงเพิ่มงานอื่น (อ่านปุ่ม ถามคำสั่ง) ลงใน `loop()` เดิมได้ |
-| `snprintf` | สร้าง JSON ลงบัฟเฟอร์ขนาดคงที่ ช่วยเลี่ยงการจองหน่วยความจำซ้ำ ๆ ของ `String` ซึ่งทำให้ heap แตกกระจายเมื่อรันนาน ๆ |
-| `addAuthHeaders()` | Publishable key ส่งเฉพาะ header `apikey` ตาม[เอกสาร Supabase](https://supabase.com/docs/guides/getting-started/api-keys) และห้ามส่งใน `Authorization: Bearer` เพราะไม่ใช่ JWT เงื่อนไข `strncmp(..., "eyJ", 3)` มีไว้รองรับกรณีที่ยังใช้ legacy `anon` key (JWT ขึ้นต้นด้วย `eyJ` เสมอ) ซึ่งต้องส่ง `Authorization` เพิ่ม |
+| `#include "arduino_secrets.h"` ก่อน `thingProperties.h` | `thingProperties.h` ใช้ macro `SECRET_SSID`, `SECRET_OPTIONAL_PASS`, `SECRET_DEVICE_KEY` จึงต้อง include ไฟล์ secrets ก่อน ถ้าสลับลำดับจะ compile ไม่ผ่าน |
+| `CloudTemperatureSensor temp;` (ใน `thingProperties.h`) | ประกาศตัวแปร Cloud ให้ใช้ได้เลย ไม่ต้องประกาศซ้ำใน `.ino` |
+| `addProperty(temp, READ, 5 * SECONDS, NULL)` | ตัวแปร Read Only ส่งทุก 5 วินาที ไม่มี Callback เพราะแดชบอร์ดเปลี่ยนค่าไม่ได้ |
+| `ArduinoCloud.begin(ArduinoIoTPreferredConnection)` | เชื่อม Wi-Fi แล้วเปิดการเชื่อมต่อ MQTT + TLS กับ Arduino Cloud ค้างไว้ และต่อใหม่อัตโนมัติถ้าหลุด (หัวข้อ 12.4) |
+| `setDebugMessageLevel(2)` / `printDebugInfo()` | พิมพ์สถานะการเชื่อมต่อลง Serial Monitor ช่วยหาสาเหตุเมื่อต่อไม่ติด (ระดับ 4 ละเอียดที่สุด) |
+| `ArduinoCloud.update()` | ส่งค่าที่ถึงรอบและรับข้อมูลจากคลาวด์ ต้องเรียกทุกรอบของ `loop()` |
+| `millis()` แทน `delay()` | `loop()` จึงวนเร็วและเรียก `update()` ได้ต่อเนื่อง |
+| `temp = roundf(... * 10) / 10.0f` | ปัดเป็นทศนิยม 1 ตำแหน่ง ตามความแม่นยำจริงของ AHT25 (หัวข้อ 12.2.2) |
+| ไม่หยุดโปรแกรมเมื่อไม่พบ AHT25 | บอร์ดยังเชื่อมคลาวด์ได้และแสดงสถานะ Online ช่วยแยกว่าปัญหาอยู่ที่เซนเซอร์หรือเครือข่าย |
 
-> **ข้อจำกัดด้านเวลา:** ฐานข้อมูลประทับเวลาตอนที่ข้อมูลมาถึง จึงอาจช้ากว่าเวลาวัดจริงประมาณ 1–2 วินาทีตามเวลาส่ง HTTPS ซึ่งยอมรับได้สำหรับงานบำรุงรักษา ถ้าต้องการเวลาระดับมิลลิวินาที ให้ซิงก์นาฬิกาด้วย NTP แล้วส่ง `created_at` ไปเอง
+> **ไม่มีบอร์ดจริง?** Wokwi จำลอง ESP32 ได้ แต่การเชื่อม Arduino Cloud จาก Wokwi ต้องตั้งค่าเพิ่มและอาจไม่เสถียร ควรใช้บอร์ดจริงสำหรับบทนี้
 
-> **ไม่มีบอร์ดจริง?** ใช้ [Wokwi](https://wokwi.com) เลือกบอร์ด ESP32-S3 แทนได้ AHT25 ไม่มีใน Wokwi จึงต้องใช้ DHT22 แทน โดยเปลี่ยนเฉพาะส่วนอ่านเซนเซอร์เป็น `dht.readTemperature()` / `dht.readHumidity()` และใช้ Wi-Fi `Wokwi-GUEST`
+### 12.8.6 สร้าง Dashboard ของส่วนที่ 1
 
-### 12.8.6 เปิดแดชบอร์ดบน Vercel
+1. เมนู **Dashboards** → **Create Dashboard** → ตั้งชื่อ `MCC Monitor`
+2. กดปุ่มแก้ไข (✏️) → **Add** → เลือกแท็บ **Things** → เลือก `MCC Monitor` → **Create Widgets** ระบบจะสร้าง Widget ให้ทุกตัวแปรอัตโนมัติ
+3. ปรับ Widget ตามหลักการในหัวข้อ 12.6 (คลิกที่ Widget → ⚙️ หรือ **Edit Settings**) และเพิ่ม Widget ด้วยปุ่ม **Add → Widgets**
 
-เลือกวิธีใดวิธีหนึ่ง
-
-**วิธีที่ 1 (แนะนำ): ใช้แดชบอร์ดที่ผู้สอน Deploy ไว้** ไม่ต้องสมัคร Vercel หรือ GitHub
-
-1. เปิดลิงก์แดชบอร์ดของรายวิชา: **(ลิงก์จากอาจารย์ผู้สอน เช่น `https://mcc-dashboard.vercel.app`)** ใช้ได้ทั้งคอมพิวเตอร์และมือถือ
-2. ครั้งแรกจะพบหน้า **ตั้งค่าการเชื่อมต่อ Supabase** ให้กรอก
-
-| ช่อง | ค่า | ที่มา |
-|:---|:---|:---|
-| **Project URL** | `https://xxxx.supabase.co` (ไม่มี `/rest/v1/` ต่อท้าย) | หัวข้อ 12.8.3 |
-| **Publishable key** | `sb_publishable_...` | หัวข้อ 12.8.3 (ห้ามใช้ Secret key) |
-| **DEVICE_ID** | ค่าเดียวกับในโปรแกรม ESP32 เช่น `mcc-1234` | หัวข้อ 12.8.5 |
-
-3. กด **บันทึก** → พบหน้า **เข้าสู่ระบบแดชบอร์ด** → กรอกอีเมลและรหัสผ่านที่สร้างในหัวข้อ 12.8.4 ข. → **เข้าสู่ระบบ**
-
-ค่าที่กรอกจะถูกเก็บใน **เบราว์เซอร์เครื่องนั้นเท่านั้น** (localStorage) ผู้สอนและนักศึกษาคนอื่นไม่เห็น ถ้าเปลี่ยนเครื่องหรือเปิดโหมดไม่ระบุตัวตน ต้องกรอกใหม่ และแก้ค่าได้จากปุ่ม **เปลี่ยนโปรเจกต์** บนแดชบอร์ด
-
-**วิธีที่ 2: Deploy แดชบอร์ดของตนเอง** (ต้องมีบัญชี GitHub)
-
-1. เปิด [หน้า Deploy บน Vercel](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FalfaXphoori%2FTechEngineering%2Ftree%2Fmain%2Fdashboard&project-name=mcc-dashboard&repository-name=mcc-dashboard) → login Vercel ด้วยบัญชี GitHub → **Create** (Vercel จะคัดลอกโฟลเดอร์ `dashboard/` ไปเป็น repo ใหม่ในบัญชี GitHub ของเรา)
-2. (ไม่บังคับ) ที่ **Environment Variables** กรอก `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` และ `NEXT_PUBLIC_DEVICE_ID` ถ้ากรอก แดชบอร์ดจะข้ามหน้าตั้งค่าและผูกกับโปรเจกต์นั้นเสมอ ถ้าไม่กรอกจะทำงานแบบวิธีที่ 1
-3. **Deploy** → รอ 1–2 นาที → ได้ URL เช่น `https://mcc-dashboard-xxxx.vercel.app`
-
-> **สำหรับผู้สอน (Deploy ครั้งเดียวให้ทั้งชั้นเรียน):** Vercel → **Add New… → Project** → **Import** repo `TechEngineering` → **Root Directory** = `dashboard` → Framework Preset = **Next.js** (ตรวจพบอัตโนมัติ) → **ไม่ต้องกรอก Environment Variables** → **Deploy** แล้วแจกลิงก์ให้นักศึกษา แดชบอร์ดตัวเดียวใช้ได้กับทุกโปรเจกต์ Supabase ของนักศึกษา เพราะเบราว์เซอร์ของแต่ละคนคุยกับ Supabase ของตนเองโดยตรง Vercel login ด้วยบัญชี Google ได้ แต่การ Import repo ต้องเชื่อมบัญชี GitHub
-
-**ตรวจสอบ:** หลัง login ต้องเห็น Gauge อุณหภูมิและความชื้นแสดงค่าเดียวกับ Serial Monitor และ **สถานะการเชื่อมต่อ** แสดงตัวเลขไม่เกินประมาณ 10 วินาทีสีเขียว
-
-### 12.8.7 อ่านแดชบอร์ดของส่วนที่ 1
-
-แดชบอร์ดจัด Layout ตามหลักการในหัวข้อ 12.7 โดยส่วนที่ 1 ใช้แถวที่ 1–2
-
-| แถว | ส่วนประกอบ | ข้อมูลจาก | ไฟล์ในโฟลเดอร์ `dashboard/` |
+| แถว | Widget | ตัวแปร | ตั้งค่า |
 |:---|:---|:---|:---|
-| 1 | Gauge อุณหภูมิ (0–60 °C, เหลือง 30, แดง 35) · Gauge ความชื้น (0–100 %RH, เหลือง 60, แดง 70) | แถวล่าสุดของ `telemetry` | `components/Gauge.jsx` |
-| 1 | สถานะการเชื่อมต่อ (วินาทีตั้งแต่ข้อมูลล่าสุด เกิน 30 วินาทีเป็นสีแดง) | `created_at` ของแถวล่าสุด | `components/Dashboard.jsx` |
-| 2 | กราฟอุณหภูมิ และกราฟความชื้น (แยกกราฟเพราะหน่วยต่างกัน) พร้อมปุ่มเลือกช่วง 15 นาที / 30 นาที / 1 ชั่วโมง | `telemetry` ในช่วงเวลาที่เลือก | `components/LineChart.jsx` |
+| 1 | **Gauge** | `temp` | Min `0`, Max `60` ชื่อ "อุณหภูมิ (°C)" |
+| 1 | **Gauge** | `hum` | Min `0`, Max `100` ชื่อ "ความชื้น (%RH)" |
+| 2 | **Chart** | `temp` | ชื่อ "แนวโน้มอุณหภูมิ" |
+| 2 | **Chart** | `hum` | ชื่อ "แนวโน้มความชื้น" (แยกกราฟเพราะหน่วยต่างกัน) |
 
-เกณฑ์สีทั้งหมดอยู่ในไฟล์ `lib/config.js` (`TEMP`, `HUM`, `STALE_SECONDS`) ถ้าต้องการเปลี่ยนเกณฑ์ ให้แก้ไฟล์นี้แล้ว Deploy ใหม่
-
-**โค้ดที่ดึงข้อมูล** (`components/Dashboard.jsx` ฟังก์ชัน `load()` ซึ่งถูกเรียกทุก 5 วินาที)
-
-```js
-const since = new Date(Date.now() - minutes * 60 * 1000).toISOString()
-
-// แถวล่าสุด → Gauge และสถานะการเชื่อมต่อ
-supabase.from('telemetry').select('created_at, temp, hum')
-  .eq('device_id', DEVICE_ID).order('created_at', { ascending: false }).limit(1)
-
-// ข้อมูลย้อนหลังตามช่วงที่เลือก → กราฟ
-supabase.from('telemetry').select('created_at, temp, hum')
-  .eq('device_id', DEVICE_ID).gte('created_at', since)
-  .order('created_at', { ascending: true }).limit(1000)
-```
-
-| ส่วนของโค้ด | การทำงาน |
-|:---|:---|
-| `.eq('device_id', DEVICE_ID)` | อ่านเฉพาะอุปกรณ์ของตนเอง ค่ามาจากหน้าตั้งค่า จึงต้องตรงกับ `DEVICE_ID` ในโปรแกรม ESP32 ทุกตัวอักษร |
-| `.order(... ascending: false).limit(1)` | เรียงจากใหม่ไปเก่าแล้วเอาแถวแรก ได้ค่าล่าสุดเพียงแถวเดียว |
-| `.gte('created_at', since)` | เอาเฉพาะแถวที่ใหม่กว่าเวลาเริ่มต้นของช่วงที่เลือก |
-| `.limit(1000)` | ไม่ขอเกินเพดาน Max rows ของ Supabase (หัวข้อ 12.5.4) |
-| `setInterval(load, REFRESH_MS)` | เรียก `load()` ซ้ำทุก 5 วินาที (Polling) |
+4. จัดตำแหน่งตามแถว (ภาพรวมบน แนวโน้มล่าง) เว้นแถวที่ 3 ไว้สำหรับส่วนที่ 2 → **Done**
+5. กดไอคอน **Mobile Layout** เพื่อดูหน้าตาบนมือถือ และ (ไม่บังคับ) ติดตั้งแอป **Arduino IoT Remote** บนมือถือ แล้ว login บัญชีเดียวกันเพื่อเปิด Dashboard
 
 **ทดสอบ**
 
 | การทดลอง | ผลที่ควรเห็น |
 |:---|:---|
-| ใช้นิ้วจับ AHT25 นาน 1 นาที | Gauge อุณหภูมิเพิ่มขึ้น และเส้นกราฟอุณหภูมิยกตัว |
-| ถอดสาย USB ของ ESP32-S3 แล้วรอ 40 วินาที | สถานะการเชื่อมต่อเป็นสีแดง และมีแถบเตือน *ไม่ได้รับข้อมูลจาก ESP32* |
-| เปลี่ยนช่วงจาก 15 นาที เป็น 1 ชั่วโมง | แกนเวลาของกราฟกว้างขึ้น และเห็นแนวโน้มยาวขึ้น |
-| เปิด **Table Editor** ของ `telemetry` เทียบกับ Gauge | ค่าล่าสุดตรงกัน |
+| ใช้นิ้วจับ AHT25 นาน 1 นาที | Gauge อุณหภูมิเพิ่มขึ้น และเส้น Chart ยกตัว |
+| เทียบค่าบน Gauge กับ Serial Monitor | ตรงกัน (ต่างกันได้ไม่เกิน 1 รอบส่ง) |
+| ถอดสาย USB ของ ESP32-S3 แล้วรอ 1–2 นาที | หน้า **Devices** เปลี่ยนเป็น **Offline** ส่วน Gauge ค้างที่ค่าล่าสุด (Digital Twin เก็บค่าที่รู้ล่าสุด) |
+| เปลี่ยนช่วงเวลาของ Chart (เช่น 1 ชั่วโมง / 1 วัน) | ดูย้อนหลังได้ไม่เกิน 1 วันในแผนฟรี |
 
-### 12.8.8 การแจ้งเตือนบนแดชบอร์ด
+### 12.8.7 การแจ้งเตือนอุณหภูมิสูง (ไม่บังคับ)
 
-แดชบอร์ดแสดง **แถบเตือนด้านบนสุด** เมื่อพบสภาวะผิดปกติ 2 แบบ
+**Triggers** ของ Arduino Cloud ส่งอีเมลหรือแจ้งเตือนในแอปได้ แต่ **ต้องใช้แผน Maker** และรองรับเฉพาะตัวแปรชนิด `bool` และ `String` ([Arduino Docs: Triggers](https://docs.arduino.cc/arduino-cloud/cloud-interface/triggers/)) จึงให้ ESP32 เป็นผู้ตัดสินว่า "ร้อนเกินเกณฑ์" แล้วเขียนผลลงตัวแปร `bool`
 
-| แถบเตือน | เงื่อนไข | ค่าที่ปรับได้ใน `lib/config.js` |
-|:---|:---|:---|
-| 🔥 *อุณหภูมิในตู้สูงเกิน 35 °C* (สีแดง) | อุณหภูมิล่าสุด ≥ `TEMP.alarm` | `TEMP.alarm = 35` |
-| 📡 *ไม่ได้รับข้อมูลจาก ESP32 เกิน 30 วินาที* (สีเหลือง) | ข้อมูลล่าสุดเก่ากว่า `STALE_SECONDS` | `STALE_SECONDS = 30` |
+1. เพิ่มตัวแปร `overheat` ชนิด **Boolean**, **Read Only**, **On Change** → คัดลอก `thingProperties.h` ใหม่จากแท็บ Sketch มาแทนของเดิม
+2. ใน `loop()` ต่อจากบรรทัด `hum = ...` เพิ่มเงื่อนไขว่าอุณหภูมิเกิน 35 °C **ต่อเนื่อง** 2 นาที
 
-```js
-const ageSec = latest ? Math.round((now - new Date(latest.created_at).getTime()) / 1000) : null
-const stale = ageSec == null || ageSec > STALE_SECONDS
-const tempAlarm = latest && levelOf(latest.temp, TEMP) === 'alarm'
+```cpp
+static unsigned long hotSince = 0;                 // เวลาที่เริ่มร้อนเกินเกณฑ์ (0 = ยังไม่ร้อน)
+if (t.temperature > 35.0) {
+  if (hotSince == 0) hotSince = millis();
+  overheat = (millis() - hotSince >= 2UL * 60 * 1000);
+} else {
+  hotSince = 0;
+  overheat = false;
+}
 ```
 
-**ทดสอบ:** ใช้นิ้วจับหรือเป่าลมอุ่นใส่ AHT25 จนอุณหภูมิเกินเกณฑ์ (ถ้าอุณหภูมิห้องต่ำ ให้ Deploy แดชบอร์ดของตนเองตามหัวข้อ 12.8.6 วิธีที่ 2 แล้วลด `TEMP.alarm` เป็นค่าที่สูงกว่าอุณหภูมิห้องเล็กน้อย เช่น `32`)
+3. **แผนฟรี:** เพิ่ม Widget **Status** หรือ **LED** ผูกกับ `overheat` ไว้แถวที่ 1 ของ Dashboard · **แผน Maker:** **Triggers → Add Trigger → Cloud Variable** → เลือก Thing และ `overheat` → **Link Variable** → Action **Email** → เปิด **State**
 
-> **ข้อจำกัดของการแจ้งเตือนบนหน้าเว็บ:** แถบเตือนทำงานเฉพาะเมื่อมีคนเปิดแดชบอร์ดอยู่ ถ้าต้องการแจ้งเตือนตลอด 24 ชั่วโมง เช่น ส่งอีเมลหรือข้อความเข้ามือถือ ต้องให้ **ฝั่งเซิร์ฟเวอร์** เป็นผู้ตรวจ เช่น ใช้ Database Webhook หรือ Edge Function ของ Supabase ทำงานทุกครั้งที่มีแถวใหม่ใน `telemetry` แล้วส่งอีเมลเมื่อค่าเกินเกณฑ์ต่อเนื่อง (โจทย์ท้าทายท้ายบท) และควรตรวจแบบ **ต่อเนื่อง** เช่น เกินเกณฑ์นาน 2 นาที เพื่อไม่ให้แจ้งเตือนผิดจากค่ากระโดดเพียงครั้งเดียว
+เงื่อนไข "ต่อเนื่อง 2 นาที" ป้องกันการแจ้งเตือนผิดจากค่ากระโดดเพียงครั้งเดียว (เช่น มีคนเปิดตู้ชั่วขณะ) และเพราะ `overheat` เป็น On Change จึงถูกส่งเฉพาะตอนเปลี่ยนสถานะ ไม่ส่งซ้ำทุก 5 วินาที
+
+> ถ้าแผนที่ใช้จำกัดจำนวนตัวแปรต่อ Thing จนเพิ่ม `overheat` แล้วเพิ่มตัวแปรของส่วนที่ 2 ไม่ได้ ให้ลบ `overheat` ออกก่อนเริ่มส่วนที่ 2
 
 ---
 
-## 12.9 ปฏิบัติการส่วนที่ 2: สั่งการ (Dashboard → ESP32)
+## 12.9 ปฏิบัติการส่วนที่ 2: สั่งการ (Dashboard ↔ Arduino Cloud ↔ ESP32)
 
-**เป้าหมายของส่วนที่ 2:** ช่างสั่งเปิด/ปิดไฟ ปั๊ม และพัดลม (แทนด้วย LED) ได้ 2 ทาง คือจากปุ่มบนเว็บแดชบอร์ด และจากปุ่มหน้าตู้ ทั้งสองทางทำให้ตาราง `controls` ตรงกับสถานะของ LED เสมอ และทุกการเปลี่ยนแปลงถูกบันทึกลง `events` เพื่อแสดงเป็นประวัติการสั่งและเส้นหมายเหตุบนกราฟ
+**เป้าหมายของส่วนที่ 2:** ช่างสั่งเปิด/ปิดไฟ ปั๊ม และพัดลม (แทนด้วย LED) ได้ 2 ทาง คือจาก Switch บน Dashboard และจากปุ่มหน้าตู้ โดยทั้งสองทางซิงก์กันผ่านตัวแปร `light`, `pump`, `fan`
 
 ### 12.9.1 ต่อวงจรเพิ่ม
 
@@ -942,903 +620,24 @@ const tempAlarm = latest && levelOf(latest.temp, TEMP) === 'alarm'
 - ปุ่มทำงานแบบ **Toggle** กดครั้งแรกเป็นการเปิด กดอีกครั้งเป็นการปิด
 - ถ้า LED ไม่ติด ให้ตรวจขั้วของ LED ก่อน (ขายาวต้องอยู่ฝั่ง GPIO)
 
-### 12.9.2 สร้างตาราง `controls`, `events` และ trigger บน Supabase
+### 12.9.2 เพิ่มตัวแปรสั่งการใน Thing
 
-**ตาราง `controls`: สถานะที่สั่งล่าสุด 1 แถวต่ออุปกรณ์**
-
-| คอลัมน์ | ชนิดข้อมูล | ค่าเริ่มต้น / เงื่อนไข | ผู้กำหนดค่า | ความหมาย | ตัวอย่าง |
-|:---|:---|:---|:---|:---|:---|
-| `device_id` | `text` (`text`) | Primary key | ผู้ดูแลระบบ (สร้างแถวครั้งแรก) | รหัสอุปกรณ์ | `mcc01` |
-| `light` | `boolean` (`bool`) | `not null`, `default false` | แดชบอร์ด / ปุ่ม GPIO 4 | สั่งไฟ (`true` = เปิด) | `false` |
-| `pump` | `boolean` (`bool`) | `not null`, `default false` | แดชบอร์ด / ปุ่ม GPIO 5 | สั่งปั๊ม | `false` |
-| `fan` | `boolean` (`bool`) | `not null`, `default false` | แดชบอร์ด / ปุ่ม GPIO 6 | สั่งพัดลม | `true` |
-| `updated_by` | `text` (`text`) | รับเฉพาะ `button` / `dashboard` | แดชบอร์ด / ESP32-S3 | ผู้สั่งครั้งล่าสุด | `dashboard` |
-| `updated_at` | `timestamptz` (`timestamptz`) | `default now()` (trigger ตั้งใหม่ทุกครั้ง) | ฐานข้อมูล | เวลาที่สั่งครั้งล่าสุด | `2026-09-28 03:20:45+00` |
-
-**ตาราง `events`: ประวัติการเปลี่ยนสถานะ (trigger เป็นผู้เขียน)**
-
-| คอลัมน์ | ชนิดข้อมูล | ค่าเริ่มต้น / เงื่อนไข | ผู้กำหนดค่า | ความหมาย | ตัวอย่าง |
-|:---|:---|:---|:---|:---|:---|
-| `id` | `bigint` (`int8`) | Primary key, identity (เพิ่มอัตโนมัติ) | ฐานข้อมูล | เลขลำดับแถว | `57` |
-| `created_at` | `timestamptz` (`timestamptz`) | `not null`, `default now()` | ฐานข้อมูล | เวลาที่สถานะเปลี่ยน (เก็บเป็น UTC) | `2026-09-28 03:16:12+00` |
-| `device_id` | `text` (`text`) | `not null` | trigger | รหัสอุปกรณ์ | `mcc01` |
-| `event` | `text` (`text`) | `not null`, รับเฉพาะ `light` / `pump` / `fan` | trigger | อุปกรณ์ที่ถูกสั่ง | `fan` |
-| `state` | `boolean` (`bool`) | `not null` | trigger | สถานะหลังเปลี่ยน (`true` = เปิด, `false` = ปิด) | `true` |
-| `source` | `text` (`text`) | `not null`, รับเฉพาะ `button` / `dashboard` | trigger (คัดลอกจาก `updated_by`) | ผู้สั่ง | `dashboard` |
-
-Index: `events_device_time_idx` บนคอลัมน์ `(device_id, created_at desc)`
-
-**ตัวอย่างข้อมูลหลังระบบทำงาน**
-
-`controls` (มีแถวเดียว และถูกแก้ทับทุกครั้งที่สั่ง)
-
-| device_id | light | pump | fan | updated_by | updated_at |
-|:---|:---|:---|:---|:---|:---|
-| mcc01 | true | false | false | button | 2026-09-28 03:48:02+00 |
-
-`events` (เพิ่มแถวทุกครั้งที่สถานะเปลี่ยน)
-
-| id | created_at | device_id | event | state | source | มาจาก |
-|---:|:---|:---|:---|:---|:---|:---|
-| 57 | 2026-09-28 03:16:12+00 | mcc01 | light | true | button | กดปุ่ม GPIO 4 หน้าตู้ |
-| 58 | 2026-09-28 03:20:45+00 | mcc01 | fan | true | dashboard | ช่างสั่งเปิดพัดลมจากแดชบอร์ด |
-| 59 | 2026-09-28 03:48:02+00 | mcc01 | fan | false | button | กดปุ่ม GPIO 6 หน้าตู้ |
-
-ตาราง `events` ไม่ได้เชื่อมกับ `telemetry` ด้วย Foreign key แต่เชื่อมกันด้วย `device_id` และช่วงเวลา `created_at` เช่น เส้นหมายเหตุบนแดชบอร์ดจะนำ event `fan` ไปวางบนกราฟ `telemetry` ของอุปกรณ์เดียวกัน ณ เวลาเดียวกัน
-
-**ขั้นตอน**
-
-1. **SQL Editor → New query** → วางคำสั่งด้านล่าง → เปลี่ยน `'mcc01'` ในคำสั่ง `insert` ท้ายสุดเป็น `DEVICE_ID` ของตนเอง → **Run**
-
-```sql
--- ===== ส่วนที่ 2: ตาราง controls (สถานะที่สั่ง) =====
-create table public.controls (
-  device_id  text primary key,
-  light      boolean not null default false,
-  pump       boolean not null default false,
-  fan        boolean not null default false,
-  updated_by text not null default 'dashboard'
-             check (updated_by in ('button', 'dashboard')),
-  updated_at timestamptz not null default now()
-);
-
--- ===== ตาราง events (ประวัติการเปลี่ยนสถานะ) =====
-create table public.events (
-  id         bigint generated always as identity primary key,
-  created_at timestamptz not null default now(),
-  device_id  text not null,
-  event      text not null check (event in ('light', 'pump', 'fan')),
-  state      boolean not null,
-  source     text not null check (source in ('button', 'dashboard'))
-);
-create index events_device_time_idx on public.events (device_id, created_at desc);
-
--- ===== Trigger: บันทึก events ทุกครั้งที่ controls เปลี่ยน =====
-create or replace function public.log_control_change()
-returns trigger
-language plpgsql
-security definer          -- ทำงานด้วยสิทธิ์เจ้าของฟังก์ชัน จึงเขียน events ได้
-set search_path = ''
-as $$
-begin
-  new.updated_at := now();
-  if new.light is distinct from old.light then
-    insert into public.events (device_id, event, state, source)
-    values (new.device_id, 'light', new.light, new.updated_by);
-  end if;
-  if new.pump is distinct from old.pump then
-    insert into public.events (device_id, event, state, source)
-    values (new.device_id, 'pump', new.pump, new.updated_by);
-  end if;
-  if new.fan is distinct from old.fan then
-    insert into public.events (device_id, event, state, source)
-    values (new.device_id, 'fan', new.fan, new.updated_by);
-  end if;
-  return new;
-end;
-$$;
-
-create trigger controls_log_change
-  before update on public.controls
-  for each row execute function public.log_control_change();
-
--- ===== สิทธิ์ของ ESP32 (anon) =====
-alter table public.controls enable row level security;
-alter table public.events   enable row level security;
-
-revoke all on public.controls, public.events from anon, authenticated;
-grant select on public.controls to anon;
-grant update (light, pump, fan, updated_by) on public.controls to anon;
-
-create policy "esp32 read controls" on public.controls
-  for select to anon using (true);
-create policy "esp32 update controls" on public.controls
-  for update to anon
-  using (true)
-  with check (updated_by = 'button');
-
--- ===== สร้างแถวเริ่มต้นของอุปกรณ์ (เปลี่ยนเป็น DEVICE_ID ของตนเอง) =====
-insert into public.controls (device_id) values ('mcc01');
-```
-
-2. **Table Editor** → ตรวจว่ามีตาราง `controls` (1 แถว ค่าเป็น `false` ทั้งหมด) และ `events` (ว่าง) และทั้งสองตารางแสดงสถานะ **RLS enabled**
-3. ทดสอบ trigger ใน SQL Editor: รัน `update controls set fan = true, updated_by = 'dashboard' where device_id = 'mcc01';` แล้วเปิด `events` ต้องเห็น 1 แถว (`fan`, `true`, `dashboard`) จากนั้นรัน `update controls set fan = false where device_id = 'mcc01';` เพื่อคืนค่า
-
-**คำอธิบาย SQL ที่สำคัญ**
-
-| ส่วนของ SQL | การทำงาน |
-|:---|:---|
-| `before update ... for each row` | trigger ทำงานก่อนบันทึกแต่ละแถว จึงแก้ `new.updated_at` ได้ และถ้าคำสั่ง `UPDATE` ถูกปฏิเสธด้วย RLS แถวใน `events` ก็จะถูกยกเลิกไปด้วย เพราะอยู่ใน transaction เดียวกัน |
-| `is distinct from` | เปรียบเทียบค่าเก่ากับค่าใหม่ บันทึกเฉพาะอุปกรณ์ที่เปลี่ยนจริง ถ้าคำสั่ง `UPDATE` หนึ่งครั้งแก้หลายคอลัมน์ `events` จะได้เฉพาะแถวของอุปกรณ์ที่ค่าเปลี่ยนจริง และถ้าสั่งค่าเดิมซ้ำจะไม่มีแถวเพิ่ม |
-| `security definer` + `set search_path = ''` | ฟังก์ชันทำงานด้วยสิทธิ์ของเจ้าของ (`postgres`) ESP32 และแดชบอร์ดจึงไม่ต้องมีสิทธิ์เขียน `events` เอง การกำหนด `search_path` ว่างและเขียนชื่อเต็ม `public.events` ป้องกันการหลอกให้ฟังก์ชันเขียนตารางอื่น |
-| `grant update (light, pump, fan, updated_by)` | สิทธิ์ระดับคอลัมน์ ESP32 แก้ได้เฉพาะสถานะและผู้สั่ง แก้ `device_id` หรือ `updated_at` เองไม่ได้ (ผู้ใช้แดชบอร์ด `authenticated` ในหัวข้อ 12.9.3 ได้สิทธิ์แบบเดียวกัน) |
-| `with check (updated_by = 'button')` | ESP32 ต้องระบุตัวเองว่า `button` เสมอ อ้างเป็น `dashboard` ไม่ได้ ประวัติใน `events` จึงเชื่อถือได้ |
-
-### 12.9.3 ให้สิทธิ์สั่งการแก่ผู้ใช้แดชบอร์ด (`authenticated`)
-
-บัญชีที่สร้างในหัวข้อ 12.8.4 ตอนนี้อ่านได้เฉพาะ `telemetry` ส่วนที่ 2 ต้องเพิ่มสิทธิ์ดังนี้
-
-| ตาราง | สิทธิ์ของ `authenticated` | RLS policy | ใช้กับ |
-|:---|:---|:---|:---|
-| `controls` | `SELECT` + `UPDATE` เฉพาะคอลัมน์ `light`, `pump`, `fan`, `updated_by` | อ่านได้ทุกแถว · แก้ได้เมื่อ `updated_by = 'dashboard'` เท่านั้น | สวิตช์สั่งการ |
-| `events` | `SELECT` | อ่านได้ทุกแถว | ประวัติการสั่ง เส้นหมายเหตุบนกราฟ และจำนวนครั้งที่เปิดพัดลม |
-
-แดชบอร์ด **ไม่มีสิทธิ์เขียน `events`** แถวใน `events` ที่เกิดจากการสั่งผ่านแดชบอร์ด trigger เป็นผู้เขียนให้ (หัวข้อ 12.6.4) ประวัติจึงปลอมไม่ได้
-
-**SQL Editor → New query → Run**
-
-```sql
--- ===== ผู้ใช้แดชบอร์ด (authenticated): อ่าน/แก้ controls =====
-grant select on public.controls to authenticated;
-grant update (light, pump, fan, updated_by) on public.controls to authenticated;
-
-create policy "dashboard read controls" on public.controls
-  for select to authenticated using (true);
-create policy "dashboard update controls" on public.controls
-  for update to authenticated
-  using (true)
-  with check (updated_by = 'dashboard');
-
--- ===== ผู้ใช้แดชบอร์ด (authenticated): อ่าน events =====
-grant select on public.events to authenticated;
-create policy "dashboard read events" on public.events
-  for select to authenticated using (true);
-```
-
-> **ทางเลือก: สร้าง policy ผ่านหน้าเว็บ** ที่ **Database → Access Control → Policies** ได้เช่นเดียวกับหัวข้อ 12.8.4 ค. (policy แบบ UPDATE ให้พิมพ์ `true` ในช่อง `using` และ `updated_by = 'dashboard'` ในช่อง `with check`) แต่คำสั่ง `grant ...` ทั้ง 3 บรรทัดยังต้องรันใน SQL Editor
-
-**ตรวจสอบ**
-
-- **Database → Access Control → Policies** → ตาราง `controls` ต้องมี 4 policy (`esp32 read controls`, `esp32 update controls`, `dashboard read controls`, `dashboard update controls`) และตาราง `events` ต้องมี `dashboard read events`
-- **SQL Editor** → รันคำสั่งด้านล่าง ต้องได้ 3 แถวคือ `controls | SELECT`, `controls | UPDATE` และ `events | SELECT`
-
-```sql
-select table_name, privilege_type
-from information_schema.table_privileges
-where grantee = 'authenticated' and table_name in ('controls', 'events')
-union
-select distinct table_name, privilege_type
-from information_schema.column_privileges
-where grantee = 'authenticated' and table_name = 'controls' and privilege_type = 'UPDATE'
-order by 1, 2;
-```
-
-### 12.9.4 โปรแกรม ESP32-S3 ส่วนที่ 2 (`mcc_control.ino`)
-
-ติดตั้งไลบรารีเพิ่ม: **Library Manager** → **ArduinoJson** (by Benoit Blanchon, เวอร์ชัน 7) โปรแกรมนี้รวมงานของส่วนที่ 1 ไว้ด้วย จึงใช้แทน `mcc_monitor.ino` ได้ทันที
-
-```cpp
-#include <WiFi.h>
-#include <WiFiClientSecure.h>
-#include <HTTPClient.h>
-#include <Wire.h>
-#include <Adafruit_AHTX0.h>
-#include <ArduinoJson.h>
-
-// ===== ตั้งค่าให้ตรงกับของตนเอง =====
-const char* WIFI_SSID    = "YOUR_WIFI";
-const char* WIFI_PASS    = "YOUR_PASSWORD";
-const char* SUPABASE_URL = "https://YOUR_PROJECT_REF.supabase.co/rest/v1/";
-const char* SUPABASE_KEY = "sb_publishable_xxxxxxxxxxxx";   // Publishable key
-const char* DEVICE_ID    = "mcc01";
-
-#define I2C_SDA 8
-#define I2C_SCL 9
-const uint8_t BTN_PINS[3] = {4, 5, 6};             // ปุ่มหน้าตู้
-const uint8_t OUT_PINS[3] = {10, 11, 12};          // LED แทนคอนแทคเตอร์
-const char*   NAMES[3]    = {"light", "pump", "fan"};
-
-const unsigned long SEND_INTERVAL = 5000;   // ms ส่งค่าเซนเซอร์
-const unsigned long POLL_INTERVAL = 2000;   // ms ถามคำสั่งจากฐานข้อมูล
-const unsigned long DEBOUNCE_MS   = 50;     // ms
-
-Adafruit_AHTX0   aht;
-WiFiClientSecure tls;
-unsigned long    lastSend = 0;
-unsigned long    lastPoll = 0;
-
-// ตัวแปรที่ใช้ร่วมกับ ISR ต้องเป็น volatile
-volatile bool          btnPending[3]  = {false, false, false};
-volatile unsigned long btnLastEdge[3] = {0, 0, 0};
-
-// สถานะของ light, pump, fan ที่ขับออก LED อยู่ขณะนี้
-bool outState[3] = {false, false, false};
-
-// ISR: เรียกทุกครั้งที่ขาเปลี่ยนสถานะ (กดหรือปล่อย)
-void IRAM_ATTR onButtonChange(void* arg) {
-  int i = (int)(intptr_t)arg;
-  unsigned long now = millis();
-  if (now - btnLastEdge[i] < DEBOUNCE_MS) {   // ยังอยู่ในช่วงหน้าสัมผัสเด้ง
-    btnLastEdge[i] = now;                     // ขยายช่วงเงียบออกไป
-    return;
-  }
-  btnLastEdge[i] = now;
-  if (digitalRead(BTN_PINS[i]) == LOW) btnPending[i] = true;   // นับเฉพาะจังหวะกด
-}
-
-void connectWiFi() {
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASS);
-  Serial.print("Connecting WiFi");
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(250);
-    Serial.print(".");
-  }
-  Serial.printf(" OK  IP=%s\n", WiFi.localIP().toString().c_str());
-}
-
-// header ที่ทุกคำขอไป Supabase ต้องมี
-void addAuthHeaders(HTTPClient& http) {
-  http.addHeader("apikey", SUPABASE_KEY);
-  if (strncmp(SUPABASE_KEY, "eyJ", 3) == 0) {           // legacy anon key (JWT)
-    http.addHeader("Authorization", String("Bearer ") + SUPABASE_KEY);
-  }
-}
-
-int postJson(const char* table, const char* body) {
-  HTTPClient http;
-  http.begin(tls, String(SUPABASE_URL) + table);
-  http.addHeader("Content-Type", "application/json");
-  http.addHeader("Prefer", "return=minimal");
-  addAuthHeaders(http);
-  int code = http.POST(String(body));
-  Serial.printf("POST %s %s -> %d\n", table, body, code);
-  if (code >= 400) Serial.println(http.getString());    // ข้อความ error จาก Supabase
-  http.end();
-  return code;
-}
-
-void applyOutput(int i) {
-  digitalWrite(OUT_PINS[i], outState[i] ? HIGH : LOW);
-}
-
-// ปุ่มหน้าตู้: แจ้งสถานะใหม่ของอุปกรณ์ i ขึ้นตาราง controls
-int patchControl(int i) {
-  HTTPClient http;
-  http.begin(tls, String(SUPABASE_URL) + "controls?device_id=eq." + DEVICE_ID);
-  http.addHeader("Content-Type", "application/json");
-  http.addHeader("Prefer", "return=minimal");
-  addAuthHeaders(http);
-  char body[64];
-  snprintf(body, sizeof(body), "{\"%s\":%s,\"updated_by\":\"button\"}",
-           NAMES[i], outState[i] ? "true" : "false");
-  int code = http.PATCH(String(body));
-  Serial.printf("PATCH controls %s -> %d\n", body, code);
-  if (code >= 400) Serial.println(http.getString());
-  http.end();
-  return code;
-}
-
-// คำสั่งจากแดชบอร์ด: อ่านสถานะที่ต้องการจาก controls แล้วขับ LED ให้ตรง
-void pollControls() {
-  HTTPClient http;
-  http.begin(tls, String(SUPABASE_URL) + "controls?device_id=eq." + DEVICE_ID +
-                  "&select=light,pump,fan");
-  addAuthHeaders(http);
-  int code = http.GET();
-  if (code != 200) {
-    Serial.printf("GET controls -> %d\n", code);
-    if (code >= 400) Serial.println(http.getString());
-    http.end();
-    return;
-  }
-  String json = http.getString();        // เช่น [{"light":false,"pump":false,"fan":true}]
-  http.end();
-
-  JsonDocument doc;
-  if (deserializeJson(doc, json) || doc.size() == 0) {
-    Serial.println("controls: no row for this DEVICE_ID");
-    return;
-  }
-  JsonObject row = doc[0];
-  for (int i = 0; i < 3; i++) {
-    bool want = row[NAMES[i]] | false;
-    if (want != outState[i]) {             // เปลี่ยนเฉพาะเมื่อค่าต่างจากเดิม
-      outState[i] = want;
-      applyOutput(i);
-      Serial.printf("CMD %s -> %s\n", NAMES[i], want ? "ON" : "OFF");
-    }
-  }
-}
-
-void setup() {
-  Serial.begin(115200);
-  delay(500);
-
-  Wire.begin(I2C_SDA, I2C_SCL);
-  if (!aht.begin(&Wire)) {
-    Serial.println("AHT25 not found: check wiring SDA=8 SCL=9");
-    while (true) delay(1000);
-  }
-
-  for (int i = 0; i < 3; i++) {
-    pinMode(OUT_PINS[i], OUTPUT);
-    applyOutput(i);                        // เริ่มต้นปิดทั้งหมด
-    pinMode(BTN_PINS[i], INPUT_PULLUP);
-    attachInterruptArg(BTN_PINS[i], onButtonChange, (void*)(intptr_t)i, CHANGE);
-  }
-
-  tls.setInsecure();   // สำหรับห้องแล็บ งานจริงให้ใช้ tls.setCACert(rootCA)
-  connectWiFi();
-  pollControls();      // รีบูตแล้วกลับไปสถานะล่าสุดที่สั่งไว้
-}
-
-void loop() {
-  if (WiFi.status() != WL_CONNECTED) connectWiFi();
-
-  // 1) ปุ่มหน้าตู้: สลับสถานะ ขับ LED ทันที แล้วแจ้งฐานข้อมูล
-  for (int i = 0; i < 3; i++) {
-    if (btnPending[i]) {
-      btnPending[i] = false;
-      outState[i] = !outState[i];          // Toggle
-      applyOutput(i);
-      patchControl(i);
-    }
-  }
-
-  // 2) คำสั่งจากแดชบอร์ด: ถามทุก POLL_INTERVAL
-  if (millis() - lastPoll >= POLL_INTERVAL) {
-    lastPoll = millis();
-    pollControls();
-  }
-
-  // 3) ค่าเซนเซอร์: ส่งทุก SEND_INTERVAL (เหมือนส่วนที่ 1)
-  if (millis() - lastSend >= SEND_INTERVAL) {
-    lastSend = millis();
-    sensors_event_t hum, temp;
-    if (aht.getEvent(&hum, &temp)) {
-      char body[96];
-      snprintf(body, sizeof(body),
-               "{\"device_id\":\"%s\",\"temp\":%.1f,\"hum\":%.1f}",
-               DEVICE_ID, temp.temperature, hum.relative_humidity);
-      postJson("telemetry", body);
-    } else {
-      Serial.println("AHT25 read failed");
-    }
-  }
-}
-```
-
-**คำอธิบายโค้ดส่วนที่เพิ่มจากส่วนที่ 1**
-
-| ส่วนของโค้ด | การทำงาน |
-|:---|:---|
-| `attachInterruptArg(..., CHANGE)` | ใช้ ISR ตัวเดียวกับทั้ง 3 ปุ่ม โดยส่งหมายเลขปุ่ม `i` เป็นอาร์กิวเมนต์ |
-| `IRAM_ATTR` | เก็บ ISR ไว้ใน RAM ภายใน เพื่อให้ตอบสนองได้เร็ว และทำงานได้แม้ cache ของ flash ถูกปิดชั่วคราว |
-| Debounce ใน ISR | ขอบสัญญาณที่ห่างจากครั้งก่อนไม่ถึง 50 ms ถูกทิ้ง และช่วงเงียบถูกยืดออก ขอบแรกที่ผ่านเงื่อนไขจะนับเป็นการกดเมื่อขาอ่านได้ `LOW` เท่านั้น กดหนึ่งครั้งจึงได้หนึ่งการสั่ง การปล่อยปุ่มหรือกดค้างไม่ทำให้นับซ้ำ |
-| `volatile` | บอกคอมไพเลอร์ว่าตัวแปรถูกแก้จาก ISR ได้ทุกเมื่อ ต้องอ่านจากหน่วยความจำจริงทุกครั้ง |
-| `outState[i] = !outState[i]` แล้ว `applyOutput(i)` ก่อน `patchControl(i)` | ขับ LED ทันทีที่กดปุ่ม ช่างหน้าตู้จึงไม่ต้องรอเครือข่าย แล้วจึงแจ้งฐานข้อมูลให้แดชบอร์ดเห็นสถานะเดียวกัน `outState` แก้เฉพาะใน `loop()` จึงไม่ต้องเป็น `volatile` |
-| `http.PATCH(...)` ไปที่ `controls?device_id=eq.<id>` | แก้เฉพาะคอลัมน์ของอุปกรณ์ที่กด พร้อม `updated_by = "button"` ตามที่ RLS policy บังคับ trigger ในฐานข้อมูลจะบันทึก `events` ให้เอง |
-| `pollControls()` | `GET` แถวของอุปกรณ์นี้ แปลง JSON ด้วย ArduinoJson แล้วขับ LED เฉพาะอุปกรณ์ที่ค่าต่างจากเดิม คำสั่งจากแดชบอร์ดจึงทำงานภายในราว 2 วินาที (หัวข้อ 12.6.3) |
-| `row[NAMES[i]] \| false` | ถ้าไม่พบคีย์หรือชนิดข้อมูลไม่ใช่ boolean ให้ใช้ค่า `false` (ปิด) ซึ่งเป็นสถานะที่ปลอดภัยกว่า |
-| `pollControls()` ใน `setup()` | เมื่อรีบูต ESP32 จะอ่านสถานะล่าสุดจาก `controls` แล้วขับ LED ให้ตรงทันที (Desired State ในหัวข้อ 12.6.2) |
-| ลำดับใน `loop()`: ปุ่ม → poll → เซนเซอร์ | จัดการปุ่มก่อน เพื่อให้ `PATCH` ถึงฐานข้อมูลก่อนการ `GET` รอบถัดไป ถ้าสลับลำดับ ค่าเก่าจากฐานข้อมูลอาจสลับ LED กลับทันทีหลังกดปุ่ม |
-
-> **ข้อจำกัดของระบบ:** (1) ถ้า `PATCH` ล้มเหลว (เช่น Wi-Fi หลุดชั่วขณะ) การ poll รอบถัดไปจะสลับ LED กลับเป็นค่าในฐานข้อมูล เพราะฐานข้อมูลคือแหล่งความจริง (2) ตาราง `controls` เก็บเฉพาะ **สถานะที่สั่ง (Desired)** ไม่ได้ยืนยันว่าอุปกรณ์ทำงานจริง (Reported) งานจริงควรเพิ่มคอลัมน์ที่ ESP32 รายงานสถานะจริงกลับ หรือใช้หน้าสัมผัสช่วย (Auxiliary Contact) ของคอนแทคเตอร์ยืนยัน (3) เมื่อไม่มีเครือข่าย ESP32 จะค้างสถานะเดิมไว้ ต้องออกแบบว่าอุปกรณ์ใดควรปิดเองเมื่อขาดการติดต่อ (Fail-safe)
-
-> **ใช้ Wokwi:** LED ปุ่มกด และไลบรารี ArduinoJson ใช้ใน Wokwi ได้ตามปกติ ต่อ LED ผ่านตัวต้านทาน 220 Ω ที่ GPIO 10/11/12 ได้เหมือนบอร์ดจริง
-
-### 12.9.5 สั่งเปิด/ปิดอุปกรณ์จากแดชบอร์ด
-
-แดชบอร์ดชุดเดิมจากหัวข้อ 12.8.6 มีแถวที่ 3 สำหรับส่วนที่ 2 อยู่แล้ว เมื่อให้สิทธิ์ในหัวข้อ 12.9.3 และสร้างแถวใน `controls` แล้ว ให้ **กด refresh หน้าเว็บ 1 ครั้ง** จะเห็นกล่อง **สั่งการอุปกรณ์** ที่มีปุ่ม 3 ปุ่ม
-
-| ปุ่ม | สถานะที่แสดง | เมื่อกด |
-|:---|:---|:---|
-| 💡 ไฟในตู้ (`light`) | **เปิด** (กรอบเขียว) / **ปิด** (กรอบเทา) ตามค่าใน `controls` | ถามยืนยัน แล้วสั่งสถานะตรงข้าม |
-| 🛢️ ปั๊ม (`pump`) | เช่นเดียวกัน | เช่นเดียวกัน |
-| 🌀 พัดลมระบายอากาศ (`fan`) | เช่นเดียวกัน | เช่นเดียวกัน |
-
-ใต้ปุ่มแสดง **ผู้สั่งล่าสุด** (ปุ่มหน้าตู้ หรือแดชบอร์ด) และเวลา ซึ่งมาจากคอลัมน์ `updated_by` และ `updated_at` ถ้ากดปุ่มหน้าตู้ ปุ่มบนแดชบอร์ดจะเปลี่ยนตามภายในรอบ refresh ถัดไป (ไม่เกิน 5 วินาที)
-
-**โค้ดที่สั่งการ** (`components/Dashboard.jsx` ฟังก์ชัน `command()`)
-
-```js
-async function command(device, value) {
-  const verb = value ? 'เปิด' : 'ปิด'
-  if (!window.confirm(`ยืนยัน${verb}${device.label} ของ ${DEVICE_ID}?`)) return
-  setBusy(device.key)
-  const { data, error } = await supabase.from('controls')
-    .update({ [device.key]: value, updated_by: 'dashboard' })
-    .eq('device_id', DEVICE_ID)
-    .select()
-  if (error) setError(error.message)
-  else if (data.length === 0) setError('สั่งไม่สำเร็จ: ไม่พบแถวของอุปกรณ์นี้ใน controls หรือไม่มีสิทธิ์แก้ไข')
-  setBusy(null)
-  load()
-}
-```
-
-| ส่วนของโค้ด | การทำงาน |
-|:---|:---|
-| `window.confirm(...)` | ถามยืนยันก่อนทุกครั้ง ป้องกันการกดพลาด (หลักการข้อ 5 ในหัวข้อ 12.7) โดยระบุชื่ออุปกรณ์และ `DEVICE_ID` ให้ชัด |
-| `.update({ [device.key]: value, updated_by: 'dashboard' })` | แก้เฉพาะคอลัมน์ของอุปกรณ์ที่กด และระบุตัวว่า `dashboard` ตามที่ RLS policy บังคับ (เทียบกับ ESP32 ที่ต้องส่ง `button`) |
-| `.eq('device_id', DEVICE_ID)` | แก้เฉพาะแถวของอุปกรณ์นี้ |
-| `.select()` | ขอแถวที่แก้แล้วกลับมา (เทียบกับ `RETURNING` ใน SQL) ถ้าได้ 0 แถว แปลว่าไม่พบแถว หรือ RLS ไม่อนุญาต ซึ่ง PostgREST ไม่ถือว่าเป็น error |
-| `setBusy(...)` | ปิดปุ่มทั้งหมดชั่วคราวระหว่างส่ง ป้องกันการกดซ้ำ |
-| `load()` | อ่านข้อมูลใหม่ทันที ไม่ต้องรอรอบ 5 วินาที |
-
-**ลำดับเหตุการณ์เมื่อกดสั่ง:** เบราว์เซอร์ส่ง `PATCH /rest/v1/controls?device_id=eq.<id>` พร้อม JWT → PostgREST รันด้วย role `authenticated` → RLS ตรวจว่า `updated_by = 'dashboard'` → trigger บันทึก `events` → ภายในราว 2 วินาที ESP32 `GET` ได้ค่าใหม่แล้วขับ LED (Serial Monitor แสดง `CMD fan -> ON`) → แดชบอร์ดแสดงแถวใหม่ในประวัติการสั่ง
-
-### 12.9.6 ประวัติการสั่ง เส้นหมายเหตุบนกราฟ และจำนวนครั้งที่เปิดพัดลม
-
-เมื่อ `authenticated` อ่าน `events` ได้แล้ว แดชบอร์ดจะแสดงข้อมูลจากตาราง `events` 3 จุด
-
-| ส่วนประกอบ | ตำแหน่ง | คำขอข้อมูล |
-|:---|:---|:---|
-| **ประวัติการสั่ง** (เวลา · อุปกรณ์ · เปิด/ปิด · ผู้สั่ง) 20 รายการล่าสุด | แถว 3 ข้างปุ่มสั่งการ | `events` ของอุปกรณ์นี้ เรียงจากใหม่ไปเก่า `limit(20)` |
-| **เส้นหมายเหตุ (Annotation)** เปิดพัดลม / ปิดพัดลม | บนกราฟอุณหภูมิ แถว 2 | กรองเฉพาะ `event = 'fan'` จากรายการเดียวกัน |
-| **เปิดพัดลมวันนี้** (จำนวนครั้ง) | แถว 1 | นับแถว `event = 'fan'` และ `state = true` ตั้งแต่เที่ยงคืนตามเวลาไทย |
-
-```js
-// นับจำนวนแถวโดยไม่ดึงข้อมูลจริง (head: true)
-supabase.from('events').select('id', { count: 'exact', head: true })
-  .eq('device_id', DEVICE_ID).eq('event', 'fan').eq('state', true)
-  .gte('created_at', startOfThaiDay())
-```
-
-`{ count: 'exact', head: true }` ให้ PostgREST ตอบเฉพาะจำนวนแถว (เทียบกับ `SELECT count(*)`) ไม่ส่งข้อมูลทั้งแถวกลับมา จึงประหยัดกว่าดึงทั้งหมดแล้วมานับเอง ส่วน `startOfThaiDay()` คำนวณเวลาเที่ยงคืนตามเวลาไทย (UTC+7) แล้วแปลงกลับเป็น UTC เพราะ `created_at` เก็บเป็น UTC ถ้าใช้เที่ยงคืน UTC ตรง ๆ วันใหม่จะเริ่มตอน 07:00 น. ตามเวลาไทย
-
-เส้นหมายเหตุช่วยให้เห็นเหตุกับผลบนกราฟเดียวกัน เช่น หลังเส้น "เปิดพัดลม" อุณหภูมิในตู้ควรค่อย ๆ ลดลง
-
-**ทดสอบ**
-
-| การทดลอง | ผลที่ควรเห็น |
-|:---|:---|
-| กด **พัดลมระบายอากาศ** บนแดชบอร์ด → ยืนยัน | LED พัดลมติดภายในไม่กี่วินาที ประวัติการสั่งมีแถวใหม่ (`dashboard`) และกราฟอุณหภูมิมีเส้นหมายเหตุ "เปิดพัดลม" |
-| กดปุ่ม `pump` หน้าตู้ | ภายใน 5 วินาที ปุ่มปั๊มบนแดชบอร์ดเปลี่ยนเป็น **เปิด** และประวัติการสั่งแสดงผู้สั่ง **ปุ่มหน้าตู้** |
-| เปิด-ปิดพัดลม 2 รอบ | ค่า **เปิดพัดลมวันนี้** เพิ่มขึ้น 2 |
-
----
-
-## 12.10 การแก้ปัญหาที่พบบ่อย
-
-| ส่วน | อาการ | สาเหตุที่เป็นไปได้ | วิธีแก้ |
-|:---|:---|:---|:---|
-| 1 | Serial Monitor ไม่แสดงอะไร | ปิด USB CDC On Boot | ตั้ง **USB CDC On Boot: Enabled** แล้วอัปโหลดใหม่ |
-| 1 | `AHT25 not found` | สาย SDA/SCL สลับ หรือไม่ได้จ่ายไฟ | ตรวจขาตามที่พิมพ์ไว้บนโมดูล และใช้ 3V3 |
-| 1 | ต่อ Wi-Fi ไม่ขึ้น | เครือข่าย 5 GHz หรือเป็น WPA2-Enterprise | ใช้ Hotspot มือถือแบบ 2.4 GHz |
-| 1 | ได้ `401` ตลอด | key ผิด หรือคัดลอกมาไม่ครบ | คัดลอก Publishable key (`sb_publishable_...`) ใหม่ และตรวจว่าส่งใน header `apikey` |
-| 1 | ได้ `401` พร้อมข้อความ *new row violates row-level security policy* ทั้งที่ค่าที่ส่งอยู่ในช่วงปกติ | ยังไม่มี policy `esp32 insert telemetry` หรือตั้ง Target Roles ไม่ใช่ `anon` | สร้างหรือแก้ policy ตามหัวข้อ 12.8.3 ขั้น ง. |
-| 1 | ได้ `401` พร้อมข้อความ *new row violates row-level security policy* และค่าผิดปกติ (เช่น `temp` เกิน 120) | ค่าไม่ผ่านเงื่อนไข `with check` (มักเกิดจากเซนเซอร์เสียหรือต่อสายผิด) | ตรวจเซนเซอร์และค่าที่ส่งใน Serial Monitor |
-| 1 | ได้ `401` พร้อมข้อความ *permission denied for table telemetry* | `anon` ไม่มีสิทธิ์ `INSERT` (เช่น ปิด Data API access ตอนสร้างตาราง หรือลืม `grant insert`) | รัน `grant insert on public.telemetry to anon;` |
-| 1 | หน้าตั้งค่าขึ้น *Project URL ต้องมีรูปแบบ https://xxxx.supabase.co* | ใส่ `/rest/v1/` ต่อท้าย (แบบใน ESP32) หรือคัดลอกมาไม่ครบ | ใช้ Project URL ที่ไม่มี `/rest/v1/` |
-| 1 | login ไม่ได้: *Invalid login credentials* | อีเมลหรือรหัสผ่านผิด หรือยังไม่ได้สร้างบัญชี | ตรวจที่ **Authentication → Users** ถ้าลืมรหัสผ่าน ให้ลบบัญชีแล้วสร้างใหม่ |
-| 1 | login ไม่ได้: *Email not confirmed* | ตอนสร้างบัญชีไม่ได้เลือก **Auto confirm user?** | สร้างบัญชีใหม่โดยเลือก Auto confirm user? |
-| 1 | แดชบอร์ดขึ้นแถบแดง *permission denied for table telemetry* | `authenticated` ยังไม่มีสิทธิ์ `SELECT` | รัน `grant select on public.telemetry to authenticated;` (หัวข้อ 12.8.4 ค.) |
-| 1 | login ได้ แต่ Gauge แสดง `–` และขึ้นแถบเหลือง *ไม่ได้รับข้อมูลจาก ESP32* ทั้งที่ ESP32 ได้ `201` | ไม่มี policy `dashboard read telemetry` (RLS คืนผลเป็น 0 แถว ไม่ใช่ error) หรือ `DEVICE_ID` ในหน้าตั้งค่าไม่ตรงกับ ESP32 | ตรวจ policy ในหน้า Policies และแก้ `DEVICE_ID` ด้วยปุ่ม **เปลี่ยนโปรเจกต์** |
-| 1 | ใช้บนมือถือแล้วต้องตั้งค่าใหม่ | ค่าตั้งเก็บแยกในแต่ละเบราว์เซอร์ | กรอกค่าตั้งในเบราว์เซอร์ของมือถือ 1 ครั้ง |
-| 2 | LED ไม่ติดเลย | ต่อ LED กลับขั้ว หรือลืมตัวต้านทาน | ขายาวต่อฝั่ง GPIO ผ่าน 220 Ω ขาสั้นต่อ GND |
-| 2 | กดปุ่มครั้งเดียวได้ 2 event | ปุ่มเด้งนานกว่า 50 ms | เพิ่ม `DEBOUNCE_MS` เป็น 80–100 |
-| 2 | Serial ขึ้น `controls: no row for this DEVICE_ID` | ยังไม่ได้ `insert` แถวของอุปกรณ์ หรือ `DEVICE_ID` สะกดไม่ตรง | รัน `insert into controls (device_id) values ('<DEVICE_ID>');` |
-| 2 | `PATCH` ได้ `204` แต่แดชบอร์ดไม่เปลี่ยน | ไม่มีแถวที่ตรง `DEVICE_ID` (แก้ 0 แถว) | ตรวจแถวใน `controls` เหมือนข้อบน |
-| 2 | `PATCH` ได้ `401/403` code `42501` | `updated_by` ไม่ใช่ `button` หรือไม่มี policy update | ตรวจ body และ policy `esp32 update controls` |
-| 2 | กดปุ่มแล้ว LED ติดแล้วดับเองใน 2 วินาที | `PATCH` ล้มเหลว poll จึงดึงค่าเดิมกลับมา | ดู status code ของ `PATCH` ใน Serial Monitor |
-| 2 | แดชบอร์ดขึ้น *ไม่พบแถวของอุปกรณ์นี้ในตาราง controls* | ยังไม่ได้ `insert` แถว หรือ `authenticated` ไม่มี policy อ่าน `controls` | สร้างแถวตามหัวข้อ 12.9.2 และตรวจสิทธิ์ตามหัวข้อ 12.9.3 |
-| 2 | กดสวิตช์แล้วขึ้น *สั่งไม่สำเร็จ: ไม่พบแถว... หรือไม่มีสิทธิ์แก้ไข* | ไม่มี policy `dashboard update controls` | รันคำสั่งในหัวข้อ 12.9.3 |
-| 2 | กดสวิตช์แล้วขึ้น *permission denied for table controls* | ลืม `grant update (light, pump, fan, updated_by) ...` | รันคำสั่ง `grant` ในหัวข้อ 12.9.3 |
-| 2 | กดสวิตช์แล้วขึ้น *new row violates row-level security policy* | policy ของ `authenticated` เขียน `with check` ผิด | ตรวจว่า `with check (updated_by = 'dashboard')` |
-| 2 | สั่งจากแดชบอร์ดแล้ว `events` ไม่มีแถวใหม่ | ส่งค่าเดิมซ้ำ (trigger บันทึกเฉพาะเมื่อค่าเปลี่ยน) หรือไม่ได้สร้าง trigger | เปลี่ยนค่าจริง หรือรันคำสั่ง `create trigger` อีกครั้ง |
-| 2 | ประวัติการสั่งว่างทั้งที่ `events` มีข้อมูล | `authenticated` ยังอ่าน `events` ไม่ได้ | รันส่วน `grant select on public.events ...` ในหัวข้อ 12.9.3 |
-
-</div>
-
-
-<div class="chapter-tab-content" data-tab-name="Lab 14" data-tab-icon="🔬" id="lab14" markdown="1">
-
-## 12.11 ใบงานปฏิบัติการ Lab 14: ระบบติดตามและสั่งการตู้ควบคุมด้วย Supabase + Vercel
-
-**ฮาร์ดแวร์:** ESP32-S3 DevKit + AHT25 + ปุ่มกด 3 ปุ่ม + LED 3 ดวง + ตัวต้านทาน 220 Ω 3 ตัว  
-**เครื่องมือ (ฟรีทั้งหมด):** Arduino IDE + Supabase (Free Plan) + แดชบอร์ดบน Vercel (ลิงก์จากผู้สอน)  
-**เวลา:** 3 ชั่วโมง (ส่วนที่ 1 ประมาณ 100 นาที · ส่วนที่ 2 ประมาณ 80 นาที)
-
-> ใบงานนี้ใช้ทำตามลำดับขั้นและบันทึกผล ส่วนโค้ดฉบับเต็ม SQL และคำอธิบายอยู่ในแท็บ **Hands-on** (หัวข้อ 12.8 สำหรับส่วนที่ 1 และ 12.9 สำหรับส่วนที่ 2)
-
-### วัตถุประสงค์ของใบงาน
-
-**ส่วนที่ 1: ติดตาม (ESP32 → Supabase → Vercel)**
-- ต่อวงจร ESP32-S3 กับ AHT25 (I2C) ได้
-- สร้างตาราง `telemetry` บน Supabase พร้อมกำหนดสิทธิ์ด้วย Row Level Security ได้
-- ส่งข้อมูลเซนเซอร์ผ่าน HTTPS POST ไปยัง REST API ได้
-- สร้างบัญชีผู้ใช้ด้วย Supabase Auth และเปิดดูข้อมูลบนเว็บแดชบอร์ดที่ Deploy บน Vercel ได้
-
-**ส่วนที่ 2: สั่งการ (Vercel → Supabase → ESP32)**
-- ต่อปุ่มกด (Pull-up + Interrupt) และ LED เป็นเอาต์พุตได้
-- สร้างตาราง `controls` แบบ Desired State และ trigger ที่บันทึก `events` อัตโนมัติได้
-- เขียนโปรแกรมให้ ESP32 poll คำสั่งด้วย HTTPS GET และแจ้งการกดปุ่มหน้าตู้ด้วย PATCH ได้
-- สั่งเปิด/ปิดอุปกรณ์จากแดชบอร์ด โดยผู้ใช้ที่ login แก้ได้เฉพาะตาราง `controls` ได้
-
-**สถานการณ์:** ติดตั้งอุปกรณ์ในตู้ควบคุมมอเตอร์ปั๊ม (MCC) เพื่อวัดอุณหภูมิและความชื้นภายในตู้ (ส่วนที่ 1) และให้ช่างสั่งเปิด/ปิด **ไฟ** (`light`), **ปั๊ม** (`pump`) และ **พัดลม** (`fan`) ได้ทั้งจากแดชบอร์ดบนมือถือและจากปุ่มหน้าตู้ (ส่วนที่ 2) โดยทุกการสั่งจะถูกบันทึกพร้อมผู้สั่ง
-
----
-
-## ส่วนที่ 1: ติดตาม (ESP32 → Supabase → Vercel)
-
-### ขั้นที่ 1.1: ต่อวงจรและตั้งค่า Arduino IDE (15 นาที)
-
-#### ความรู้เบื้องต้น
-
-- **AHT25** เป็นเซนเซอร์ดิจิทัล สื่อสารผ่าน I2C ที่ address `0x38` ESP32-S3 เลือกขา I2C ได้อิสระ บทนี้ใช้ SDA = GPIO 8 และ SCL = GPIO 9
-
-#### ขั้นตอนปฏิบัติ
-
-| อุปกรณ์ | ขาอุปกรณ์ | ESP32-S3 |
-|:---|:---|:---|
-| AHT25 | VDD / GND / SDA / SCL | 3V3 / GND / GPIO 8 / GPIO 9 |
-
-1. ต่อวงจรตามตาราง โดยดูลำดับขาตามที่พิมพ์ไว้บนโมดูล AHT25 และ **ห้ามต่อเข้า 5V**
-2. Arduino IDE → **Boards Manager** → ติดตั้ง **esp32 by Espressif Systems**
-3. **Library Manager** → ติดตั้ง **Adafruit AHTX0**
-4. **Tools** → Board **ESP32S3 Dev Module** → **USB CDC On Boot: Enabled**
-5. เตรียม Wi-Fi แบบ **2.4 GHz** ที่ไม่ต้อง login ผ่านหน้าเว็บ (ใช้ Hotspot มือถือได้)
-
-#### ตารางบันทึกผล — ขั้นที่ 1.1
-
-| รายการ | สถานะ |
-|:---|:---|
-| ต่อวงจรครบ ตรวจแรงดันที่ขา VDD ของ AHT25 = 3.3 V | ________ |
-| ติดตั้ง ESP32 core และ Adafruit AHTX0 สำเร็จ | ________ |
-| ชื่อ Wi-Fi ที่ใช้ และย่านความถี่ | ________ |
-
-### ขั้นที่ 1.2: สร้างตาราง `telemetry` บน Supabase (20 นาที)
-
-#### ขั้นตอนปฏิบัติ
-
-1. สมัครที่ [supabase.com](https://supabase.com) → **New project** → ชื่อ `mcc-monitor` → ตั้ง Database Password → Region **Southeast Asia (Singapore)**
-2. สร้างตาราง `telemetry` ตาม **หัวข้อ 12.8.3** (วิธีที่ 1 ผ่านหน้าเว็บ หรือวิธีที่ 2 ด้วย SQL) ซึ่งจะได้
-   - ตาราง `telemetry` พร้อม index
-   - policy ให้ `anon` (ESP32) **INSERT ได้อย่างเดียว** และตรวจช่วงค่า `temp` / `hum`
-3. **Integrations → Data API → Overview** → คัดลอก **Project URL** และ **Project Settings → API Keys** → คัดลอก **Publishable key** (`sb_publishable_...`)
-
-#### ตารางบันทึกผล — ขั้นที่ 1.2
-
-| รายการ | สถานะ |
-|:---|:---|
-| เห็นตาราง `telemetry` ใน Table Editor | ________ |
-| RLS ของตาราง `telemetry` แสดงสถานะ Enabled | ________ |
-| วิธีที่ใช้สร้างตาราง (หน้าเว็บ / SQL) | ________ |
-| Project URL ของฉัน | ________ |
-
-### ขั้นที่ 1.3: โปรแกรม ESP32-S3 ส่งค่าเซนเซอร์ (25 นาที)
-
-#### ความรู้เบื้องต้น
-
-- ESP32 ส่งค่าเซนเซอร์ไปที่ `POST /rest/v1/telemetry` ทุก 5 วินาที ฐานข้อมูลตอบ `201` เมื่อบันทึกสำเร็จ
-- โปรแกรมใช้ `millis()` แทน `delay()` เพื่อให้ `loop()` ว่างสำหรับงานอื่นในส่วนที่ 2
-
-#### ขั้นตอนปฏิบัติ
-
-1. สร้าง sketch ใหม่ชื่อ `mcc_monitor` → คัดลอกโค้ดจาก **หัวข้อ 12.8.5**
-2. แก้ค่า `WIFI_SSID`, `WIFI_PASS`, `SUPABASE_URL` (ต้องลงท้ายด้วย `/rest/v1/`) และ `SUPABASE_KEY`
-3. เปลี่ยน `DEVICE_ID` เป็น `mcc-` ตามด้วยรหัสนักศึกษา 4 ตัวท้าย เช่น `mcc-1234`
-4. อัปโหลด → เปิด Serial Monitor ที่ **115200** ต้องเห็น `WiFi OK` แล้วตามด้วย `POST telemetry ... -> 201` ทุก 5 วินาที
-5. เปิด Supabase **Table Editor** → ตรวจว่ามีแถวใหม่ในตาราง `telemetry`
-
-#### ตารางบันทึกผล — ขั้นที่ 1.3
-
-| การทดลอง | ผลใน Serial Monitor | แถวใหม่ใน Table Editor? |
-|:---|:---|:---|
-| รอ 30 วินาที | ได้ `201` กี่ครั้ง: ________ | ________ |
-| ใช้นิ้วจับ AHT25 นาน 30 วินาที | temp เปลี่ยนจาก ____ เป็น ____ °C | ________ |
-| แก้ key ผิด 1 ตัวอักษร แล้วอัปโหลดใหม่ | Status code: ________ | ________ |
-
-### ขั้นที่ 1.4: สร้างบัญชีแดชบอร์ดและเปิดแดชบอร์ดบน Vercel (25 นาที)
-
-#### ความรู้เบื้องต้น
-
-- หน้าเว็บแดชบอร์ดโหลดจาก Vercel แต่ **เบราว์เซอร์ดึงข้อมูลจาก Supabase โดยตรง** ด้วย Publishable key ตัวเดียวกับ ESP32
-- ต้อง login ก่อนจึงจะได้ role `authenticated` ที่อ่านข้อมูลได้ จึงต้อง **ปิดการสมัครเอง** และให้ผู้ดูแลสร้างบัญชีให้เท่านั้น
-
-#### ขั้นตอนปฏิบัติ
-
-1. **Authentication → Sign In / Providers** → ปิด **Allow new users to sign up** → Save ตาม **หัวข้อ 12.8.4 ก.**
-2. **Authentication → Users → Add user → Create new user** → ใส่อีเมลและรหัสผ่านของตนเอง → เลือก **Auto confirm user?** → Create user ตาม **หัวข้อ 12.8.4 ข.**
-3. รัน SQL ให้สิทธิ์อ่าน `telemetry` แก่ `authenticated` ตาม **หัวข้อ 12.8.4 ค.**
-4. เปิดลิงก์แดชบอร์ดของรายวิชา → กรอก Project URL, Publishable key และ `DEVICE_ID` → บันทึก → login ตาม **หัวข้อ 12.8.6**
-5. ทดลองตาม **หัวข้อ 12.8.7** และ **12.8.8**
-
-#### ตารางบันทึกผล — ขั้นที่ 1.4
-
-| การทดลอง | ผลที่เห็นบนแดชบอร์ด |
-|:---|:---|
-| login ด้วยรหัสผ่านผิด 1 ครั้ง | ข้อความที่แสดง: ________ |
-| ค่า Gauge อุณหภูมิเทียบกับ Serial Monitor | แดชบอร์ด ____ °C / Serial ____ °C |
-| ใช้นิ้วจับ AHT25 นาน 1 นาที | สีของ Gauge อุณหภูมิ: ________ กราฟ: ________ |
-| ถอดสาย USB ของ ESP32-S3 แล้วรอ 40 วินาที | ค่าและสีของสถานะการเชื่อมต่อ: ________ แถบเตือน: ________ |
-| เปลี่ยนช่วงกราฟจาก 15 นาที เป็น 1 ชั่วโมง | กราฟเปลี่ยนอย่างไร: ________ |
-| ทำให้อุณหภูมิเกิน `TEMP.alarm` (35 °C) | แถบเตือนที่แสดง: ________ |
-| เปิดแดชบอร์ดบนมือถือ | ต้องกรอกค่าตั้งใหม่หรือไม่ เพราะเหตุใด: ________ |
-
-### ขั้นที่ 1.5: ทดสอบความปลอดภัยของส่วนที่ 1 (15 นาที)
-
-#### ขั้นตอนปฏิบัติ
-
-1. เปิดแดชบอร์ดในหน้าต่างไม่ระบุตัวตน (Incognito) → กรอกค่าตั้ง → **อย่า login** แล้วสังเกตว่าเข้าหน้าแดชบอร์ดได้หรือไม่
-2. ที่ **Authentication → Sign In / Providers** เปิด **Allow new users to sign up** ชั่วคราว แล้วอธิบายในแบบฝึกหัดข้อ 4 ว่าเปิดทิ้งไว้จะเกิดความเสี่ยงอะไร จากนั้น **ปิดกลับทันที**
-3. SQL Editor → รัน `select policyname, roles, cmd from pg_policies where tablename = 'telemetry';` แล้วจดผล
-
-#### ตารางบันทึกผล — ขั้นที่ 1.5
-
-| การทดลอง | ผล |
-|:---|:---|
-| เปิดแดชบอร์ดโดยไม่ login | ________ |
-| policy ของ `telemetry` (ชื่อ · role · คำสั่ง) | ________ |
-| ปิด Allow new users to sign up กลับแล้ว | ________ |
-
----
-
-## ส่วนที่ 2: สั่งการ (Vercel → Supabase → ESP32)
-
-> เริ่มส่วนที่ 2 ได้เมื่อแดชบอร์ดของส่วนที่ 1 แสดงข้อมูลได้แล้วเท่านั้น
-
-### ขั้นที่ 2.1: ต่อ LED + ปุ่ม และสร้างตาราง `controls` (25 นาที)
-
-#### ความรู้เบื้องต้น
-
-- **ปุ่มกด** ต่อระหว่างขา GPIO กับ GND แล้วเปิด `INPUT_PULLUP` ขาจะอ่านได้ `HIGH` ตอนปล่อย และ `LOW` ตอนกด
-- **LED** ต่อผ่านตัวต้านทาน 220 Ω จำกัดกระแสไว้ราว 6 mA ($I = (3.3 - 2.0)/220$)
-- ตาราง `controls` เก็บ **สถานะที่ต้องการ** 1 แถวต่ออุปกรณ์ ทั้งแดชบอร์ดและปุ่มหน้าตู้เขียนแถวเดียวกัน และ trigger บันทึกทุกการเปลี่ยนแปลงลง `events`
-
-#### ขั้นตอนปฏิบัติ
-
-| อุปกรณ์ | ESP32-S3 |
-|:---|:---|
-| ปุ่ม `light` / `pump` / `fan` (อีกขาต่อ GND) | GPIO 4 / 5 / 6 |
-| LED `light` / `pump` / `fan` (ขายาวผ่าน R 220 Ω, ขาสั้นต่อ GND) | GPIO 10 / 11 / 12 |
-
-1. ต่อวงจรเพิ่มตามตาราง โดยไม่ต้องถอด AHT25
-2. **SQL Editor → New query** → วางชุดคำสั่ง SQL ส่วนที่ 2 จาก **หัวข้อ 12.9.2** → เปลี่ยน `'mcc01'` ในคำสั่ง `insert` เป็น `DEVICE_ID` ของตนเอง → **Run**
-3. ทดสอบ trigger ด้วยคำสั่ง `update` ในข้อ 3 ของหัวข้อ 12.9.2 แล้วตรวจตาราง `events`
-4. ให้สิทธิ์สั่งการแก่ผู้ใช้แดชบอร์ดตาม **หัวข้อ 12.9.3** แล้วรันคำสั่งตรวจสิทธิ์
-
-#### ตารางบันทึกผล — ขั้นที่ 2.1
-
-| รายการ | สถานะ |
-|:---|:---|
-| ตาราง `controls` มี 1 แถวของ `DEVICE_ID` ของฉัน | ________ |
-| RLS ของ `controls` และ `events` แสดงสถานะ Enabled | ________ |
-| หลังทดสอบ `update` ตาราง `events` มีกี่แถว และค่า `source` คือ | ________ |
-| ผลคำสั่งตรวจสิทธิ์ในหัวข้อ 12.9.3 ได้กี่แถว | ________ |
-
-### ขั้นที่ 2.2: โปรแกรม ESP32-S3 รับคำสั่งและปุ่มหน้าตู้ (25 นาที)
-
-#### ความรู้เบื้องต้น
-
-- ESP32 ถามคำสั่งด้วย `GET /rest/v1/controls?device_id=eq.<id>` ทุก 2 วินาที และเมื่อกดปุ่มจะสลับ LED ทันทีแล้ว `PATCH` ค่าใหม่ขึ้น `controls`
-- ESP32 ต้องส่ง HTTPS แทบตลอดเวลา (แต่ละครั้งค้าง 0.5–2 วินาที) โปรแกรมจึงอ่านปุ่มด้วย **Interrupt** เพื่อไม่ให้การกดระหว่างส่งข้อมูลหายไป และทำ **Debounce** 50 ms ใน ISR
-
-#### ขั้นตอนปฏิบัติ
-
-1. **Library Manager** → ติดตั้ง **ArduinoJson** (by Benoit Blanchon, v7)
-2. สร้าง sketch ใหม่ชื่อ `mcc_control` → คัดลอกโค้ดจาก **หัวข้อ 12.9.4** → ใส่ค่า Wi-Fi, URL, key และ `DEVICE_ID` เดิมจากขั้นที่ 1.3
-3. อัปโหลด → Serial Monitor ต้องเห็น `POST telemetry ... -> 201` ทุก 5 วินาทีเหมือนเดิม และไม่มีข้อความ `controls: no row ...`
-4. กดปุ่มแต่ละปุ่ม 1 ครั้ง → LED ต้องติดทันที และเห็น `PATCH controls ... -> 204` **ครั้งเดียวต่อการกด**
-5. SQL Editor → รัน `update controls set pump = true, updated_by = 'dashboard' where device_id = '<DEVICE_ID>';` → ภายในไม่กี่วินาทีต้องเห็น `CMD pump -> ON` และ LED ปั๊มติด
-
-#### ตารางบันทึกผล — ขั้นที่ 2.2
-
-| การทดลอง | ผลใน Serial Monitor / LED | แถวใหม่ใน `events` (`event`, `state`, `source`) |
-|:---|:---|:---|
-| กดปุ่ม `light` 1 ครั้ง | ________ | ________ |
-| กดปุ่ม `light` อีก 1 ครั้ง | ________ | ________ |
-| กดปุ่ม `fan` ค้างไว้ 3 วินาทีแล้วปล่อย | ได้ `PATCH` กี่ครั้ง: ________ | ________ |
-| กดปุ่ม `pump` ขณะ Serial กำลังพิมพ์ `POST telemetry` | การกดหายหรือไม่: ________ | ________ |
-| สั่ง `pump = true` จาก SQL Editor | เวลาจนเห็น `CMD pump -> ON` ประมาณ ____ วินาที | ________ |
-| เปิด `fan` ไว้ แล้วกดปุ่ม EN (รีเซ็ต) บนบอร์ด | หลังบูต LED `fan` ติดหรือไม่: ________ | ________ |
-
-### ขั้นที่ 2.3: สั่งการจากแดชบอร์ดบน Vercel (30 นาที)
-
-#### ขั้นตอนปฏิบัติ
-
-1. กด refresh แดชบอร์ด 1 ครั้ง → ตรวจว่าแถวที่ 3 แสดงกล่อง **สั่งการอุปกรณ์** และ **ประวัติการสั่ง** ตาม **หัวข้อ 12.9.5** และ **12.9.6**
-2. ทดลองตามตารางด้านล่าง โดยเปิด Serial Monitor ไว้ด้วย
-
-#### ตารางบันทึกผล — ขั้นที่ 2.3
-
-| การทดลอง | ผลที่เห็น |
-|:---|:---|
-| กด **พัดลมระบายอากาศ** บนแดชบอร์ด → ยืนยัน แล้วจับเวลาจนถึง LED ติด (ทำ 5 ครั้ง) | ____ / ____ / ____ / ____ / ____ วินาที เฉลี่ย ____ (เทียบกับค่าประมาณในหัวข้อ 12.6.3) |
-| กดปุ่มบนแดชบอร์ดแล้วเลือก **ยกเลิก** ในหน้าต่างยืนยัน | LED และ `events` เปลี่ยนหรือไม่: ________ |
-| กดปุ่ม `pump` หน้าตู้ แล้วรอไม่เกิน 5 วินาที | ปุ่มปั๊มบนแดชบอร์ด: ________ ผู้สั่งในประวัติ: ________ |
-| สั่ง `fan` เปิด-ปิดจากแดชบอร์ด 1 รอบ และจากปุ่ม 1 รอบ | ค่า **เปิดพัดลมวันนี้**: ____ ข้อความบนเส้นหมายเหตุ: ________ |
-| เปิด `fan` แล้วใช้มือบังอากาศรอบ AHT25 เทียบกับตอนปิด | แนวโน้มอุณหภูมิบนกราฟ: ________ |
-| สั่งจากแดชบอร์ดบนมือถือ ขณะอยู่นอกเครือข่าย Wi-Fi เดียวกับ ESP32 (ใช้ 4G/5G) | LED ทำงานหรือไม่ เพราะเหตุใด: ________ |
-| ปิด Hotspot ของ ESP32 แล้วสั่ง `light` จากแดชบอร์ด จากนั้นเปิด Hotspot อีกครั้ง | LED `light` ทำงานเมื่อใด: ________ |
-
----
-
-### แบบฝึกหัดท้ายใบงาน
-
-1. **Interrupt กับ Polling:** จากผลการทดลองในขั้นที่ 2.2 (กด `pump` ขณะกำลังส่งข้อมูล) อธิบายว่าถ้าโปรแกรมอ่านปุ่มด้วย `digitalRead()` ใน `loop()` แทน Interrupt ผลจะต่างไปอย่างไร เพราะเหตุใด
-
-   > คำตอบ: _______________________________________________________________
-
-2. **Debounce:** จากการกดปุ่ม `fan` ค้างไว้ 3 วินาที ทำไมโปรแกรมจึงนับเป็นเพียง 1 การสั่ง? อธิบายโดยอ้างอิงเงื่อนไขในฟังก์ชัน `onButtonChange()`
-
-   > คำตอบ: _______________________________________________________________
-
-3. **Desired State:** จากการทดลองรีเซ็ตบอร์ดขณะเปิด `fan` ไว้ อธิบายว่าทำไม LED จึงกลับมาอยู่สถานะเดิม และถ้าเปลี่ยนตาราง `controls` ให้เก็บเป็นคำสั่ง "toggle" แทนสถานะ จะเกิดปัญหาอะไร
-
-   > คำตอบ: _______________________________________________________________
-
-4. **ความปลอดภัย:** ESP32 และแดชบอร์ดใช้ Publishable key ตัวเดียวกัน (ก) ถ้ามีผู้ไม่หวังดีนำ key ออกจากเฟิร์มแวร์ได้ เขาจะทำอะไรกับฐานข้อมูลได้บ้าง และทำอะไรไม่ได้บ้าง (ข) ถ้าเปิด *Allow new users to sign up* ทิ้งไว้ ความเสี่ยงจะเพิ่มขึ้นอย่างไร อ้างอิง policy ที่สร้างในขั้นที่ 1.2, 1.4 และ 2.1
-
-   > คำตอบ: _______________________________________________________________
-
-5. **ประยุกต์งานเครื่องกล:** ถ้าต้องการรู้ว่า "เปิดพัดลมระบายอากาศแล้ว อุณหภูมิเฉลี่ยในตู้ลดลงหรือไม่" จะดูส่วนใดบนแดชบอร์ด และเขียน SQL ใน SQL Editor เปรียบเทียบอุณหภูมิเฉลี่ย 10 นาทีก่อนและหลัง event `fan` ที่ `state = true` ล่าสุดอย่างไร
-
-   > คำตอบ: _______________________________________________________________
-
----
-
-### การส่งงาน
-
-> 📋 ส่งงานผ่าน Google Form: **(ลิงก์จากอาจารย์ผู้สอน)**
-
-สิ่งที่ต้องส่ง:
-1. รูปถ่ายวงจรจริง ESP32-S3 + AHT25 + ปุ่ม 3 ปุ่ม + LED 3 ดวง
-2. Screenshot Serial Monitor ที่แสดง `POST telemetry ... -> 201`, `PATCH controls ... -> 204` และ `CMD ... -> ON`
-3. Screenshot Supabase Table Editor ของตาราง `telemetry` (อย่างน้อย 20 แถว), `controls` และ `events` (มีทั้ง `source` = `button` และ `dashboard`)
-4. Screenshot หน้า **Authentication → Sign In / Providers** ที่ปิด *Allow new users to sign up* แล้ว และหน้า **Policies** ของทั้ง 3 ตาราง
-5. Screenshot แดชบอร์ด `MCC Monitor` ที่มีครบ 3 แถว (ภาพรวม · กราฟ · สั่งการและประวัติ)
-6. คลิปวิดีโอสั้น (ไม่เกิน 30 วินาที) แสดงการกดสั่งบนแดชบอร์ดแล้ว LED บนบอร์ดติด
-7. คำตอบแบบฝึกหัดท้ายใบงานครบทุกข้อ
-
-#### Checklist ก่อนส่ง
-
-- [ ] `DEVICE_ID` เป็นรูปแบบ `mcc-` ตามด้วยรหัสนักศึกษา 4 ตัวท้าย ตรงกันทั้งในโปรแกรม ESP32 แถวใน `controls` และหน้าตั้งค่าของแดชบอร์ด
-- [ ] ESP32-S3 และแดชบอร์ดใช้ Publishable key (`sb_publishable_...`) เท่านั้น ไม่ใช่ Secret key (`sb_secret_...`) หรือ `service_role` key
-- [ ] ทุกตาราง (`telemetry`, `controls`, `events`) เปิด RLS และมี policy ครบทั้งของ `anon` และ `authenticated`
-- [ ] ปิด **Allow new users to sign up** แล้ว และมีบัญชีแดชบอร์ดที่ผู้ดูแลสร้างเท่านั้น
-- [ ] กดปุ่ม 1 ครั้งได้ 1 การสั่งเสมอ
-- [ ] การสั่งจากแดชบอร์ดมีหน้าต่างยืนยันทุกครั้ง
-- [ ] กรอกตารางบันทึกผลครบทุกขั้น
-- [ ] ระบุชื่อ-นามสกุล และรหัสนักศึกษาในฟอร์ม
-
-</div>
-
-<div class="chapter-tab-content" data-tab-name="Lab 15" data-tab-icon="☁️" id="lab15" markdown="1">
-
-## 12.12 ใบงานปฏิบัติการ Lab 15: ระบบเดียวกันบน Arduino Cloud
-
-**ฮาร์ดแวร์:** ชุดเดียวกับ Lab 14 (ESP32-S3 DevKit + AHT25 + ปุ่มกด 3 ปุ่ม + LED 3 ดวง + ตัวต้านทาน 220 Ω 3 ตัว) ไม่ต้องต่อวงจรใหม่  
-**เครื่องมือ:** Arduino IDE + [Arduino Cloud](https://cloud.arduino.cc/) (Free Plan) + แอป Arduino IoT Remote บนมือถือ (ไม่บังคับ)  
-**เวลา:** 3 ชั่วโมง
-
-> Lab 14 ประกอบระบบเองจากชิ้นส่วนแยก (REST API + PostgreSQL + RLS + เว็บแดชบอร์ด) Lab 15 สร้าง **ระบบเดียวกัน** บนแพลตฟอร์มสำเร็จรูป **Arduino Cloud** ซึ่งรวมฐานข้อมูล การสื่อสาร และแดชบอร์ดไว้ในที่เดียว เพื่อเปรียบเทียบข้อดีข้อเสียของทั้งสองแนวทาง
-
-### เปรียบเทียบ Lab 14 กับ Lab 15
-
-| ประเด็น | Lab 14: Supabase + Vercel | Lab 15: Arduino Cloud |
-|:---|:---|:---|
-| แนวคิด | ประกอบระบบเองจากบริการแยก (Build) | ใช้แพลตฟอร์ม IoT สำเร็จรูป (Platform) |
-| ตัวแทนของอุปกรณ์บนคลาวด์ | ตาราง `telemetry`, `controls`, `events` ที่ออกแบบเอง | **Thing** และ **Cloud Variables** (`temp`, `hum`, `light`, `pump`, `fan`) |
-| โปรโตคอลของ ESP32 | HTTPS REST (`POST`/`GET`/`PATCH`) เขียนเองด้วย `HTTPClient` | MQTT over TLS ที่ไลบรารี `ArduinoIoTCloud` จัดการให้ เรียกเพียง `ArduinoCloud.update()` |
-| การรับคำสั่ง | ESP32 **poll** ทุก 2 วินาที (หัวข้อ 12.6.3) | Cloud **push** ลงมาทันทีผ่าน connection ที่เปิดค้างไว้ (Callback `onFanChange()`) |
-| แดชบอร์ด | เว็บ Next.js ที่ปรับแต่งได้ทุกส่วน | ลาก Widget สำเร็จรูป (Gauge, Chart, Switch) ไม่ต้องเขียนโค้ด และมีแอปมือถือ |
-| การยืนยันตัวตนของอุปกรณ์ | Publishable key ร่วมกันทุกอุปกรณ์ + RLS | **Device ID + Secret Key** เฉพาะแต่ละอุปกรณ์ |
-| การเก็บข้อมูลย้อนหลัง | ไม่จำกัดระยะเวลา (ตามพื้นที่ฐานข้อมูล) | แผนฟรีเก็บค่าย้อนหลัง **1 วัน** |
-| ประวัติการสั่งพร้อมผู้สั่ง | มี (`events` + trigger) | ไม่มีในตัว เห็นเฉพาะค่าบนกราฟ |
-| สิ่งที่ต้องเรียนรู้เพิ่ม | SQL, RLS, REST, JavaScript | การตั้งค่า Thing และ Widget |
-
-> ℹ️ **แผนฟรีของ Arduino Cloud** (ข้อมูล ณ ปี 2025 อาจเปลี่ยนได้ ตรวจสอบที่ [cloud.arduino.cc/plans](https://cloud.arduino.cc/plans)): อุปกรณ์ได้ไม่เกิน **2 เครื่อง** · เก็บค่าตัวแปรย้อนหลัง **1 วัน** · compile ใน Cloud Editor ได้ **25 ครั้งต่อวัน** · **Triggers** (แจ้งเตือนทางอีเมล) ต้องใช้แผน Maker ใบงานนี้ออกแบบให้ใช้ตัวแปรเพียง **5 ตัว** และ compile ด้วย Arduino IDE บนเครื่อง จึงไม่ติดเพดานการ compile
-
-### วัตถุประสงค์ของใบงาน
-
-- อธิบายแนวคิด **Thing**, **Cloud Variable**, Permission และ Update Policy ของ Arduino Cloud ได้
-- ลงทะเบียน ESP32-S3 เป็น Third Party Device และเชื่อมกับ Thing ได้
-- เขียนโปรแกรมด้วยไลบรารี `ArduinoIoTCloud` ให้ส่งค่า AHT25 และรับคำสั่ง `light`/`pump`/`fan` ผ่าน Callback ได้
-- สร้าง Dashboard ด้วย Widget ที่เหมาะกับคำถามของช่าง (หัวข้อ 12.7) ได้
-- เปรียบเทียบสถาปัตยกรรม ความหน่วง ความปลอดภัย และข้อจำกัดของ Lab 14 กับ Lab 15 จากผลการทดลองได้
-
----
-
-### ส่วนที่ 1: ลงทะเบียนอุปกรณ์ (20 นาที)
-
-#### ความรู้เบื้องต้น
-
-- **Device** คือบอร์ดจริง Arduino Cloud ระบุตัวบอร์ดด้วย **Device ID** และให้บอร์ดพิสูจน์ตัวตนด้วย **Secret Key** (เทียบได้กับชื่อผู้ใช้และรหัสผ่านของบอร์ด)
-- ESP32-S3 ไม่ใช่บอร์ดของ Arduino จึงลงทะเบียนเป็น **Third Party Device**
-
-#### ขั้นตอนปฏิบัติ
-
-1. สมัครหรือ login ที่ [cloud.arduino.cc](https://cloud.arduino.cc/) (ใช้บัญชี Google ได้)
-2. เมนู **Devices** → **Add Device** → **Third Party Device** → เลือก **ESP32** → รุ่น **ESP32S3 Dev Module** (หรือชื่อรุ่น ESP32-S3 ที่ใกล้เคียงที่สุดในรายการ) → **Continue**
-3. ตั้งชื่ออุปกรณ์ เช่น `MCC-1234` (รหัสนักศึกษา 4 ตัวท้าย) → **Next**
-4. หน้าจอจะแสดง **Device ID** และ **Secret Key** → คัดลอกเก็บไว้ (หรือดาวน์โหลดเป็นไฟล์ PDF ที่หน้าจอเสนอให้) → ยืนยันว่าบันทึกแล้ว → **Continue**
-
-> ⚠️ **Secret Key แสดงเพียงครั้งเดียว** ถ้าทำหาย ต้องลบอุปกรณ์แล้วลงทะเบียนใหม่ และห้ามนำ Secret Key ขึ้น GitHub หรือส่งให้ผู้อื่น เพราะใครมี key นี้ก็ปลอมตัวเป็นบอร์ดของเราได้
-
-#### ตารางบันทึกผล — ส่วนที่ 1
-
-| รายการ | สถานะ |
-|:---|:---|
-| ชื่ออุปกรณ์ในหน้า Devices | ________ |
-| Device ID (8 ตัวอักษรแรก) | ________ |
-| เก็บ Secret Key ไว้ที่ใด (ห้ามจดตัว key ลงในใบงาน) | ________ |
-
----
-
-### ส่วนที่ 2: สร้าง Thing และ Cloud Variables (25 นาที)
-
-#### ความรู้เบื้องต้น
-
-**Thing** คือ "ฝาแฝดดิจิทัล (Digital Twin)" ของบอร์ดบนคลาวด์ ประกอบด้วยตัวแปรที่ซิงก์ระหว่างบอร์ดกับคลาวด์ ตัวแปรแต่ละตัวมีคุณสมบัติ 2 อย่าง
-
-| คุณสมบัติ | ตัวเลือก | ความหมาย | เทียบกับ Lab 14 |
-|:---|:---|:---|:---|
-| **Permission** | Read Only | บอร์ดเขียนได้ฝ่ายเดียว Dashboard อ่านอย่างเดียว | ตาราง `telemetry` ที่แดชบอร์ดอ่านได้อย่างเดียว |
-| | Read & Write | ทั้งบอร์ดและ Dashboard เปลี่ยนค่าได้ เมื่อ Dashboard เปลี่ยนค่า บอร์ดจะเรียก Callback | ตาราง `controls` ที่ทั้งปุ่มหน้าตู้และแดชบอร์ดแก้ได้ |
-| **Update Policy** | Periodically | ส่งค่าทุก x วินาที | ESP32 `POST` ทุก 5 วินาที |
-| | On Change | ส่งเมื่อค่าเปลี่ยนเกิน threshold | ESP32 `PATCH` เมื่อกดปุ่ม |
-
-#### ขั้นตอนปฏิบัติ
-
-1. เมนู **Things** → **Create Thing** (หรือ **+ Thing**) → ตั้งชื่อ `MCC Monitor`
-2. ส่วน **Associated Device** → **Select Device** → เลือก `MCC-1234` → **Associate**
-3. ส่วน **Network** → **Configure** → กรอก **Wi-Fi Name**, **Password** (Wi-Fi 2.4 GHz เดียวกับ Lab 14) และ **Secret Key** จากส่วนที่ 1 → **Save**
-4. ส่วน **Cloud Variables** → **Add** เพิ่มตัวแปร 5 ตัวตามตาราง (ชื่อต้องตรงทุกตัวอักษร เพราะโปรแกรมใช้ชื่อเหล่านี้)
+1. เปิด Thing `MCC Monitor` → **Cloud Variables** → **Add** เพิ่มอีก 3 ตัว
 
 | Name | Type | Permission | Update Policy |
 |:---|:---|:---|:---|
-| `temp` | Temperature Sensor (°C) (`CloudTemperatureSensor`) | Read Only | Periodically ทุก **5** วินาที |
-| `hum` | Relative Humidity (`CloudRelativeHumidity`) | Read Only | Periodically ทุก **5** วินาที |
-| `light` | Boolean (`bool`) | Read & Write | On Change |
-| `pump` | Boolean (`bool`) | Read & Write | On Change |
-| `fan` | Boolean (`bool`) | Read & Write | On Change |
+| `light` | Boolean | Read & Write | On Change |
+| `pump` | Boolean | Read & Write | On Change |
+| `fan` | Boolean | Read & Write | On Change |
 
-> ชนิดข้อมูลแบบ Specialized เช่น `CloudTemperatureSensor` ภายในเป็น `float` เหมือนเดิม แต่ Arduino Cloud รู้หน่วย (°C, %) จึงแสดงหน่วยบน Widget ให้อัตโนมัติ ถ้าหาชนิดนี้ไม่พบ ใช้ **Floating Point Number** (`float`) แทนได้ โดยไม่ต้องแก้โปรแกรม
+2. เปิดแท็บ **Sketch** → `thingProperties.h` ต้องมีตัวแปรครบ 5 ตัว และมีการประกาศ Callback 3 ฟังก์ชัน คือ `onLightChange()`, `onPumpChange()`, `onFanChange()`
 
-5. เปิดแท็บ **Sketch** ของ Thing → เปิดไฟล์ `thingProperties.h` ที่ระบบสร้างให้ → ตรวจว่ามีตัวแปรครบ 5 ตัว
+### 12.9.3 โปรแกรม ESP32-S3 ส่วนที่ 2 (`mcc_cloud.ino`)
 
-#### ตารางบันทึกผล — ส่วนที่ 2
+โปรแกรมนี้รวมงานของส่วนที่ 1 ไว้ด้วย จึงใช้แทน `mcc_cloud_monitor.ino` ได้ทันที
 
-| รายการ | สถานะ |
-|:---|:---|
-| Thing มี Associated Device เป็น `MCC-1234` | ________ |
-| จำนวน Cloud Variables และชื่อ | ________ |
-| Callback ที่ระบบสร้างใน `thingProperties.h` (ชื่อฟังก์ชัน) | ________ |
-
----
-
-### ส่วนที่ 3: โปรแกรม ESP32-S3 (40 นาที)
-
-#### ความรู้เบื้องต้น
-
-โปรแกรมแบ่งเป็น 3 ไฟล์ในโฟลเดอร์ sketch เดียวกัน
-
-| ไฟล์ | ผู้สร้าง | เนื้อหา |
-|:---|:---|:---|
-| `thingProperties.h` | Arduino Cloud สร้างให้ (**ห้ามแก้**) | Device ID, ตัวแปร Cloud 5 ตัว, การลงทะเบียน Callback |
-| `arduino_secrets.h` | เราสร้างเอง | ชื่อและรหัส Wi-Fi, Secret Key |
-| `mcc_cloud.ino` | เราเขียนเอง | อ่าน AHT25, อ่านปุ่ม, ขับ LED, Callback |
-
-**ทำไมใช้ Arduino IDE แทน Cloud Editor?** Cloud Editor บนเว็บใช้ได้เช่นกัน (ต้องติดตั้งโปรแกรม **Arduino Cloud Agent** เพื่ออัปโหลด) แต่แผนฟรี compile ได้ 25 ครั้งต่อวัน การใช้ Arduino IDE บนเครื่องจึงไม่ติดเพดานนี้ และใช้ ESP32 core ชุดเดียวกับ Lab 14
-
-#### ขั้นตอนปฏิบัติ
-
-1. Arduino IDE → **Library Manager** → ติดตั้ง **ArduinoIoTCloud** (by Arduino) → เมื่อถามให้ติดตั้งไลบรารีที่เกี่ยวข้อง (dependencies) เลือก **Install All** (Adafruit AHTX0 ติดตั้งไว้แล้วจาก Lab 14)
-2. สร้าง sketch ใหม่ชื่อ `mcc_cloud` → เพิ่มแท็บไฟล์ใหม่ (ปุ่ม **⋯** หรือ **▾** ข้างแท็บ → **New Tab**) 2 ไฟล์ ชื่อ `thingProperties.h` และ `arduino_secrets.h`
-3. **`thingProperties.h`:** คัดลอกเนื้อหาทั้งหมดจากแท็บ **Sketch** ของ Thing บน Arduino Cloud มาวาง (ตัวอย่างด้านล่างใช้ตรวจเทียบ ค่า `DEVICE_LOGIN_NAME` ต้องเป็น Device ID ของตนเอง)
+1. สร้าง sketch ใหม่ชื่อ `mcc_cloud` → สร้างแท็บ `thingProperties.h` และ `arduino_secrets.h` เหมือนหัวข้อ 12.8.5 (ไฟล์ `arduino_secrets.h` ใช้ค่าเดิม)
+2. **`thingProperties.h`:** คัดลอกฉบับใหม่จากแท็บ Sketch (มีตัวแปร 5 ตัว) ตัวอย่างสำหรับตรวจเทียบ
 
 ```cpp
 // Code generated by Arduino IoT Cloud, DO NOT EDIT.
@@ -1877,15 +676,7 @@ void initProperties(){
 WiFiConnectionHandler ArduinoIoTPreferredConnection(SSID, PASS);
 ```
 
-4. **`arduino_secrets.h`:** ใส่ค่าของตนเอง (ชื่อ macro ต้องตรงกับที่ `thingProperties.h` ใช้)
-
-```cpp
-#define SECRET_SSID          "YOUR_WIFI"
-#define SECRET_OPTIONAL_PASS "YOUR_PASSWORD"
-#define SECRET_DEVICE_KEY    "YOUR_SECRET_KEY"   // Secret Key จากส่วนที่ 1
-```
-
-5. **`mcc_cloud.ino`:** วางโค้ดด้านล่าง
+3. **`mcc_cloud.ino`:** วางโค้ดด้านล่าง → อัปโหลด → เปิด Serial Monitor ที่ **115200**
 
 ```cpp
 #include "arduino_secrets.h"   // ชื่อ/รหัส Wi-Fi และ Secret Key ของอุปกรณ์
@@ -1986,121 +777,270 @@ void onPumpChange()  { applyOutputs(); Serial.printf("CMD pump -> %s\n",  pump  
 void onFanChange()   { applyOutputs(); Serial.printf("CMD fan -> %s\n",   fan   ? "ON" : "OFF"); }
 ```
 
-6. **Tools** → Board **ESP32S3 Dev Module** → **USB CDC On Boot: Enabled** → อัปโหลด → เปิด Serial Monitor ที่ **115200**
-7. รอประมาณ 10–30 วินาที ต้องเห็นข้อความว่าเชื่อมต่อ Wi-Fi และ Arduino Cloud สำเร็จ (เช่น `Connected to Arduino IoT Cloud`) และหน้า **Devices** แสดงสถานะ **Online**
+**คำอธิบายโค้ดส่วนที่เพิ่มจากส่วนที่ 1**
 
-**คำอธิบายโค้ด**
-
-| ส่วนของโค้ด | การทำงาน | เทียบกับ Lab 14 |
-|:---|:---|:---|
-| `#include "thingProperties.h"` | ประกาศตัวแปร Cloud ให้ใช้ได้ทันที เช่น `temp = 31.4;` | ไม่ต้องสร้าง JSON ด้วย `snprintf` เอง |
-| `ArduinoCloud.begin(...)` | เชื่อม Wi-Fi แล้วเปิด connection แบบ MQTT over TLS กับ Arduino Cloud ค้างไว้ และต่อใหม่อัตโนมัติถ้าหลุด | แทน `connectWiFi()` + `HTTPClient` + `tls.setInsecure()` |
-| `ArduinoCloud.update()` | ต้องเรียกใน `loop()` บ่อย ๆ เพื่อส่งค่าที่ถึงรอบ (ทุก 5 วินาที) และรับค่าที่ Dashboard เปลี่ยน ห้ามใช้ `delay()` ยาว ๆ ใน `loop()` | แทน `postJson()` และ `pollControls()` |
-| `temp = ...` / `hum = ...` | แค่เขียนค่าลงตัวแปร ไลบรารีส่งขึ้นคลาวด์ตาม Update Policy (Periodically 5 วินาที) | แทน `POST /rest/v1/telemetry` |
-| `onFanChange()` | Callback ที่ไลบรารีเรียกเมื่อ Dashboard เปลี่ยนค่า `fan` ค่าใหม่ถูกเขียนลงตัวแปร `fan` ก่อนเรียกฟังก์ชันนี้แล้ว | แทนการ `GET` ทุก 2 วินาทีแล้วเทียบค่า |
-| `*STATES[i] = !*STATES[i]` | ปุ่มหน้าตู้เปลี่ยนค่าตัวแปร Read & Write ในบอร์ด ไลบรารีตรวจพบว่าค่าเปลี่ยน (On Change) แล้วส่งขึ้นคลาวด์เองในการเรียก `update()` ครั้งถัดไป Switch บน Dashboard จึงเปลี่ยนตาม | แทน `PATCH /rest/v1/controls` |
-| `bool* const STATES[3]` | อาร์เรย์ของ pointer ไปยังตัวแปร `light`, `pump`, `fan` ทำให้วนลูปจัดการปุ่มทั้ง 3 ได้ในโค้ดชุดเดียว | แทนอาร์เรย์ `outState[3]` |
-| ISR + Debounce | เหมือน Lab 14 ทุกประการ | — |
-
-#### ตารางบันทึกผล — ส่วนที่ 3
-
-| การทดลอง | ผลที่เห็น |
+| ส่วนของโค้ด | การทำงาน |
 |:---|:---|
-| ข้อความใน Serial Monitor เมื่อเชื่อมต่อสำเร็จ | ________ |
-| สถานะอุปกรณ์ในหน้า Devices | ________ |
-| ค่า `temp` และ `hum` ในหน้า Thing (Last Value) เทียบกับ Serial Monitor | Thing ____ / Serial ____ |
-| กดปุ่ม `light` หน้าตู้ 1 ครั้ง | Serial: ________ ค่า `light` ในหน้า Thing: ________ |
+| `addProperty(fan, READWRITE, ON_CHANGE, onFanChange)` (ใน `thingProperties.h`) | ตัวแปร Read & Write ที่ส่งเมื่อค่าเปลี่ยน และลงทะเบียน `onFanChange()` เป็น Callback รูปแบบนี้ใช้นโยบาย Sync แบบ `CLOUD_WINS` เป็นค่าเริ่มต้น (หัวข้อ 12.5.3) |
+| `void onFanChange()` | ไลบรารีเรียกเมื่อ Dashboard เปลี่ยนค่า `fan` โดยค่าใหม่ถูกเขียนลงตัวแปรก่อนแล้ว จึงเพียงเรียก `applyOutputs()` ให้ LED ตรงกับตัวแปร |
+| `bool* const STATES[3] = {&light, &pump, &fan}` | อาร์เรย์ของ pointer ไปยังตัวแปร Cloud ทำให้วนลูปจัดการปุ่มและ LED ทั้ง 3 ชุดด้วยโค้ดเดียว `*STATES[i]` คือค่าของตัวแปรที่ pointer ชี้อยู่ |
+| `*STATES[i] = !*STATES[i]` แล้ว `applyOutputs()` | ปุ่มหน้าตู้สลับค่าและขับ LED ทันทีโดยไม่รอเครือข่าย ไลบรารีตรวจพบว่าค่าเปลี่ยน (On Change) แล้ว publish ขึ้นคลาวด์เองในการเรียก `update()` ครั้งถัดไป Switch บน Dashboard จึงเปลี่ยนตาม |
+| `attachInterruptArg(..., CHANGE)` | ใช้ ISR ตัวเดียวกับทั้ง 3 ปุ่ม โดยส่งหมายเลขปุ่ม `i` เป็นอาร์กิวเมนต์ |
+| `IRAM_ATTR` | เก็บ ISR ไว้ใน RAM ภายใน เพื่อให้ตอบสนองได้เร็ว และทำงานได้แม้ cache ของ flash ถูกปิดชั่วคราว |
+| Debounce ใน ISR | ขอบสัญญาณที่ห่างจากครั้งก่อนไม่ถึง 50 ms ถูกทิ้ง และช่วงเงียบถูกยืดออก ขอบแรกที่ผ่านเงื่อนไขจะนับเป็นการกดเมื่อขาอ่านได้ `LOW` เท่านั้น กดหนึ่งครั้งจึงได้หนึ่งการสั่ง การปล่อยปุ่มหรือกดค้างไม่ทำให้นับซ้ำ |
+| `volatile` | บอกคอมไพเลอร์ว่าตัวแปรถูกแก้จาก ISR ได้ทุกเมื่อ ต้องอ่านจากหน่วยความจำจริงทุกครั้ง |
+| ตัวแปร Cloud ไม่ถูกแก้ใน ISR | ISR ตั้งเพียง flag `btnPending` ส่วนการแก้ `light`, `pump`, `fan` ทำใน `loop()` เพราะไลบรารีอ่านตัวแปรเหล่านี้ใน `update()` ถ้าแก้จาก ISR อาจชนกันระหว่างส่งข้อมูล |
+
+> **ข้อจำกัดของระบบ:** (1) ระหว่างบอร์ดบูตจนถึงเชื่อมต่อคลาวด์สำเร็จ (ราว 5–30 วินาที) LED จะอยู่ในสถานะเริ่มต้น (ปิด) แล้วจึงถูก Sync กลับเป็นค่าบนคลาวด์ (2) ตัวแปร `bool` บอกเพียง **สถานะที่สั่ง** ไม่ได้ยืนยันว่าอุปกรณ์ทำงานจริง งานจริงควรใช้หน้าสัมผัสช่วย (Auxiliary Contact) ของคอนแทคเตอร์ส่งสถานะจริงกลับเป็นตัวแปร Read Only อีกตัว (3) Arduino Cloud ไม่เก็บว่าใครสั่งเมื่อไร ถ้าต้องการประวัติ ต้องส่งเหตุการณ์ไปเก็บในระบบอื่น
+
+### 12.9.4 เพิ่ม Switch บน Dashboard และทดสอบการสั่งการ
+
+1. เปิด Dashboard `MCC Monitor` → ✏️ → **Add → Widgets → Switch** 3 ตัว ผูกกับ `light`, `pump`, `fan` ตั้งชื่อ "ไฟในตู้", "ปั๊ม", "พัดลมระบายอากาศ"
+2. วางไว้แถวที่ 3 และขยายให้ใหญ่พอกดบนมือถือได้ง่าย → **Done**
+
+**ทดสอบ**
+
+| การทดลอง | ผลที่ควรเห็น |
+|:---|:---|
+| กด Switch `fan` บน Dashboard | Serial ขึ้น `CMD fan -> ON` และ LED พัดลมติดภายในไม่ถึง 1–2 วินาที |
+| กดปุ่ม `pump` หน้าตู้ | Serial ขึ้น `BTN pump -> ON` LED ติดทันที และ Switch ปั๊มบน Dashboard เปลี่ยนเป็นเปิดภายในไม่กี่วินาที |
+| กดปุ่ม `fan` ค้างไว้ 3 วินาทีแล้วปล่อย | สลับเพียง 1 ครั้ง (Debounce) |
+| สั่งจากแอป IoT Remote บนมือถือ ขณะมือถือใช้ 4G/5G (คนละเครือข่ายกับบอร์ด) | LED ทำงานได้ เพราะทั้งสองฝั่งคุยผ่านคลาวด์ ไม่ต้องอยู่ในเครือข่ายเดียวกัน |
+| เปิด `fan` แล้วกดปุ่ม EN (รีเซ็ต) บนบอร์ด | LED ดับระหว่างบูต แล้วกลับมาติดเมื่อเชื่อมต่อคลาวด์ได้ (`CLOUD_WINS`) |
+| ปิด Hotspot 30 วินาที ระหว่างนั้นกด Switch `light` แล้วเปิด Hotspot | เมื่อบอร์ดเชื่อมต่อใหม่ LED `light` จะเปลี่ยนตามค่าบนคลาวด์ |
 
 ---
 
-### ส่วนที่ 4: สร้าง Dashboard (30 นาที)
+## 12.10 การแก้ปัญหาที่พบบ่อย
 
-#### ขั้นตอนปฏิบัติ
-
-1. เมนู **Dashboards** → **Create Dashboard** → ตั้งชื่อ `MCC Monitor`
-2. กดปุ่มแก้ไข (✏️) → **Add** → เลือกแท็บ **Things** → เลือก `MCC Monitor` → **Create Widgets** ระบบจะสร้าง Widget ให้ทุกตัวแปรอัตโนมัติ
-3. ปรับ Widget ตามหลักการในหัวข้อ 12.7 (คลิกที่ Widget → ⚙️ หรือ **Edit Settings**)
-
-| แถว | Widget | ตัวแปร | ตั้งค่า |
+| ส่วน | อาการ | สาเหตุที่เป็นไปได้ | วิธีแก้ |
 |:---|:---|:---|:---|
-| 1 | **Gauge** | `temp` | Min `0`, Max `60` ตั้งชื่อ "อุณหภูมิ (°C)" |
-| 1 | **Gauge** | `hum` | Min `0`, Max `100` ตั้งชื่อ "ความชื้น (%RH)" |
-| 2 | **Chart** | `temp` | ตั้งชื่อ "แนวโน้มอุณหภูมิ" |
-| 2 | **Chart** | `hum` | ตั้งชื่อ "แนวโน้มความชื้น" (แยกกราฟเพราะหน่วยต่างกัน) |
-| 3 | **Switch** | `light`, `pump`, `fan` (อย่างละ 1 ตัว) | ตั้งชื่อ "ไฟในตู้", "ปั๊ม", "พัดลมระบายอากาศ" |
+| 1 | Serial Monitor ไม่แสดงอะไร | ปิด USB CDC On Boot | ตั้ง **USB CDC On Boot: Enabled** แล้วอัปโหลดใหม่ |
+| 1 | compile ไม่ผ่าน: `'SECRET_SSID' was not declared` | ไม่มีไฟล์ `arduino_secrets.h` หรือ include หลัง `thingProperties.h` | สร้างแท็บ `arduino_secrets.h` และ `#include "arduino_secrets.h"` เป็นบรรทัดแรกของ `.ino` |
+| 1 | compile ไม่ผ่าน: `ArduinoIoTCloud.h: No such file or directory` | ยังไม่ได้ติดตั้งไลบรารี | ติดตั้ง **ArduinoIoTCloud** พร้อม dependencies (Install All) |
+| 1 | compile ไม่ผ่าน: `'temp' was not declared` หรือ `onFanChange` ไม่พบ | ชื่อตัวแปรบน Thing ไม่ตรงกับโปรแกรม หรือยังไม่ได้คัดลอก `thingProperties.h` ฉบับใหม่ | ตั้งชื่อตัวแปรให้ตรงทุกตัวอักษร แล้วคัดลอก `thingProperties.h` ใหม่จากแท็บ Sketch |
+| 1 | `AHT25 not found` | สาย SDA/SCL สลับ หรือไม่ได้จ่ายไฟ | ตรวจขาตามที่พิมพ์ไว้บนโมดูล และใช้ 3V3 |
+| 1 | ต่อ Wi-Fi ไม่ขึ้น | เครือข่าย 5 GHz หรือเป็น WPA2-Enterprise | ใช้ Hotspot มือถือแบบ 2.4 GHz |
+| 1 | ต่อ Wi-Fi ได้ แต่ Serial แจ้งเชื่อม Arduino Cloud ไม่สำเร็จซ้ำ ๆ และหน้า Devices เป็น Offline | Secret Key หรือ Device ID ผิด หรือเครือข่ายปิด port 8884 | คัดลอก Device ID ใหม่จาก `thingProperties.h` ของ Thing ตรวจ Secret Key (ถ้าทำหายให้ลบอุปกรณ์แล้วลงทะเบียนใหม่) และลองใช้ Hotspot มือถือ ตั้ง `setDebugMessageLevel(4)` เพื่อดูรายละเอียด |
+| 1 | Online แต่ค่าบน Dashboard ไม่เปลี่ยน | ใช้ `delay()` ยาวใน `loop()` หรือ Widget ผูกผิดตัวแปร | เอา `delay()` ออก ใช้ `millis()` และตรวจ Linked Variable ของ Widget |
+| 1 | Chart ไม่มีข้อมูลเก่า | แผนฟรีเก็บค่าย้อนหลัง 1 วัน และ Widget ที่ลบแล้วสร้างใหม่จะเริ่มประวัติใหม่ | ข้อจำกัดของแผน ดาวน์โหลดข้อมูลเก็บไว้ถ้าต้องใช้ |
+| 1 | compile บน Cloud Editor ไม่ได้: เกินเพดาน | แผนฟรี compile ได้ 25 ครั้งต่อวัน | ใช้ Arduino IDE บนเครื่อง (หัวข้อ 12.8.2) |
+| 2 | LED ไม่ติดเลย | ต่อ LED กลับขั้ว หรือลืมตัวต้านทาน | ขายาวต่อฝั่ง GPIO ผ่าน 220 Ω ขาสั้นต่อ GND |
+| 2 | กดปุ่มครั้งเดียวสลับ 2 ครั้ง | ปุ่มเด้งนานกว่า 50 ms | เพิ่ม `DEBOUNCE_MS` เป็น 80–100 |
+| 2 | กด Switch บน Dashboard แล้วไม่มี `CMD ...` ใน Serial | ตั้งตัวแปรเป็น Read Only แทน Read & Write หรือ `thingProperties.h` ยังเป็นฉบับเก่า | แก้ Permission เป็น Read & Write แล้วคัดลอก `thingProperties.h` ใหม่ |
+| 2 | Switch บน Dashboard กดไม่ได้ (เป็นสีเทา) | ตัวแปรเป็น Read Only | แก้ Permission เป็น Read & Write |
+| 2 | กดปุ่มหน้าตู้แล้ว LED ติด แต่ Switch บน Dashboard ไม่เปลี่ยน | แก้ตัวแปร Cloud ใน ISR หรือบอร์ด Offline | แก้ตัวแปรใน `loop()` เท่านั้น และตรวจสถานะ Online |
+| 2 | หลังรีบูต LED ไม่กลับมาตามค่าบนคลาวด์ | ใช้ `addProperty(..., Permission::ReadWrite)` แบบใหม่ที่ไม่ได้กำหนด `onSync()` หรือกำหนดเป็น `DEVICE_WINS` | ใช้ `thingProperties.h` ที่ Arduino Cloud สร้างให้ หรือเพิ่ม `.onSync(CLOUD_WINS)` |
 
-4. จัดตำแหน่งตามแถว (ภาพรวมบน แนวโน้มกลาง สั่งการล่าง) → กด **Done**
-5. กดไอคอน **Mobile Layout** เพื่อดูหน้าตาบนมือถือ และ (ไม่บังคับ) ติดตั้งแอป **Arduino IoT Remote** บนมือถือ แล้ว login บัญชีเดียวกันเพื่อเปิด Dashboard
+</div>
 
-#### ตารางบันทึกผล — ส่วนที่ 4
+<div class="chapter-tab-content" data-tab-name="Lab 14" data-tab-icon="🔬" id="lab14" markdown="1">
 
-| การทดลอง | ผลที่เห็น |
-|:---|:---|
-| ใช้นิ้วจับ AHT25 นาน 1 นาที | Gauge และ Chart อุณหภูมิ: ________ |
-| Widget ที่ระบบสร้างให้อัตโนมัติสำหรับตัวแปร `bool` คือแบบใด | ________ |
-| Widget ใดบอกสีตามเกณฑ์ (เขียว/เหลือง/แดง) ได้ หรือไม่มี | ________ |
+## 12.11 ใบงานปฏิบัติการ Lab 14: ระบบติดตามและสั่งการตู้ควบคุมด้วย Arduino Cloud
+
+**ฮาร์ดแวร์:** ESP32-S3 DevKit + AHT25 + ปุ่มกด 3 ปุ่ม + LED 3 ดวง + ตัวต้านทาน 220 Ω 3 ตัว  
+**เครื่องมือ (ฟรีทั้งหมด):** Arduino IDE + [Arduino Cloud](https://cloud.arduino.cc/) (Free Plan) + แอป Arduino IoT Remote (ไม่บังคับ)  
+**เวลา:** 3 ชั่วโมง (ส่วนที่ 1 ประมาณ 100 นาที · ส่วนที่ 2 ประมาณ 80 นาที)
+
+> ใบงานนี้ใช้ทำตามลำดับขั้นและบันทึกผล ส่วนโค้ดฉบับเต็มและคำอธิบายอยู่ในแท็บ **Hands-on** (หัวข้อ 12.8 สำหรับส่วนที่ 1 และ 12.9 สำหรับส่วนที่ 2)
+
+### วัตถุประสงค์ของใบงาน
+
+**ส่วนที่ 1: ติดตาม (Sensor → ESP32 → Arduino Cloud → Dashboard)**
+- ต่อวงจร ESP32-S3 กับ AHT25 (I2C) ได้
+- ลงทะเบียน ESP32-S3 เป็น Third Party Device และสร้าง Thing พร้อม Cloud Variables ที่มี Permission และ Update Policy เหมาะสมได้
+- เขียนโปรแกรมด้วยไลบรารี `ArduinoIoTCloud` ให้ส่งค่าเซนเซอร์ขึ้นคลาวด์ได้
+- สร้าง Dashboard ด้วย Gauge และ Chart ตามหลักการออกแบบที่ดีได้
+
+**ส่วนที่ 2: สั่งการ (Dashboard ↔ Arduino Cloud ↔ ESP32)**
+- ต่อปุ่มกด (Pull-up + Interrupt) และ LED เป็นเอาต์พุตได้
+- ใช้ตัวแปร Read & Write และ Callback รับคำสั่งจาก Dashboard ได้
+- ทำให้ปุ่มหน้าตู้และ Switch บน Dashboard ซิงก์กันได้
+- อธิบายความหน่วงแบบ Push และพฤติกรรม Sync หลังรีบูตจากผลการทดลองได้
+
+**สถานการณ์:** ติดตั้งอุปกรณ์ในตู้ควบคุมมอเตอร์ปั๊ม (MCC) เพื่อวัดอุณหภูมิและความชื้นภายในตู้ (ส่วนที่ 1) และให้ช่างสั่งเปิด/ปิด **ไฟ** (`light`), **ปั๊ม** (`pump`) และ **พัดลม** (`fan`) ได้ทั้งจาก Dashboard บนมือถือและจากปุ่มหน้าตู้ (ส่วนที่ 2)
 
 ---
 
-### ส่วนที่ 5: สั่งการและเปรียบเทียบกับ Lab 14 (45 นาที)
+## ส่วนที่ 1: ติดตาม (Sensor → ESP32 → Arduino Cloud → Dashboard)
+
+### ขั้นที่ 1.1: ต่อวงจรและตั้งค่า Arduino IDE (20 นาที)
+
+#### ความรู้เบื้องต้น
+
+- **AHT25** เป็นเซนเซอร์ดิจิทัล สื่อสารผ่าน I2C ที่ address `0x38` ESP32-S3 เลือกขา I2C ได้อิสระ บทนี้ใช้ SDA = GPIO 8 และ SCL = GPIO 9
+- ไลบรารี **ArduinoIoTCloud** จัดการการเชื่อมต่อ MQTT + TLS กับ Arduino Cloud ให้ทั้งหมด
 
 #### ขั้นตอนปฏิบัติ
 
-ทำการทดลองตามตาราง โดยเปิด Serial Monitor ไว้ตลอด
-
-#### ตารางบันทึกผล — ส่วนที่ 5
-
-| การทดลอง | Lab 15 (Arduino Cloud) | Lab 14 (Supabase + Vercel) จากผลเดิม |
+| อุปกรณ์ | ขาอุปกรณ์ | ESP32-S3 |
 |:---|:---|:---|
-| กด Switch `fan` แล้วจับเวลาจนถึง LED ติด (ทำ 5 ครั้ง) | ____ / ____ / ____ / ____ / ____ เฉลี่ย ____ วินาที | เฉลี่ย ____ วินาที |
-| กดปุ่ม `pump` หน้าตู้ แล้วดู Switch บน Dashboard | เปลี่ยนภายใน ____ วินาที | ____ วินาที |
-| กดปุ่ม `fan` ค้างไว้ 3 วินาทีแล้วปล่อย | สลับ ____ ครั้ง | ____ ครั้ง |
-| เปิด `fan` จาก Dashboard แล้วกดปุ่ม EN (รีเซ็ต) บนบอร์ด | LED `fan` กลับมาติดหรือไม่ หลังบูตกี่วินาที: ________ Switch บน Dashboard: ________ | LED `fan`: ________ |
-| ปิด Hotspot 30 วินาที ระหว่างนั้นกด Switch `light` แล้วเปิด Hotspot | LED `light` ทำงานเมื่อใด: ________ | ________ |
-| ถอดสาย USB ของบอร์ด | สถานะในหน้า Devices: ________ Dashboard บอกได้หรือไม่ว่าอุปกรณ์ offline: ________ | สถานะการเชื่อมต่อบนแดชบอร์ด: ________ |
-| หาประวัติว่า "ใครสั่งเปิดพัดลมเมื่อไร" | ทำได้หรือไม่ อย่างไร: ________ | ________ |
+| AHT25 | VDD / GND / SDA / SCL | 3V3 / GND / GPIO 8 / GPIO 9 |
 
-> 💡 **สังเกตผลการรีเซ็ตบอร์ด:** ตอนเชื่อมต่อครั้งแรกหลังบูต Arduino Cloud จะส่งค่าล่าสุดของตัวแปร Read & Write ลงมา (เรียกว่า **Sync**) คำสั่ง `addProperty(..., READWRITE, ON_CHANGE, onFanChange)` ที่ `thingProperties.h` สร้างให้ใช้นโยบาย **`CLOUD_WINS`** เป็นค่าเริ่มต้น คือถ้าค่าในบอร์ดต่างจากคลาวด์ ให้ใช้ค่าบนคลาวด์ แล้วเรียก Callback `onFanChange()` ให้เอง LED จึงควรกลับมาอยู่สถานะเดิมภายในไม่กี่วินาทีหลังเชื่อมต่อ ซึ่งเป็นแนวคิดเดียวกับ **Desired State** ในหัวข้อ 12.6.2 ของ Lab 14 ที่ ESP32 อ่านค่าล่าสุดจาก `controls` ตอนบูต ให้บันทึกเวลาที่ LED กลับมาติด และสังเกตว่า **ระหว่างบูตจนถึงเชื่อมต่อสำเร็จ LED ดับอยู่** (ในโค้ดเริ่มต้นปิดทั้งหมด) ถ้าต้องการให้ค่าในบอร์ดชนะแทน (เช่น ให้ปั๊มปิดเสมอหลังรีบูตเพื่อความปลอดภัย) เปลี่ยนเป็น `DEVICE_WINS` ได้ ซึ่งเกี่ยวข้องกับแนวคิด **Fail-safe** ในแบบฝึกหัดข้อ 7 ของบท
+1. ต่อวงจรตามตาราง โดยดูลำดับขาตามที่พิมพ์ไว้บนโมดูล AHT25 และ **ห้ามต่อเข้า 5V**
+2. Arduino IDE → ติดตั้ง **esp32 by Espressif Systems**, **Adafruit AHTX0** และ **ArduinoIoTCloud** (Install All) ตาม **หัวข้อ 12.8.2**
+3. **Tools** → Board **ESP32S3 Dev Module** → **USB CDC On Boot: Enabled**
+4. เตรียม Wi-Fi แบบ **2.4 GHz** ที่ไม่ต้อง login ผ่านหน้าเว็บ (ใช้ Hotspot มือถือได้)
 
-#### ขั้นเสริม: การแจ้งเตือนอุณหภูมิสูง (ไม่บังคับ)
+#### ตารางบันทึกผล — ขั้นที่ 1.1
 
-**Triggers** ของ Arduino Cloud ส่งอีเมลหรือแจ้งเตือนในแอปได้ แต่ **ต้องใช้แผน Maker** และรองรับเฉพาะตัวแปรชนิด `bool` และ `String` ([Arduino Docs: Triggers](https://docs.arduino.cc/arduino-cloud/cloud-interface/triggers/)) จึงต้องให้ ESP32 คำนวณเงื่อนไขเอง
+| รายการ | สถานะ |
+|:---|:---|
+| ต่อวงจรครบ ตรวจแรงดันที่ขา VDD ของ AHT25 = 3.3 V | ________ |
+| ติดตั้ง ESP32 core, Adafruit AHTX0 และ ArduinoIoTCloud สำเร็จ | ________ |
+| ชื่อ Wi-Fi ที่ใช้ และย่านความถี่ | ________ |
 
-1. เพิ่มตัวแปรที่ 6 ชื่อ `overheat` ชนิด Boolean, Read Only, On Change
-2. ใน `loop()` หลังอ่านค่าเซนเซอร์ เพิ่มเงื่อนไขว่าอุณหภูมิเกิน 35 °C **ต่อเนื่อง** 2 นาที เช่น
+### ขั้นที่ 1.2: ลงทะเบียนอุปกรณ์และสร้าง Thing (25 นาที)
 
-```cpp
-static unsigned long hotSince = 0;                 // เวลาที่เริ่มร้อนเกินเกณฑ์
-if (t.temperature > 35.0) {
-  if (hotSince == 0) hotSince = millis();
-  overheat = (millis() - hotSince >= 2UL * 60 * 1000);
-} else {
-  hotSince = 0;
-  overheat = false;
-}
-```
+#### ขั้นตอนปฏิบัติ
 
-3. แผนฟรี: เพิ่ม Widget **Status** หรือ **LED** ผูกกับ `overheat` บน Dashboard · แผน Maker: **Triggers → Add Trigger → Cloud Variable** → เลือก `overheat` → Action **Email**
+1. ลงทะเบียน ESP32-S3 เป็น **Third Party Device** ชื่อ `MCC-` ตามด้วยรหัสนักศึกษา 4 ตัวท้าย ตาม **หัวข้อ 12.8.3** และเก็บ **Device ID** กับ **Secret Key** ไว้
+2. สร้าง Thing `MCC Monitor` → Associate Device → ตั้งค่า Network → เพิ่มตัวแปร `temp` และ `hum` ตาม **หัวข้อ 12.8.4**
 
-> ถ้าแผนที่ใช้จำกัดจำนวนตัวแปรต่อ Thing และเพิ่มตัวแปรที่ 6 ไม่ได้ ให้ข้ามขั้นนี้ แล้วอธิบายเหตุผลในแบบฝึกหัดข้อ 4
+#### ตารางบันทึกผล — ขั้นที่ 1.2
+
+| รายการ | สถานะ |
+|:---|:---|
+| ชื่ออุปกรณ์ และ Device ID (8 ตัวอักษรแรก) | ________ |
+| เก็บ Secret Key ไว้ที่ใด (ห้ามจดตัว key ลงในใบงาน) | ________ |
+| ตัวแปรที่สร้าง (ชื่อ · Type · Permission · Update Policy) | ________ |
+
+### ขั้นที่ 1.3: โปรแกรม ESP32-S3 ส่งค่าเซนเซอร์ (30 นาที)
+
+#### ความรู้เบื้องต้น
+
+- `thingProperties.h` สร้างโดย Arduino Cloud ประกาศตัวแปร `temp` และ `hum` ไว้แล้ว โปรแกรมเพียงเขียนค่า เช่น `temp = 31.4;` แล้วไลบรารีจะส่งขึ้นคลาวด์ทุก 5 วินาที
+- `ArduinoCloud.update()` ต้องถูกเรียกบ่อย ๆ ใน `loop()` จึงใช้ `millis()` แทน `delay()`
+
+#### ขั้นตอนปฏิบัติ
+
+1. สร้าง sketch `mcc_cloud_monitor` ที่มี 3 ไฟล์ ตาม **หัวข้อ 12.8.5** (`thingProperties.h` คัดลอกจากแท็บ Sketch ของ Thing, `arduino_secrets.h` ใส่ค่าของตนเอง)
+2. อัปโหลด → เปิด Serial Monitor ที่ **115200** → รอจนขึ้น `Connected to Arduino IoT Cloud`
+3. ตรวจหน้า **Devices** (Online) และหน้า Thing (Last Value ของ `temp`, `hum`)
+
+#### ตารางบันทึกผล — ขั้นที่ 1.3
+
+| การทดลอง | ผล |
+|:---|:---|
+| เวลาตั้งแต่อัปโหลดเสร็จจนขึ้น `Connected to Arduino IoT Cloud` | ________ วินาที |
+| ค่า `temp` / `hum` ในหน้า Thing เทียบกับ Serial Monitor | Thing ____ / Serial ____ |
+| ใช้นิ้วจับ AHT25 นาน 30 วินาที | temp เปลี่ยนจาก ____ เป็น ____ °C |
+| แก้ Secret Key ผิด 1 ตัวอักษร แล้วอัปโหลดใหม่ | ข้อความใน Serial: ________ สถานะใน Devices: ________ (ทดสอบแล้วแก้กลับ) |
+| ใส่ `delay(20000);` ท้าย `loop()` ชั่วคราว | ค่าบน Thing อัปเดตทุก ____ วินาที เพราะ: ________ (ทดสอบแล้วลบออก) |
+
+### ขั้นที่ 1.4: สร้าง Dashboard (25 นาที)
+
+#### ขั้นตอนปฏิบัติ
+
+1. สร้าง Dashboard `MCC Monitor` → **Create Widgets** จาก Thing → ปรับเป็น Gauge และ Chart ตาม **หัวข้อ 12.8.6**
+2. (ไม่บังคับ) ติดตั้งแอป **Arduino IoT Remote** แล้วเปิด Dashboard บนมือถือ
+3. (ไม่บังคับ) เพิ่มตัวแปร `overheat` และ Widget Status ตาม **หัวข้อ 12.8.7**
+
+#### ตารางบันทึกผล — ขั้นที่ 1.4
+
+| การทดลอง | ผลที่เห็นบน Dashboard |
+|:---|:---|
+| ใช้นิ้วจับ AHT25 นาน 1 นาที | Gauge: ________ Chart: ________ |
+| ถอดสาย USB ของ ESP32-S3 แล้วรอ 2 นาที | Gauge แสดงค่าใด: ________ สถานะในหน้า Devices: ________ |
+| Dashboard บอกได้หรือไม่ว่าอุปกรณ์ Offline ถ้าบอกไม่ได้ ช่างจะเข้าใจผิดอย่างไร | ________ |
+| เปลี่ยนช่วงเวลาของ Chart | ดูย้อนหลังได้นานสุด: ________ |
+| (ไม่บังคับ) ทำให้อุณหภูมิเกิน 35 °C นาน 2 นาที | Widget Status `overheat`: ________ |
+
+---
+
+## ส่วนที่ 2: สั่งการ (Dashboard ↔ Arduino Cloud ↔ ESP32)
+
+> เริ่มส่วนที่ 2 ได้เมื่อ Dashboard ของส่วนที่ 1 แสดงข้อมูลได้แล้วเท่านั้น
+
+### ขั้นที่ 2.1: ต่อ LED + ปุ่ม และเพิ่มตัวแปรสั่งการ (25 นาที)
+
+#### ความรู้เบื้องต้น
+
+- **ปุ่มกด** ต่อระหว่างขา GPIO กับ GND แล้วเปิด `INPUT_PULLUP` ขาจะอ่านได้ `HIGH` ตอนปล่อย และ `LOW` ตอนกด
+- **LED** ต่อผ่านตัวต้านทาน 220 Ω จำกัดกระแสไว้ราว 6 mA ($I = (3.3 - 2.0)/220$)
+- ตัวแปร **Read & Write** เปลี่ยนได้ทั้งจาก Dashboard และจากบอร์ด เมื่อ Dashboard เปลี่ยนค่า ไลบรารีจะเรียก **Callback**
+
+#### ขั้นตอนปฏิบัติ
+
+| อุปกรณ์ | ESP32-S3 |
+|:---|:---|
+| ปุ่ม `light` / `pump` / `fan` (อีกขาต่อ GND) | GPIO 4 / 5 / 6 |
+| LED `light` / `pump` / `fan` (ขายาวผ่าน R 220 Ω, ขาสั้นต่อ GND) | GPIO 10 / 11 / 12 |
+
+1. ต่อวงจรเพิ่มตามตาราง โดยไม่ต้องถอด AHT25
+2. เพิ่มตัวแปร `light`, `pump`, `fan` ใน Thing ตาม **หัวข้อ 12.9.2**
+3. เปิดแท็บ Sketch แล้วตรวจ `thingProperties.h` ฉบับใหม่
+
+#### ตารางบันทึกผล — ขั้นที่ 2.1
+
+| รายการ | สถานะ |
+|:---|:---|
+| จำนวนตัวแปรใน Thing และชื่อ | ________ |
+| ชื่อ Callback ทั้ง 3 ฟังก์ชันใน `thingProperties.h` | ________ |
+| บรรทัด `addProperty` ของ `fan` (คัดลอกมา) | ________ |
+
+### ขั้นที่ 2.2: โปรแกรม ESP32-S3 รับคำสั่งและปุ่มหน้าตู้ (25 นาที)
+
+#### ความรู้เบื้องต้น
+
+- Dashboard เปลี่ยนค่า → คลาวด์ **push** ลงบอร์ดทันที → `onFanChange()` ขับ LED
+- ปุ่มหน้าตู้เปลี่ยนตัวแปรในบอร์ด → ไลบรารีส่งขึ้นคลาวด์เอง (On Change) → Switch บน Dashboard เปลี่ยนตาม
+- ช่วงที่ `ArduinoCloud.update()` ค้าง (เช่นกำลังเชื่อมต่อใหม่) โปรแกรมจึงอ่านปุ่มด้วย **Interrupt** และทำ **Debounce** 50 ms ใน ISR
+
+#### ขั้นตอนปฏิบัติ
+
+1. สร้าง sketch `mcc_cloud` ตาม **หัวข้อ 12.9.3** (คัดลอก `thingProperties.h` ฉบับ 5 ตัวแปร ใช้ `arduino_secrets.h` เดิม)
+2. อัปโหลด → Serial Monitor ต้องขึ้น `Connected to Arduino IoT Cloud` และค่า `temp=... hum=...` ทุก 5 วินาทีเหมือนเดิม
+3. กดปุ่มแต่ละปุ่ม 1 ครั้ง → LED ต้องติดทันที และเห็น `BTN ... -> ON` **ครั้งเดียวต่อการกด**
+
+#### ตารางบันทึกผล — ขั้นที่ 2.2
+
+| การทดลอง | ผลใน Serial Monitor / LED | ค่าตัวแปรในหน้า Thing |
+|:---|:---|:---|
+| กดปุ่ม `light` 1 ครั้ง | ________ | ________ |
+| กดปุ่ม `light` อีก 1 ครั้ง | ________ | ________ |
+| กดปุ่ม `fan` ค้างไว้ 3 วินาทีแล้วปล่อย | สลับกี่ครั้ง: ________ | ________ |
+
+### ขั้นที่ 2.3: สั่งการจาก Dashboard และทดสอบการซิงก์ (30 นาที)
+
+#### ขั้นตอนปฏิบัติ
+
+1. เพิ่ม Widget **Switch** 3 ตัว ผูกกับ `light`, `pump`, `fan` ไว้แถวที่ 3 ตาม **หัวข้อ 12.9.4**
+2. ทดลองตามตารางด้านล่าง โดยเปิด Serial Monitor ไว้ตลอด
+
+#### ตารางบันทึกผล — ขั้นที่ 2.3
+
+| การทดลอง | ผลที่เห็น |
+|:---|:---|
+| กด Switch `fan` แล้วจับเวลาจนถึง LED ติด (ทำ 5 ครั้ง) | ____ / ____ / ____ / ____ / ____ เฉลี่ย ____ วินาที (เทียบกับค่าประมาณของ Polling ในหัวข้อ 12.5.1) |
+| กดปุ่ม `pump` หน้าตู้ แล้วดู Switch บน Dashboard | เปลี่ยนภายใน ____ วินาที |
+| สั่งจากแอป IoT Remote ขณะมือถือใช้ 4G/5G | LED ทำงานหรือไม่ เพราะเหตุใด: ________ |
+| เปิด `fan` จาก Dashboard แล้วกดปุ่ม EN (รีเซ็ต) บนบอร์ด | LED `fan` ระหว่างบูต: ____ หลังเชื่อมต่อ: ____ ใช้เวลา ____ วินาที |
+| ปิด Hotspot 30 วินาที ระหว่างนั้นกด Switch `light` แล้วเปิด Hotspot | LED `light` ทำงานเมื่อใด: ________ Serial แสดงอะไร: ________ |
+| กด Switch `pump` บน Dashboard และกดปุ่ม `pump` หน้าตู้เกือบพร้อมกัน | สถานะสุดท้าย: ________ อธิบาย: ________ |
+| หาประวัติว่า "ใครสั่งเปิดพัดลมเมื่อไร" | ทำได้หรือไม่ อย่างไร: ________ |
 
 ---
 
 ### แบบฝึกหัดท้ายใบงาน
 
-1. **Push กับ Poll:** จากผลจับเวลาในส่วนที่ 5 ความหน่วงของ Lab 15 ต่างจาก Lab 14 อย่างไร อธิบายโดยอ้างอิงว่า ESP32 รับคำสั่งด้วยวิธีใดในแต่ละ Lab (หัวข้อ 12.6.3)
+1. **Interrupt กับ Polling:** ถ้าโปรแกรมอ่านปุ่มด้วย `digitalRead()` ใน `loop()` แทน Interrupt จะเกิดปัญหาเมื่อใด อธิบายโดยเชื่อมโยงกับการทำงานของ `ArduinoCloud.update()` ขณะ Wi-Fi หลุด
 
    > คำตอบ: _______________________________________________________________
 
-2. **Thing กับตาราง:** เทียบตัวแปร Cloud ทั้ง 5 ตัว กับตารางและคอลัมน์ใน Lab 14 ว่าตัวใดตรงกับอะไร และ Lab 14 มีข้อมูลอะไรที่ Lab 15 ไม่มี
+2. **Push กับ Poll:** จากผลจับเวลาในขั้นที่ 2.3 อธิบายว่าทำไมความหน่วงจึงต่ำกว่าระบบที่บอร์ดต้องถามเซิร์ฟเวอร์ทุก 2 วินาที และทำไมคลาวด์จึงส่งคำสั่งถึงบอร์ดได้ทั้งที่บอร์ดอยู่หลัง NAT
 
    > คำตอบ: _______________________________________________________________
 
-3. **ความปลอดภัย:** Secret Key ของ Lab 15 ต่างจาก Publishable key ของ Lab 14 อย่างไร ถ้า key ของแต่ละแบบรั่ว ผู้ไม่หวังดีทำอะไรได้บ้าง
+3. **Sync หลังรีบูต:** จากผลการกดปุ่ม EN ขณะเปิด `fan` อธิบายการทำงานของ `CLOUD_WINS` และเสนอว่าอุปกรณ์ใดใน 3 ตัว (ไฟ ปั๊ม พัดลม) ควรเปลี่ยนเป็น `DEVICE_WINS` เพราะเหตุใด
 
    > คำตอบ: _______________________________________________________________
 
-4. **เลือกแพลตฟอร์ม:** ถ้าโรงงานมีตู้ควบคุม 20 ตู้ ต้องเก็บข้อมูลย้อนหลัง 1 ปี และต้องรู้ว่าใครสั่งอะไรเมื่อไร ควรเลือกแนวทาง Lab 14 หรือ Lab 15 และถ้ามีเพียง 1 ตู้สำหรับสาธิตในห้องเรียนล่ะ ให้เหตุผลโดยอ้างอิงข้อจำกัดของแผนฟรีและผลการทดลอง
+4. **ความปลอดภัย:** ถ้ามีผู้ไม่หวังดีได้ Secret Key ของบอร์ดไป เขาทำอะไรได้บ้าง และทำอะไรไม่ได้บ้าง ควรแก้ไขอย่างไร
+
+   > คำตอบ: _______________________________________________________________
+
+5. **ประยุกต์งานเครื่องกล:** ถ้าต้องการรู้ว่า "เปิดพัดลมระบายอากาศแล้ว อุณหภูมิในตู้ลดลงเร็วเพียงใด" จะใช้ Widget ใดบน Dashboard และข้อจำกัดของแผนฟรี (เก็บข้อมูล 1 วัน ไม่มีประวัติการสั่ง) มีผลต่อการวิเคราะห์นี้อย่างไร
 
    > คำตอบ: _______________________________________________________________
 
@@ -2111,36 +1051,40 @@ if (t.temperature > 35.0) {
 > 📋 ส่งงานผ่าน Google Form: **(ลิงก์จากอาจารย์ผู้สอน)**
 
 สิ่งที่ต้องส่ง:
-1. Screenshot หน้า **Thing** ที่แสดง Associated Device และ Cloud Variables ครบ 5 ตัว
-2. Screenshot Serial Monitor ที่แสดงการเชื่อมต่อ Arduino Cloud, `BTN ... -> ON` และ `CMD ... -> ON`
-3. Screenshot Dashboard `MCC Monitor` บนคอมพิวเตอร์ หรือแอป Arduino IoT Remote
-4. คลิปวิดีโอสั้น (ไม่เกิน 30 วินาที) แสดงการกด Switch บน Dashboard แล้ว LED บนบอร์ดติด
-5. ตารางบันทึกผลทุกส่วน และคำตอบแบบฝึกหัดท้ายใบงานครบทุกข้อ
+1. รูปถ่ายวงจรจริง ESP32-S3 + AHT25 + ปุ่ม 3 ปุ่ม + LED 3 ดวง
+2. Screenshot หน้า **Thing** ที่แสดง Associated Device และ Cloud Variables ครบ 5 ตัว
+3. Screenshot Serial Monitor ที่แสดง `Connected to Arduino IoT Cloud`, `BTN ... -> ON` และ `CMD ... -> ON`
+4. Screenshot Dashboard `MCC Monitor` ที่มีครบ 3 แถว (ภาพรวม · แนวโน้ม · สั่งการ) บนคอมพิวเตอร์ หรือแอป Arduino IoT Remote
+5. คลิปวิดีโอสั้น (ไม่เกิน 30 วินาที) แสดงการกด Switch บน Dashboard แล้ว LED บนบอร์ดติด และการกดปุ่มหน้าตู้แล้ว Switch บน Dashboard เปลี่ยนตาม
+6. คำตอบแบบฝึกหัดท้ายใบงานครบทุกข้อ
 
 #### Checklist ก่อนส่ง
 
+- [ ] ชื่ออุปกรณ์เป็นรูปแบบ `MCC-` ตามด้วยรหัสนักศึกษา 4 ตัวท้าย
 - [ ] ชื่อตัวแปรบน Arduino Cloud ตรงกับโปรแกรม (`temp`, `hum`, `light`, `pump`, `fan`)
-- [ ] `arduino_secrets.h` ไม่ถูกนำขึ้น GitHub หรือแนบในไฟล์ที่ส่ง
+- [ ] `temp`, `hum` เป็น Read Only และ `light`, `pump`, `fan` เป็น Read & Write
+- [ ] `arduino_secrets.h` และ Secret Key ไม่ถูกนำขึ้น GitHub หรือแนบในไฟล์ที่ส่ง
 - [ ] `loop()` ไม่มี `delay()` ยาว ๆ ที่ขวาง `ArduinoCloud.update()`
-- [ ] Dashboard จัดเป็น 3 แถว: ภาพรวม · แนวโน้ม · สั่งการ
-- [ ] กรอกตารางเปรียบเทียบกับ Lab 14 ครบ
+- [ ] กดปุ่ม 1 ครั้งได้ 1 การสั่งเสมอ
+- [ ] กรอกตารางบันทึกผลครบทุกขั้น
 - [ ] ระบุชื่อ-นามสกุล และรหัสนักศึกษาในฟอร์ม
 
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Reference / Summary" data-tab-icon="📊" id="summary" markdown="1">
 
-## 12.13 สรุปประจำบทที่ 12 (Summary)
+## 12.12 สรุปประจำบทที่ 12 (Summary)
 
-1. **ระบบ IoT แบบครบวงจร** ประกอบด้วย 4 ชั้น ได้แก่ เซนเซอร์ ปุ่ม และเอาต์พุต (AHT25, LED) อุปกรณ์เครือข่าย (ESP32-S3 + HTTPS) ฐานข้อมูลคลาวด์ (Supabase/PostgreSQL) และแอปพลิเคชันแสดงผลและสั่งการ (เว็บแดชบอร์ดบน Vercel) โดยแบ่งเป็นเส้นทาง **ติดตาม** (ส่วนที่ 1) และเส้นทาง **สั่งการ** (ส่วนที่ 2)
+1. **ระบบ IoT แบบครบวงจร** ประกอบด้วย 4 ชั้น ได้แก่ เซนเซอร์ ปุ่ม และเอาต์พุต (AHT25, LED) อุปกรณ์เครือข่าย (ESP32-S3 + MQTT over TLS) แพลตฟอร์มคลาวด์ (Arduino Cloud) และแอปพลิเคชันแสดงผลและสั่งการ (Dashboard บนเว็บและมือถือ) โดยแบ่งเป็นเส้นทาง **ติดตาม** (ส่วนที่ 1) และเส้นทาง **สั่งการ** (ส่วนที่ 2)
 2. **AHT25** สื่อสารผ่าน I2C ที่ address `0x38` ให้ค่าดิบ 20 บิต ซึ่งแปลงเป็นหน่วยจริงได้ด้วย $RH = S_{RH}/2^{20} \times 100$ และ $T = S_T/2^{20} \times 200 - 50$ ความละเอียดของค่าไม่ใช่ความแม่นยำ
-3. **ปุ่มกด** ต้องใช้ Pull-up และ Debounce และควรอ่านด้วย **Interrupt** เมื่อโปรแกรมมีงานที่บล็อกนาน เช่น การส่ง HTTPS ส่วน **เอาต์พุต** ต้องจำกัดกระแสด้วยตัวต้านทาน และใช้โมดูลรีเลย์เมื่อขับโหลดจริง
-4. **Telemetry, Command State และ Event** เป็นข้อมูลต่างประเภทกัน จึงควรแยกตาราง และเลือกรูปแบบการแสดงผลให้ตรงกับประเภทข้อมูล
-5. **Row Level Security และ Least Privilege** แยกสิทธิ์ตามการ login ด้วย Publishable key ตัวเดียวกัน (`anon` = ESP32 → `INSERT` telemetry และแก้ `controls` ในนาม `button` · `authenticated` = ช่างที่ login → อ่านข้อมูลและแก้ `controls` ในนาม `dashboard`) และต้องปิดการสมัครสมาชิกเอง
-6. **Vercel** ให้บริการเฉพาะไฟล์หน้าเว็บ เบราว์เซอร์คุยกับ Supabase REST API โดยตรงผ่าน `supabase-js` ซึ่งแปลงเป็นคำขอ REST และ SQL แบบเดียวกับที่ ESP32 ใช้ ความปลอดภัยจึงขึ้นกับ RLS ไม่ใช่การซ่อนโค้ด
-7. **การสั่งการผ่านคลาวด์** ใช้ฐานข้อมูลเป็นจุดพัก **Desired State** ที่ ESP32 poll เป็นรอบ ซึ่ง Idempotent และทนต่อการรีบูต แลกกับความหน่วงประมาณ $T_{poll}/2 + t_{HTTPS}$ และห้ามใช้แทนระบบหยุดฉุกเฉิน
-8. **Trigger** ของ PostgreSQL บันทึกประวัติการสั่งพร้อมผู้สั่งได้โดยอัตโนมัติ ทำให้มีแหล่งความจริงเดียว และผู้สั่งไม่ต้องมีสิทธิ์เขียนประวัติเอง
-9. **แดชบอร์ดที่ดี** ต้องเข้าใจได้ใน 3 วินาที วางภาพรวมไว้บน ใช้สีเพื่อบอกสถานะเท่านั้น ติดหน่วยทุกส่วน และส่วนสั่งการต้องยืนยันก่อนส่งและแสดงผลของคำสั่งให้เห็น
+3. **ปุ่มกด** ต้องใช้ Pull-up และ Debounce และควรอ่านด้วย **Interrupt** เพราะ `ArduinoCloud.update()` อาจค้างขณะเชื่อมต่อใหม่ ส่วน **เอาต์พุต** ต้องจำกัดกระแสด้วยตัวต้านทาน และใช้โมดูลรีเลย์เมื่อขับโหลดจริง
+4. **Device, Thing, Cloud Variable, Dashboard** เป็นองค์ประกอบหลักของ Arduino Cloud โดย Thing เป็น **Digital Twin** ที่เก็บสำเนาสถานะของอุปกรณ์
+5. **Telemetry ใช้ Read Only + Periodically** ส่วน **Command State ใช้ Read & Write + On Change** และตัวแปร Read & Write จะมี **Callback** ที่ถูกเรียกเมื่อ Dashboard เปลี่ยนค่า
+6. **ความปลอดภัย** อาศัย Device ID + Secret Key เฉพาะแต่ละอุปกรณ์ การเข้ารหัส TLS และบัญชีผู้ใช้ Arduino Secret Key แสดงเพียงครั้งเดียวและห้ามเผยแพร่
+7. **MQTT Push** ทำให้คำสั่งถึงบอร์ดภายในไม่ถึงวินาที เพราะบอร์ดเปิดการเชื่อมต่อค้างไว้ ต่างจาก Polling ที่มีความหน่วงราว $T_{poll}/2 + t_{HTTPS}$ และ `ArduinoCloud.update()` ต้องถูกเรียกบ่อย ๆ เสมอ
+8. **Sync หลังเชื่อมต่อใหม่** ตัดสินด้วย `CLOUD_WINS` (ค่าเริ่มต้นของโค้ดที่สร้างให้ คืนสถานะที่สั่งไว้) หรือ `DEVICE_WINS` (ใช้ค่าในบอร์ด เหมาะกับ Fail-safe) และการสั่งผ่านคลาวด์ห้ามใช้แทนระบบหยุดฉุกเฉิน
+9. **แดชบอร์ดที่ดี** ต้องเข้าใจได้ใน 3 วินาที วางภาพรวมไว้บน ใช้สีเพื่อบอกสถานะเท่านั้น ติดหน่วยทุก Widget และส่วนสั่งการต้องแยกชัดเจน กดง่ายบนมือถือ
+10. **แพลตฟอร์มสำเร็จรูป** เริ่มใช้งานเร็ว แต่มีข้อจำกัด เช่น เก็บข้อมูลย้อนหลัง 1 วันในแผนฟรี ไม่มีประวัติการสั่ง และผูกกับผู้ให้บริการ
 
 ### ตารางอ้างอิงด่วน
 
@@ -2148,45 +1092,43 @@ if (t.temperature > 35.0) {
 |:---|:---|
 | I2C ของ AHT25 | address `0x38`, SDA = GPIO 8, SCL = GPIO 9 |
 | ปุ่ม / LED | ปุ่ม GPIO 4/5/6 (`INPUT_PULLUP`) · LED GPIO 10/11/12 ผ่าน 220 Ω |
-| ส่งค่าเซนเซอร์ (ESP32) | `POST https://<ref>.supabase.co/rest/v1/telemetry` → `201` |
-| ถามคำสั่ง (ESP32) | `GET .../rest/v1/controls?device_id=eq.<id>&select=light,pump,fan` → `200` |
-| แจ้งการกดปุ่ม (ESP32) | `PATCH .../rest/v1/controls?device_id=eq.<id>` body `{"fan":true,"updated_by":"button"}` → `204` |
-| อ่านค่าล่าสุด (แดชบอร์ด) | `supabase.from('telemetry').select(...).eq('device_id', id).order('created_at', { ascending: false }).limit(1)` |
-| สั่งการ (แดชบอร์ด) | `supabase.from('controls').update({ fan: true, updated_by: 'dashboard' }).eq('device_id', id).select()` |
-| บัญชีแดชบอร์ด | Authentication → Users → Add user → Create new user (Auto confirm user?) · ปิด Allow new users to sign up |
-| โค้ดแดชบอร์ด | [`dashboard/`](https://github.com/alfaXphoori/TechEngineering/tree/main/dashboard) · เกณฑ์สีและรอบ refresh ใน `lib/config.js` |
+| ลงทะเบียนบอร์ด | Devices → Add Device → Third Party Device → ESP32 → ESP32S3 Dev Module |
+| ตัวแปรเซนเซอร์ | `temp` (Temperature Sensor), `hum` (Relative Humidity) · Read Only · Periodically 5 s |
+| ตัวแปรสั่งการ | `light`, `pump`, `fan` (Boolean) · Read & Write · On Change |
+| ไฟล์ของ sketch | `thingProperties.h` (สร้างให้) · `arduino_secrets.h` (`SECRET_SSID`, `SECRET_OPTIONAL_PASS`, `SECRET_DEVICE_KEY`) · `.ino` |
+| เชื่อมต่อ | `initProperties(); ArduinoCloud.begin(ArduinoIoTPreferredConnection);` |
+| ใน `loop()` | `ArduinoCloud.update();` ทุกรอบ ห้ามใช้ `delay()` ยาว |
+| รับคำสั่ง | `void onFanChange() { applyOutputs(); }` |
+| Sync หลังเชื่อมต่อใหม่ | `CLOUD_WINS` (ค่าเริ่มต้น) · `DEVICE_WINS` |
+| การเชื่อมต่อ | MQTT over TLS, port 8884 (Device ID + Secret Key) |
 
-> ℹ️ **แผนฟรี:** Supabase Free Plan และ Vercel Hobby Plan มีโควตาจำกัด เช่น พื้นที่ฐานข้อมูล ปริมาณข้อมูลขาออก (Egress) และการ pause โปรเจกต์ Supabase ที่ไม่มีการใช้งาน เงื่อนไขเหล่านี้อาจเปลี่ยนได้ ควรตรวจสอบหน้าราคาของผู้ให้บริการก่อนเริ่มภาคการศึกษา
+> ℹ️ **แผนฟรี:** Arduino Cloud Free Plan มีโควตาจำกัด เช่น อุปกรณ์ 2 เครื่อง เก็บข้อมูลย้อนหลัง 1 วัน compile ใน Cloud Editor 25 ครั้งต่อวัน และ Triggers ต้องใช้แผน Maker เงื่อนไขเหล่านี้อาจเปลี่ยนได้ ควรตรวจสอบ [หน้าแผนราคา](https://cloud.arduino.cc/plans) ก่อนเริ่มภาคการศึกษา
 
 </div>
 
 <div class="chapter-tab-content" data-tab-name="Challenge" data-tab-icon="🏆" id="challenge" markdown="1">
 
-## 12.14 แบบฝึกหัดท้ายบทที่ 12 (Exercises)
+## 12.13 แบบฝึกหัดท้ายบทที่ 12 (Exercises)
 
 **ข้อ 1:** AHT25 ส่งค่าดิบของความชื้น $S_{RH} = 629{,}146$ และอุณหภูมิ $S_T = 419{,}430$ จงคำนวณความชื้นสัมพัทธ์ (%RH) และอุณหภูมิ (°C) พร้อมอธิบายว่าทำไมจึงควรรายงานผลเพียงทศนิยม 1 ตำแหน่ง
 
-**ข้อ 2:** อธิบายว่าถ้าเปลี่ยนการอ่านปุ่มจาก Interrupt เป็น Polling ใน `loop()` จะเกิดปัญหาอะไรกับระบบในส่วนที่ 2 และปัญหานั้นเกี่ยวข้องกับการส่ง HTTPS อย่างไร
+**ข้อ 2:** อธิบายว่าถ้าเปลี่ยนการอ่านปุ่มจาก Interrupt เป็น Polling ใน `loop()` จะเกิดปัญหาอะไรกับระบบในส่วนที่ 2 และปัญหานั้นเกี่ยวข้องกับ `ArduinoCloud.update()` อย่างไร
 
-**ข้อ 3:** ถ้าผู้พัฒนาใส่ **Secret key** ไว้ในหน้าเว็บแดชบอร์ดแทน Publishable key เพื่อ "ไม่ต้อง login" ระบบยังทำงานได้ แต่ความเสี่ยงเพิ่มขึ้นอย่างไร? (ใบ้: ใครก็เปิดดูโค้ด JavaScript ของหน้าเว็บได้) ยกตัวอย่างเหตุการณ์ที่อาจเกิดขึ้นในโรงงาน
+**ข้อ 3:** ถ้าเปลี่ยนตัวแปร `temp` จาก Read Only เป็น Read & Write จะเกิดความเสี่ยงอะไรต่อความน่าเชื่อถือของข้อมูลในโรงงาน? และถ้าเปลี่ยน `fan` จาก Read & Write เป็น Read Only ระบบจะทำงานต่างไปอย่างไร
 
-**ข้อ 4:** ถ้าต้องการให้แดชบอร์ดแสดงกราฟย้อนหลัง 30 วันบนกราฟกว้าง 1,200 พิกเซล จะมีข้อมูลดิบในตาราง `telemetry` กี่แถว และช่วงเวลาของ Downsampling ควรมีค่าประมาณเท่าใด? แสดงวิธีคำนวณ แล้วอธิบายว่าทำไมการใช้ `.limit(1000)` เพียงอย่างเดียวจึงไม่พอ
+**ข้อ 4:** ถ้าตั้ง `temp` เป็น On Change ด้วย threshold 0.2 °C แทน Periodically 5 วินาที ในช่วงที่อุณหภูมิคงที่ 2 ชั่วโมง แล้วค่อย ๆ เพิ่มขึ้น 3 °C ใน 30 นาที จงประมาณจำนวนข้อความที่ส่งเทียบกับแบบ Periodically และอธิบายข้อดีข้อเสียต่อการแสดงผลบน Chart และการตรวจว่าอุปกรณ์ยังทำงานอยู่
 
-**ข้อ 5:** ความชื้นในตู้ควบคุมจะเสี่ยงเกิดหยดน้ำเมื่ออุณหภูมิลดลงถึงจุดน้ำค้าง (Dew Point) จงเขียนคำสั่ง SQL ที่คำนวณ Dew Point จากคอลัมน์ `temp` และ `hum` ด้วยสมการ Magnus โดยประมาณ $T_d = \frac{b\,\gamma}{a - \gamma}$ เมื่อ $\gamma = \ln(RH/100) + \frac{a\,T}{b + T}$, $a = 17.62$, $b = 243.12\ ^\circ C$ แล้วเสนอวิธีนำค่านี้ไปแสดงบนแดชบอร์ด
+**ข้อ 5:** ความชื้นในตู้ควบคุมจะเสี่ยงเกิดหยดน้ำเมื่ออุณหภูมิลดลงถึงจุดน้ำค้าง (Dew Point) จงเขียนโค้ดบน ESP32 ที่คำนวณ Dew Point จาก `temp` และ `hum` ด้วยสมการ Magnus โดยประมาณ $T_d = \frac{b\,\gamma}{a - \gamma}$ เมื่อ $\gamma = \ln(RH/100) + \frac{a\,T}{b + T}$, $a = 17.62$, $b = 243.12\ ^\circ C$ แล้วออกแบบตัวแปร Cloud และ Widget สำหรับแสดงค่านี้
 
-**ข้อ 6 (ความหน่วงของ Polling):** ถ้าลด `POLL_INTERVAL` จาก 2 วินาทีเป็น 0.5 วินาที และคำขอ HTTPS แต่ละครั้งใช้เวลา 0.8 วินาที
-- (ก) ความหน่วงเฉลี่ยตั้งแต่กดส่งคำสั่งจนถึง LED ติดเปลี่ยนจากเดิมเท่าใด
-- (ข) จำนวนคำขอ `GET` ต่อวันเพิ่มขึ้นกี่เท่า
-- (ค) ทำไม ESP32 จึงอาจ poll ได้ไม่ถี่ถึง 0.5 วินาทีจริง (พิจารณาเวลาของ HTTPS) และควรเปลี่ยนไปใช้วิธีใดแทน
+**ข้อ 6 (Push กับ Poll):** ระบบหนึ่งใช้ HTTP Polling ทุก 2 วินาที (คำขอละ 0.8 วินาที) อีกระบบใช้ MQTT Push แบบบทนี้
+- (ก) คำนวณความหน่วงเฉลี่ยของระบบ Polling และจำนวนคำขอต่อวัน
+- (ข) อธิบายว่าทำไมระบบ Push จึงไม่ต้องส่งคำขอซ้ำ และต้องแลกกับอะไร
+- (ค) ถ้าบอร์ดใช้แบตเตอรี่และต้องประหยัดพลังงานมาก ควรเลือกแบบใด เพราะเหตุใด
 
-**ข้อ 7 (Fail-safe):** เมื่อ Wi-Fi ขาดหายนานเกิน 1 นาที ESP32 ควรทำอย่างไรกับไฟ ปั๊ม และพัดลม แต่ละตัว (คงสถานะเดิม หรือปิดเอง)? ให้เหตุผลทางวิศวกรรมของแต่ละอุปกรณ์ แล้วเสนอการแก้โค้ดใน `loop()`
+**ข้อ 7 (Fail-safe):** เมื่อ Wi-Fi ขาดหายนานเกิน 1 นาที ESP32 ควรทำอย่างไรกับไฟ ปั๊ม และพัดลม แต่ละตัว (คงสถานะเดิม หรือปิดเอง)? ให้เหตุผลทางวิศวกรรมของแต่ละอุปกรณ์ แล้วเสนอการแก้โค้ดโดยใช้ `ArduinoCloud.connected()` ตรวจสถานะการเชื่อมต่อ และเลือกนโยบาย Sync (`CLOUD_WINS` / `DEVICE_WINS`) ให้แต่ละตัวแปร
 
-**ข้อ 8 (แจ้งเตือน 24 ชั่วโมง):** แถบเตือนบนแดชบอร์ดทำงานเฉพาะเมื่อเปิดหน้าเว็บไว้ จงออกแบบระบบแจ้งเตือนทางอีเมลเมื่ออุณหภูมิเกิน 35 °C ต่อเนื่อง 2 นาที โดยระบุว่าจะตรวจที่ใด (ESP32 / ฐานข้อมูล / Edge Function) เงื่อนไข "ต่อเนื่อง" คำนวณอย่างไร และป้องกันการส่งอีเมลซ้ำทุก 5 วินาทีอย่างไร
+**ข้อ 8 (เลือกแพลตฟอร์ม):** โรงงานมีตู้ควบคุม 20 ตู้ ต้องเก็บข้อมูลย้อนหลัง 1 ปี และต้องรู้ว่าใครสั่งอะไรเมื่อไร จงเปรียบเทียบการใช้ Arduino Cloud กับการสร้างระบบเองด้วยฐานข้อมูลคลาวด์ (เช่น PostgreSQL + REST API) ในด้าน ค่าใช้จ่าย ความเร็วในการพัฒนา การเก็บข้อมูล ความปลอดภัย และการตรวจสอบย้อนหลัง แล้วเสนอแนวทางที่เหมาะสม
 
-**ข้อ 9 (ออกแบบ):** โรงงานมีตู้ควบคุม 20 ตู้ แต่ละตู้มี ESP32-S3 หนึ่งตัว จงออกแบบ
-- (ก) ค่า `device_id` ที่สื่อความหมาย
-- (ข) Layout แดชบอร์ดภาพรวมที่ให้หัวหน้าช่างเห็นได้ทันทีว่าตู้ใดผิดปกติ
-- (ค) คำนวณพื้นที่ฐานข้อมูลที่ใช้ต่อเดือน แล้วเสนอแนวทางลดขนาดข้อมูลเก่า
-- (ง) แนวทางป้องกันไม่ให้ ESP32 ของตู้หนึ่งสั่งอุปกรณ์ของตู้อื่นได้ ทั้งที่ทุกตัวใช้ Publishable key เดียวกัน และให้ช่างแต่ละแผนกเห็นเฉพาะตู้ของแผนกตนเอง (ใบ้: ให้แต่ละอุปกรณ์และช่าง login ด้วยบัญชีของตนเอง แล้วเขียน RLS policy ที่เทียบ `device_id` กับตัวตนของผู้ login ผ่าน `auth.uid()`)
+**ข้อ 9 (ออกแบบ):** ออกแบบ Dashboard ภาพรวมสำหรับหัวหน้าช่างที่ดูแลตู้ 20 ตู้ ให้เห็นได้ทันทีว่าตู้ใดร้อนเกินเกณฑ์หรือออฟไลน์ โดยระบุ Widget ที่ใช้ การจัดแถว และตัวแปรที่ต้องเพิ่มในแต่ละ Thing
 
 </div>

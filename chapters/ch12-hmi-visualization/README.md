@@ -819,7 +819,7 @@ void loop() {
 
    > ⚠️ `[INDEX]` คือหมายเลข cluster ของ pooler ซึ่ง **เดาจาก region ไม่ได้** (อาจเป็น `aws-0-...` หรือ `aws-1-...`) ต้องคัดลอก host จากหน้า Connect ของโปรเจกต์ตนเองเท่านั้น ([Supabase Docs: Connecting to Postgres](https://supabase.com/docs/guides/database/connecting-to-postgres))
 2. สมัครที่ [grafana.com](https://grafana.com) → แผน **Free** → สร้าง Stack
-3. **Connections → Data sources → Add data source → PostgreSQL** → ตั้งชื่อ `Supabase` แล้วกรอกค่าจาก *Connection parameters* ตามตารางด้านล่าง
+3. **Connections → Data sources → Add data source → PostgreSQL** → เปลี่ยน **Name** ด้านบนสุดของหน้า (ค่าเริ่มต้นคือ `grafana-postgresql-datasource-1`) เป็น `Supabase` เพราะ panel ทุกตัวในบทนี้อ้างชื่อนี้ แล้วกรอกค่าจาก *Connection parameters* ตามตารางด้านล่าง
 
 **ตัวอย่าง:** ถ้าหน้า Connect แสดงค่าดังนี้ (project ref สมมุติ `abcdefghijklmnopqrst`)
 
@@ -834,12 +834,27 @@ user:     postgres.abcdefghijklmnopqrst
 
 | ช่องใน Grafana | นำมาจาก | ค่าที่กรอก (ตามตัวอย่าง) |
 |:---|:---|:---|
-| **Host URL** | `host` + `:` + `port` | `aws-0-ap-southeast-1.pooler.supabase.com:5432` |
+| **Host URL** | `host` + `:` + `port` | `aws-0-ap-southeast-1.pooler.supabase.com:5432` (อย่าลืม `:5432` ต่อท้าย) |
 | **Database name** | `database` | `postgres` |
 | **Username** | `grafana_ro` + `.` + project ref (ส่วนหลังจุดของ `user`) | `grafana_ro.abcdefghijklmnopqrst` |
 | **Password** | รหัสผ่านของ `grafana_ro` ที่ตั้งในหัวข้อ 12.8.4 | (รหัสผ่านของตนเอง) |
 | **TLS/SSL Mode** | กำหนดเอง | `require` |
 | **TimescaleDB** | กำหนดเอง | ปิด |
+
+**Additional settings** (อยู่ด้านล่างของหน้า ค่าเริ่มต้นบางช่องไม่เหมาะกับระบบนี้)
+
+| ช่อง | ค่าเริ่มต้น | ค่าที่ตั้ง | เหตุผล |
+|:---|:---|:---|:---|
+| **Version** | `9.3` | เวอร์ชันสูงสุดในรายการ (เช่น `15`) | Supabase ใช้ PostgreSQL 15 ขึ้นไป Grafana ใช้ค่านี้เลือกรูปแบบ SQL ที่สร้างให้ใน macro |
+| **Min time interval** | `1m` | `5s` | ค่าต่ำสุดของ `$__interval` (หัวข้อ 12.5.2) ควรเท่ากับรอบส่งของ ESP32 ถ้าปล่อยไว้ `1m` กราฟช่วง Last 15 minutes จะเหลือเพียงราว 15 จุด และไม่เห็นการเปลี่ยนแปลงระดับวินาที |
+| **Max open** | `100` | `10` | Session pooler ของแผนฟรีรับ connection ได้จำกัด ตั้งสูงเกินอาจเจอ error ว่า connection เต็ม 10 connection เพียงพอสำหรับแดชบอร์ดของผู้ใช้ 1 คน (ตรวจเพดานจริงได้ที่ Supabase **Database Settings**) |
+| **Max lifetime** | `14400` | คงค่าเดิม | |
+
+ช่องที่ **ปล่อยว่างหรือไม่ต้องแก้**
+- **TLS/SSL Method** และ **TLS/SSL Root Certificate / Client Certificate / Client Key:** ปล่อยว่าง โหมด `require` เข้ารหัสการเชื่อมต่อโดยไม่ตรวจใบรับรอง จึงไม่ต้องใช้ไฟล์ใบรับรอง
+- **Private data source connect:** ไม่ต้องเลือก ใช้กับฐานข้อมูลในเครือข่ายภายในที่ปิดจากอินเทอร์เน็ต ซึ่ง Supabase เปิดสู่อินเทอร์เน็ตอยู่แล้ว
+
+กล่อง *User Permissions* ด้านบนหน้าเป็นคำเตือนของ Grafana ว่าควรใช้ user ที่มีสิทธิ์ `SELECT` เท่านั้น เพราะ Grafana ไม่ตรวจว่า query ปลอดภัยหรือไม่ ซึ่งเราทำไว้แล้วด้วย `grafana_ro` ในหัวข้อ 12.8.4
 
 > ⚠️ **ช่อง `user` ในหน้า Connect เป็นของ user `postgres` (ผู้ดูแลระบบ)** ให้คัดลอกมาเฉพาะ project ref ที่อยู่หลังจุด แล้วเปลี่ยนส่วนหน้าเป็น `grafana_ro` ถ้าใช้ `postgres.xxxx` ตรง ๆ Grafana จะได้สิทธิ์ผู้ดูแลระบบซึ่งแก้ไขและลบข้อมูลได้ทั้งหมด ขัดกับหลัก Least Privilege (หัวข้อ 12.3.3)
 
@@ -1361,7 +1376,7 @@ void loop() {
 **ก. ติดตั้ง plugin และเพิ่ม data source สำหรับสั่งการ**
 
 1. **Administration → Plugins and data → Plugins** → ค้นหา **Business Forms** → **Install** (ต้องเป็นผู้ดูแล Stack ซึ่งเจ้าของ Stack เป็นอยู่แล้ว)
-2. **Connections → Data sources → Add data source → PostgreSQL** → ตั้งชื่อ `Supabase-Control` → กรอกค่าเหมือนหัวข้อ 12.8.6 ทุกช่อง ยกเว้น **Username** = `grafana_ctl.<project_ref>` (เช่น `grafana_ctl.abcdefghijklmnopqrst`) และ **Password** = รหัสผ่านของ `grafana_ctl` → **Save & test**
+2. **Connections → Data sources → Add data source → PostgreSQL** → ตั้งชื่อ `Supabase-Control` → กรอกค่าเหมือนหัวข้อ 12.8.6 ทุกช่อง (รวมถึง Additional settings) ยกเว้น **Username** = `grafana_ctl.<project_ref>` (เช่น `grafana_ctl.abcdefghijklmnopqrst`) และ **Password** = รหัสผ่านของ `grafana_ctl` → **Save & test**
 
 > data source `Supabase` (`grafana_ro`) ใช้กับ panel แสดงผลทั้งหมด ส่วน `Supabase-Control` (`grafana_ctl`) ใช้กับฟอร์มสั่งการเท่านั้น ถ้าเลือกผิดเป็น `Supabase` ฟอร์มจะขึ้น *permission denied for table controls*
 

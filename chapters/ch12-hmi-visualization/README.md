@@ -27,7 +27,8 @@ permalink: /chapters/ch12-hmi-visualization/
 >   - **LLO14.2:** ใช้เว็บแดชบอร์ดบน Vercel แสดงผล แจ้งเตือน และสั่งการอุปกรณ์กลับไปยัง ESP32 ตามหลักการออกแบบแดชบอร์ดที่ดีได้ (CLO3, CLO4)
 >
 > **ฮาร์ดแวร์:** ESP32-S3 DevKit · เซนเซอร์อุณหภูมิ/ความชื้น AHT25 · ปุ่มกด 3 ปุ่ม · LED 3 ดวง + ตัวต้านทาน 220 Ω  
-> **ซอฟต์แวร์ (ฟรีทั้งหมด):** Arduino IDE (ESP32 core) · Supabase Free Plan · เว็บแดชบอร์ด Next.js บน Vercel (ลิงก์จากผู้สอน นักศึกษาไม่ต้องสมัคร Vercel)
+> **ซอฟต์แวร์ (ฟรีทั้งหมด):** Arduino IDE (ESP32 core) · Supabase Free Plan · เว็บแดชบอร์ด Next.js บน Vercel (ลิงก์จากผู้สอน นักศึกษาไม่ต้องสมัคร Vercel)  
+> **Lab 15 (ทางเลือกเปรียบเทียบ):** สร้างระบบเดียวกันบน [Arduino Cloud](https://cloud.arduino.cc/) Free Plan ด้วยฮาร์ดแวร์ชุดเดิม
 
 ---
 
@@ -1715,9 +1716,421 @@ supabase.from('events').select('id', { count: 'exact', head: true })
 
 </div>
 
+<div class="chapter-tab-content" data-tab-name="Lab 15" data-tab-icon="☁️" id="lab15" markdown="1">
+
+## 12.12 ใบงานปฏิบัติการ Lab 15: ระบบเดียวกันบน Arduino Cloud
+
+**ฮาร์ดแวร์:** ชุดเดียวกับ Lab 14 (ESP32-S3 DevKit + AHT25 + ปุ่มกด 3 ปุ่ม + LED 3 ดวง + ตัวต้านทาน 220 Ω 3 ตัว) ไม่ต้องต่อวงจรใหม่  
+**เครื่องมือ:** Arduino IDE + [Arduino Cloud](https://cloud.arduino.cc/) (Free Plan) + แอป Arduino IoT Remote บนมือถือ (ไม่บังคับ)  
+**เวลา:** 3 ชั่วโมง
+
+> Lab 14 ประกอบระบบเองจากชิ้นส่วนแยก (REST API + PostgreSQL + RLS + เว็บแดชบอร์ด) Lab 15 สร้าง **ระบบเดียวกัน** บนแพลตฟอร์มสำเร็จรูป **Arduino Cloud** ซึ่งรวมฐานข้อมูล การสื่อสาร และแดชบอร์ดไว้ในที่เดียว เพื่อเปรียบเทียบข้อดีข้อเสียของทั้งสองแนวทาง
+
+### เปรียบเทียบ Lab 14 กับ Lab 15
+
+| ประเด็น | Lab 14: Supabase + Vercel | Lab 15: Arduino Cloud |
+|:---|:---|:---|
+| แนวคิด | ประกอบระบบเองจากบริการแยก (Build) | ใช้แพลตฟอร์ม IoT สำเร็จรูป (Platform) |
+| ตัวแทนของอุปกรณ์บนคลาวด์ | ตาราง `telemetry`, `controls`, `events` ที่ออกแบบเอง | **Thing** และ **Cloud Variables** (`temp`, `hum`, `light`, `pump`, `fan`) |
+| โปรโตคอลของ ESP32 | HTTPS REST (`POST`/`GET`/`PATCH`) เขียนเองด้วย `HTTPClient` | MQTT over TLS ที่ไลบรารี `ArduinoIoTCloud` จัดการให้ เรียกเพียง `ArduinoCloud.update()` |
+| การรับคำสั่ง | ESP32 **poll** ทุก 2 วินาที (หัวข้อ 12.6.3) | Cloud **push** ลงมาทันทีผ่าน connection ที่เปิดค้างไว้ (Callback `onFanChange()`) |
+| แดชบอร์ด | เว็บ Next.js ที่ปรับแต่งได้ทุกส่วน | ลาก Widget สำเร็จรูป (Gauge, Chart, Switch) ไม่ต้องเขียนโค้ด และมีแอปมือถือ |
+| การยืนยันตัวตนของอุปกรณ์ | Publishable key ร่วมกันทุกอุปกรณ์ + RLS | **Device ID + Secret Key** เฉพาะแต่ละอุปกรณ์ |
+| การเก็บข้อมูลย้อนหลัง | ไม่จำกัดระยะเวลา (ตามพื้นที่ฐานข้อมูล) | แผนฟรีเก็บค่าย้อนหลัง **1 วัน** |
+| ประวัติการสั่งพร้อมผู้สั่ง | มี (`events` + trigger) | ไม่มีในตัว เห็นเฉพาะค่าบนกราฟ |
+| สิ่งที่ต้องเรียนรู้เพิ่ม | SQL, RLS, REST, JavaScript | การตั้งค่า Thing และ Widget |
+
+> ℹ️ **แผนฟรีของ Arduino Cloud** (ข้อมูล ณ ปี 2025 อาจเปลี่ยนได้ ตรวจสอบที่ [cloud.arduino.cc/plans](https://cloud.arduino.cc/plans)): อุปกรณ์ได้ไม่เกิน **2 เครื่อง** · เก็บค่าตัวแปรย้อนหลัง **1 วัน** · compile ใน Cloud Editor ได้ **25 ครั้งต่อวัน** · **Triggers** (แจ้งเตือนทางอีเมล) ต้องใช้แผน Maker ใบงานนี้ออกแบบให้ใช้ตัวแปรเพียง **5 ตัว** และ compile ด้วย Arduino IDE บนเครื่อง จึงไม่ติดเพดานการ compile
+
+### วัตถุประสงค์ของใบงาน
+
+- อธิบายแนวคิด **Thing**, **Cloud Variable**, Permission และ Update Policy ของ Arduino Cloud ได้
+- ลงทะเบียน ESP32-S3 เป็น Third Party Device และเชื่อมกับ Thing ได้
+- เขียนโปรแกรมด้วยไลบรารี `ArduinoIoTCloud` ให้ส่งค่า AHT25 และรับคำสั่ง `light`/`pump`/`fan` ผ่าน Callback ได้
+- สร้าง Dashboard ด้วย Widget ที่เหมาะกับคำถามของช่าง (หัวข้อ 12.7) ได้
+- เปรียบเทียบสถาปัตยกรรม ความหน่วง ความปลอดภัย และข้อจำกัดของ Lab 14 กับ Lab 15 จากผลการทดลองได้
+
+---
+
+### ส่วนที่ 1: ลงทะเบียนอุปกรณ์ (20 นาที)
+
+#### ความรู้เบื้องต้น
+
+- **Device** คือบอร์ดจริง Arduino Cloud ระบุตัวบอร์ดด้วย **Device ID** และให้บอร์ดพิสูจน์ตัวตนด้วย **Secret Key** (เทียบได้กับชื่อผู้ใช้และรหัสผ่านของบอร์ด)
+- ESP32-S3 ไม่ใช่บอร์ดของ Arduino จึงลงทะเบียนเป็น **Third Party Device**
+
+#### ขั้นตอนปฏิบัติ
+
+1. สมัครหรือ login ที่ [cloud.arduino.cc](https://cloud.arduino.cc/) (ใช้บัญชี Google ได้)
+2. เมนู **Devices** → **Add Device** → **Third Party Device** → เลือก **ESP32** → รุ่น **ESP32S3 Dev Module** (หรือชื่อรุ่น ESP32-S3 ที่ใกล้เคียงที่สุดในรายการ) → **Continue**
+3. ตั้งชื่ออุปกรณ์ เช่น `MCC-1234` (รหัสนักศึกษา 4 ตัวท้าย) → **Next**
+4. หน้าจอจะแสดง **Device ID** และ **Secret Key** → คัดลอกเก็บไว้ (หรือดาวน์โหลดเป็นไฟล์ PDF ที่หน้าจอเสนอให้) → ยืนยันว่าบันทึกแล้ว → **Continue**
+
+> ⚠️ **Secret Key แสดงเพียงครั้งเดียว** ถ้าทำหาย ต้องลบอุปกรณ์แล้วลงทะเบียนใหม่ และห้ามนำ Secret Key ขึ้น GitHub หรือส่งให้ผู้อื่น เพราะใครมี key นี้ก็ปลอมตัวเป็นบอร์ดของเราได้
+
+#### ตารางบันทึกผล — ส่วนที่ 1
+
+| รายการ | สถานะ |
+|:---|:---|
+| ชื่ออุปกรณ์ในหน้า Devices | ________ |
+| Device ID (8 ตัวอักษรแรก) | ________ |
+| เก็บ Secret Key ไว้ที่ใด (ห้ามจดตัว key ลงในใบงาน) | ________ |
+
+---
+
+### ส่วนที่ 2: สร้าง Thing และ Cloud Variables (25 นาที)
+
+#### ความรู้เบื้องต้น
+
+**Thing** คือ "ฝาแฝดดิจิทัล (Digital Twin)" ของบอร์ดบนคลาวด์ ประกอบด้วยตัวแปรที่ซิงก์ระหว่างบอร์ดกับคลาวด์ ตัวแปรแต่ละตัวมีคุณสมบัติ 2 อย่าง
+
+| คุณสมบัติ | ตัวเลือก | ความหมาย | เทียบกับ Lab 14 |
+|:---|:---|:---|:---|
+| **Permission** | Read Only | บอร์ดเขียนได้ฝ่ายเดียว Dashboard อ่านอย่างเดียว | ตาราง `telemetry` ที่แดชบอร์ดอ่านได้อย่างเดียว |
+| | Read & Write | ทั้งบอร์ดและ Dashboard เปลี่ยนค่าได้ เมื่อ Dashboard เปลี่ยนค่า บอร์ดจะเรียก Callback | ตาราง `controls` ที่ทั้งปุ่มหน้าตู้และแดชบอร์ดแก้ได้ |
+| **Update Policy** | Periodically | ส่งค่าทุก x วินาที | ESP32 `POST` ทุก 5 วินาที |
+| | On Change | ส่งเมื่อค่าเปลี่ยนเกิน threshold | ESP32 `PATCH` เมื่อกดปุ่ม |
+
+#### ขั้นตอนปฏิบัติ
+
+1. เมนู **Things** → **Create Thing** (หรือ **+ Thing**) → ตั้งชื่อ `MCC Monitor`
+2. ส่วน **Associated Device** → **Select Device** → เลือก `MCC-1234` → **Associate**
+3. ส่วน **Network** → **Configure** → กรอก **Wi-Fi Name**, **Password** (Wi-Fi 2.4 GHz เดียวกับ Lab 14) และ **Secret Key** จากส่วนที่ 1 → **Save**
+4. ส่วน **Cloud Variables** → **Add** เพิ่มตัวแปร 5 ตัวตามตาราง (ชื่อต้องตรงทุกตัวอักษร เพราะโปรแกรมใช้ชื่อเหล่านี้)
+
+| Name | Type | Permission | Update Policy |
+|:---|:---|:---|:---|
+| `temp` | Temperature Sensor (°C) (`CloudTemperatureSensor`) | Read Only | Periodically ทุก **5** วินาที |
+| `hum` | Relative Humidity (`CloudRelativeHumidity`) | Read Only | Periodically ทุก **5** วินาที |
+| `light` | Boolean (`bool`) | Read & Write | On Change |
+| `pump` | Boolean (`bool`) | Read & Write | On Change |
+| `fan` | Boolean (`bool`) | Read & Write | On Change |
+
+> ชนิดข้อมูลแบบ Specialized เช่น `CloudTemperatureSensor` ภายในเป็น `float` เหมือนเดิม แต่ Arduino Cloud รู้หน่วย (°C, %) จึงแสดงหน่วยบน Widget ให้อัตโนมัติ ถ้าหาชนิดนี้ไม่พบ ใช้ **Floating Point Number** (`float`) แทนได้ โดยไม่ต้องแก้โปรแกรม
+
+5. เปิดแท็บ **Sketch** ของ Thing → เปิดไฟล์ `thingProperties.h` ที่ระบบสร้างให้ → ตรวจว่ามีตัวแปรครบ 5 ตัว
+
+#### ตารางบันทึกผล — ส่วนที่ 2
+
+| รายการ | สถานะ |
+|:---|:---|
+| Thing มี Associated Device เป็น `MCC-1234` | ________ |
+| จำนวน Cloud Variables และชื่อ | ________ |
+| Callback ที่ระบบสร้างใน `thingProperties.h` (ชื่อฟังก์ชัน) | ________ |
+
+---
+
+### ส่วนที่ 3: โปรแกรม ESP32-S3 (40 นาที)
+
+#### ความรู้เบื้องต้น
+
+โปรแกรมแบ่งเป็น 3 ไฟล์ในโฟลเดอร์ sketch เดียวกัน
+
+| ไฟล์ | ผู้สร้าง | เนื้อหา |
+|:---|:---|:---|
+| `thingProperties.h` | Arduino Cloud สร้างให้ (**ห้ามแก้**) | Device ID, ตัวแปร Cloud 5 ตัว, การลงทะเบียน Callback |
+| `arduino_secrets.h` | เราสร้างเอง | ชื่อและรหัส Wi-Fi, Secret Key |
+| `mcc_cloud.ino` | เราเขียนเอง | อ่าน AHT25, อ่านปุ่ม, ขับ LED, Callback |
+
+**ทำไมใช้ Arduino IDE แทน Cloud Editor?** Cloud Editor บนเว็บใช้ได้เช่นกัน (ต้องติดตั้งโปรแกรม **Arduino Cloud Agent** เพื่ออัปโหลด) แต่แผนฟรี compile ได้ 25 ครั้งต่อวัน การใช้ Arduino IDE บนเครื่องจึงไม่ติดเพดานนี้ และใช้ ESP32 core ชุดเดียวกับ Lab 14
+
+#### ขั้นตอนปฏิบัติ
+
+1. Arduino IDE → **Library Manager** → ติดตั้ง **ArduinoIoTCloud** (by Arduino) → เมื่อถามให้ติดตั้งไลบรารีที่เกี่ยวข้อง (dependencies) เลือก **Install All** (Adafruit AHTX0 ติดตั้งไว้แล้วจาก Lab 14)
+2. สร้าง sketch ใหม่ชื่อ `mcc_cloud` → เพิ่มแท็บไฟล์ใหม่ (ปุ่ม **⋯** หรือ **▾** ข้างแท็บ → **New Tab**) 2 ไฟล์ ชื่อ `thingProperties.h` และ `arduino_secrets.h`
+3. **`thingProperties.h`:** คัดลอกเนื้อหาทั้งหมดจากแท็บ **Sketch** ของ Thing บน Arduino Cloud มาวาง (ตัวอย่างด้านล่างใช้ตรวจเทียบ ค่า `DEVICE_LOGIN_NAME` ต้องเป็น Device ID ของตนเอง)
+
+```cpp
+// Code generated by Arduino IoT Cloud, DO NOT EDIT.
+
+#include <ArduinoIoTCloud.h>
+#include <Arduino_ConnectionHandler.h>
+
+const char DEVICE_LOGIN_NAME[]  = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx";
+
+const char SSID[]               = SECRET_SSID;          // Network SSID (name)
+const char PASS[]               = SECRET_OPTIONAL_PASS; // Network password (use for WPA, or use as key for WEP)
+const char DEVICE_KEY[]         = SECRET_DEVICE_KEY;    // Secret device password
+
+void onLightChange();
+void onPumpChange();
+void onFanChange();
+
+CloudTemperatureSensor temp;
+CloudRelativeHumidity hum;
+bool light;
+bool pump;
+bool fan;
+
+void initProperties(){
+
+  ArduinoCloud.setBoardId(DEVICE_LOGIN_NAME);
+  ArduinoCloud.setSecretDeviceKey(DEVICE_KEY);
+  ArduinoCloud.addProperty(temp, READ, 5 * SECONDS, NULL);
+  ArduinoCloud.addProperty(hum, READ, 5 * SECONDS, NULL);
+  ArduinoCloud.addProperty(light, READWRITE, ON_CHANGE, onLightChange);
+  ArduinoCloud.addProperty(pump, READWRITE, ON_CHANGE, onPumpChange);
+  ArduinoCloud.addProperty(fan, READWRITE, ON_CHANGE, onFanChange);
+
+}
+
+WiFiConnectionHandler ArduinoIoTPreferredConnection(SSID, PASS);
+```
+
+4. **`arduino_secrets.h`:** ใส่ค่าของตนเอง (ชื่อ macro ต้องตรงกับที่ `thingProperties.h` ใช้)
+
+```cpp
+#define SECRET_SSID          "YOUR_WIFI"
+#define SECRET_OPTIONAL_PASS "YOUR_PASSWORD"
+#define SECRET_DEVICE_KEY    "YOUR_SECRET_KEY"   // Secret Key จากส่วนที่ 1
+```
+
+5. **`mcc_cloud.ino`:** วางโค้ดด้านล่าง
+
+```cpp
+#include "arduino_secrets.h"   // ชื่อ/รหัส Wi-Fi และ Secret Key ของอุปกรณ์
+#include "thingProperties.h"   // สร้างโดย Arduino Cloud: ตัวแปร temp, hum, light, pump, fan
+#include <Wire.h>
+#include <Adafruit_AHTX0.h>
+
+#define I2C_SDA 8
+#define I2C_SCL 9
+const uint8_t BTN_PINS[3] = {4, 5, 6};             // ปุ่มหน้าตู้
+const uint8_t OUT_PINS[3] = {10, 11, 12};          // LED แทนคอนแทคเตอร์
+const char*   NAMES[3]    = {"light", "pump", "fan"};
+
+const unsigned long READ_INTERVAL = 5000;   // ms อ่าน AHT25
+const unsigned long DEBOUNCE_MS   = 50;     // ms
+
+Adafruit_AHTX0 aht;
+unsigned long  lastRead = 0;
+
+// ตัวแปรของ Cloud ทั้ง 3 ตัวรวมเป็นอาร์เรย์ของ pointer เพื่อวนลูปได้
+bool* const STATES[3] = {&light, &pump, &fan};
+
+// ตัวแปรที่ใช้ร่วมกับ ISR ต้องเป็น volatile
+volatile bool          btnPending[3]  = {false, false, false};
+volatile unsigned long btnLastEdge[3] = {0, 0, 0};
+
+// ISR: เรียกทุกครั้งที่ขาเปลี่ยนสถานะ (เหมือน Lab 14)
+void IRAM_ATTR onButtonChange(void* arg) {
+  int i = (int)(intptr_t)arg;
+  unsigned long now = millis();
+  if (now - btnLastEdge[i] < DEBOUNCE_MS) {
+    btnLastEdge[i] = now;
+    return;
+  }
+  btnLastEdge[i] = now;
+  if (digitalRead(BTN_PINS[i]) == LOW) btnPending[i] = true;
+}
+
+// ขับ LED ทั้ง 3 ดวงให้ตรงกับค่าของตัวแปร Cloud
+void applyOutputs() {
+  for (int i = 0; i < 3; i++) {
+    digitalWrite(OUT_PINS[i], *STATES[i] ? HIGH : LOW);
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  delay(1500);
+
+  Wire.begin(I2C_SDA, I2C_SCL);
+  if (!aht.begin(&Wire)) {
+    Serial.println("AHT25 not found: check wiring SDA=8 SCL=9");
+  }
+
+  for (int i = 0; i < 3; i++) {
+    pinMode(OUT_PINS[i], OUTPUT);
+    pinMode(BTN_PINS[i], INPUT_PULLUP);
+    attachInterruptArg(BTN_PINS[i], onButtonChange, (void*)(intptr_t)i, CHANGE);
+  }
+  applyOutputs();                        // เริ่มต้นปิดทั้งหมด
+
+  initProperties();                      // ประกาศตัวแปร Cloud (thingProperties.h)
+  ArduinoCloud.begin(ArduinoIoTPreferredConnection);
+  setDebugMessageLevel(2);               // 0 = เฉพาะ error ... 4 = ละเอียดที่สุด
+  ArduinoCloud.printDebugInfo();
+}
+
+void loop() {
+  ArduinoCloud.update();                 // ส่ง/รับค่าตัวแปรกับ Cloud ต้องเรียกบ่อย ๆ
+
+  // 1) ปุ่มหน้าตู้: สลับสถานะ ขับ LED ทันที แล้ว Cloud จะส่งค่าใหม่ขึ้นไปเอง
+  for (int i = 0; i < 3; i++) {
+    if (btnPending[i]) {
+      btnPending[i] = false;
+      *STATES[i] = !*STATES[i];          // Toggle
+      applyOutputs();
+      Serial.printf("BTN %s -> %s\n", NAMES[i], *STATES[i] ? "ON" : "OFF");
+    }
+  }
+
+  // 2) ค่าเซนเซอร์: อ่านทุก READ_INTERVAL แล้วเขียนลงตัวแปร Cloud
+  if (millis() - lastRead >= READ_INTERVAL) {
+    lastRead = millis();
+    sensors_event_t h, t;
+    if (aht.getEvent(&h, &t)) {
+      temp = roundf(t.temperature * 10) / 10.0f;          // ทศนิยม 1 ตำแหน่ง
+      hum  = roundf(h.relative_humidity * 10) / 10.0f;
+      Serial.printf("temp=%.1f hum=%.1f\n", t.temperature, h.relative_humidity);
+    } else {
+      Serial.println("AHT25 read failed");
+    }
+  }
+}
+
+// ===== Callback: ทำงานเมื่อค่าถูกเปลี่ยนจาก Dashboard =====
+void onLightChange() { applyOutputs(); Serial.printf("CMD light -> %s\n", light ? "ON" : "OFF"); }
+void onPumpChange()  { applyOutputs(); Serial.printf("CMD pump -> %s\n",  pump  ? "ON" : "OFF"); }
+void onFanChange()   { applyOutputs(); Serial.printf("CMD fan -> %s\n",   fan   ? "ON" : "OFF"); }
+```
+
+6. **Tools** → Board **ESP32S3 Dev Module** → **USB CDC On Boot: Enabled** → อัปโหลด → เปิด Serial Monitor ที่ **115200**
+7. รอประมาณ 10–30 วินาที ต้องเห็นข้อความว่าเชื่อมต่อ Wi-Fi และ Arduino Cloud สำเร็จ (เช่น `Connected to Arduino IoT Cloud`) และหน้า **Devices** แสดงสถานะ **Online**
+
+**คำอธิบายโค้ด**
+
+| ส่วนของโค้ด | การทำงาน | เทียบกับ Lab 14 |
+|:---|:---|:---|
+| `#include "thingProperties.h"` | ประกาศตัวแปร Cloud ให้ใช้ได้ทันที เช่น `temp = 31.4;` | ไม่ต้องสร้าง JSON ด้วย `snprintf` เอง |
+| `ArduinoCloud.begin(...)` | เชื่อม Wi-Fi แล้วเปิด connection แบบ MQTT over TLS กับ Arduino Cloud ค้างไว้ และต่อใหม่อัตโนมัติถ้าหลุด | แทน `connectWiFi()` + `HTTPClient` + `tls.setInsecure()` |
+| `ArduinoCloud.update()` | ต้องเรียกใน `loop()` บ่อย ๆ เพื่อส่งค่าที่ถึงรอบ (ทุก 5 วินาที) และรับค่าที่ Dashboard เปลี่ยน ห้ามใช้ `delay()` ยาว ๆ ใน `loop()` | แทน `postJson()` และ `pollControls()` |
+| `temp = ...` / `hum = ...` | แค่เขียนค่าลงตัวแปร ไลบรารีส่งขึ้นคลาวด์ตาม Update Policy (Periodically 5 วินาที) | แทน `POST /rest/v1/telemetry` |
+| `onFanChange()` | Callback ที่ไลบรารีเรียกเมื่อ Dashboard เปลี่ยนค่า `fan` ค่าใหม่ถูกเขียนลงตัวแปร `fan` ก่อนเรียกฟังก์ชันนี้แล้ว | แทนการ `GET` ทุก 2 วินาทีแล้วเทียบค่า |
+| `*STATES[i] = !*STATES[i]` | ปุ่มหน้าตู้เปลี่ยนค่าตัวแปร Read & Write ในบอร์ด ไลบรารีตรวจพบว่าค่าเปลี่ยน (On Change) แล้วส่งขึ้นคลาวด์เองในการเรียก `update()` ครั้งถัดไป Switch บน Dashboard จึงเปลี่ยนตาม | แทน `PATCH /rest/v1/controls` |
+| `bool* const STATES[3]` | อาร์เรย์ของ pointer ไปยังตัวแปร `light`, `pump`, `fan` ทำให้วนลูปจัดการปุ่มทั้ง 3 ได้ในโค้ดชุดเดียว | แทนอาร์เรย์ `outState[3]` |
+| ISR + Debounce | เหมือน Lab 14 ทุกประการ | — |
+
+#### ตารางบันทึกผล — ส่วนที่ 3
+
+| การทดลอง | ผลที่เห็น |
+|:---|:---|
+| ข้อความใน Serial Monitor เมื่อเชื่อมต่อสำเร็จ | ________ |
+| สถานะอุปกรณ์ในหน้า Devices | ________ |
+| ค่า `temp` และ `hum` ในหน้า Thing (Last Value) เทียบกับ Serial Monitor | Thing ____ / Serial ____ |
+| กดปุ่ม `light` หน้าตู้ 1 ครั้ง | Serial: ________ ค่า `light` ในหน้า Thing: ________ |
+
+---
+
+### ส่วนที่ 4: สร้าง Dashboard (30 นาที)
+
+#### ขั้นตอนปฏิบัติ
+
+1. เมนู **Dashboards** → **Create Dashboard** → ตั้งชื่อ `MCC Monitor`
+2. กดปุ่มแก้ไข (✏️) → **Add** → เลือกแท็บ **Things** → เลือก `MCC Monitor` → **Create Widgets** ระบบจะสร้าง Widget ให้ทุกตัวแปรอัตโนมัติ
+3. ปรับ Widget ตามหลักการในหัวข้อ 12.7 (คลิกที่ Widget → ⚙️ หรือ **Edit Settings**)
+
+| แถว | Widget | ตัวแปร | ตั้งค่า |
+|:---|:---|:---|:---|
+| 1 | **Gauge** | `temp` | Min `0`, Max `60` ตั้งชื่อ "อุณหภูมิ (°C)" |
+| 1 | **Gauge** | `hum` | Min `0`, Max `100` ตั้งชื่อ "ความชื้น (%RH)" |
+| 2 | **Chart** | `temp` | ตั้งชื่อ "แนวโน้มอุณหภูมิ" |
+| 2 | **Chart** | `hum` | ตั้งชื่อ "แนวโน้มความชื้น" (แยกกราฟเพราะหน่วยต่างกัน) |
+| 3 | **Switch** | `light`, `pump`, `fan` (อย่างละ 1 ตัว) | ตั้งชื่อ "ไฟในตู้", "ปั๊ม", "พัดลมระบายอากาศ" |
+
+4. จัดตำแหน่งตามแถว (ภาพรวมบน แนวโน้มกลาง สั่งการล่าง) → กด **Done**
+5. กดไอคอน **Mobile Layout** เพื่อดูหน้าตาบนมือถือ และ (ไม่บังคับ) ติดตั้งแอป **Arduino IoT Remote** บนมือถือ แล้ว login บัญชีเดียวกันเพื่อเปิด Dashboard
+
+#### ตารางบันทึกผล — ส่วนที่ 4
+
+| การทดลอง | ผลที่เห็น |
+|:---|:---|
+| ใช้นิ้วจับ AHT25 นาน 1 นาที | Gauge และ Chart อุณหภูมิ: ________ |
+| Widget ที่ระบบสร้างให้อัตโนมัติสำหรับตัวแปร `bool` คือแบบใด | ________ |
+| Widget ใดบอกสีตามเกณฑ์ (เขียว/เหลือง/แดง) ได้ หรือไม่มี | ________ |
+
+---
+
+### ส่วนที่ 5: สั่งการและเปรียบเทียบกับ Lab 14 (45 นาที)
+
+#### ขั้นตอนปฏิบัติ
+
+ทำการทดลองตามตาราง โดยเปิด Serial Monitor ไว้ตลอด
+
+#### ตารางบันทึกผล — ส่วนที่ 5
+
+| การทดลอง | Lab 15 (Arduino Cloud) | Lab 14 (Supabase + Vercel) จากผลเดิม |
+|:---|:---|:---|
+| กด Switch `fan` แล้วจับเวลาจนถึง LED ติด (ทำ 5 ครั้ง) | ____ / ____ / ____ / ____ / ____ เฉลี่ย ____ วินาที | เฉลี่ย ____ วินาที |
+| กดปุ่ม `pump` หน้าตู้ แล้วดู Switch บน Dashboard | เปลี่ยนภายใน ____ วินาที | ____ วินาที |
+| กดปุ่ม `fan` ค้างไว้ 3 วินาทีแล้วปล่อย | สลับ ____ ครั้ง | ____ ครั้ง |
+| เปิด `fan` จาก Dashboard แล้วกดปุ่ม EN (รีเซ็ต) บนบอร์ด | LED `fan` กลับมาติดหรือไม่ หลังบูตกี่วินาที: ________ Switch บน Dashboard: ________ | LED `fan`: ________ |
+| ปิด Hotspot 30 วินาที ระหว่างนั้นกด Switch `light` แล้วเปิด Hotspot | LED `light` ทำงานเมื่อใด: ________ | ________ |
+| ถอดสาย USB ของบอร์ด | สถานะในหน้า Devices: ________ Dashboard บอกได้หรือไม่ว่าอุปกรณ์ offline: ________ | สถานะการเชื่อมต่อบนแดชบอร์ด: ________ |
+| หาประวัติว่า "ใครสั่งเปิดพัดลมเมื่อไร" | ทำได้หรือไม่ อย่างไร: ________ | ________ |
+
+> 💡 **สังเกตผลการรีเซ็ตบอร์ด:** ตอนเชื่อมต่อครั้งแรกหลังบูต Arduino Cloud จะส่งค่าล่าสุดของตัวแปร Read & Write ลงมา (เรียกว่า **Sync**) คำสั่ง `addProperty(..., READWRITE, ON_CHANGE, onFanChange)` ที่ `thingProperties.h` สร้างให้ใช้นโยบาย **`CLOUD_WINS`** เป็นค่าเริ่มต้น คือถ้าค่าในบอร์ดต่างจากคลาวด์ ให้ใช้ค่าบนคลาวด์ แล้วเรียก Callback `onFanChange()` ให้เอง LED จึงควรกลับมาอยู่สถานะเดิมภายในไม่กี่วินาทีหลังเชื่อมต่อ ซึ่งเป็นแนวคิดเดียวกับ **Desired State** ในหัวข้อ 12.6.2 ของ Lab 14 ที่ ESP32 อ่านค่าล่าสุดจาก `controls` ตอนบูต ให้บันทึกเวลาที่ LED กลับมาติด และสังเกตว่า **ระหว่างบูตจนถึงเชื่อมต่อสำเร็จ LED ดับอยู่** (ในโค้ดเริ่มต้นปิดทั้งหมด) ถ้าต้องการให้ค่าในบอร์ดชนะแทน (เช่น ให้ปั๊มปิดเสมอหลังรีบูตเพื่อความปลอดภัย) เปลี่ยนเป็น `DEVICE_WINS` ได้ ซึ่งเกี่ยวข้องกับแนวคิด **Fail-safe** ในแบบฝึกหัดข้อ 7 ของบท
+
+#### ขั้นเสริม: การแจ้งเตือนอุณหภูมิสูง (ไม่บังคับ)
+
+**Triggers** ของ Arduino Cloud ส่งอีเมลหรือแจ้งเตือนในแอปได้ แต่ **ต้องใช้แผน Maker** และรองรับเฉพาะตัวแปรชนิด `bool` และ `String` ([Arduino Docs: Triggers](https://docs.arduino.cc/arduino-cloud/cloud-interface/triggers/)) จึงต้องให้ ESP32 คำนวณเงื่อนไขเอง
+
+1. เพิ่มตัวแปรที่ 6 ชื่อ `overheat` ชนิด Boolean, Read Only, On Change
+2. ใน `loop()` หลังอ่านค่าเซนเซอร์ เพิ่มเงื่อนไขว่าอุณหภูมิเกิน 35 °C **ต่อเนื่อง** 2 นาที เช่น
+
+```cpp
+static unsigned long hotSince = 0;                 // เวลาที่เริ่มร้อนเกินเกณฑ์
+if (t.temperature > 35.0) {
+  if (hotSince == 0) hotSince = millis();
+  overheat = (millis() - hotSince >= 2UL * 60 * 1000);
+} else {
+  hotSince = 0;
+  overheat = false;
+}
+```
+
+3. แผนฟรี: เพิ่ม Widget **Status** หรือ **LED** ผูกกับ `overheat` บน Dashboard · แผน Maker: **Triggers → Add Trigger → Cloud Variable** → เลือก `overheat` → Action **Email**
+
+> ถ้าแผนที่ใช้จำกัดจำนวนตัวแปรต่อ Thing และเพิ่มตัวแปรที่ 6 ไม่ได้ ให้ข้ามขั้นนี้ แล้วอธิบายเหตุผลในแบบฝึกหัดข้อ 4
+
+---
+
+### แบบฝึกหัดท้ายใบงาน
+
+1. **Push กับ Poll:** จากผลจับเวลาในส่วนที่ 5 ความหน่วงของ Lab 15 ต่างจาก Lab 14 อย่างไร อธิบายโดยอ้างอิงว่า ESP32 รับคำสั่งด้วยวิธีใดในแต่ละ Lab (หัวข้อ 12.6.3)
+
+   > คำตอบ: _______________________________________________________________
+
+2. **Thing กับตาราง:** เทียบตัวแปร Cloud ทั้ง 5 ตัว กับตารางและคอลัมน์ใน Lab 14 ว่าตัวใดตรงกับอะไร และ Lab 14 มีข้อมูลอะไรที่ Lab 15 ไม่มี
+
+   > คำตอบ: _______________________________________________________________
+
+3. **ความปลอดภัย:** Secret Key ของ Lab 15 ต่างจาก Publishable key ของ Lab 14 อย่างไร ถ้า key ของแต่ละแบบรั่ว ผู้ไม่หวังดีทำอะไรได้บ้าง
+
+   > คำตอบ: _______________________________________________________________
+
+4. **เลือกแพลตฟอร์ม:** ถ้าโรงงานมีตู้ควบคุม 20 ตู้ ต้องเก็บข้อมูลย้อนหลัง 1 ปี และต้องรู้ว่าใครสั่งอะไรเมื่อไร ควรเลือกแนวทาง Lab 14 หรือ Lab 15 และถ้ามีเพียง 1 ตู้สำหรับสาธิตในห้องเรียนล่ะ ให้เหตุผลโดยอ้างอิงข้อจำกัดของแผนฟรีและผลการทดลอง
+
+   > คำตอบ: _______________________________________________________________
+
+---
+
+### การส่งงาน
+
+> 📋 ส่งงานผ่าน Google Form: **(ลิงก์จากอาจารย์ผู้สอน)**
+
+สิ่งที่ต้องส่ง:
+1. Screenshot หน้า **Thing** ที่แสดง Associated Device และ Cloud Variables ครบ 5 ตัว
+2. Screenshot Serial Monitor ที่แสดงการเชื่อมต่อ Arduino Cloud, `BTN ... -> ON` และ `CMD ... -> ON`
+3. Screenshot Dashboard `MCC Monitor` บนคอมพิวเตอร์ หรือแอป Arduino IoT Remote
+4. คลิปวิดีโอสั้น (ไม่เกิน 30 วินาที) แสดงการกด Switch บน Dashboard แล้ว LED บนบอร์ดติด
+5. ตารางบันทึกผลทุกส่วน และคำตอบแบบฝึกหัดท้ายใบงานครบทุกข้อ
+
+#### Checklist ก่อนส่ง
+
+- [ ] ชื่อตัวแปรบน Arduino Cloud ตรงกับโปรแกรม (`temp`, `hum`, `light`, `pump`, `fan`)
+- [ ] `arduino_secrets.h` ไม่ถูกนำขึ้น GitHub หรือแนบในไฟล์ที่ส่ง
+- [ ] `loop()` ไม่มี `delay()` ยาว ๆ ที่ขวาง `ArduinoCloud.update()`
+- [ ] Dashboard จัดเป็น 3 แถว: ภาพรวม · แนวโน้ม · สั่งการ
+- [ ] กรอกตารางเปรียบเทียบกับ Lab 14 ครบ
+- [ ] ระบุชื่อ-นามสกุล และรหัสนักศึกษาในฟอร์ม
+
+</div>
+
 <div class="chapter-tab-content" data-tab-name="Reference / Summary" data-tab-icon="📊" id="summary" markdown="1">
 
-## 12.12 สรุปประจำบทที่ 12 (Summary)
+## 12.13 สรุปประจำบทที่ 12 (Summary)
 
 1. **ระบบ IoT แบบครบวงจร** ประกอบด้วย 4 ชั้น ได้แก่ เซนเซอร์ ปุ่ม และเอาต์พุต (AHT25, LED) อุปกรณ์เครือข่าย (ESP32-S3 + HTTPS) ฐานข้อมูลคลาวด์ (Supabase/PostgreSQL) และแอปพลิเคชันแสดงผลและสั่งการ (เว็บแดชบอร์ดบน Vercel) โดยแบ่งเป็นเส้นทาง **ติดตาม** (ส่วนที่ 1) และเส้นทาง **สั่งการ** (ส่วนที่ 2)
 2. **AHT25** สื่อสารผ่าน I2C ที่ address `0x38` ให้ค่าดิบ 20 บิต ซึ่งแปลงเป็นหน่วยจริงได้ด้วย $RH = S_{RH}/2^{20} \times 100$ และ $T = S_T/2^{20} \times 200 - 50$ ความละเอียดของค่าไม่ใช่ความแม่นยำ
@@ -1749,7 +2162,7 @@ supabase.from('events').select('id', { count: 'exact', head: true })
 
 <div class="chapter-tab-content" data-tab-name="Challenge" data-tab-icon="🏆" id="challenge" markdown="1">
 
-## 12.13 แบบฝึกหัดท้ายบทที่ 12 (Exercises)
+## 12.14 แบบฝึกหัดท้ายบทที่ 12 (Exercises)
 
 **ข้อ 1:** AHT25 ส่งค่าดิบของความชื้น $S_{RH} = 629{,}146$ และอุณหภูมิ $S_T = 419{,}430$ จงคำนวณความชื้นสัมพัทธ์ (%RH) และอุณหภูมิ (°C) พร้อมอธิบายว่าทำไมจึงควรรายงานผลเพียงทศนิยม 1 ตำแหน่ง
 

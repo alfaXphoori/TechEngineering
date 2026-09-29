@@ -55,9 +55,9 @@ assignments:
     form: "https://docs.google.com/forms/d/e/1FAIpQLSc3qcEkqnSI2DvgbffJLDU1tRsWijhwp8dwhpP4o_HOMqI5FQ/viewform?usp=dialog"
   - n: 10
     topic: โพรโทคอล MQTT
-    work: ใบงานที่ 10 — การรับส่งข้อมูลผ่านโพรโทคอล MQTT
-    due: ก่อนคาบสัปดาห์ที่ 11
-    form: "#"
+    work: ใบงานที่ 10 — การรับส่งข้อมูลผ่าน Arduino IOT Cloud
+    due: สุดท้าย
+    form: "https://docs.google.com/forms/d/e/1FAIpQLScFY8JDHHofzCUzXDhvphp26koP99TuFafdz_kSMY0FY5EG5Q/viewform?usp=dialog"
   - n: 11
     topic: เทคโนโลยีคลาวด์และแพลตฟอร์ม IoT
     work: ใบงานที่ 11 — การเชื่อมต่ออุปกรณ์กับ ThingsBoard แพลตฟอร์ม

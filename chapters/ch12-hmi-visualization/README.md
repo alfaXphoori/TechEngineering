@@ -573,6 +573,18 @@ create policy "grafana read telemetry" on public.telemetry
   for select to grafana_ro using (true);
 ```
 
+> **ทางเลือก: สร้าง role `grafana_ro` ผ่านหน้าเว็บ Supabase** (ทำ **ก่อน** Run ชุดคำสั่งด้านบน)
+>
+> 1. เมนูซ้าย **Database** → กลุ่ม **Access Control** → **Roles** → **Add role**
+> 2. **Name** = `grafana_ro` → เปิดสวิตช์ **User can login** เพียงข้อเดียว (สวิตช์อื่น โดยเฉพาะ *User bypasses every row level security policy* ต้องปิดไว้) → **Save**
+> 3. หน้าเว็บยังไม่มีช่องตั้งรหัสผ่าน และไม่มีเมนูให้สิทธิ์ schema/ตารางแก่ role ที่สร้างเอง (หน้า **Column Privileges** แก้ได้เฉพาะ `anon`, `authenticated` และ `service_role`) ในชุดคำสั่งด้านบนจึงต้อง **เปลี่ยนบรรทัด `create role ...` เป็น**
+>
+> ```sql
+> alter role grafana_ro with password 'ChangeMe-Strong-2026';
+> ```
+>
+> ส่วนบรรทัด `grant usage ...`, `grant select ...` และ `create policy ...` ให้คงไว้ตามเดิม แล้วจึง Run ถ้าไม่เปลี่ยนบรรทัดนี้ จะเกิด error *role "grafana_ro" already exists* และคำสั่งทั้งชุดจะไม่ถูกบันทึก ภายหลังถ้าต้องการเปลี่ยนรหัสผ่าน ให้รันเฉพาะคำสั่ง `alter role` นี้ได้ทุกเมื่อ และตรวจว่าสร้าง role สำเร็จได้ที่หน้า **Roles** หัวข้อ *Other database roles*
+
 3. เปิด **Table Editor** → ตรวจว่ามีตาราง `telemetry` ที่มีคอลัมน์ตรงกับโครงสร้างด้านบน และแสดงสถานะ **RLS enabled**
 4. เมนูซ้าย **Integrations → Data API** → หน้า **Overview** → คัดลอก **Project URL** (เช่น `https://xxxx.supabase.co`) ซึ่งเป็นปลายทางของ REST API ที่ ESP32 ใช้ (URL ของหน้านี้คือ `supabase.com/dashboard/project/<project_ref>/integrations/data_api/overview`)
 5. **Project Settings → API Keys** → คัดลอก **Publishable key** (ขึ้นต้นด้วย `sb_publishable_`) เก็บไว้ ห้ามคัดลอก Secret key (`sb_secret_`)
@@ -919,6 +931,8 @@ create policy "grafana update controls" on public.controls
 -- ===== สร้างแถวเริ่มต้นของอุปกรณ์ (เปลี่ยนเป็น DEVICE_ID ของตนเอง) =====
 insert into public.controls (device_id) values ('mcc01');
 ```
+
+> **ทางเลือก: สร้าง role `grafana_ctl` ผ่านหน้าเว็บ** ทำเหมือนกับ `grafana_ro` ในหัวข้อ 12.8.3 คือ **Database → Roles → Add role** → Name `grafana_ctl` → เปิดเฉพาะ **User can login** → Save แล้วเปลี่ยนบรรทัด `create role grafana_ctl ...` ในชุดคำสั่งด้านบนเป็น `alter role grafana_ctl with password 'ChangeMe-Control-2026';` ก่อน Run
 
 2. **Table Editor** → ตรวจว่ามีตาราง `controls` (1 แถว ค่าเป็น `false` ทั้งหมด) และ `events` (ว่าง) และทั้งสองตารางแสดงสถานะ **RLS enabled**
 3. ทดสอบ trigger ใน SQL Editor: รัน `update controls set fan = true, updated_by = 'dashboard' where device_id = 'mcc01';` แล้วเปิด `events` ต้องเห็น 1 แถว (`fan`, `true`, `dashboard`) จากนั้นรัน `update controls set fan = false where device_id = 'mcc01';` เพื่อคืนค่า

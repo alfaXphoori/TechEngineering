@@ -819,18 +819,33 @@ void loop() {
 
    > ⚠️ `[INDEX]` คือหมายเลข cluster ของ pooler ซึ่ง **เดาจาก region ไม่ได้** (อาจเป็น `aws-0-...` หรือ `aws-1-...`) ต้องคัดลอก host จากหน้า Connect ของโปรเจกต์ตนเองเท่านั้น ([Supabase Docs: Connecting to Postgres](https://supabase.com/docs/guides/database/connecting-to-postgres))
 2. สมัครที่ [grafana.com](https://grafana.com) → แผน **Free** → สร้าง Stack
-3. **Connections → Data sources → Add data source → PostgreSQL** → ตั้งชื่อ `Supabase` แล้วกรอกค่าดังนี้
+3. **Connections → Data sources → Add data source → PostgreSQL** → ตั้งชื่อ `Supabase` แล้วกรอกค่าจาก *Connection parameters* ตามตารางด้านล่าง
 
-| ช่อง | ค่า |
-|:---|:---|
-| Host URL | host ที่คัดลอกจากข้อ 1 ตามด้วย `:5432` เช่น `aws-[INDEX]-ap-southeast-1.pooler.supabase.com:5432` |
-| Database name | `postgres` |
-| Username | `grafana_ro.xxxx` (ชื่อ role + จุด + project ref) |
-| Password | รหัสผ่านของ `grafana_ro` |
-| TLS/SSL Mode | `require` |
-| TimescaleDB | ปิด |
+**ตัวอย่าง:** ถ้าหน้า Connect แสดงค่าดังนี้ (project ref สมมุติ `abcdefghijklmnopqrst`)
 
-4. **Save & test** → ต้องขึ้น ✅ *Database Connection OK*
+```text
+host:     aws-0-ap-southeast-1.pooler.supabase.com
+port:     5432
+database: postgres
+user:     postgres.abcdefghijklmnopqrst
+```
+
+จะกรอกใน Grafana ดังนี้
+
+| ช่องใน Grafana | นำมาจาก | ค่าที่กรอก (ตามตัวอย่าง) |
+|:---|:---|:---|
+| **Host URL** | `host` + `:` + `port` | `aws-0-ap-southeast-1.pooler.supabase.com:5432` |
+| **Database name** | `database` | `postgres` |
+| **Username** | `grafana_ro` + `.` + project ref (ส่วนหลังจุดของ `user`) | `grafana_ro.abcdefghijklmnopqrst` |
+| **Password** | รหัสผ่านของ `grafana_ro` ที่ตั้งในหัวข้อ 12.8.4 | (รหัสผ่านของตนเอง) |
+| **TLS/SSL Mode** | กำหนดเอง | `require` |
+| **TimescaleDB** | กำหนดเอง | ปิด |
+
+> ⚠️ **ช่อง `user` ในหน้า Connect เป็นของ user `postgres` (ผู้ดูแลระบบ)** ให้คัดลอกมาเฉพาะ project ref ที่อยู่หลังจุด แล้วเปลี่ยนส่วนหน้าเป็น `grafana_ro` ถ้าใช้ `postgres.xxxx` ตรง ๆ Grafana จะได้สิทธิ์ผู้ดูแลระบบซึ่งแก้ไขและลบข้อมูลได้ทั้งหมด ขัดกับหลัก Least Privilege (หัวข้อ 12.3.3)
+
+> ⚠️ **ห้ามกด Reset database password** ในหน้า Connect เพราะปุ่มนี้เปลี่ยนรหัสผ่านของ `postgres` ไม่ใช่ของ `grafana_ro` ถ้าลืมรหัสผ่านของ `grafana_ro` ให้รัน `alter role grafana_ro with password '...';` ใน SQL Editor แทน และไม่ต้องใช้ connection string (`postgresql://...`) ที่หน้านี้แสดง เพราะ Grafana ให้กรอกแยกเป็นช่อง
+
+4. **Save & test** → ต้องขึ้น ✅ *Database Connection OK* ถ้าขึ้น *password authentication failed* ให้ตรวจ Username ก่อน (มักลืมเติม `.project_ref` ต่อท้าย หรือยังใช้ `postgres.` อยู่) ถ้าขึ้น *connection timeout* ให้ตรวจว่าใช้ host ของ Session pooler ไม่ใช่ `db.xxxx.supabase.co`
 
 ### 12.8.7 สร้าง Panel ของส่วนที่ 1
 
@@ -1346,7 +1361,7 @@ void loop() {
 **ก. ติดตั้ง plugin และเพิ่ม data source สำหรับสั่งการ**
 
 1. **Administration → Plugins and data → Plugins** → ค้นหา **Business Forms** → **Install** (ต้องเป็นผู้ดูแล Stack ซึ่งเจ้าของ Stack เป็นอยู่แล้ว)
-2. **Connections → Data sources → Add data source → PostgreSQL** → ตั้งชื่อ `Supabase-Control` → กรอกค่าเหมือนหัวข้อ 12.8.6 ยกเว้น **Username** = `grafana_ctl.xxxx` และ **Password** = รหัสผ่านของ `grafana_ctl` → **Save & test**
+2. **Connections → Data sources → Add data source → PostgreSQL** → ตั้งชื่อ `Supabase-Control` → กรอกค่าเหมือนหัวข้อ 12.8.6 ทุกช่อง ยกเว้น **Username** = `grafana_ctl.<project_ref>` (เช่น `grafana_ctl.abcdefghijklmnopqrst`) และ **Password** = รหัสผ่านของ `grafana_ctl` → **Save & test**
 
 > data source `Supabase` (`grafana_ro`) ใช้กับ panel แสดงผลทั้งหมด ส่วน `Supabase-Control` (`grafana_ctl`) ใช้กับฟอร์มสั่งการเท่านั้น ถ้าเลือกผิดเป็น `Supabase` ฟอร์มจะขึ้น *permission denied for table controls*
 

@@ -41,7 +41,7 @@ permalink: /chapters/summary/
 | **11** | [บทที่ 10: แพลตฟอร์มคลาวด์ IoT]({{ '/chapters/ch10-cloud/' | relative_url }}) | IaaS/PaaS/SaaS, ThingsBoard, Telemetry, Client/Server Attributes | **CLO2, CLO3, CLO4** | LLO11.1, LLO11.2 |
 | **12** | [บทที่ 10: ระบบจัดการกฎและแจ้งเตือน]({{ '/chapters/ch10-cloud/' | relative_url }}) | Time-Series Database, Rule Engine, Alarm Triggers, REST API | **CLO3, CLO4** | LLO12.1, LLO12.2 |
 | **13** | [บทที่ 11: ฐานข้อมูล & Node-RED]({{ '/chapters/ch11-node-red/' | relative_url }}) | Edge Gateway, Node-RED Dashboard, Flow Programming, Chart UI | **CLO3, CLO4** | LLO13.1, LLO13.2 |
-| **14** | [บทที่ 12: ระบบ IoT สู่ฐานข้อมูลคลาวด์และแดชบอร์ด]({{ '/chapters/ch12-hmi-visualization/' | relative_url }}) | ESP32-S3 + AHT25, Supabase (PostgreSQL + RLS), Grafana Dashboard & Alerting, Remote Control (Business Forms) | **CLO3, CLO4** | LLO14.1, LLO14.2 |
+| **14** | [บทที่ 12: ระบบ IoT สู่ฐานข้อมูลคลาวด์และแดชบอร์ด]({{ '/chapters/ch12-hmi-visualization/' | relative_url }}) | ESP32-S3 + AHT25, Supabase (PostgreSQL + RLS), Supabase Auth, Web Dashboard on Vercel (Next.js), Remote Control | **CLO3, CLO4** | LLO14.1, LLO14.2 |
 | **15** | [บทที่ 13: การเรียนรู้ของเครื่องและ TinyML]({{ '/chapters/ch13-machine-learning/' | relative_url }}) | ML Pipeline, การสกัดฟีเจอร์การสั่นสะเทือน, TinyML บน ESP32 | **CLO1, CLO4** | LLO15.1, LLO15.2 |
 | 🟧 | **สอบปลายภาค (Final Exam)** | ครอบคลุมเนื้อหาสัปดาห์ที่ 9–15 (สัดส่วนคะแนน 25%) | **CLO2, CLO3, CLO4** | — |
 
@@ -51,7 +51,7 @@ permalink: /chapters/summary/
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ 4. APPLICATION LAYER: ThingsBoard/Grafana Dashboard, Node-RED UI, Web App   │
+│ 4. APPLICATION LAYER: ThingsBoard, Node-RED UI, Web Dashboard (Vercel)      │
 └──────────────────────────────────────┬──────────────────────────────────────┘
                                        │ REST API / WebSocket / MQTT
 ┌──────────────────────────────────────▼──────────────────────────────────────┐

@@ -6,7 +6,7 @@ permalink: /chapters/ch12-hmi-visualization/
 
 # Chapter 12: ระบบ IoT สู่ฐานข้อมูลคลาวด์และแดชบอร์ด
 
-## Cloud Database, Dashboard & Remote Control (ESP32-S3, AHT25, Supabase/PostgreSQL, Grafana Cloud)
+## Cloud Database, Web Dashboard & Remote Control (ESP32-S3, AHT25, Supabase/PostgreSQL, Vercel)
 
 ---
 
@@ -24,10 +24,10 @@ permalink: /chapters/ch12-hmi-visualization/
 >   - **CLO4:** ปฏิบัติการสร้าง ทดสอบ และประยุกต์ใช้ระบบ IoT พร้อมการเรียนรู้ของเครื่องเบื้องต้น และทำงานเป็นทีมอย่างรับผิดชอบ
 > - **ผลลัพธ์การเรียนรู้ระดับบทเรียน (LLOs):**
 >   - **LLO14.1:** ออกแบบและพัฒนาระบบ IoT ที่ส่งข้อมูลเซนเซอร์และเหตุการณ์จากผู้ใช้ไปจัดเก็บในฐานข้อมูลคลาวด์ (Supabase/PostgreSQL) พร้อมกำหนดสิทธิ์อย่างปลอดภัยได้ (CLO3)
->   - **LLO14.2:** สร้างแดชบอร์ดแสดงผล ระบบแจ้งเตือน และส่วนสั่งการอุปกรณ์กลับไปยัง ESP32 ด้วย Grafana ตามหลักการออกแบบแดชบอร์ดที่ดีได้ (CLO3, CLO4)
+>   - **LLO14.2:** ใช้เว็บแดชบอร์ดบน Vercel แสดงผล แจ้งเตือน และสั่งการอุปกรณ์กลับไปยัง ESP32 ตามหลักการออกแบบแดชบอร์ดที่ดีได้ (CLO3, CLO4)
 >
 > **ฮาร์ดแวร์:** ESP32-S3 DevKit · เซนเซอร์อุณหภูมิ/ความชื้น AHT25 · ปุ่มกด 3 ปุ่ม · LED 3 ดวง + ตัวต้านทาน 220 Ω  
-> **ซอฟต์แวร์ (ฟรีทั้งหมด):** Arduino IDE (ESP32 core) · Supabase Free Plan · Grafana Cloud Free Tier (+ plugin Business Forms)
+> **ซอฟต์แวร์ (ฟรีทั้งหมด):** Arduino IDE (ESP32 core) · Supabase Free Plan · เว็บแดชบอร์ด Next.js บน Vercel (ลิงก์จากผู้สอน นักศึกษาไม่ต้องสมัคร Vercel)
 
 ---
 
@@ -43,14 +43,14 @@ permalink: /chapters/ch12-hmi-visualization/
 
 | ส่วน | ทิศทางข้อมูล | สิ่งที่สร้าง |
 |:---|:---|:---|
-| **ส่วนที่ 1: ติดตาม (Monitoring)** | เซนเซอร์ → ESP32-S3 → ฐานข้อมูล → แดชบอร์ด | ส่งค่า AHT25 ขึ้น Supabase แล้วแสดงผลและแจ้งเตือนบน Grafana |
-| **ส่วนที่ 2: สั่งการ (Control)** | แดชบอร์ด → ฐานข้อมูล → ESP32-S3 → อุปกรณ์ | สั่ง LED แทนไฟ ปั๊ม และพัดลม จากฟอร์มบน Grafana และจากปุ่มหน้าตู้ |
+| **ส่วนที่ 1: ติดตาม (Monitoring)** | เซนเซอร์ → ESP32-S3 → Supabase → แดชบอร์ดบน Vercel | ส่งค่า AHT25 ขึ้น Supabase แล้วแสดงผลและแจ้งเตือนบนเว็บแดชบอร์ด |
+| **ส่วนที่ 2: สั่งการ (Control)** | แดชบอร์ดบน Vercel → Supabase → ESP32-S3 → อุปกรณ์ | สั่ง LED แทนไฟ ปั๊ม และพัดลม จากปุ่มบนแดชบอร์ด (ใช้บนมือถือได้) และจากปุ่มหน้าตู้ |
 
 ทั้งหมดสร้างด้วยเครื่องมือฟรี ตามสถาปัตยกรรมด้านล่าง
 
 <div style="text-align: center; margin: 20px 0;">
-<svg viewBox="0 0 900 425" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif" role="img" aria-label="ส่วนที่ 1: ESP32-S3 ส่งค่า AHT25 ผ่าน HTTPS POST ไปยัง REST API ของ Supabase ลงตาราง telemetry แล้ว Grafana Cloud อ่านผ่าน Session Pooler ด้วย role grafana_ro เพื่อแสดงแดชบอร์ดและส่งอีเมลแจ้งเตือน ส่วนที่ 2: ช่างสั่งการบนฟอร์มของ Grafana ซึ่งเขียนตาราง controls ด้วย role grafana_ctl ESP32-S3 อ่านตาราง controls ทุก 2 วินาทีแล้วขับ LED ส่วนปุ่มหน้าตู้แก้ตาราง controls ด้วย PATCH และ trigger บันทึกทุกการเปลี่ยนแปลงลงตาราง events">
-  <title>สถาปัตยกรรมระบบ: ส่วนที่ 1 เส้นทางติดตาม และส่วนที่ 2 เส้นทางสั่งการ ผ่าน Supabase และ Grafana</title>
+<svg viewBox="0 0 900 425" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" font-family="'IBM Plex Sans Thai', system-ui, sans-serif" role="img" aria-label="ส่วนที่ 1: ESP32-S3 ส่งค่า AHT25 ผ่าน HTTPS POST ไปยัง REST API ของ Supabase ลงตาราง telemetry เบราว์เซอร์ของช่างโหลดหน้าแดชบอร์ดจาก Vercel แล้ว login กับ Supabase Auth และอ่านข้อมูลจาก REST API โดยตรง ส่วนที่ 2: ช่างกดสวิตช์บนแดชบอร์ดซึ่งแก้ตาราง controls ESP32-S3 อ่านตาราง controls ทุก 2 วินาทีแล้วขับ LED ส่วนปุ่มหน้าตู้แก้ตาราง controls ด้วย PATCH และ trigger บันทึกทุกการเปลี่ยนแปลงลงตาราง events">
+  <title>สถาปัตยกรรมระบบ: ESP32-S3 → Supabase → เว็บแดชบอร์ดบน Vercel และเส้นทางสั่งการกลับ</title>
   <style>
     .c12-bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1; }
     .c12-box { fill: #ffffff; stroke: #475569; stroke-width: 2; }
@@ -58,23 +58,26 @@ permalink: /chapters/ch12-hmi-visualization/
     .c12-db { fill: #ecfdf5; stroke: #059669; stroke-width: 2.5; }
     .c12-tb { fill: #ffffff; stroke: #059669; stroke-width: 1.5; }
     .c12-tk { fill: #ffffff; stroke: #db2777; stroke-width: 2; }
-    .c12-gf { fill: #fff7ed; stroke: #ea580c; stroke-width: 2.5; }
+    .c12-vc { fill: #f1f5f9; stroke: #0f172a; stroke-width: 2.5; }
+    .c12-web { fill: #fff7ed; stroke: #ea580c; stroke-width: 2.5; }
     .c12-cloud { fill: #f0fdf4; stroke: #059669; stroke-width: 1.5; stroke-dasharray: 6 5; }
     .c12-w { fill: none; stroke: #059669; stroke-width: 4; stroke-dasharray: 8 10; stroke-linecap: round; animation: c12-flow 1.6s linear infinite; }
     .c12-r { fill: none; stroke: #2f5597; stroke-width: 4; stroke-dasharray: 8 10; stroke-linecap: round; animation: c12-flow 1.6s linear infinite; }
     .c12-k { fill: none; stroke: #db2777; stroke-width: 4; stroke-dasharray: 8 10; stroke-linecap: round; animation: c12-flow 1.6s linear infinite; }
-    .c12-a { fill: none; stroke: #ea580c; stroke-width: 3; stroke-dasharray: 6 8; stroke-linecap: round; animation: c12-flow 1.2s linear infinite; }
+    .c12-g { fill: none; stroke: #64748b; stroke-width: 3; stroke-dasharray: 6 8; stroke-linecap: round; animation: c12-flow 1.6s linear infinite; }
     .c12-t { font-size: 14px; font-weight: 700; fill: #1e293b; }
     .c12-l { font-size: 12px; fill: #64748b; font-weight: 500; }
     .c12-c { font-size: 11px; font-family: monospace; font-weight: 700; fill: #475569; }
     .c12-cw { font-size: 11px; font-family: monospace; font-weight: 700; fill: #059669; }
     .c12-cr { font-size: 11px; font-family: monospace; font-weight: 700; fill: #2f5597; }
     .c12-ck { font-size: 11px; font-family: monospace; font-weight: 700; fill: #db2777; }
-    .c12-ca { font-size: 11px; font-family: monospace; font-weight: 700; fill: #ea580c; }
     @keyframes c12-flow { to { stroke-dashoffset: -36; } }
-    @media (prefers-reduced-motion: reduce) { .c12-w, .c12-r, .c12-k, .c12-a { animation: none; } }
+    @media (prefers-reduced-motion: reduce) { .c12-w, .c12-r, .c12-k, .c12-g { animation: none; } }
   </style>
   <rect x="5" y="5" width="890" height="415" rx="10" class="c12-bg"/>
+  <!-- Supabase container -->
+  <rect x="230" y="30" width="330" height="345" rx="12" class="c12-cloud"/>
+  <text x="246" y="52" class="c12-cw">SUPABASE</text>
   <!-- ESP32-S3 -->
   <rect x="20" y="60" width="160" height="250" rx="8" class="c12-esp"/>
   <text x="100" y="88" text-anchor="middle" class="c12-t">ESP32-S3</text>
@@ -85,101 +88,97 @@ permalink: /chapters/ch12-hmi-visualization/
   <text x="100" y="216" text-anchor="middle" class="c12-l">LED 3 ดวง</text>
   <text x="100" y="234" text-anchor="middle" class="c12-c">GPIO 10/11/12</text>
   <text x="100" y="256" text-anchor="middle" class="c12-c">light/pump/fan</text>
-  <text x="100" y="292" text-anchor="middle" class="c12-c">Wi-Fi 2.4 GHz</text>
+  <text x="100" y="292" text-anchor="middle" class="c12-c">role: anon</text>
   <!-- ESP32 ↔ REST -->
   <path d="M 180 95 L 246 95" class="c12-w"/>
   <polygon points="246,90 256,95 246,100" fill="#059669"/>
   <text x="218" y="85" text-anchor="middle" class="c12-cw">POST</text>
-  <text x="218" y="118" text-anchor="middle" class="c12-c">HTTPS</text>
+  <text x="218" y="114" text-anchor="middle" class="c12-c">HTTPS</text>
   <path d="M 256 140 L 190 140" class="c12-k"/>
   <polygon points="190,135 180,140 190,145" fill="#db2777"/>
   <text x="218" y="132" text-anchor="middle" class="c12-ck">GET 2s</text>
   <path d="M 180 160 L 246 160" class="c12-k"/>
   <polygon points="246,155 256,160 246,165" fill="#db2777"/>
   <text x="218" y="178" text-anchor="middle" class="c12-ck">PATCH</text>
-  <!-- Supabase container -->
-  <rect x="230" y="30" width="345" height="345" rx="12" class="c12-cloud"/>
-  <text x="246" y="52" class="c12-cw">SUPABASE</text>
-  <rect x="256" y="70" width="140" height="100" rx="8" class="c12-box"/>
-  <text x="326" y="102" text-anchor="middle" class="c12-t">REST API</text>
-  <text x="326" y="124" text-anchor="middle" class="c12-c">Publishable key</text>
-  <text x="326" y="142" text-anchor="middle" class="c12-c">(anon)</text>
-  <rect x="416" y="70" width="140" height="100" rx="8" class="c12-box"/>
-  <text x="486" y="102" text-anchor="middle" class="c12-t">Session Pooler</text>
-  <text x="486" y="124" text-anchor="middle" class="c12-c">port 5432</text>
+  <rect x="256" y="70" width="170" height="100" rx="8" class="c12-box"/>
+  <text x="341" y="102" text-anchor="middle" class="c12-t">REST API</text>
+  <text x="341" y="124" text-anchor="middle" class="c12-c">Publishable key</text>
+  <text x="341" y="142" text-anchor="middle" class="c12-c">+ RLS</text>
+  <rect x="440" y="70" width="104" height="100" rx="8" class="c12-box"/>
+  <text x="492" y="102" text-anchor="middle" class="c12-t">Auth</text>
+  <text x="492" y="124" text-anchor="middle" class="c12-c">email+pass</text>
+  <text x="492" y="142" text-anchor="middle" class="c12-c">→ JWT</text>
   <!-- PostgreSQL -->
-  <rect x="256" y="215" width="300" height="145" rx="8" class="c12-db"/>
-  <text x="406" y="233" text-anchor="middle" class="c12-c">PostgreSQL + RLS</text>
-  <rect x="266" y="245" width="88" height="55" rx="6" class="c12-tb"/>
-  <text x="310" y="268" text-anchor="middle" class="c12-t">telemetry</text>
-  <text x="310" y="288" text-anchor="middle" class="c12-l">ทุก 5 วินาที</text>
-  <rect x="362" y="245" width="88" height="55" rx="6" class="c12-tk"/>
-  <text x="406" y="268" text-anchor="middle" class="c12-t">controls</text>
-  <text x="406" y="288" text-anchor="middle" class="c12-l">สถานะที่สั่ง</text>
-  <rect x="458" y="245" width="88" height="55" rx="6" class="c12-tb"/>
-  <text x="502" y="268" text-anchor="middle" class="c12-t">events</text>
-  <text x="502" y="288" text-anchor="middle" class="c12-l">ประวัติการสั่ง</text>
+  <rect x="256" y="215" width="288" height="145" rx="8" class="c12-db"/>
+  <text x="484" y="233" text-anchor="middle" class="c12-c">PostgreSQL + RLS</text>
+  <rect x="264" y="245" width="86" height="55" rx="6" class="c12-tb"/>
+  <text x="307" y="268" text-anchor="middle" class="c12-t">telemetry</text>
+  <text x="307" y="288" text-anchor="middle" class="c12-l">ทุก 5 วินาที</text>
+  <rect x="357" y="245" width="86" height="55" rx="6" class="c12-tk"/>
+  <text x="400" y="268" text-anchor="middle" class="c12-t">controls</text>
+  <text x="400" y="288" text-anchor="middle" class="c12-l">สถานะที่สั่ง</text>
+  <rect x="450" y="245" width="86" height="55" rx="6" class="c12-tb"/>
+  <text x="493" y="268" text-anchor="middle" class="c12-t">events</text>
+  <text x="493" y="288" text-anchor="middle" class="c12-l">ประวัติการสั่ง</text>
   <!-- trigger: controls → events -->
-  <path d="M 420 300 L 420 324 L 490 324 L 490 310" fill="none" stroke="#db2777" stroke-width="2"/>
-  <polygon points="485,310 490,301 495,310" fill="#db2777"/>
-  <text x="455" y="344" text-anchor="middle" class="c12-ck">trigger</text>
+  <path d="M 414 300 L 414 324 L 486 324 L 486 310" fill="none" stroke="#db2777" stroke-width="2"/>
+  <polygon points="481,310 486,301 491,310" fill="#db2777"/>
+  <text x="450" y="344" text-anchor="middle" class="c12-ck">trigger</text>
   <!-- REST ↔ DB -->
-  <path d="M 310 170 L 310 237" class="c12-w"/>
-  <polygon points="305,237 310,245 315,237" fill="#059669"/>
-  <text x="316" y="200" class="c12-cw">INSERT</text>
-  <path d="M 380 170 L 380 237" class="c12-k"/>
-  <polygon points="375,178 380,170 385,178" fill="#db2777"/>
-  <polygon points="375,237 380,245 385,237" fill="#db2777"/>
-  <!-- Pooler ↔ DB -->
-  <path d="M 435 170 L 435 237" class="c12-k"/>
-  <polygon points="430,237 435,245 440,237" fill="#db2777"/>
-  <path d="M 502 245 L 502 178" class="c12-r"/>
-  <polygon points="497,178 502,170 507,178" fill="#2f5597"/>
-  <text x="508" y="200" class="c12-cr">SELECT</text>
-  <!-- Pooler ↔ Grafana -->
-  <path d="M 556 100 L 620 100" class="c12-r"/>
-  <polygon points="620,95 630,100 620,105" fill="#2f5597"/>
-  <text x="593" y="90" text-anchor="middle" class="c12-cr">grafana_ro</text>
-  <path d="M 630 150 L 566 150" class="c12-k"/>
-  <polygon points="566,145 556,150 566,155" fill="#db2777"/>
-  <text x="593" y="170" text-anchor="middle" class="c12-ck">grafana_ctl</text>
-  <!-- Grafana -->
-  <rect x="630" y="60" width="130" height="200" rx="8" class="c12-gf"/>
-  <text x="695" y="88" text-anchor="middle" class="c12-t">Grafana Cloud</text>
-  <polyline points="648,150 666,140 684,144 702,126 720,130 742,108" fill="none" stroke="#ea580c" stroke-width="2.5"/>
-  <circle cx="742" cy="108" r="3.5" fill="#ea580c"/>
-  <line x1="702" y1="100" x2="702" y2="158" stroke="#db2777" stroke-width="1.5" stroke-dasharray="3 3"/>
-  <rect x="650" y="178" width="26" height="14" rx="7" fill="#059669"/>
-  <circle cx="669" cy="185" r="5" fill="#ffffff"/>
-  <rect x="682" y="178" width="26" height="14" rx="7" fill="#94a3b8"/>
-  <circle cx="689" cy="185" r="5" fill="#ffffff"/>
-  <rect x="714" y="178" width="26" height="14" rx="7" fill="#059669"/>
-  <circle cx="733" cy="185" r="5" fill="#ffffff"/>
-  <text x="695" y="214" text-anchor="middle" class="c12-l">ฟอร์มสั่งการ</text>
-  <text x="695" y="242" text-anchor="middle" class="c12-c">refresh 10s</text>
-  <!-- Grafana ↔ user -->
-  <path d="M 760 120 L 790 120" class="c12-r"/>
-  <polygon points="790,115 800,120 790,125" fill="#2f5597"/>
-  <path d="M 800 160 L 770 160" class="c12-k"/>
-  <polygon points="770,155 760,160 770,165" fill="#db2777"/>
-  <rect x="800" y="80" width="85" height="100" rx="8" class="c12-box"/>
-  <text x="842" y="124" text-anchor="middle" class="c12-t">ช่าง</text>
-  <text x="842" y="146" text-anchor="middle" class="c12-l">เบราว์เซอร์</text>
-  <!-- Grafana → email -->
-  <path d="M 695 260 L 695 296" class="c12-a"/>
-  <polygon points="690,296 695,306 700,296" fill="#ea580c"/>
-  <text x="705" y="284" class="c12-ca">temp &gt; 35 °C</text>
-  <rect x="630" y="306" width="130" height="44" rx="8" class="c12-box"/>
-  <text x="695" y="333" text-anchor="middle" class="c12-t">อีเมลแจ้งเตือน</text>
+  <path d="M 290 170 L 290 237" class="c12-w"/>
+  <polygon points="285,237 290,245 295,237" fill="#059669"/>
+  <text x="285" y="200" text-anchor="end" class="c12-cw">INSERT</text>
+  <path d="M 330 245 L 330 178" class="c12-r"/>
+  <polygon points="325,178 330,170 335,178" fill="#2f5597"/>
+  <text x="336" y="200" class="c12-cr">SELECT</text>
+  <path d="M 400 170 L 400 237" class="c12-k"/>
+  <polygon points="395,178 400,170 405,178" fill="#db2777"/>
+  <polygon points="395,237 400,245 405,237" fill="#db2777"/>
+  <!-- Vercel -->
+  <rect x="610" y="40" width="150" height="80" rx="8" class="c12-vc"/>
+  <text x="685" y="70" text-anchor="middle" class="c12-t">▲ Vercel</text>
+  <text x="685" y="92" text-anchor="middle" class="c12-c">Next.js</text>
+  <text x="685" y="108" text-anchor="middle" class="c12-l">ไฟล์หน้าเว็บ</text>
+  <path d="M 685 120 L 685 160" class="c12-g"/>
+  <polygon points="680,160 685,170 690,160" fill="#64748b"/>
+  <text x="693" y="148" class="c12-c">HTML/JS</text>
+  <!-- Browser dashboard -->
+  <rect x="610" y="170" width="275" height="190" rx="8" class="c12-web"/>
+  <text x="747" y="192" text-anchor="middle" class="c12-t">แดชบอร์ดบนเบราว์เซอร์</text>
+  <rect x="624" y="202" width="247" height="16" rx="4" fill="#fee2e2"/>
+  <text x="747" y="214" text-anchor="middle" class="c12-c" style="fill:#991b1b">temp &gt; 35 °C</text>
+  <path d="M 632 262 A 22 22 0 0 1 676 262" fill="none" stroke="#e2e8f0" stroke-width="7"/>
+  <path d="M 632 262 A 22 22 0 0 1 668 247" fill="none" stroke="#dc2626" stroke-width="7"/>
+  <path d="M 690 262 A 22 22 0 0 1 734 262" fill="none" stroke="#e2e8f0" stroke-width="7"/>
+  <path d="M 690 262 A 22 22 0 0 1 718 241" fill="none" stroke="#16a34a" stroke-width="7"/>
+  <polyline points="748,264 766,252 784,256 802,238 820,244 842,228 862,236" fill="none" stroke="#ea580c" stroke-width="2.5"/>
+  <line x1="802" y1="228" x2="802" y2="268" stroke="#db2777" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <rect x="628" y="288" width="72" height="30" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="664" y="308" text-anchor="middle" class="c12-c">light</text>
+  <rect x="711" y="288" width="72" height="30" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
+  <text x="747" y="308" text-anchor="middle" class="c12-c">pump</text>
+  <rect x="794" y="288" width="72" height="30" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="830" y="308" text-anchor="middle" class="c12-c">fan</text>
+  <text x="747" y="344" text-anchor="middle" class="c12-c">role: authenticated</text>
+  <!-- Browser ↔ Supabase -->
+  <path d="M 610 250 L 574 250 L 574 150 L 552 150" class="c12-g"/>
+  <polygon points="552,145 544,150 552,155" fill="#64748b"/>
+  <text x="590" y="140" text-anchor="middle" class="c12-c">login</text>
+  <path d="M 420 170 L 420 185 L 602 185" class="c12-r"/>
+  <polygon points="602,180 610,185 602,190" fill="#2f5597"/>
+  <text x="500" y="180" text-anchor="middle" class="c12-cr">GET ทุก 5s</text>
+  <path d="M 610 205 L 412 205 L 412 178" class="c12-k"/>
+  <polygon points="407,178 412,170 417,178" fill="#db2777"/>
+  <text x="515" y="200" text-anchor="middle" class="c12-ck">PATCH</text>
   <!-- legend -->
   <line x1="30" y1="400" x2="62" y2="400" stroke="#059669" stroke-width="4" stroke-dasharray="8 10"/>
   <text x="70" y="404" class="c12-l">เขียน (ส่วนที่ 1)</text>
   <line x1="215" y1="400" x2="247" y2="400" stroke="#2f5597" stroke-width="4" stroke-dasharray="8 10"/>
   <text x="255" y="404" class="c12-l">อ่าน (ส่วนที่ 1)</text>
-  <line x1="390" y1="400" x2="422" y2="400" stroke="#ea580c" stroke-width="3" stroke-dasharray="6 8"/>
-  <text x="430" y="404" class="c12-l">แจ้งเตือน (ส่วนที่ 1)</text>
-  <line x1="590" y1="400" x2="622" y2="400" stroke="#db2777" stroke-width="4" stroke-dasharray="8 10"/>
-  <text x="630" y="404" class="c12-l">สั่งการ (ส่วนที่ 2)</text>
+  <line x1="390" y1="400" x2="422" y2="400" stroke="#db2777" stroke-width="4" stroke-dasharray="8 10"/>
+  <text x="430" y="404" class="c12-l">สั่งการ (ส่วนที่ 2)</text>
+  <line x1="590" y1="400" x2="622" y2="400" stroke="#64748b" stroke-width="3" stroke-dasharray="6 8"/>
+  <text x="630" y="404" class="c12-l">โหลดหน้าเว็บ / login</text>
 </svg>
 </div>
 
@@ -190,7 +189,7 @@ permalink: /chapters/ch12-hmi-visualization/
 | Perception | AHT25, ปุ่มกด 3 ปุ่ม, LED 3 ดวง | วัดอุณหภูมิ/ความชื้น รับคำสั่งจากช่างหน้าตู้ และขับอุปกรณ์ปลายทาง |
 | Network | ESP32-S3 + Wi-Fi + HTTPS | ส่งข้อมูลขึ้นคลาวด์ และรับคำสั่งลงมาอย่างเข้ารหัส |
 | Middleware / Storage | Supabase (REST API + PostgreSQL) | ตรวจสิทธิ์ จัดเก็บ ให้บริการ query และเป็นจุดพักคำสั่ง |
-| Application | Grafana Cloud | แสดงแดชบอร์ด แจ้งเตือน และรับคำสั่งจากช่าง |
+| Application | เว็บแดชบอร์ด Next.js บน Vercel + Supabase Auth | แสดงผล แจ้งเตือน และรับคำสั่งจากช่างผ่านเบราว์เซอร์หรือมือถือ |
 
 ---
 
@@ -302,33 +301,34 @@ create table public.events (
 - **`created_at ... default now()`** ให้ฐานข้อมูลเป็นผู้ประทับเวลา ESP32 จึงไม่ต้องมีนาฬิกาที่แม่นยำ ส่วน `timestamptz` เก็บเวลาเป็น UTC แล้วแสดงตาม time zone ของผู้ใช้
 - **`controls.device_id` เป็น Primary key** จึงมีได้เพียง 1 แถวต่ออุปกรณ์ แถวนี้คือ "สถานะที่สั่งล่าสุด" ของอุปกรณ์นั้น
 - **`check (... in (...))`** ทำให้ฐานข้อมูลรับเฉพาะค่าที่กำหนด ถ้าสะกดผิดจะถูกปฏิเสธ
-- **`state` และ `source` ใน `events`** เก็บทั้งสถานะหลังเปลี่ยน และแหล่งที่สั่ง (`button` = ปุ่มหน้าตู้, `dashboard` = Grafana) การรู้แค่ว่า "มีการสั่ง" ไม่พอ ต้องรู้ว่าเปิดหรือปิด จึงจะวาดช่วงเวลาที่อุปกรณ์ทำงานได้ และต้องรู้ว่าใครสั่ง จึงจะตรวจสอบย้อนหลังได้ (Audit trail)
+- **`state` และ `source` ใน `events`** เก็บทั้งสถานะหลังเปลี่ยน และแหล่งที่สั่ง (`button` = ปุ่มหน้าตู้, `dashboard` = เว็บแดชบอร์ด) การรู้แค่ว่า "มีการสั่ง" ไม่พอ ต้องรู้ว่าเปิดหรือปิด จึงจะวาดช่วงเวลาที่อุปกรณ์ทำงานได้ และต้องรู้ว่าใครสั่ง จึงจะตรวจสอบย้อนหลังได้ (Audit trail)
 - **Index `(device_id, created_at desc)`** แดชบอร์ดเกือบทุก query จะถามว่า "อุปกรณ์ X ในช่วงเวลา Y" B-tree index ที่เรียงตามคอลัมน์ทั้งสองจะช่วยให้ PostgreSQL กระโดดไปยังช่วงข้อมูลนั้นได้ทันที ไม่ต้องอ่านทั้งตาราง (Sequential Scan)
 
 **ประเมินปริมาณข้อมูล:** ถ้าส่งทุก 5 วินาที จะได้ $86{,}400 / 5 = 17{,}280$ แถวต่อวัน ถ้าแต่ละแถวรวม index ใช้พื้นที่ราว 100 ไบต์ จะใช้พื้นที่ประมาณ 1.7 MB ต่อวัน หรือราว 50 MB ต่อเดือนต่ออุปกรณ์ ตัวเลขนี้ใช้เทียบกับพื้นที่ฐานข้อมูลของแผนฟรี เพื่อตัดสินใจเรื่องความถี่ในการส่งและการลบข้อมูลเก่า ส่วน `controls` มีขนาดคงที่ และ `events` เพิ่มเฉพาะเมื่อมีการสั่ง จึงเล็กมากเมื่อเทียบกับ `telemetry`
 
 ### 12.3.3 Row Level Security และหลัก Least Privilege
 
-ระบบมีผู้ใช้ฐานข้อมูล 3 ราย และให้แต่ละรายมีสิทธิ์เท่าที่จำเป็นต่อหน้าที่เท่านั้น (**Principle of Least Privilege**)
+ระบบมีผู้ใช้ฐานข้อมูล 2 กลุ่ม และให้แต่ละกลุ่มมีสิทธิ์เท่าที่จำเป็นต่อหน้าที่เท่านั้น (**Principle of Least Privilege**)
 
-| ผู้ใช้ | ช่องทาง | `telemetry` | `controls` | `events` |
-|:---|:---|:---|:---|:---|
-| ESP32-S3 (role `anon`) | HTTPS → REST API | `INSERT` | `SELECT` + `UPDATE` ได้เฉพาะเมื่อ `updated_by = 'button'` | ไม่มีสิทธิ์ (trigger เป็นผู้เขียน) |
-| Grafana แดชบอร์ด (role `grafana_ro`) | PostgreSQL + TLS | `SELECT` | ไม่มีสิทธิ์ | `SELECT` |
-| Grafana ฟอร์มสั่งการ (role `grafana_ctl`) | PostgreSQL + TLS | ไม่มีสิทธิ์ | `SELECT` + `UPDATE` ได้เฉพาะเมื่อ `updated_by = 'dashboard'` | ไม่มีสิทธิ์ |
+| ผู้ใช้ | role ใน PostgreSQL | วิธียืนยันตัวตน | `telemetry` | `controls` | `events` |
+|:---|:---|:---|:---|:---|:---|
+| ESP32-S3 | `anon` | Publishable key อย่างเดียว (ไม่ login) | `INSERT` | `SELECT` + `UPDATE` ได้เฉพาะเมื่อ `updated_by = 'button'` | ไม่มีสิทธิ์ (trigger เป็นผู้เขียน) |
+| ช่างที่ใช้แดชบอร์ด | `authenticated` | Publishable key + login ด้วยอีเมลและรหัสผ่าน (Supabase Auth) | `SELECT` | `SELECT` + `UPDATE` ได้เฉพาะเมื่อ `updated_by = 'dashboard'` | `SELECT` |
 
-การแยก `grafana_ctl` ออกจาก `grafana_ro` ทำให้ panel แสดงผลทั่วไปไม่มีทางเขียนฐานข้อมูลได้ แม้จะเขียน SQL ผิดพลาด สิทธิ์เขียนมีอยู่ใน data source เดียวที่ใช้กับฟอร์มสั่งการเท่านั้น
+ทั้ง ESP32 และหน้าเว็บใช้ **Publishable key ตัวเดียวกัน** สิ่งที่ทำให้สิทธิ์ต่างกันคือ **การ login** คำขอที่ไม่มี login จะได้ role `anon` ส่วนคำขอที่แนบ token จากการ login จะได้ role `authenticated` (รายละเอียดในหัวข้อ 12.5.2)
 
 **Row Level Security (RLS)** เป็นกฎที่ PostgreSQL ตรวจทุกครั้งที่มีการอ่านหรือเขียนแถว ถ้าเปิด RLS แล้วไม่มี policy อนุญาต คำขอนั้นจะถูกปฏิเสธทั้งหมด (**Deny by Default**) ผลของการออกแบบนี้คือ
-- ถ้า key ใน ESP32 ถูกดึงออกจากเฟิร์มแวร์ ผู้ไม่หวังดีก็ **อ่าน** ข้อมูลเซนเซอร์ย้อนหลังของโรงงานไม่ได้ และ **ลบหรือปลอมประวัติ** ใน `events` ไม่ได้ (แต่ยังสั่งอุปกรณ์ผ่าน `controls` ได้ ซึ่งเป็นข้อจำกัดของการใช้ key เดียวร่วมกันทุกอุปกรณ์ ดูแบบฝึกหัดท้ายบท)
-- ถ้ารหัสผ่านของ `grafana_ro` รั่ว ผู้ไม่หวังดีก็ **แก้ไขหรือลบ** ข้อมูลไม่ได้
-- policy ยังทำหน้าที่ **ตรวจความสมเหตุสมผลของข้อมูล** ได้ด้วย เช่น ปฏิเสธค่าอุณหภูมิที่อยู่นอกย่านวัดของ AHT25 (-40 ถึง 120 °C) ซึ่งมักเกิดจากเซนเซอร์เสีย และบังคับให้ผู้สั่งระบุ `updated_by` ตามตัวตนจริง (ESP32 อ้างเป็น `dashboard` ไม่ได้)
+- ถ้า key ใน ESP32 ถูกดึงออกจากเฟิร์มแวร์ ผู้ไม่หวังดีก็ **อ่าน** ข้อมูลเซนเซอร์ย้อนหลังของโรงงานไม่ได้ เพราะไม่มีบัญชี login และ **ลบหรือปลอมประวัติ** ใน `events` ไม่ได้ (แต่ยังสั่งอุปกรณ์ผ่าน `controls` ได้ ซึ่งเป็นข้อจำกัดของการใช้ key เดียวร่วมกันทุกอุปกรณ์ ดูแบบฝึกหัดท้ายบท)
+- ถ้ารหัสผ่านของบัญชีแดชบอร์ดรั่ว ผู้ไม่หวังดีก็ **ลบ** ข้อมูล หรือ **ปลอม** ค่าเซนเซอร์ไม่ได้ เพราะ `authenticated` ไม่มีสิทธิ์ `INSERT`/`DELETE`
+- policy ยังทำหน้าที่ **ตรวจความสมเหตุสมผลของข้อมูล** ได้ด้วย เช่น ปฏิเสธค่าอุณหภูมิที่อยู่นอกย่านวัดของ AHT25 (-40 ถึง 120 °C) ซึ่งมักเกิดจากเซนเซอร์เสีย และบังคับให้ผู้สั่งระบุ `updated_by` ตามตัวตนจริง (ESP32 อ้างเป็น `dashboard` ไม่ได้ และแดชบอร์ดอ้างเป็น `button` ไม่ได้)
+
+> ⚠️ role `authenticated` หมายถึง **ทุกคนที่ login ได้** จึงต้อง **ปิดการสมัครสมาชิกเอง (Sign up)** ใน Supabase Auth และให้ผู้ดูแลเป็นผู้สร้างบัญชีให้ช่างเท่านั้น (หัวข้อ 12.8.4) มิฉะนั้นใครที่มี Publishable key ก็สมัครบัญชีเองแล้วอ่านข้อมูลได้
 
 **API key ของ Supabase มี 4 แบบ** (ตาม [Supabase Docs: API keys](https://supabase.com/docs/guides/getting-started/api-keys))
 
 | Key | รูปแบบ | Role ที่ได้ | RLS | ใช้ในอุปกรณ์/หน้าเว็บได้? |
 |:---|:---|:---|:---|:---|
-| **Publishable key** ✅ | `sb_publishable_...` | `anon` (ยังไม่ login) | ถูกตรวจ | **ได้** ← ใช้ใน ESP32-S3 |
+| **Publishable key** ✅ | `sb_publishable_...` | `anon` (ถ้า login แล้วเป็น `authenticated`) | ถูกตรวจ | **ได้** ← ใช้ใน ESP32-S3 และแดชบอร์ด |
 | Secret key | `sb_secret_...` | `service_role` | **ข้าม RLS** | ห้ามเด็ดขาด |
 | `anon` (legacy) | JWT ขึ้นต้นด้วย `eyJ` | `anon` | ถูกตรวจ | ได้ แต่เป็นแบบเก่าที่กำลังจะเลิกใช้ |
 | `service_role` (legacy) | JWT ขึ้นต้นด้วย `eyJ` | `service_role` | **ข้าม RLS** | ห้ามเด็ดขาด |
@@ -368,28 +368,73 @@ Supabase มีเครื่องมือชื่อ **PostgREST** ที�
 
 ---
 
-## 12.5 เส้นทางอ่าน: Grafana และ SQL
+## 12.5 เส้นทางอ่าน: เว็บแดชบอร์ดบน Vercel
 
-**Grafana** ไม่ได้เก็บข้อมูลเอง แต่ส่ง query ไปถามฐานข้อมูลทุกครั้งที่แดชบอร์ด refresh แล้วนำผลลัพธ์มาวาดเป็น panel เราจึงสร้างบัญชี `grafana_ro` ไว้ให้ Grafana ใช้โดยเฉพาะ
+แดชบอร์ดในบทนี้เป็น **เว็บแอปพลิเคชัน** ที่เขียนด้วย **Next.js** (เฟรมเวิร์กของ React) และใช้ไลบรารี **`supabase-js`** คุยกับ Supabase โค้ดแม่แบบอยู่ใน repo ของรายวิชา โฟลเดอร์ [`dashboard/`](https://github.com/alfaXphoori/TechEngineering/tree/main/dashboard) นักศึกษาไม่ต้องเขียนเว็บเอง แต่ต้องเข้าใจว่าข้อมูลเดินทางอย่างไร และอ่านโค้ดส่วนสำคัญได้
 
-**ทำไมต้องใช้ Session Pooler?** ที่อยู่ Direct connection ของ Supabase (`db.xxxx.supabase.co`) ใช้ IPv6 ขณะที่บริการคลาวด์หลายแห่ง รวมถึง Grafana Cloud เชื่อมต่อออกด้วย IPv4 จึงต้องต่อผ่าน **Session Pooler** (Supavisor) ซึ่งรองรับ IPv4 และช่วยจำกัดจำนวน connection ไม่ให้ฐานข้อมูลรับภาระเกิน
+### 12.5.1 Vercel ทำหน้าที่อะไร
 
-### 12.5.1 Macro ของ Grafana
+**Vercel** เป็นบริการฝากเว็บ (Web Hosting) ที่นำโค้ด Next.js ไป build และให้บริการไฟล์หน้าเว็บผ่าน URL เช่น `https://mcc-dashboard.vercel.app` สิ่งที่มักเข้าใจผิดคือ **Vercel ไม่ได้ดึงข้อมูลจากฐานข้อมูลแทนเรา**
 
-| Macro | หน้าที่ | ตัวอย่างผลลัพธ์ที่ Grafana แทนให้ |
+| ขั้น | เกิดที่ใด | สิ่งที่เกิดขึ้น |
 |:---|:---|:---|
-| `$__timeFilter(created_at)` | กรองตามช่วงเวลาที่เลือกบนแดชบอร์ด | `created_at BETWEEN '2026-09-28T01:00:00Z' AND '2026-09-28T07:00:00Z'` |
-| `$__timeGroupAlias(created_at, $__interval)` | ปัดเวลาลงเป็นช่วง (bucket) และตั้งชื่อคอลัมน์ว่า `time` | ใช้คู่กับ `GROUP BY 1` และ `avg()` |
-| `$__interval` | ขนาดช่วงที่ Grafana คำนวณจากช่วงเวลาที่เลือก หารด้วยความกว้างของกราฟ | `5m`, `10m`, `1h` |
-| `$device` | ตัวแปรที่ผู้ใช้เลือกจาก dropdown บนแดชบอร์ด | `'mcc01'` |
+| 1 | เบราว์เซอร์ → Vercel | เปิด URL ของแดชบอร์ด Vercel ส่งไฟล์ HTML, CSS และ JavaScript มาให้ **ครั้งเดียว** |
+| 2 | เบราว์เซอร์ → Supabase Auth | ช่าง login ด้วยอีเมลและรหัสผ่าน ได้ token กลับมา |
+| 3 | เบราว์เซอร์ → Supabase REST API | JavaScript ในหน้าเว็บขอข้อมูล `telemetry`, `controls`, `events` **โดยตรง** ทุก 5 วินาที |
+| 4 | เบราว์เซอร์ → Supabase REST API | เมื่อกดสวิตช์ JavaScript ส่งคำขอแก้ `controls` (ส่วนที่ 2) |
 
-### 12.5.2 Downsampling
+ผลของสถาปัตยกรรมนี้คือ
+- Vercel **ไม่ต้องรู้รหัสผ่านฐานข้อมูล** และไม่ต้องเชื่อมต่อ PostgreSQL โดยตรง เพราะทั้ง ESP32 และหน้าเว็บใช้ **REST API ตัวเดียวกัน** (หัวข้อ 12.4) ผ่าน HTTPS
+- ความปลอดภัยทั้งหมดขึ้นกับ **RLS + การ login** (หัวข้อ 12.3.3) ไม่ได้ขึ้นกับการซ่อนโค้ด เพราะใครก็เปิดดูโค้ด JavaScript ของหน้าเว็บได้
+- หน้าเว็บ 1 ชุดใช้กับหลายโปรเจกต์ได้ ผู้ใช้กรอก Project URL, Publishable key และ `DEVICE_ID` ของตนเองในหน้า **ตั้งค่า** ค่าจะถูกเก็บไว้ในเบราว์เซอร์ของผู้ใช้คนนั้นเท่านั้น (หรือผู้ Deploy จะกำหนดเป็น Environment Variables ไว้ล่วงหน้าก็ได้)
 
-ถ้าเลือกดูย้อนหลัง 7 วัน จะมีข้อมูล $17{,}280 \times 7 \approx 121{,}000$ จุด แต่กราฟกว้างราว 1,000 พิกเซลแสดงได้ไม่เกินราว 1,000 จุด Grafana จะคำนวณ
+### 12.5.2 Login และ role `authenticated`
 
-$$\$\_\_interval \approx \frac{7 \times 86{,}400\ s}{1{,}000\ px} \approx 605\ s \approx 10\ \text{นาที}$$
+1. หน้าเว็บส่งอีเมลและรหัสผ่านไปที่ Supabase Auth ด้วย `supabase.auth.signInWithPassword()`
+2. ถ้าถูกต้อง Supabase Auth ตอบ **access token** ซึ่งเป็น **JWT (JSON Web Token)** ที่มีข้อมูล `"role": "authenticated"` และลายเซ็นดิจิทัลของ Supabase (ปลอมไม่ได้) พร้อมอายุการใช้งาน (ค่าเริ่มต้น 1 ชั่วโมง `supabase-js` ต่ออายุให้อัตโนมัติ)
+3. ทุกคำขอหลังจากนั้น `supabase-js` แนบ header `apikey: <Publishable key>` และ `Authorization: Bearer <JWT>`
+4. PostgREST ตรวจลายเซ็นของ JWT แล้วรัน SQL ด้วย role `authenticated` RLS policy ที่เขียน `to authenticated` จึงมีผล
 
-จากนั้น `avg()` จะรวมข้อมูลราว 120 จุดในแต่ละช่วง 10 นาทีให้เหลือจุดเดียว query จึงเร็วขึ้น ส่งข้อมูลผ่านเครือข่ายน้อยลง และกราฟไม่รก เทคนิคนี้เรียกว่า **Downsampling** แบบเดียวกับ `GROUP BY time()` ของ InfluxDB ในบทที่ 10
+เปรียบเทียบกับ ESP32 ที่ส่งเฉพาะ `apikey` โดยไม่มี JWT จึงได้ role `anon` เสมอ
+
+### 12.5.3 จาก `supabase-js` เป็น REST และ SQL
+
+`supabase-js` เป็นเพียงตัวช่วยสร้างคำขอ REST แบบเดียวกับที่ ESP32 เขียนเองด้วย `HTTPClient` เช่น คำสั่งอ่านค่าล่าสุดในแดชบอร์ด
+
+```js
+supabase.from('telemetry')
+  .select('created_at, temp, hum')
+  .eq('device_id', 'mcc01')
+  .order('created_at', { ascending: false })
+  .limit(1)
+```
+
+| โค้ด `supabase-js` | คำขอ REST ที่ส่งจริง | SQL ที่ PostgREST สร้าง |
+|:---|:---|:---|
+| `.from('telemetry').select('created_at, temp, hum')` | `GET /rest/v1/telemetry?select=created_at,temp,hum` | `SELECT created_at, temp, hum FROM telemetry` |
+| `.eq('device_id', 'mcc01')` | `&device_id=eq.mcc01` | `WHERE device_id = 'mcc01'` |
+| `.gte('created_at', since)` | `&created_at=gte.2026-09-28T03:00:00Z` | `AND created_at >= '2026-09-28T03:00:00Z'` |
+| `.order('created_at', { ascending: false })` | `&order=created_at.desc` | `ORDER BY created_at DESC` |
+| `.limit(1)` | `&limit=1` | `LIMIT 1` |
+| `.update({ fan: true, updated_by: 'dashboard' }).eq('device_id', 'mcc01')` | `PATCH /rest/v1/controls?device_id=eq.mcc01` | `UPDATE controls SET fan = true, updated_by = 'dashboard' WHERE device_id = 'mcc01'` |
+
+Index `(device_id, created_at desc)` ในหัวข้อ 12.3.2 ทำให้คำขอเหล่านี้ตอบได้เร็ว แม้ตารางจะมีหลายแสนแถว
+
+### 12.5.4 ปริมาณข้อมูลของกราฟและ Downsampling
+
+กราฟในแดชบอร์ดเลือกดูได้ 15 นาที, 30 นาที และ 1 ชั่วโมง ข้อมูล 1 ชั่วโมงมี $3{,}600 / 5 = 720$ แถว ซึ่งต่ำกว่าเพดาน **Max rows = 1,000 แถวต่อคำขอ** ที่ Supabase ตั้งไว้เป็นค่าเริ่มต้น (ปรับได้ที่ **Integrations → Data API → Settings**)
+
+ถ้าต้องการดูย้อนหลัง 7 วัน จะมีข้อมูล $17{,}280 \times 7 \approx 121{,}000$ จุด แต่กราฟกว้างราว 1,000 พิกเซลแสดงได้ไม่เกินราว 1,000 จุด การดึงข้อมูลดิบทั้งหมดมาวาดจึงช้าและเปลือง ต้องให้ฐานข้อมูลรวมข้อมูลเป็นช่วงก่อนส่ง เรียกว่า **Downsampling** ขนาดช่วงที่เหมาะสมคำนวณได้จาก
+
+$$\Delta t \approx \frac{\text{ช่วงเวลาที่ดู}}{\text{ความกว้างของกราฟ}} = \frac{7 \times 86{,}400\ s}{1{,}000\ px} \approx 605\ s \approx 10\ \text{นาที}$$
+
+แล้วใช้ `avg()` ร่วมกับ `GROUP BY` ช่วงเวลา 10 นาที ให้ข้อมูลราว 120 จุดเหลือจุดเดียว เทคนิคเดียวกับ `GROUP BY time()` ของ InfluxDB ในบทที่ 10 ใน Supabase ทำได้โดยสร้าง **SQL function** แล้วเรียกผ่าน `supabase.rpc()` (โจทย์ท้าทายท้ายบท)
+
+### 12.5.5 การ refresh ของแดชบอร์ด: Polling หรือ Realtime
+
+แดชบอร์ดดึงข้อมูลใหม่ทุก 5 วินาที (`REFRESH_MS` ใน `lib/config.js`) เท่ากับรอบส่งของ ESP32 ด้วยวิธี **Polling** แบบเดียวกับที่ ESP32 ถามคำสั่ง (หัวข้อ 12.6.3) ทุกเบราว์เซอร์ที่เปิดแดชบอร์ดอยู่จะส่ง 5 คำขอทุก 5 วินาที ถ้าเปิดทิ้งไว้ 10 เครื่อง ก็คือ 10 คำขอต่อวินาที
+
+อีกทางเลือกคือ **Supabase Realtime** ซึ่งให้ฐานข้อมูลส่งแถวใหม่มายังเบราว์เซอร์ทันทีผ่าน WebSocket ไม่ต้องถามซ้ำ ตอบสนองเร็วกว่าและประหยัดคำขอ แต่ต้องเปิด Realtime ให้ตาราง และต้องจัดการการเชื่อมต่อที่หลุด บทนี้ใช้ Polling เพราะเข้าใจง่ายและเพียงพอกับข้อมูลที่เปลี่ยนทุก 5 วินาที
 
 ---
 
@@ -397,9 +442,9 @@ $$\$\_\_interval \approx \frac{7 \times 86{,}400\ s}{1{,}000\ px} \approx 605\ s
 
 ### 12.6.1 ทำไมแดชบอร์ดสั่ง ESP32 ตรง ๆ ไม่ได้
 
-ESP32-S3 ต่อ Wi-Fi อยู่หลังเราเตอร์ที่ทำ **NAT** จึงไม่มี IP สาธารณะ Grafana Cloud บนอินเทอร์เน็ตจึงเปิดการเชื่อมต่อเข้าหา ESP32 ไม่ได้ ในทางกลับกัน ESP32 เป็นฝ่ายเชื่อมต่อ **ออก** ไปหาเซิร์ฟเวอร์ได้เสมอ ระบบจึงใช้ฐานข้อมูลเป็น **จุดพักคำสั่ง** ตรงกลาง
+ESP32-S3 ต่อ Wi-Fi อยู่หลังเราเตอร์ที่ทำ **NAT** จึงไม่มี IP สาธารณะ แดชบอร์ดบนอินเทอร์เน็ตจึงเปิดการเชื่อมต่อเข้าหา ESP32 ไม่ได้ ในทางกลับกัน ESP32 เป็นฝ่ายเชื่อมต่อ **ออก** ไปหาเซิร์ฟเวอร์ได้เสมอ ระบบจึงใช้ฐานข้อมูลเป็น **จุดพักคำสั่ง** ตรงกลาง
 
-1. ช่างเลือกสถานะบนฟอร์มของ Grafana แล้วกดส่ง → Grafana รัน `UPDATE controls ...` ด้วย role `grafana_ctl`
+1. ช่างกดสวิตช์บนแดชบอร์ดแล้วยืนยัน → เบราว์เซอร์ส่ง `PATCH /rest/v1/controls ...` (= `UPDATE controls ...`) ด้วย role `authenticated`
 2. ESP32 ถามตาราง `controls` ทุก 2 วินาที (`GET`) → ถ้าค่าต่างจากสถานะปัจจุบันก็ขับ LED ตามค่านั้น
 3. trigger ในฐานข้อมูลบันทึกการเปลี่ยนแปลงลง `events` โดยอัตโนมัติ
 
@@ -420,7 +465,7 @@ ESP32 ถาม `controls` ทุก $T_{poll} = 2$ วินาที ช่า
 
 $$\bar{t}_{delay} \approx t_{submit} + \frac{T_{poll}}{2} + t_{GET} \approx 0.3 + 1 + 1 \approx 2.3\ \text{วินาที}$$
 
-เมื่อ $t_{submit}$ คือเวลาที่ Grafana เขียนฐานข้อมูล และ $t_{GET}$ คือเวลาของคำขอ HTTPS กรณีแย่ที่สุดอาจถึง 4–6 วินาที ถ้าคำสั่งมาถึงขณะ ESP32 กำลังส่งค่าเซนเซอร์อยู่
+เมื่อ $t_{submit}$ คือเวลาที่แดชบอร์ดเขียนฐานข้อมูล และ $t_{GET}$ คือเวลาของคำขอ HTTPS กรณีแย่ที่สุดอาจถึง 4–6 วินาที ถ้าคำสั่งมาถึงขณะ ESP32 กำลังส่งค่าเซนเซอร์อยู่
 
 **ราคาของการ Poll:** $86{,}400 / 2 = 43{,}200$ คำขอต่อวัน ถ้าคำตอบพร้อม header ใช้ราว 0.5 KB จะได้ข้อมูลขาออก (Egress) ราว 21 MB ต่อวันต่ออุปกรณ์ ตัวเลขนี้ใช้เทียบกับโควตาของแผนฟรี
 
@@ -433,13 +478,13 @@ $$\bar{t}_{delay} \approx t_{submit} + \frac{T_{poll}}{2} + t_{GET} \approx 0.3 
 
 ### 12.6.4 สองผู้สั่ง หนึ่งความจริง
 
-ระบบมีผู้สั่ง 2 ทาง คือฟอร์มบนแดชบอร์ดและปุ่มหน้าตู้ ทั้งสองทางต้องเขียนลงแถวเดียวกันใน `controls` ซึ่งเป็น **แหล่งความจริงเพียงแหล่งเดียว (Single Source of Truth)**
+ระบบมีผู้สั่ง 2 ทาง คือสวิตช์บนแดชบอร์ดและปุ่มหน้าตู้ ทั้งสองทางต้องเขียนลงแถวเดียวกันใน `controls` ซึ่งเป็น **แหล่งความจริงเพียงแหล่งเดียว (Single Source of Truth)**
 
 - **ช่างกดปุ่มหน้าตู้:** ESP32 สลับ LED ทันที (ไม่ต้องรอเครือข่าย) แล้ว `PATCH` ค่าใหม่ขึ้น `controls` แดชบอร์ดจึงเห็นสถานะเดียวกัน
-- **ช่างสั่งจากแดชบอร์ด:** Grafana แก้ `controls` แล้ว ESP32 เห็นในรอบ poll ถัดไป
+- **ช่างสั่งจากแดชบอร์ด:** เบราว์เซอร์แก้ `controls` แล้ว ESP32 เห็นในรอบ poll ถัดไป และแดชบอร์ดเครื่องอื่นเห็นในรอบ refresh ถัดไป
 - ถ้าสั่งพร้อมกันทั้งสองทาง ค่าที่เขียนทีหลังจะชนะ (**Last Write Wins**)
 
-**Trigger** คือฟังก์ชันที่ PostgreSQL เรียกให้อัตโนมัติเมื่อตารางถูกแก้ไข เราใช้ trigger เปรียบเทียบค่าเก่า (`old`) กับค่าใหม่ (`new`) ของแต่ละอุปกรณ์ ถ้าเปลี่ยนก็เพิ่มแถวลง `events` พร้อม `source` ผลคือไม่ว่าคำสั่งจะมาจากทางใด ประวัติก็ถูกบันทึกครบ และทั้ง ESP32 และ Grafana ไม่ต้องมีสิทธิ์เขียน `events` เลย
+**Trigger** คือฟังก์ชันที่ PostgreSQL เรียกให้อัตโนมัติเมื่อตารางถูกแก้ไข เราใช้ trigger เปรียบเทียบค่าเก่า (`old`) กับค่าใหม่ (`new`) ของแต่ละอุปกรณ์ ถ้าเปลี่ยนก็เพิ่มแถวลง `events` พร้อม `source` ผลคือไม่ว่าคำสั่งจะมาจากทางใด ประวัติก็ถูกบันทึกครบ และทั้ง ESP32 และแดชบอร์ดไม่ต้องมีสิทธิ์เขียน `events` เลย
 
 ---
 
@@ -449,29 +494,30 @@ $$\bar{t}_{delay} \approx t_{submit} + \frac{T_{poll}}{2} + t_{GET} \approx 0.3 
 
 1. **ภาพรวมอยู่บน รายละเอียดอยู่ล่าง** แถวบนสุดเป็นค่าปัจจุบันและสถานะ ถัดลงมาเป็นแนวโน้ม และล่างสุดเป็นส่วนสั่งการและประวัติเหตุการณ์
 2. **สีมีความหมายเสมอ** ใช้เขียว เหลือง และแดงเฉพาะเพื่อบอกสถานะ (ปกติ เฝ้าระวัง ผิดปกติ) ไม่ใช้สีเพื่อความสวยงาม ช่างจะได้มองหาสีแดงเป็นอันดับแรก
-3. **เลือกชนิด panel ตามคำถาม**
+3. **เลือกรูปแบบการแสดงผลตามคำถาม**
 
-| คำถามของช่าง | Panel ที่เหมาะ | เหตุผล |
+| คำถามของช่าง | รูปแบบที่เหมาะ | เหตุผล |
 |:---|:---|:---|
 | ตอนนี้ร้อนแค่ไหน? | Gauge | เห็นตำแหน่งเทียบกับเกณฑ์ทันที |
 | อุปกรณ์ยังส่งข้อมูลอยู่ไหม? | Stat (วินาทีตั้งแต่ข้อมูลล่าสุด) | ตัวเลขเดียวพร้อมสีสถานะ |
-| อุณหภูมิเพิ่มขึ้นเรื่อย ๆ หรือไม่? | Time series | กราฟเส้นแสดงแนวโน้มตามเวลาได้ดีที่สุด |
-| จะสั่งเปิด/ปิดไฟ ปั๊ม พัดลม? | Business Forms (ฟอร์มสั่งการ) | แสดงสถานะที่สั่งอยู่ และแก้ไขได้ในที่เดียว |
-| ไฟ ปั๊ม และพัดลม เปิดอยู่ช่วงไหน? | State timeline | แถบสีต่อเนื่องแสดงช่วงเวลาเปิด/ปิดของแต่ละอุปกรณ์ |
-| เปิดพัดลมแล้วอุณหภูมิลดลงหรือไม่? | Annotation บน Time series | วางเหตุการณ์ลงบนกราฟเดียวกันเพื่อเทียบเหตุกับผล |
+| อุณหภูมิเพิ่มขึ้นเรื่อย ๆ หรือไม่? | กราฟเส้นตามเวลา (Time series) | กราฟเส้นแสดงแนวโน้มตามเวลาได้ดีที่สุด |
+| จะสั่งเปิด/ปิดไฟ ปั๊ม พัดลม? | ปุ่มสวิตช์ที่แสดงสถานะ (Toggle button) | แสดงสถานะที่สั่งอยู่ และกดเปลี่ยนได้ในที่เดียว ปุ่มใหญ่พอกดบนมือถือ |
+| ใครสั่งอะไร เมื่อไร? | ตารางประวัติ (Event log) พร้อมป้ายสีเปิด/ปิด | อ่านลำดับเหตุการณ์และผู้สั่งได้ทันที |
+| เปิดพัดลมแล้วอุณหภูมิลดลงหรือไม่? | เส้นหมายเหตุ (Annotation) บนกราฟ | วางเหตุการณ์ลงบนกราฟเดียวกันเพื่อเทียบเหตุกับผล |
 
-4. **ข้อมูลต้องไม่บิดเบือน** ติดหน่วยทุก panel (°C, %RH) ใช้แกนแยกเมื่อหน่วยต่างกัน และตั้งช่วงแกนของ Gauge ให้คงที่ (เช่น 0–60 °C) เพื่อไม่ให้การเปลี่ยนแปลงเล็กน้อยดูเหมือนรุนแรง
-5. **ส่วนสั่งการต้องป้องกันการกดพลาด** แยกฟอร์มสั่งการออกจาก panel แสดงผล ใช้ป้ายกำกับชัดเจนว่ากำลังสั่งอุปกรณ์ใด ให้ **ยืนยันก่อนส่ง (Confirmation)** ทุกครั้ง และวางแถบสถานะไว้ข้างฟอร์ม เพื่อให้ช่างเห็นผลของคำสั่งทันที
+4. **ข้อมูลต้องไม่บิดเบือน** ติดหน่วยทุกส่วน (°C, %RH) ใช้กราฟหรือแกนแยกเมื่อหน่วยต่างกัน และตั้งช่วงแกนของ Gauge ให้คงที่ (เช่น 0–60 °C) เพื่อไม่ให้การเปลี่ยนแปลงเล็กน้อยดูเหมือนรุนแรง
+5. **ส่วนสั่งการต้องป้องกันการกดพลาด** แยกปุ่มสั่งการออกจากส่วนแสดงผล ใช้ป้ายกำกับชัดเจนว่ากำลังสั่งอุปกรณ์ใด ให้ **ยืนยันก่อนส่ง (Confirmation)** ทุกครั้ง และวางประวัติการสั่งไว้ข้างปุ่ม เพื่อให้ช่างเห็นผลของคำสั่งทันที
 
-**Layout ของแดชบอร์ด `MCC Monitor`**
+**Layout ของแดชบอร์ด `MCC Monitor`** (แม่แบบในโฟลเดอร์ `dashboard/` จัดไว้ให้แล้ว)
 
-| แถว | Panel | สร้างในส่วนที่ |
+| แถว | ส่วนประกอบ | ใช้งานได้ตั้งแต่ส่วนที่ |
 |:---|:---|:---|
-| 1 (ภาพรวม) | Gauge อุณหภูมิ · Gauge ความชื้น · Stat สถานะการเชื่อมต่อ | 1 |
-| | Stat เปิดพัดลมวันนี้ | 2 |
-| 2 (แนวโน้ม) | Time series อุณหภูมิ + ความชื้น | 1 |
-| | Annotation เปิด/ปิดพัดลมบน Time series | 2 |
-| 3 (สั่งการและเหตุการณ์) | ฟอร์มสั่งการ (Business Forms) · State timeline ไฟ · ปั๊ม · พัดลม | 2 |
+| 1 (ภาพรวม) | Gauge อุณหภูมิ · Gauge ความชื้น · สถานะการเชื่อมต่อ | 1 |
+| | เปิดพัดลมวันนี้ (จำนวนครั้ง) | 2 |
+| 2 (แนวโน้ม) | กราฟอุณหภูมิ · กราฟความชื้น (เลือกช่วง 15 นาที / 30 นาที / 1 ชั่วโมง) | 1 |
+| | เส้นหมายเหตุเปิด/ปิดพัดลมบนกราฟอุณหภูมิ | 2 |
+| 3 (สั่งการและเหตุการณ์) | ปุ่มสั่งการ ไฟ · ปั๊ม · พัดลม · ประวัติการสั่ง | 2 |
+| แถบบนสุด | แถบเตือนอุณหภูมิสูง / ขาดการเชื่อมต่อ / ข้อผิดพลาด | 1 |
 
 </div>
 
@@ -481,7 +527,7 @@ $$\bar{t}_{delay} \approx t_{submit} + \frac{T_{poll}}{2} + t_{GET} \approx 0.3 
 
 > ใบงานพร้อมตารางบันทึกผลอยู่ในแท็บ **Lab 14** (หัวข้อ 12.11) หัวข้อ 12.8–12.10 อธิบายโค้ดและขั้นตอนทั้งหมดแบบละเอียด ส่วนที่ 1 ต้องทำงานได้ก่อน แล้วจึงต่อยอดเป็นส่วนที่ 2
 
-**เป้าหมายของส่วนที่ 1:** ESP32-S3 อ่าน AHT25 แล้วส่งขึ้นตาราง `telemetry` ทุก 5 วินาที จากนั้น Grafana แสดงค่าปัจจุบัน แนวโน้ม สถานะการเชื่อมต่อ และแจ้งเตือนเมื่ออุณหภูมิสูง
+**เป้าหมายของส่วนที่ 1:** ESP32-S3 อ่าน AHT25 แล้วส่งขึ้นตาราง `telemetry` ทุก 5 วินาที จากนั้นเว็บแดชบอร์ดบน Vercel แสดงค่าปัจจุบัน แนวโน้ม สถานะการเชื่อมต่อ และแจ้งเตือนเมื่ออุณหภูมิสูง
 
 ### 12.8.1 ต่อวงจร
 
@@ -640,71 +686,40 @@ create policy "esp32 insert telemetry" on public.telemetry
 
 > 💡 ใช้ปุ่ม **Connect** ด้านบนของหน้าโปรเจกต์แทนข้อ 3–4 ได้ โดยเลือกแท็บ **Framework** แล้วดูไฟล์ env ในขั้น *Add files* ค่า `..._SUPABASE_URL` คือ Project URL และ `..._SUPABASE_PUBLISHABLE_KEY` คือ Publishable key (framework ที่เลือกไม่มีผล เพราะ ESP32 ใช้เฉพาะ 2 ค่านี้)
 
-### 12.8.4 ตั้งค่า user `grafana_ro` บน Supabase
+### 12.8.4 สร้างบัญชีผู้ใช้แดชบอร์ดด้วย Supabase Auth
 
-Grafana ต้องมีบัญชีฐานข้อมูลของตนเองเพื่ออ่านตาราง `telemetry` (หลัก Least Privilege ในหัวข้อ 12.3.3) บัญชีนี้ใน PostgreSQL เรียกว่า **role** ซึ่ง user กับ role คือสิ่งเดียวกัน user ก็คือ role ที่ login ได้
+แดชบอร์ดต้อง login ก่อนจึงจะอ่านข้อมูลได้ (หัวข้อ 12.3.3 และ 12.5.2) ขั้นนี้มี 3 ส่วน คือ ปิดการสมัครเอง สร้างบัญชีให้ช่าง และให้สิทธิ์อ่าน `telemetry` แก่ role `authenticated`
 
-**user `grafana_ro`**
+**ก. ปิดการสมัครสมาชิกเอง (ทำก่อนเสมอ)**
 
-| รายการ | ค่า | เหตุผล |
-|:---|:---|:---|
-| Name | `grafana_ro` | `ro` = read-only |
-| Login | ได้ | Grafana ต้อง login ผ่าน Session Pooler |
-| Password | ตั้งเอง ยาวอย่างน้อย 16 ตัวอักษร | ใช้กรอกใน data source ของ Grafana (หัวข้อ 12.8.6) |
-| Bypass RLS · Superuser · Create role · Create DB | ปิดทั้งหมด | ให้สิทธิ์เท่าที่จำเป็นเท่านั้น |
-| Username ที่กรอกใน Grafana | `grafana_ro.<project_ref>` | Session Pooler ใช้ project ref ต่อท้ายเพื่อรู้ว่าเป็นโปรเจกต์ใด |
+1. เมนูซ้าย **Authentication** → **Sign In / Providers**
+2. ปิดสวิตช์ **Allow new users to sign up** → **Save changes**
 
-**สิทธิ์ที่ต้องให้**
+> ถ้าไม่ปิด ใครก็ตามที่มี Publishable key (ซึ่งอยู่ในเฟิร์มแวร์ ESP32 และในหน้าเว็บ) สามารถสมัครบัญชีเองผ่าน API แล้วได้ role `authenticated` ทันที ซึ่งแปลว่าอ่านข้อมูลของโรงงานได้
 
-| คำสั่ง | ความหมาย |
-|:---|:---|
-| `grant usage on schema public` | ให้มองเห็นตารางใน schema `public` (เหมือนได้สิทธิ์เข้าห้อง แต่ยังเปิดตู้ไม่ได้) |
-| `grant select on public.telemetry` | อ่านตาราง `telemetry` ได้ แต่เพิ่ม แก้ หรือลบไม่ได้ |
-| `create policy ... for select to grafana_ro using (true)` | RLS อนุญาตให้อ่านได้ทุกแถว ถ้าไม่มี policy นี้ query จะได้ 0 แถว แม้มีสิทธิ์ `select` แล้วก็ตาม |
+**ข. สร้างบัญชีให้ช่าง**
 
-**วิธีที่ 1: สร้าง user ผ่านหน้าเว็บ Supabase แล้วให้สิทธิ์ด้วย SQL**
+1. **Authentication** → **Users** → **Add user** → **Create new user**
+2. **Email address** = อีเมลของตนเอง (เช่น อีเมลมหาวิทยาลัย) · **User Password** = รหัสผ่านอย่างน้อย 8 ตัวอักษร · เลือก **Auto confirm user?** ไว้ (ไม่ต้องยืนยันทางอีเมล)
+3. กด **Create user** → บัญชีใหม่จะแสดงในรายการ Users
 
-1. เมนูซ้าย **Database** → กลุ่ม **Access Control** → **Roles** → **Add role**
-2. **Name** = `grafana_ro` → เปิดสวิตช์ **User can login** เพียงข้อเดียว (สวิตช์อื่น โดยเฉพาะ *User bypasses every row level security policy* ต้องปิดไว้) → **Save**
-3. ตรวจว่า `grafana_ro` ปรากฏในหน้า **Roles** หัวข้อ *Other database roles*
-4. หน้าเว็บยังไม่มีช่องตั้งรหัสผ่าน และไม่มีเมนูให้สิทธิ์ schema/ตารางแก่ role ที่สร้างเอง (หน้า **Column Privileges** แก้ได้เฉพาะ `anon`, `authenticated` และ `service_role`) จึงต้องไปที่ **SQL Editor → New query** → เปลี่ยนรหัสผ่านเป็นของตนเอง → **Run**
+**ค. ให้สิทธิ์อ่าน `telemetry` แก่ผู้ที่ login**
+
+ในหัวข้อ 12.8.3 เราถอนสิทธิ์ทั้งหมดของ `authenticated` ออกแล้ว จึงต้องให้กลับเฉพาะสิทธิ์อ่าน **SQL Editor → New query → Run**
 
 ```sql
-alter role grafana_ro with password 'ChangeMe-Strong-2026';
-grant usage on schema public to grafana_ro;
-grant select on public.telemetry to grafana_ro;
+grant select on public.telemetry to authenticated;
 
-create policy "grafana read telemetry" on public.telemetry
-  for select to grafana_ro using (true);
+create policy "dashboard read telemetry" on public.telemetry
+  for select to authenticated using (true);
 ```
 
-**วิธีที่ 2: ใช้ SQL ทั้งหมด**
-
-**SQL Editor → New query** → เปลี่ยนรหัสผ่านเป็นของตนเอง → **Run** (ต่างจากวิธีที่ 1 เฉพาะบรรทัดแรก ที่ใช้ `create role` สร้าง user พร้อมตั้งรหัสผ่านในคำสั่งเดียว)
-
-```sql
-create role grafana_ro with login password 'ChangeMe-Strong-2026';
-grant usage on schema public to grafana_ro;
-grant select on public.telemetry to grafana_ro;
-
-create policy "grafana read telemetry" on public.telemetry
-  for select to grafana_ro using (true);
-```
-
-> ⚠️ เลือกใช้วิธีใดวิธีหนึ่งเท่านั้น ถ้าสร้าง user ผ่านหน้าเว็บแล้วมารันวิธีที่ 2 จะเกิด error *role "grafana_ro" already exists* และคำสั่งทั้งชุดจะไม่ถูกบันทึก ภายหลังถ้าต้องการเปลี่ยนรหัสผ่าน ให้รันเฉพาะคำสั่ง `alter role grafana_ro with password '...';`
+> **ทางเลือก: สร้าง policy ผ่านหน้าเว็บ** ที่ **Database → Access Control → Policies** → ตาราง `telemetry` → **Create policy** → Policy Name `dashboard read telemetry` → Policy Command **SELECT** → Target Roles **authenticated** → พิมพ์ `true` ในวงเล็บของ `using` → **Save policy** แต่คำสั่ง `grant select ...` บรรทัดแรกยังต้องรันใน SQL Editor เพราะหน้าเว็บยังไม่มีเมนูให้สิทธิ์ระดับตาราง
 
 **ตรวจสอบ**
 
-- **Database → Access Control → Policies** → ตาราง `telemetry` ต้องมี 2 policy คือ `esp32 insert telemetry` (role `anon`) และ `grafana read telemetry` (role `grafana_ro`)
-- **SQL Editor** → รันคำสั่งด้านล่าง ต้องได้ 1 แถวคือ `grafana_ro | SELECT`
-
-```sql
-select grantee, privilege_type
-from information_schema.table_privileges
-where table_name = 'telemetry' and grantee = 'grafana_ro';
-```
-
-การทดสอบจริงว่า login ได้ คือขั้น **Save & test** ของ data source ในหัวข้อ 12.8.6
+- **Authentication → Users** มีบัญชีของตนเอง และ **Sign In / Providers** แสดงว่าปิด *Allow new users to sign up* แล้ว
+- **Database → Access Control → Policies** ตาราง `telemetry` มี 2 policy คือ `esp32 insert telemetry` (INSERT, `anon`) และ `dashboard read telemetry` (SELECT, `authenticated`)
 
 ### 12.8.5 โปรแกรม ESP32-S3 ส่วนที่ 1 (`mcc_monitor.ino`)
 
@@ -811,119 +826,103 @@ void loop() {
 
 > **ไม่มีบอร์ดจริง?** ใช้ [Wokwi](https://wokwi.com) เลือกบอร์ด ESP32-S3 แทนได้ AHT25 ไม่มีใน Wokwi จึงต้องใช้ DHT22 แทน โดยเปลี่ยนเฉพาะส่วนอ่านเซนเซอร์เป็น `dht.readTemperature()` / `dht.readHumidity()` และใช้ Wi-Fi `Wokwi-GUEST`
 
-### 12.8.6 เชื่อม Grafana Cloud
+### 12.8.6 เปิดแดชบอร์ดบน Vercel
 
-1. ใน Supabase คลิก **Connect** ด้านบนของหน้าโปรเจกต์ → เลือกแท็บ **Direct** (*Connection string*) → ที่ **Connection Method** เลือก **Session pooler** → ส่วน *Connection parameters* ด้านล่างจะแสดงค่า `host`, `port`, `database` และ `user` แยกกัน → **คัดลอก** ค่า `host` (รูปแบบ `aws-[INDEX]-[REGION].pooler.supabase.com`), `port` (`5432`) และ project ref (ส่วนต่อท้ายของ `user` คือ `postgres.xxxx`)
+เลือกวิธีใดวิธีหนึ่ง
 
-   > แท็บแรกที่เปิดขึ้นมาคือ **Framework** (ตัวอย่างโค้ด Next.js ฯลฯ) ไม่ใช่ข้อมูลที่ Grafana ใช้ ต้องเปลี่ยนไปแท็บ **Direct** ก่อน และห้ามเลือก *Direct connection* เพราะใช้ IPv6 (หัวข้อ 12.5) หรือ *Transaction pooler* (port `6543`) เพราะออกแบบมาสำหรับงานที่เปิด-ปิด connection สั้น ๆ เช่น serverless function ไม่ใช่ connection ค้างยาวแบบ Grafana
+**วิธีที่ 1 (แนะนำ): ใช้แดชบอร์ดที่ผู้สอน Deploy ไว้** ไม่ต้องสมัคร Vercel หรือ GitHub
 
-   > ⚠️ `[INDEX]` คือหมายเลข cluster ของ pooler ซึ่ง **เดาจาก region ไม่ได้** (อาจเป็น `aws-0-...` หรือ `aws-1-...`) ต้องคัดลอก host จากหน้า Connect ของโปรเจกต์ตนเองเท่านั้น ([Supabase Docs: Connecting to Postgres](https://supabase.com/docs/guides/database/connecting-to-postgres))
-2. สมัครที่ [grafana.com](https://grafana.com) → แผน **Free** → สร้าง Stack
-3. **Connections → Data sources → Add data source → PostgreSQL** → เปลี่ยน **Name** ด้านบนสุดของหน้า (ค่าเริ่มต้นคือ `grafana-postgresql-datasource-1`) เป็น `Supabase` เพราะ panel ทุกตัวในบทนี้อ้างชื่อนี้ แล้วกรอกค่าจาก *Connection parameters* ตามตารางด้านล่าง
+1. เปิดลิงก์แดชบอร์ดของรายวิชา: **(ลิงก์จากอาจารย์ผู้สอน เช่น `https://mcc-dashboard.vercel.app`)** ใช้ได้ทั้งคอมพิวเตอร์และมือถือ
+2. ครั้งแรกจะพบหน้า **ตั้งค่าการเชื่อมต่อ Supabase** ให้กรอก
 
-**ตัวอย่าง:** ถ้าหน้า Connect แสดงค่าดังนี้ (project ref สมมุติ `abcdefghijklmnopqrst`)
-
-```text
-host:     aws-0-ap-southeast-1.pooler.supabase.com
-port:     5432
-database: postgres
-user:     postgres.abcdefghijklmnopqrst
-```
-
-จะกรอกใน Grafana ดังนี้
-
-| ช่องใน Grafana | นำมาจาก | ค่าที่กรอก (ตามตัวอย่าง) |
+| ช่อง | ค่า | ที่มา |
 |:---|:---|:---|
-| **Host URL** | `host` + `:` + `port` | `aws-0-ap-southeast-1.pooler.supabase.com:5432` (อย่าลืม `:5432` ต่อท้าย) |
-| **Database name** | `database` | `postgres` |
-| **Username** | `grafana_ro` + `.` + project ref (ส่วนหลังจุดของ `user`) | `grafana_ro.abcdefghijklmnopqrst` |
-| **Password** | รหัสผ่านของ `grafana_ro` ที่ตั้งในหัวข้อ 12.8.4 | (รหัสผ่านของตนเอง) |
-| **TLS/SSL Mode** | กำหนดเอง | `require` |
-| **TimescaleDB** | กำหนดเอง | ปิด |
+| **Project URL** | `https://xxxx.supabase.co` (ไม่มี `/rest/v1/` ต่อท้าย) | หัวข้อ 12.8.3 |
+| **Publishable key** | `sb_publishable_...` | หัวข้อ 12.8.3 (ห้ามใช้ Secret key) |
+| **DEVICE_ID** | ค่าเดียวกับในโปรแกรม ESP32 เช่น `mcc-1234` | หัวข้อ 12.8.5 |
 
-**Additional settings** (อยู่ด้านล่างของหน้า ค่าเริ่มต้นบางช่องไม่เหมาะกับระบบนี้)
+3. กด **บันทึก** → พบหน้า **เข้าสู่ระบบแดชบอร์ด** → กรอกอีเมลและรหัสผ่านที่สร้างในหัวข้อ 12.8.4 ข. → **เข้าสู่ระบบ**
 
-| ช่อง | ค่าเริ่มต้น | ค่าที่ตั้ง | เหตุผล |
+ค่าที่กรอกจะถูกเก็บใน **เบราว์เซอร์เครื่องนั้นเท่านั้น** (localStorage) ผู้สอนและนักศึกษาคนอื่นไม่เห็น ถ้าเปลี่ยนเครื่องหรือเปิดโหมดไม่ระบุตัวตน ต้องกรอกใหม่ และแก้ค่าได้จากปุ่ม **เปลี่ยนโปรเจกต์** บนแดชบอร์ด
+
+**วิธีที่ 2: Deploy แดชบอร์ดของตนเอง** (ต้องมีบัญชี GitHub)
+
+1. เปิด [หน้า Deploy บน Vercel](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FalfaXphoori%2FTechEngineering%2Ftree%2Fmain%2Fdashboard&project-name=mcc-dashboard&repository-name=mcc-dashboard) → login Vercel ด้วยบัญชี GitHub → **Create** (Vercel จะคัดลอกโฟลเดอร์ `dashboard/` ไปเป็น repo ใหม่ในบัญชี GitHub ของเรา)
+2. (ไม่บังคับ) ที่ **Environment Variables** กรอก `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` และ `NEXT_PUBLIC_DEVICE_ID` ถ้ากรอก แดชบอร์ดจะข้ามหน้าตั้งค่าและผูกกับโปรเจกต์นั้นเสมอ ถ้าไม่กรอกจะทำงานแบบวิธีที่ 1
+3. **Deploy** → รอ 1–2 นาที → ได้ URL เช่น `https://mcc-dashboard-xxxx.vercel.app`
+
+> **สำหรับผู้สอน (Deploy ครั้งเดียวให้ทั้งชั้นเรียน):** Vercel → **Add New… → Project** → **Import** repo `TechEngineering` → **Root Directory** = `dashboard` → Framework Preset = **Next.js** (ตรวจพบอัตโนมัติ) → **ไม่ต้องกรอก Environment Variables** → **Deploy** แล้วแจกลิงก์ให้นักศึกษา แดชบอร์ดตัวเดียวใช้ได้กับทุกโปรเจกต์ Supabase ของนักศึกษา เพราะเบราว์เซอร์ของแต่ละคนคุยกับ Supabase ของตนเองโดยตรง Vercel login ด้วยบัญชี Google ได้ แต่การ Import repo ต้องเชื่อมบัญชี GitHub
+
+**ตรวจสอบ:** หลัง login ต้องเห็น Gauge อุณหภูมิและความชื้นแสดงค่าเดียวกับ Serial Monitor และ **สถานะการเชื่อมต่อ** แสดงตัวเลขไม่เกินประมาณ 10 วินาทีสีเขียว
+
+### 12.8.7 อ่านแดชบอร์ดของส่วนที่ 1
+
+แดชบอร์ดจัด Layout ตามหลักการในหัวข้อ 12.7 โดยส่วนที่ 1 ใช้แถวที่ 1–2
+
+| แถว | ส่วนประกอบ | ข้อมูลจาก | ไฟล์ในโฟลเดอร์ `dashboard/` |
 |:---|:---|:---|:---|
-| **Version** | `9.3` | เวอร์ชันสูงสุดในรายการ (เช่น `15`) | Supabase ใช้ PostgreSQL 15 ขึ้นไป Grafana ใช้ค่านี้เลือกรูปแบบ SQL ที่สร้างให้ใน macro |
-| **Min time interval** | `1m` | `5s` | ค่าต่ำสุดของ `$__interval` (หัวข้อ 12.5.2) ควรเท่ากับรอบส่งของ ESP32 ถ้าปล่อยไว้ `1m` กราฟช่วง Last 15 minutes จะเหลือเพียงราว 15 จุด และไม่เห็นการเปลี่ยนแปลงระดับวินาที |
-| **Max open** | `100` | `10` | Session pooler ของแผนฟรีรับ connection ได้จำกัด ตั้งสูงเกินอาจเจอ error ว่า connection เต็ม 10 connection เพียงพอสำหรับแดชบอร์ดของผู้ใช้ 1 คน (ตรวจเพดานจริงได้ที่ Supabase **Database Settings**) |
-| **Max lifetime** | `14400` | คงค่าเดิม | |
+| 1 | Gauge อุณหภูมิ (0–60 °C, เหลือง 30, แดง 35) · Gauge ความชื้น (0–100 %RH, เหลือง 60, แดง 70) | แถวล่าสุดของ `telemetry` | `components/Gauge.jsx` |
+| 1 | สถานะการเชื่อมต่อ (วินาทีตั้งแต่ข้อมูลล่าสุด เกิน 30 วินาทีเป็นสีแดง) | `created_at` ของแถวล่าสุด | `components/Dashboard.jsx` |
+| 2 | กราฟอุณหภูมิ และกราฟความชื้น (แยกกราฟเพราะหน่วยต่างกัน) พร้อมปุ่มเลือกช่วง 15 นาที / 30 นาที / 1 ชั่วโมง | `telemetry` ในช่วงเวลาที่เลือก | `components/LineChart.jsx` |
 
-ช่องที่ **ปล่อยว่างหรือไม่ต้องแก้**
-- **TLS/SSL Method** และ **TLS/SSL Root Certificate / Client Certificate / Client Key:** ปล่อยว่าง โหมด `require` เข้ารหัสการเชื่อมต่อโดยไม่ตรวจใบรับรอง จึงไม่ต้องใช้ไฟล์ใบรับรอง
-- **Private data source connect:** ไม่ต้องเลือก ใช้กับฐานข้อมูลในเครือข่ายภายในที่ปิดจากอินเทอร์เน็ต ซึ่ง Supabase เปิดสู่อินเทอร์เน็ตอยู่แล้ว
+เกณฑ์สีทั้งหมดอยู่ในไฟล์ `lib/config.js` (`TEMP`, `HUM`, `STALE_SECONDS`) ถ้าต้องการเปลี่ยนเกณฑ์ ให้แก้ไฟล์นี้แล้ว Deploy ใหม่
 
-กล่อง *User Permissions* ด้านบนหน้าเป็นคำเตือนของ Grafana ว่าควรใช้ user ที่มีสิทธิ์ `SELECT` เท่านั้น เพราะ Grafana ไม่ตรวจว่า query ปลอดภัยหรือไม่ ซึ่งเราทำไว้แล้วด้วย `grafana_ro` ในหัวข้อ 12.8.4
+**โค้ดที่ดึงข้อมูล** (`components/Dashboard.jsx` ฟังก์ชัน `load()` ซึ่งถูกเรียกทุก 5 วินาที)
 
-> ⚠️ **ช่อง `user` ในหน้า Connect เป็นของ user `postgres` (ผู้ดูแลระบบ)** ให้คัดลอกมาเฉพาะ project ref ที่อยู่หลังจุด แล้วเปลี่ยนส่วนหน้าเป็น `grafana_ro` ถ้าใช้ `postgres.xxxx` ตรง ๆ Grafana จะได้สิทธิ์ผู้ดูแลระบบซึ่งแก้ไขและลบข้อมูลได้ทั้งหมด ขัดกับหลัก Least Privilege (หัวข้อ 12.3.3)
+```js
+const since = new Date(Date.now() - minutes * 60 * 1000).toISOString()
 
-> ⚠️ **ห้ามกด Reset database password** ในหน้า Connect เพราะปุ่มนี้เปลี่ยนรหัสผ่านของ `postgres` ไม่ใช่ของ `grafana_ro` ถ้าลืมรหัสผ่านของ `grafana_ro` ให้รัน `alter role grafana_ro with password '...';` ใน SQL Editor แทน และไม่ต้องใช้ connection string (`postgresql://...`) ที่หน้านี้แสดง เพราะ Grafana ให้กรอกแยกเป็นช่อง
+// แถวล่าสุด → Gauge และสถานะการเชื่อมต่อ
+supabase.from('telemetry').select('created_at, temp, hum')
+  .eq('device_id', DEVICE_ID).order('created_at', { ascending: false }).limit(1)
 
-4. **Save & test** → ต้องขึ้น ✅ *Database Connection OK* ถ้าขึ้น *password authentication failed* ให้ตรวจ Username ก่อน (มักลืมเติม `.project_ref` ต่อท้าย หรือยังใช้ `postgres.` อยู่) ถ้าขึ้น *connection timeout* ให้ตรวจว่าใช้ host ของ Session pooler ไม่ใช่ `db.xxxx.supabase.co`
-
-### 12.8.7 สร้าง Panel ของส่วนที่ 1
-
-ทุก panel ในหัวข้อนี้ใช้ data source `Supabase` (role `grafana_ro`)
-
-**ตัวแปร `device`:** Dashboard **Settings → Variables → Add variable** → Type **Query** → `SELECT DISTINCT device_id FROM telemetry ORDER BY 1;`
-
-**Gauge อุณหภูมิ** (Min 0, Max 60, Unit Celsius, Thresholds เขียว → เหลือง `30` → แดง `35`) และ **Gauge ความชื้น** (เปลี่ยน `temp` เป็น `hum`, Max 100, Unit Humidity (%H), เหลือง `60` → แดง `70`)
-
-```sql
-SELECT created_at AS time, temp
-FROM telemetry
-WHERE device_id = '$device'
-ORDER BY created_at DESC
-LIMIT 1;
+// ข้อมูลย้อนหลังตามช่วงที่เลือก → กราฟ
+supabase.from('telemetry').select('created_at, temp, hum')
+  .eq('device_id', DEVICE_ID).gte('created_at', since)
+  .order('created_at', { ascending: true }).limit(1000)
 ```
 
-**Stat สถานะการเชื่อมต่อ** (Unit seconds, แดงที่ `30` ขึ้นไป ค่าเกิน 30 วินาทีแปลว่าขาดข้อมูลไปอย่างน้อย 5 รอบ)
+| ส่วนของโค้ด | การทำงาน |
+|:---|:---|
+| `.eq('device_id', DEVICE_ID)` | อ่านเฉพาะอุปกรณ์ของตนเอง ค่ามาจากหน้าตั้งค่า จึงต้องตรงกับ `DEVICE_ID` ในโปรแกรม ESP32 ทุกตัวอักษร |
+| `.order(... ascending: false).limit(1)` | เรียงจากใหม่ไปเก่าแล้วเอาแถวแรก ได้ค่าล่าสุดเพียงแถวเดียว |
+| `.gte('created_at', since)` | เอาเฉพาะแถวที่ใหม่กว่าเวลาเริ่มต้นของช่วงที่เลือก |
+| `.limit(1000)` | ไม่ขอเกินเพดาน Max rows ของ Supabase (หัวข้อ 12.5.4) |
+| `setInterval(load, REFRESH_MS)` | เรียก `load()` ซ้ำทุก 5 วินาที (Polling) |
 
-```sql
-SELECT EXTRACT(EPOCH FROM now() - max(created_at)) AS "วินาทีที่แล้ว"
-FROM telemetry
-WHERE device_id = '$device';
+**ทดสอบ**
+
+| การทดลอง | ผลที่ควรเห็น |
+|:---|:---|
+| ใช้นิ้วจับ AHT25 นาน 1 นาที | Gauge อุณหภูมิเพิ่มขึ้น และเส้นกราฟอุณหภูมิยกตัว |
+| ถอดสาย USB ของ ESP32-S3 แล้วรอ 40 วินาที | สถานะการเชื่อมต่อเป็นสีแดง และมีแถบเตือน *ไม่ได้รับข้อมูลจาก ESP32* |
+| เปลี่ยนช่วงจาก 15 นาที เป็น 1 ชั่วโมง | แกนเวลาของกราฟกว้างขึ้น และเห็นแนวโน้มยาวขึ้น |
+| เปิด **Table Editor** ของ `telemetry` เทียบกับ Gauge | ค่าล่าสุดตรงกัน |
+
+### 12.8.8 การแจ้งเตือนบนแดชบอร์ด
+
+แดชบอร์ดแสดง **แถบเตือนด้านบนสุด** เมื่อพบสภาวะผิดปกติ 2 แบบ
+
+| แถบเตือน | เงื่อนไข | ค่าที่ปรับได้ใน `lib/config.js` |
+|:---|:---|:---|
+| 🔥 *อุณหภูมิในตู้สูงเกิน 35 °C* (สีแดง) | อุณหภูมิล่าสุด ≥ `TEMP.alarm` | `TEMP.alarm = 35` |
+| 📡 *ไม่ได้รับข้อมูลจาก ESP32 เกิน 30 วินาที* (สีเหลือง) | ข้อมูลล่าสุดเก่ากว่า `STALE_SECONDS` | `STALE_SECONDS = 30` |
+
+```js
+const ageSec = latest ? Math.round((now - new Date(latest.created_at).getTime()) / 1000) : null
+const stale = ageSec == null || ageSec > STALE_SECONDS
+const tempAlarm = latest && levelOf(latest.temp, TEMP) === 'alarm'
 ```
 
-**Time series แนวโน้ม** (Format: Time series ตั้ง Override ให้ซีรีส์ความชื้นใช้แกน Y ด้านขวา)
+**ทดสอบ:** ใช้นิ้วจับหรือเป่าลมอุ่นใส่ AHT25 จนอุณหภูมิเกินเกณฑ์ (ถ้าอุณหภูมิห้องต่ำ ให้ Deploy แดชบอร์ดของตนเองตามหัวข้อ 12.8.6 วิธีที่ 2 แล้วลด `TEMP.alarm` เป็นค่าที่สูงกว่าอุณหภูมิห้องเล็กน้อย เช่น `32`)
 
-```sql
-SELECT
-  $__timeGroupAlias(created_at, $__interval),
-  avg(temp) AS "อุณหภูมิ (°C)",
-  avg(hum)  AS "ความชื้น (%RH)"
-FROM telemetry
-WHERE device_id = '$device' AND $__timeFilter(created_at)
-GROUP BY 1
-ORDER BY 1;
-```
-
-ตั้ง Auto-refresh ที่มุมขวาบนเป็น **10s** แล้ว **Save dashboard** ชื่อ `MCC Monitor`
-
-### 12.8.8 ตั้งการแจ้งเตือน
-
-1. **Alerting → Contact points → Add contact point** → Integration **Email** → ใส่อีเมล → **Test** → **Save**
-2. **Alerting → Alert rules → New alert rule** → ชื่อ `MCC overheat` → เลือก data source `Supabase` → Query:
-
-```sql
-SELECT $__timeGroupAlias(created_at, 1m), avg(temp) AS temp
-FROM telemetry
-WHERE device_id = 'mcc01' AND $__timeFilter(created_at)
-GROUP BY 1
-ORDER BY 1;
-```
-
-3. Expressions: **Reduce** = `Last` → **Threshold** = `IS ABOVE 35`
-4. Evaluation ทุก `1m`, Pending period `2m` → เลือก Contact point → **Save rule**
-
-Pending period ทำให้ต้องเกินเกณฑ์ **ต่อเนื่อง** 2 นาทีจึงจะแจ้งเตือน จึงไม่แจ้งเตือนผิดจากค่ากระโดดเพียงครั้งเดียว นอกจากนี้ Alert rule ใช้ตัวแปร `$device` ของแดชบอร์ดไม่ได้ จึงต้องระบุชื่ออุปกรณ์ตรง ๆ
+> **ข้อจำกัดของการแจ้งเตือนบนหน้าเว็บ:** แถบเตือนทำงานเฉพาะเมื่อมีคนเปิดแดชบอร์ดอยู่ ถ้าต้องการแจ้งเตือนตลอด 24 ชั่วโมง เช่น ส่งอีเมลหรือข้อความเข้ามือถือ ต้องให้ **ฝั่งเซิร์ฟเวอร์** เป็นผู้ตรวจ เช่น ใช้ Database Webhook หรือ Edge Function ของ Supabase ทำงานทุกครั้งที่มีแถวใหม่ใน `telemetry` แล้วส่งอีเมลเมื่อค่าเกินเกณฑ์ต่อเนื่อง (โจทย์ท้าทายท้ายบท) และควรตรวจแบบ **ต่อเนื่อง** เช่น เกินเกณฑ์นาน 2 นาที เพื่อไม่ให้แจ้งเตือนผิดจากค่ากระโดดเพียงครั้งเดียว
 
 ---
 
 ## 12.9 ปฏิบัติการส่วนที่ 2: สั่งการ (Dashboard → ESP32)
 
-**เป้าหมายของส่วนที่ 2:** ช่างสั่งเปิด/ปิดไฟ ปั๊ม และพัดลม (แทนด้วย LED) ได้ 2 ทาง คือจากฟอร์มบน Grafana และจากปุ่มหน้าตู้ ทั้งสองทางทำให้ตาราง `controls` ตรงกับสถานะของ LED เสมอ และทุกการเปลี่ยนแปลงถูกบันทึกลง `events` เพื่อแสดงบน State timeline และ Annotation
+**เป้าหมายของส่วนที่ 2:** ช่างสั่งเปิด/ปิดไฟ ปั๊ม และพัดลม (แทนด้วย LED) ได้ 2 ทาง คือจากปุ่มบนเว็บแดชบอร์ด และจากปุ่มหน้าตู้ ทั้งสองทางทำให้ตาราง `controls` ตรงกับสถานะของ LED เสมอ และทุกการเปลี่ยนแปลงถูกบันทึกลง `events` เพื่อแสดงเป็นประวัติการสั่งและเส้นหมายเหตุบนกราฟ
 
 ### 12.9.1 ต่อวงจรเพิ่ม
 
@@ -949,10 +948,10 @@ Pending period ทำให้ต้องเกินเกณฑ์ **ต่�
 | คอลัมน์ | ชนิดข้อมูล | ค่าเริ่มต้น / เงื่อนไข | ผู้กำหนดค่า | ความหมาย | ตัวอย่าง |
 |:---|:---|:---|:---|:---|:---|
 | `device_id` | `text` (`text`) | Primary key | ผู้ดูแลระบบ (สร้างแถวครั้งแรก) | รหัสอุปกรณ์ | `mcc01` |
-| `light` | `boolean` (`bool`) | `not null`, `default false` | Grafana / ปุ่ม GPIO 4 | สั่งไฟ (`true` = เปิด) | `false` |
-| `pump` | `boolean` (`bool`) | `not null`, `default false` | Grafana / ปุ่ม GPIO 5 | สั่งปั๊ม | `false` |
-| `fan` | `boolean` (`bool`) | `not null`, `default false` | Grafana / ปุ่ม GPIO 6 | สั่งพัดลม | `true` |
-| `updated_by` | `text` (`text`) | รับเฉพาะ `button` / `dashboard` | Grafana / ESP32-S3 | ผู้สั่งครั้งล่าสุด | `dashboard` |
+| `light` | `boolean` (`bool`) | `not null`, `default false` | แดชบอร์ด / ปุ่ม GPIO 4 | สั่งไฟ (`true` = เปิด) | `false` |
+| `pump` | `boolean` (`bool`) | `not null`, `default false` | แดชบอร์ด / ปุ่ม GPIO 5 | สั่งปั๊ม | `false` |
+| `fan` | `boolean` (`bool`) | `not null`, `default false` | แดชบอร์ด / ปุ่ม GPIO 6 | สั่งพัดลม | `true` |
+| `updated_by` | `text` (`text`) | รับเฉพาะ `button` / `dashboard` | แดชบอร์ด / ESP32-S3 | ผู้สั่งครั้งล่าสุด | `dashboard` |
 | `updated_at` | `timestamptz` (`timestamptz`) | `default now()` (trigger ตั้งใหม่ทุกครั้ง) | ฐานข้อมูล | เวลาที่สั่งครั้งล่าสุด | `2026-09-28 03:20:45+00` |
 
 **ตาราง `events`: ประวัติการเปลี่ยนสถานะ (trigger เป็นผู้เขียน)**
@@ -981,10 +980,10 @@ Index: `events_device_time_idx` บนคอลัมน์ `(device_id, created
 | id | created_at | device_id | event | state | source | มาจาก |
 |---:|:---|:---|:---|:---|:---|:---|
 | 57 | 2026-09-28 03:16:12+00 | mcc01 | light | true | button | กดปุ่ม GPIO 4 หน้าตู้ |
-| 58 | 2026-09-28 03:20:45+00 | mcc01 | fan | true | dashboard | ช่างสั่งเปิดพัดลมจาก Grafana |
+| 58 | 2026-09-28 03:20:45+00 | mcc01 | fan | true | dashboard | ช่างสั่งเปิดพัดลมจากแดชบอร์ด |
 | 59 | 2026-09-28 03:48:02+00 | mcc01 | fan | false | button | กดปุ่ม GPIO 6 หน้าตู้ |
 
-ตาราง `events` ไม่ได้เชื่อมกับ `telemetry` ด้วย Foreign key แต่เชื่อมกันด้วย `device_id` และช่วงเวลา `created_at` เช่น Annotation บน Grafana จะนำ event `fan` ไปวางบนกราฟ `telemetry` ของอุปกรณ์เดียวกัน ณ เวลาเดียวกัน
+ตาราง `events` ไม่ได้เชื่อมกับ `telemetry` ด้วย Foreign key แต่เชื่อมกันด้วย `device_id` และช่วงเวลา `created_at` เช่น เส้นหมายเหตุบนแดชบอร์ดจะนำ event `fan` ไปวางบนกราฟ `telemetry` ของอุปกรณ์เดียวกัน ณ เวลาเดียวกัน
 
 **ขั้นตอน**
 
@@ -1069,89 +1068,58 @@ insert into public.controls (device_id) values ('mcc01');
 | ส่วนของ SQL | การทำงาน |
 |:---|:---|
 | `before update ... for each row` | trigger ทำงานก่อนบันทึกแต่ละแถว จึงแก้ `new.updated_at` ได้ และถ้าคำสั่ง `UPDATE` ถูกปฏิเสธด้วย RLS แถวใน `events` ก็จะถูกยกเลิกไปด้วย เพราะอยู่ใน transaction เดียวกัน |
-| `is distinct from` | เปรียบเทียบค่าเก่ากับค่าใหม่ บันทึกเฉพาะอุปกรณ์ที่เปลี่ยนจริง ฟอร์มของ Grafana ส่งค่าทั้ง 3 อุปกรณ์ทุกครั้ง แต่ `events` จะได้เฉพาะแถวของอุปกรณ์ที่ถูกเปลี่ยน |
-| `security definer` + `set search_path = ''` | ฟังก์ชันทำงานด้วยสิทธิ์ของเจ้าของ (`postgres`) ESP32 และ Grafana จึงไม่ต้องมีสิทธิ์เขียน `events` เอง การกำหนด `search_path` ว่างและเขียนชื่อเต็ม `public.events` ป้องกันการหลอกให้ฟังก์ชันเขียนตารางอื่น |
-| `grant update (light, pump, fan, updated_by)` | สิทธิ์ระดับคอลัมน์ ESP32 แก้ได้เฉพาะสถานะและผู้สั่ง แก้ `device_id` หรือ `updated_at` เองไม่ได้ (`grafana_ctl` ในหัวข้อ 12.9.3 ได้สิทธิ์แบบเดียวกัน) |
+| `is distinct from` | เปรียบเทียบค่าเก่ากับค่าใหม่ บันทึกเฉพาะอุปกรณ์ที่เปลี่ยนจริง ถ้าคำสั่ง `UPDATE` หนึ่งครั้งแก้หลายคอลัมน์ `events` จะได้เฉพาะแถวของอุปกรณ์ที่ค่าเปลี่ยนจริง และถ้าสั่งค่าเดิมซ้ำจะไม่มีแถวเพิ่ม |
+| `security definer` + `set search_path = ''` | ฟังก์ชันทำงานด้วยสิทธิ์ของเจ้าของ (`postgres`) ESP32 และแดชบอร์ดจึงไม่ต้องมีสิทธิ์เขียน `events` เอง การกำหนด `search_path` ว่างและเขียนชื่อเต็ม `public.events` ป้องกันการหลอกให้ฟังก์ชันเขียนตารางอื่น |
+| `grant update (light, pump, fan, updated_by)` | สิทธิ์ระดับคอลัมน์ ESP32 แก้ได้เฉพาะสถานะและผู้สั่ง แก้ `device_id` หรือ `updated_at` เองไม่ได้ (ผู้ใช้แดชบอร์ด `authenticated` ในหัวข้อ 12.9.3 ได้สิทธิ์แบบเดียวกัน) |
 | `with check (updated_by = 'button')` | ESP32 ต้องระบุตัวเองว่า `button` เสมอ อ้างเป็น `dashboard` ไม่ได้ ประวัติใน `events` จึงเชื่อถือได้ |
 
-### 12.9.3 ตั้งค่า user `grafana_ctl` และเพิ่มสิทธิ์ `grafana_ro` บน Supabase
+### 12.9.3 ให้สิทธิ์สั่งการแก่ผู้ใช้แดชบอร์ด (`authenticated`)
 
-ส่วนที่ 2 ต้องตั้งค่า user 2 ราย
+บัญชีที่สร้างในหัวข้อ 12.8.4 ตอนนี้อ่านได้เฉพาะ `telemetry` ส่วนที่ 2 ต้องเพิ่มสิทธิ์ดังนี้
 
-- **`grafana_ctl` (user ใหม่):** ใช้กับฟอร์มสั่งการบน Grafana เท่านั้น อ่านและแก้ได้เฉพาะตาราง `controls` (`ctl` = control)
-- **`grafana_ro` (user เดิมจากหัวข้อ 12.8.4):** เพิ่มสิทธิ์อ่านตาราง `events` สำหรับ State timeline, Annotation และ Stat
-
-**user `grafana_ctl`**
-
-| รายการ | ค่า | เหตุผล |
-|:---|:---|:---|
-| Name | `grafana_ctl` | แยกจาก `grafana_ro` เพื่อให้ panel แสดงผลเขียนฐานข้อมูลไม่ได้ |
-| Login | ได้ | Grafana ต้อง login ผ่าน Session Pooler |
-| Password | ตั้งเอง และต้องไม่ซ้ำกับของ `grafana_ro` | ใช้กรอกใน data source `Supabase-Control` (หัวข้อ 12.9.5) |
-| Bypass RLS · Superuser · Create role · Create DB | ปิดทั้งหมด | ให้สิทธิ์เท่าที่จำเป็นเท่านั้น |
-| Username ที่กรอกใน Grafana | `grafana_ctl.<project_ref>` | รูปแบบเดียวกับ `grafana_ro` |
-
-**สิทธิ์ที่ต้องให้**
-
-| User | ตาราง | สิทธิ์ | RLS policy |
+| ตาราง | สิทธิ์ของ `authenticated` | RLS policy | ใช้กับ |
 |:---|:---|:---|:---|
-| `grafana_ctl` | `controls` | `SELECT` + `UPDATE` เฉพาะคอลัมน์ `light`, `pump`, `fan`, `updated_by` | อ่านได้ทุกแถว · แก้ได้เมื่อ `updated_by = 'dashboard'` เท่านั้น |
-| `grafana_ro` | `events` | `SELECT` | อ่านได้ทุกแถว |
+| `controls` | `SELECT` + `UPDATE` เฉพาะคอลัมน์ `light`, `pump`, `fan`, `updated_by` | อ่านได้ทุกแถว · แก้ได้เมื่อ `updated_by = 'dashboard'` เท่านั้น | สวิตช์สั่งการ |
+| `events` | `SELECT` | อ่านได้ทุกแถว | ประวัติการสั่ง เส้นหมายเหตุบนกราฟ และจำนวนครั้งที่เปิดพัดลม |
 
-`grafana_ctl` ไม่มีสิทธิ์ใด ๆ กับ `telemetry` และ `events` เพราะฟอร์มสั่งการไม่ต้องใช้ ส่วนแถวใน `events` ที่เกิดจากการสั่งผ่านแดชบอร์ด trigger เป็นผู้เขียนให้ (หัวข้อ 12.6.4)
+แดชบอร์ด **ไม่มีสิทธิ์เขียน `events`** แถวใน `events` ที่เกิดจากการสั่งผ่านแดชบอร์ด trigger เป็นผู้เขียนให้ (หัวข้อ 12.6.4) ประวัติจึงปลอมไม่ได้
 
-**วิธีที่ 1: สร้าง user ผ่านหน้าเว็บ Supabase แล้วให้สิทธิ์ด้วย SQL**
-
-1. **Database → Access Control → Roles → Add role**
-2. **Name** = `grafana_ctl` → เปิดสวิตช์ **User can login** เพียงข้อเดียว → **Save**
-3. **SQL Editor → New query** → เปลี่ยนรหัสผ่านเป็นของตนเอง → **Run**
+**SQL Editor → New query → Run**
 
 ```sql
--- ===== grafana_ctl: ฟอร์มสั่งการ อ่าน/แก้ controls ได้อย่างเดียว =====
-alter role grafana_ctl with password 'ChangeMe-Control-2026';
-grant usage on schema public to grafana_ctl;
-grant select on public.controls to grafana_ctl;
-grant update (light, pump, fan, updated_by) on public.controls to grafana_ctl;
+-- ===== ผู้ใช้แดชบอร์ด (authenticated): อ่าน/แก้ controls =====
+grant select on public.controls to authenticated;
+grant update (light, pump, fan, updated_by) on public.controls to authenticated;
 
-create policy "grafana read controls" on public.controls
-  for select to grafana_ctl using (true);
-create policy "grafana update controls" on public.controls
-  for update to grafana_ctl
+create policy "dashboard read controls" on public.controls
+  for select to authenticated using (true);
+create policy "dashboard update controls" on public.controls
+  for update to authenticated
   using (true)
   with check (updated_by = 'dashboard');
 
--- ===== grafana_ro อ่าน events เพิ่ม (State timeline, Annotation) =====
-grant select on public.events to grafana_ro;
-create policy "grafana read events" on public.events
-  for select to grafana_ro using (true);
+-- ===== ผู้ใช้แดชบอร์ด (authenticated): อ่าน events =====
+grant select on public.events to authenticated;
+create policy "dashboard read events" on public.events
+  for select to authenticated using (true);
 ```
 
-**วิธีที่ 2: ใช้ SQL ทั้งหมด**
-
-ใช้ชุดคำสั่งเดียวกับวิธีที่ 1 แต่เปลี่ยนบรรทัด `alter role ...` เป็น
-
-```sql
-create role grafana_ctl with login password 'ChangeMe-Control-2026';
-```
-
-> ⚠️ เช่นเดียวกับหัวข้อ 12.8.4 ให้เลือกใช้วิธีใดวิธีหนึ่งเท่านั้น ถ้ามี user `grafana_ctl` อยู่แล้ว คำสั่ง `create role` จะ error และคำสั่งทั้งชุดจะไม่ถูกบันทึก
+> **ทางเลือก: สร้าง policy ผ่านหน้าเว็บ** ที่ **Database → Access Control → Policies** ได้เช่นเดียวกับหัวข้อ 12.8.4 ค. (policy แบบ UPDATE ให้พิมพ์ `true` ในช่อง `using` และ `updated_by = 'dashboard'` ในช่อง `with check`) แต่คำสั่ง `grant ...` ทั้ง 3 บรรทัดยังต้องรันใน SQL Editor
 
 **ตรวจสอบ**
 
-- **Database → Access Control → Roles** → หัวข้อ *Other database roles* ต้องมีทั้ง `grafana_ro` และ `grafana_ctl`
-- **Database → Access Control → Policies** → ตาราง `controls` ต้องมี 4 policy (`esp32 read controls`, `esp32 update controls`, `grafana read controls`, `grafana update controls`) และตาราง `events` ต้องมี `grafana read events`
-- **SQL Editor** → รันคำสั่งด้านล่าง ต้องได้ 3 แถวคือ `controls | grafana_ctl | SELECT`, `controls | grafana_ctl | UPDATE` และ `events | grafana_ro | SELECT`
+- **Database → Access Control → Policies** → ตาราง `controls` ต้องมี 4 policy (`esp32 read controls`, `esp32 update controls`, `dashboard read controls`, `dashboard update controls`) และตาราง `events` ต้องมี `dashboard read events`
+- **SQL Editor** → รันคำสั่งด้านล่าง ต้องได้ 3 แถวคือ `controls | SELECT`, `controls | UPDATE` และ `events | SELECT`
 
 ```sql
-select table_name, grantee, privilege_type
+select table_name, privilege_type
 from information_schema.table_privileges
-where grantee in ('grafana_ro', 'grafana_ctl')
-  and table_name in ('controls', 'events')
+where grantee = 'authenticated' and table_name in ('controls', 'events')
 union
-select distinct table_name, grantee, privilege_type
+select distinct table_name, privilege_type
 from information_schema.column_privileges
-where grantee = 'grafana_ctl' and table_name = 'controls' and privilege_type = 'UPDATE'
-order by 1, 2, 3;
+where grantee = 'authenticated' and table_name = 'controls' and privilege_type = 'UPDATE'
+order by 1, 2;
 ```
 
 ### 12.9.4 โปรแกรม ESP32-S3 ส่วนที่ 2 (`mcc_control.ino`)
@@ -1369,118 +1337,75 @@ void loop() {
 
 > **ใช้ Wokwi:** LED ปุ่มกด และไลบรารี ArduinoJson ใช้ใน Wokwi ได้ตามปกติ ต่อ LED ผ่านตัวต้านทาน 220 Ω ที่ GPIO 10/11/12 ได้เหมือนบอร์ดจริง
 
-### 12.9.5 สร้างฟอร์มสั่งการด้วย Business Forms
+### 12.9.5 สั่งเปิด/ปิดอุปกรณ์จากแดชบอร์ด
 
-**Business Forms** (plugin id `volkovlabs-form-panel`) เป็น panel plugin ที่ Grafana Labs ดูแล ใช้สร้างฟอร์มที่อ่านค่าจาก data source แล้วส่งค่าที่แก้ไขกลับไปเขียน data source ได้ ([Grafana Docs: Business Forms](https://grafana.com/docs/plugins/volkovlabs-form-panel/latest/)) ขั้นตอนด้านล่างอ้างอิงเวอร์ชัน 6.x ชื่อเมนูอาจต่างเล็กน้อยในเวอร์ชันอื่น
+แดชบอร์ดชุดเดิมจากหัวข้อ 12.8.6 มีแถวที่ 3 สำหรับส่วนที่ 2 อยู่แล้ว เมื่อให้สิทธิ์ในหัวข้อ 12.9.3 และสร้างแถวใน `controls` แล้ว ให้ **กด refresh หน้าเว็บ 1 ครั้ง** จะเห็นกล่อง **สั่งการอุปกรณ์** ที่มีปุ่ม 3 ปุ่ม
 
-**ก. ติดตั้ง plugin และเพิ่ม data source สำหรับสั่งการ**
-
-1. **Administration → Plugins and data → Plugins** → ค้นหา **Business Forms** → **Install** (ต้องเป็นผู้ดูแล Stack ซึ่งเจ้าของ Stack เป็นอยู่แล้ว)
-2. **Connections → Data sources → Add data source → PostgreSQL** → ตั้งชื่อ `Supabase-Control` → กรอกค่าเหมือนหัวข้อ 12.8.6 ทุกช่อง (รวมถึง Additional settings) ยกเว้น **Username** = `grafana_ctl.<project_ref>` (เช่น `grafana_ctl.abcdefghijklmnopqrst`) และ **Password** = รหัสผ่านของ `grafana_ctl` → **Save & test**
-
-> data source `Supabase` (`grafana_ro`) ใช้กับ panel แสดงผลทั้งหมด ส่วน `Supabase-Control` (`grafana_ctl`) ใช้กับฟอร์มสั่งการเท่านั้น ถ้าเลือกผิดเป็น `Supabase` ฟอร์มจะขึ้น *permission denied for table controls*
-
-**ข. สร้าง panel ฟอร์มสั่งการ**
-
-เปิดแดชบอร์ด `MCC Monitor` → **Add → Visualization** → เลือก visualization **Business Forms** → ตั้งชื่อ panel `สั่งการอุปกรณ์` แล้วตั้งค่าตามลำดับ
-
-1. **Queries** (แท็บด้านล่าง): data source `Supabase-Control` → โหมด **Code** → Format **Table**
-
-```sql
-SELECT light, pump, fan
-FROM controls
-WHERE device_id = '$device';
-```
-
-2. **Form Elements** → **Add Element** 3 ตัว
-
-| Id | Label | Type |
+| ปุ่ม | สถานะที่แสดง | เมื่อกด |
 |:---|:---|:---|
-| `light` | ไฟในตู้ | Radio group with boolean options |
-| `pump` | ปั๊ม | Radio group with boolean options |
-| `fan` | พัดลมระบายอากาศ | Radio group with boolean options |
+| 💡 ไฟในตู้ (`light`) | **เปิด** (กรอบเขียว) / **ปิด** (กรอบเทา) ตามค่าใน `controls` | ถามยืนยัน แล้วสั่งสถานะตรงข้าม |
+| 🛢️ ปั๊ม (`pump`) | เช่นเดียวกัน | เช่นเดียวกัน |
+| 🌀 พัดลมระบายอากาศ (`fan`) | เช่นเดียวกัน | เช่นเดียวกัน |
 
-   element แบบ boolean แสดงเป็นปุ่มเลือก **Enabled** (เปิด = `true`) / **Disabled** (ปิด = `false`)
+ใต้ปุ่มแสดง **ผู้สั่งล่าสุด** (ปุ่มหน้าตู้ หรือแดชบอร์ด) และเวลา ซึ่งมาจากคอลัมน์ `updated_by` และ `updated_at` ถ้ากดปุ่มหน้าตู้ ปุ่มบนแดชบอร์ดจะเปลี่ยนตามภายในรอบ refresh ถัดไป (ไม่เกิน 5 วินาที)
 
-3. **Initial Request** → **Initial Action** = `Query` → **Synchronize with data** = `Enabled` จากนั้นที่ **Initial Fields → Query Fields** จับคู่ element กับคอลัมน์ `light` → `A:light`, `pump` → `A:pump`, `fan` → `A:fan`
-
-   ฟอร์มจะแสดงสถานะใน `controls` ขณะนั้น และอัปเดตตามทุกครั้งที่แดชบอร์ด refresh จึงเห็นผลของการกดปุ่มหน้าตู้ด้วย
-
-4. **Update Request** → **Update Action** = `Data Source` → **Data Source** = `Supabase-Control` → **Custom Code** (โค้ดที่ทำงานหลังส่งคำสั่ง)
+**โค้ดที่สั่งการ** (`components/Dashboard.jsx` ฟังก์ชัน `command()`)
 
 ```js
-if (context.panel.response && context.panel.response.state === 'Done') {
-  context.grafana.notifySuccess(['สั่งการ', 'บันทึกคำสั่งแล้ว ESP32 จะทำตามภายในไม่กี่วินาที']);
-  context.grafana.refresh();
-} else {
-  context.grafana.notifyError(['สั่งการ', 'ส่งคำสั่งไม่สำเร็จ']);
+async function command(device, value) {
+  const verb = value ? 'เปิด' : 'ปิด'
+  if (!window.confirm(`ยืนยัน${verb}${device.label} ของ ${DEVICE_ID}?`)) return
+  setBusy(device.key)
+  const { data, error } = await supabase.from('controls')
+    .update({ [device.key]: value, updated_by: 'dashboard' })
+    .eq('device_id', DEVICE_ID)
+    .select()
+  if (error) setError(error.message)
+  else if (data.length === 0) setError('สั่งไม่สำเร็จ: ไม่พบแถวของอุปกรณ์นี้ใน controls หรือไม่มีสิทธิ์แก้ไข')
+  setBusy(null)
+  load()
 }
 ```
 
-5. **Update Request Payload** → **Request Payload** = `All Elements` → **Query Editor** โหมด **Code** → Format **Table**
-
-```sql
-UPDATE controls
-SET light      = ${payload.light},
-    pump       = ${payload.pump},
-    fan        = ${payload.fan},
-    updated_by = 'dashboard'
-WHERE device_id = '$device'
-RETURNING light, pump, fan;
-```
-
-6. **Confirmation Window** = `Enabled` (ยืนยันก่อนส่งทุกครั้ง ตามหลักการในหัวข้อ 12.7) → **Submit Button → Text** = `ส่งคำสั่ง`
-7. **Save dashboard**
-
-| ตัวแปร | ความหมาย |
+| ส่วนของโค้ด | การทำงาน |
 |:---|:---|
-| `${payload.light}` | ค่าของ element id `light` ขณะกดส่ง Business Forms แทนเป็น `true` หรือ `false` ก่อนส่ง SQL ไปยังฐานข้อมูล |
-| `'$device'` | ตัวแปรของแดชบอร์ด ฟอร์มจึงสั่งเฉพาะอุปกรณ์ที่เลือกอยู่ |
-| `RETURNING ...` | ให้ `UPDATE` ส่งแถวที่แก้แล้วกลับมา ถ้าได้ 0 แถวแปลว่าไม่มีแถวของอุปกรณ์นี้ใน `controls` |
+| `window.confirm(...)` | ถามยืนยันก่อนทุกครั้ง ป้องกันการกดพลาด (หลักการข้อ 5 ในหัวข้อ 12.7) โดยระบุชื่ออุปกรณ์และ `DEVICE_ID` ให้ชัด |
+| `.update({ [device.key]: value, updated_by: 'dashboard' })` | แก้เฉพาะคอลัมน์ของอุปกรณ์ที่กด และระบุตัวว่า `dashboard` ตามที่ RLS policy บังคับ (เทียบกับ ESP32 ที่ต้องส่ง `button`) |
+| `.eq('device_id', DEVICE_ID)` | แก้เฉพาะแถวของอุปกรณ์นี้ |
+| `.select()` | ขอแถวที่แก้แล้วกลับมา (เทียบกับ `RETURNING` ใน SQL) ถ้าได้ 0 แถว แปลว่าไม่พบแถว หรือ RLS ไม่อนุญาต ซึ่ง PostgREST ไม่ถือว่าเป็น error |
+| `setBusy(...)` | ปิดปุ่มทั้งหมดชั่วคราวระหว่างส่ง ป้องกันการกดซ้ำ |
+| `load()` | อ่านข้อมูลใหม่ทันที ไม่ต้องรอรอบ 5 วินาที |
 
-**ลำดับเหตุการณ์เมื่อกด "ส่งคำสั่ง":** Grafana ส่ง `UPDATE` ด้วย role `grafana_ctl` → RLS ตรวจว่า `updated_by = 'dashboard'` → trigger บันทึก `events` ของอุปกรณ์ที่เปลี่ยน → ภายในราว 2 วินาที ESP32 `GET` ได้ค่าใหม่แล้วขับ LED → แดชบอร์ด refresh แล้ว State timeline แสดงช่วงเวลาใหม่
+**ลำดับเหตุการณ์เมื่อกดสั่ง:** เบราว์เซอร์ส่ง `PATCH /rest/v1/controls?device_id=eq.<id>` พร้อม JWT → PostgREST รันด้วย role `authenticated` → RLS ตรวจว่า `updated_by = 'dashboard'` → trigger บันทึก `events` → ภายในราว 2 วินาที ESP32 `GET` ได้ค่าใหม่แล้วขับ LED (Serial Monitor แสดง `CMD fan -> ON`) → แดชบอร์ดแสดงแถวใหม่ในประวัติการสั่ง
 
-### 12.9.6 Panel ประวัติการสั่ง (State timeline, Annotation, Stat)
+### 12.9.6 ประวัติการสั่ง เส้นหมายเหตุบนกราฟ และจำนวนครั้งที่เปิดพัดลม
 
-panel ในหัวข้อนี้อ่าน `events` จึงใช้ data source `Supabase` (`grafana_ro`)
+เมื่อ `authenticated` อ่าน `events` ได้แล้ว แดชบอร์ดจะแสดงข้อมูลจากตาราง `events` 3 จุด
 
-**State timeline ไฟ · ปั๊ม · พัดลม** (Format: Time series, Value mappings: `1` → "เปิด" สีเขียว, `0` → "ปิด" สีเทา) วางไว้ข้างฟอร์มสั่งการในแถวที่ 3
+| ส่วนประกอบ | ตำแหน่ง | คำขอข้อมูล |
+|:---|:---|:---|
+| **ประวัติการสั่ง** (เวลา · อุปกรณ์ · เปิด/ปิด · ผู้สั่ง) 20 รายการล่าสุด | แถว 3 ข้างปุ่มสั่งการ | `events` ของอุปกรณ์นี้ เรียงจากใหม่ไปเก่า `limit(20)` |
+| **เส้นหมายเหตุ (Annotation)** เปิดพัดลม / ปิดพัดลม | บนกราฟอุณหภูมิ แถว 2 | กรองเฉพาะ `event = 'fan'` จากรายการเดียวกัน |
+| **เปิดพัดลมวันนี้** (จำนวนครั้ง) | แถว 1 | นับแถว `event = 'fan'` และ `state = true` ตั้งแต่เที่ยงคืนตามเวลาไทย |
 
-```sql
-SELECT created_at AS time, event AS metric, state::int AS value
-FROM events
-WHERE device_id = '$device' AND $__timeFilter(created_at)
-ORDER BY 1;
+```js
+// นับจำนวนแถวโดยไม่ดึงข้อมูลจริง (head: true)
+supabase.from('events').select('id', { count: 'exact', head: true })
+  .eq('device_id', DEVICE_ID).eq('event', 'fan').eq('state', true)
+  .gte('created_at', startOfThaiDay())
 ```
 
-คอลัมน์ชื่อ `metric` บอก Grafana ให้แยกข้อมูลเป็นซีรีส์ตามชื่ออุปกรณ์ จึงได้แถบ 3 แถว (light, pump, fan) ส่วน `state::int` แปลง `true`/`false` เป็น `1`/`0` ให้ใช้กับ Value mappings ได้
+`{ count: 'exact', head: true }` ให้ PostgREST ตอบเฉพาะจำนวนแถว (เทียบกับ `SELECT count(*)`) ไม่ส่งข้อมูลทั้งแถวกลับมา จึงประหยัดกว่าดึงทั้งหมดแล้วมานับเอง ส่วน `startOfThaiDay()` คำนวณเวลาเที่ยงคืนตามเวลาไทย (UTC+7) แล้วแปลงกลับเป็น UTC เพราะ `created_at` เก็บเป็น UTC ถ้าใช้เที่ยงคืน UTC ตรง ๆ วันใหม่จะเริ่มตอน 07:00 น. ตามเวลาไทย
 
-**Annotation เปิด/ปิดพัดลม:** Dashboard **Settings → Annotations → New** → เลือก data source `Supabase`
+เส้นหมายเหตุช่วยให้เห็นเหตุกับผลบนกราฟเดียวกัน เช่น หลังเส้น "เปิดพัดลม" อุณหภูมิในตู้ควรค่อย ๆ ลดลง
 
-```sql
-SELECT created_at AS time,
-       CASE WHEN state THEN 'เปิดพัดลม' ELSE 'ปิดพัดลม' END
-         || ' (' || source || ')' AS text,
-       event AS tags
-FROM events
-WHERE device_id = '$device' AND event = 'fan'
-  AND $__timeFilter(created_at);
-```
+**ทดสอบ**
 
-เส้นหมายเหตุนี้ช่วยให้เห็นเหตุกับผลบนกราฟแนวโน้มในแถวที่ 2 เช่น หลังเส้น "เปิดพัดลม (dashboard)" อุณหภูมิในตู้ควรค่อย ๆ ลดลง
-
-**Stat เปิดพัดลมวันนี้** (วางในแถวที่ 1 นับจำนวนครั้งที่เปิดพัดลมตามเวลาไทย ไม่ว่าจะสั่งจากทางใด)
-
-```sql
-SELECT count(*) AS "เปิดพัดลมวันนี้"
-FROM events
-WHERE device_id = '$device' AND event = 'fan' AND state = true
-  AND created_at >= date_trunc('day', now() AT TIME ZONE 'Asia/Bangkok') AT TIME ZONE 'Asia/Bangkok';
-```
-
-`AT TIME ZONE` สองชั้นคือ แปลงเวลาปัจจุบันเป็นเวลาไทย ตัดให้เหลือเที่ยงคืน แล้วแปลงกลับเป็น `timestamptz` ถ้าใช้ `date_trunc('day', now())` ตรง ๆ วันใหม่จะเริ่มตอน 07:00 น. ตามเวลาไทย เพราะ `now()` เป็นเวลา UTC
-
-จัด panel ให้ครบตาม Layout ในหัวข้อ 12.7 แล้ว **Save dashboard**
+| การทดลอง | ผลที่ควรเห็น |
+|:---|:---|
+| กด **พัดลมระบายอากาศ** บนแดชบอร์ด → ยืนยัน | LED พัดลมติดภายในไม่กี่วินาที ประวัติการสั่งมีแถวใหม่ (`dashboard`) และกราฟอุณหภูมิมีเส้นหมายเหตุ "เปิดพัดลม" |
+| กดปุ่ม `pump` หน้าตู้ | ภายใน 5 วินาที ปุ่มปั๊มบนแดชบอร์ดเปลี่ยนเป็น **เปิด** และประวัติการสั่งแสดงผู้สั่ง **ปุ่มหน้าตู้** |
+| เปิด-ปิดพัดลม 2 รอบ | ค่า **เปิดพัดลมวันนี้** เพิ่มขึ้น 2 |
 
 ---
 
@@ -1495,54 +1420,57 @@ WHERE device_id = '$device' AND event = 'fan' AND state = true
 | 1 | ได้ `401` พร้อมข้อความ *new row violates row-level security policy* ทั้งที่ค่าที่ส่งอยู่ในช่วงปกติ | ยังไม่มี policy `esp32 insert telemetry` หรือตั้ง Target Roles ไม่ใช่ `anon` | สร้างหรือแก้ policy ตามหัวข้อ 12.8.3 ขั้น ง. |
 | 1 | ได้ `401` พร้อมข้อความ *new row violates row-level security policy* และค่าผิดปกติ (เช่น `temp` เกิน 120) | ค่าไม่ผ่านเงื่อนไข `with check` (มักเกิดจากเซนเซอร์เสียหรือต่อสายผิด) | ตรวจเซนเซอร์และค่าที่ส่งใน Serial Monitor |
 | 1 | ได้ `401` พร้อมข้อความ *permission denied for table telemetry* | `anon` ไม่มีสิทธิ์ `INSERT` (เช่น ปิด Data API access ตอนสร้างตาราง หรือลืม `grant insert`) | รัน `grant insert on public.telemetry to anon;` |
-| 1 | Grafana: connection timeout | ใช้ Direct connection (IPv6) | เปลี่ยนเป็น Session pooler |
-| 1 | Grafana: *password authentication failed for user "postgres"* (SQLSTATE `28P01`) | กรอก Username เป็น `postgres.xxxx` ตามช่อง `user` ในหน้า Connect ซึ่งเป็นของผู้ดูแลระบบ | เปลี่ยน Username เป็น `grafana_ro.xxxx` (คงส่วน project ref หลังจุดไว้) |
-| 1 | Grafana: *password authentication failed for user "grafana_ro"* | รหัสผ่านไม่ตรงกับที่ตั้งไว้ในหัวข้อ 12.8.4 | รัน `alter role grafana_ro with password '...';` ใน SQL Editor แล้วกรอกรหัสใหม่ใน Grafana |
-| 1 | Grafana: password authentication failed (ข้อความไม่ระบุ project) หรือ *Tenant or user not found* | Username ไม่มี `.project_ref` ต่อท้าย | ใช้รูปแบบ `grafana_ro.xxxx` หรือ `grafana_ctl.xxxx` |
-| 1 | Grafana: ข้อความ error มี `database=telemetry` | กรอก **Database name** เป็นชื่อตาราง | เปลี่ยนเป็น `postgres` (ลำดับชั้นคือ ฐานข้อมูล `postgres` → schema `public` → ตาราง `telemetry` ชื่อตารางใส่ใน SQL ของ panel) |
-| 1 | Grafana: เชื่อมต่อได้แต่ไม่มีข้อมูล | ไม่มี policy `select` ให้ role นั้น | รัน `create policy "grafana read ..."` |
-| 1 | Grafana: *Data is missing a time field* | Format ไม่ตรง หรือไม่มีคอลัมน์เวลา | ตั้ง Format เป็น Time series และตั้งชื่อคอลัมน์เวลาว่า `time` |
+| 1 | หน้าตั้งค่าขึ้น *Project URL ต้องมีรูปแบบ https://xxxx.supabase.co* | ใส่ `/rest/v1/` ต่อท้าย (แบบใน ESP32) หรือคัดลอกมาไม่ครบ | ใช้ Project URL ที่ไม่มี `/rest/v1/` |
+| 1 | login ไม่ได้: *Invalid login credentials* | อีเมลหรือรหัสผ่านผิด หรือยังไม่ได้สร้างบัญชี | ตรวจที่ **Authentication → Users** ถ้าลืมรหัสผ่าน ให้ลบบัญชีแล้วสร้างใหม่ |
+| 1 | login ไม่ได้: *Email not confirmed* | ตอนสร้างบัญชีไม่ได้เลือก **Auto confirm user?** | สร้างบัญชีใหม่โดยเลือก Auto confirm user? |
+| 1 | แดชบอร์ดขึ้นแถบแดง *permission denied for table telemetry* | `authenticated` ยังไม่มีสิทธิ์ `SELECT` | รัน `grant select on public.telemetry to authenticated;` (หัวข้อ 12.8.4 ค.) |
+| 1 | login ได้ แต่ Gauge แสดง `–` และขึ้นแถบเหลือง *ไม่ได้รับข้อมูลจาก ESP32* ทั้งที่ ESP32 ได้ `201` | ไม่มี policy `dashboard read telemetry` (RLS คืนผลเป็น 0 แถว ไม่ใช่ error) หรือ `DEVICE_ID` ในหน้าตั้งค่าไม่ตรงกับ ESP32 | ตรวจ policy ในหน้า Policies และแก้ `DEVICE_ID` ด้วยปุ่ม **เปลี่ยนโปรเจกต์** |
+| 1 | ใช้บนมือถือแล้วต้องตั้งค่าใหม่ | ค่าตั้งเก็บแยกในแต่ละเบราว์เซอร์ | กรอกค่าตั้งในเบราว์เซอร์ของมือถือ 1 ครั้ง |
 | 2 | LED ไม่ติดเลย | ต่อ LED กลับขั้ว หรือลืมตัวต้านทาน | ขายาวต่อฝั่ง GPIO ผ่าน 220 Ω ขาสั้นต่อ GND |
 | 2 | กดปุ่มครั้งเดียวได้ 2 event | ปุ่มเด้งนานกว่า 50 ms | เพิ่ม `DEBOUNCE_MS` เป็น 80–100 |
 | 2 | Serial ขึ้น `controls: no row for this DEVICE_ID` | ยังไม่ได้ `insert` แถวของอุปกรณ์ หรือ `DEVICE_ID` สะกดไม่ตรง | รัน `insert into controls (device_id) values ('<DEVICE_ID>');` |
 | 2 | `PATCH` ได้ `204` แต่แดชบอร์ดไม่เปลี่ยน | ไม่มีแถวที่ตรง `DEVICE_ID` (แก้ 0 แถว) | ตรวจแถวใน `controls` เหมือนข้อบน |
 | 2 | `PATCH` ได้ `401/403` code `42501` | `updated_by` ไม่ใช่ `button` หรือไม่มี policy update | ตรวจ body และ policy `esp32 update controls` |
 | 2 | กดปุ่มแล้ว LED ติดแล้วดับเองใน 2 วินาที | `PATCH` ล้มเหลว poll จึงดึงค่าเดิมกลับมา | ดู status code ของ `PATCH` ใน Serial Monitor |
-| 2 | Business Forms: *permission denied for table controls* | ฟอร์มใช้ data source `Supabase` (`grafana_ro`) | เปลี่ยน Query และ Update Request เป็น `Supabase-Control` |
-| 2 | Business Forms: กดส่งแล้ว SQL error ที่ `SET light = ,` | element id ไม่ตรงกับ `${payload.<id>}` หรือยังไม่ได้ map Query Fields | ตรวจ Id ของ element และการจับคู่ `A:light` ฯลฯ |
+| 2 | แดชบอร์ดขึ้น *ไม่พบแถวของอุปกรณ์นี้ในตาราง controls* | ยังไม่ได้ `insert` แถว หรือ `authenticated` ไม่มี policy อ่าน `controls` | สร้างแถวตามหัวข้อ 12.9.2 และตรวจสิทธิ์ตามหัวข้อ 12.9.3 |
+| 2 | กดสวิตช์แล้วขึ้น *สั่งไม่สำเร็จ: ไม่พบแถว... หรือไม่มีสิทธิ์แก้ไข* | ไม่มี policy `dashboard update controls` | รันคำสั่งในหัวข้อ 12.9.3 |
+| 2 | กดสวิตช์แล้วขึ้น *permission denied for table controls* | ลืม `grant update (light, pump, fan, updated_by) ...` | รันคำสั่ง `grant` ในหัวข้อ 12.9.3 |
+| 2 | กดสวิตช์แล้วขึ้น *new row violates row-level security policy* | policy ของ `authenticated` เขียน `with check` ผิด | ตรวจว่า `with check (updated_by = 'dashboard')` |
 | 2 | สั่งจากแดชบอร์ดแล้ว `events` ไม่มีแถวใหม่ | ส่งค่าเดิมซ้ำ (trigger บันทึกเฉพาะเมื่อค่าเปลี่ยน) หรือไม่ได้สร้าง trigger | เปลี่ยนค่าจริง หรือรันคำสั่ง `create trigger` อีกครั้ง |
+| 2 | ประวัติการสั่งว่างทั้งที่ `events` มีข้อมูล | `authenticated` ยังอ่าน `events` ไม่ได้ | รันส่วน `grant select on public.events ...` ในหัวข้อ 12.9.3 |
 
 </div>
 
+
 <div class="chapter-tab-content" data-tab-name="Lab 14" data-tab-icon="🔬" id="lab14" markdown="1">
 
-## 12.11 ใบงานปฏิบัติการ Lab 14: ระบบติดตามและสั่งการตู้ควบคุมด้วย Supabase + Grafana
+## 12.11 ใบงานปฏิบัติการ Lab 14: ระบบติดตามและสั่งการตู้ควบคุมด้วย Supabase + Vercel
 
 **ฮาร์ดแวร์:** ESP32-S3 DevKit + AHT25 + ปุ่มกด 3 ปุ่ม + LED 3 ดวง + ตัวต้านทาน 220 Ω 3 ตัว  
-**เครื่องมือ (ฟรีทั้งหมด):** Arduino IDE + Supabase (Free Plan) + Grafana Cloud (Free Tier) + plugin Business Forms  
-**เวลา:** 3 ชั่วโมง (ส่วนที่ 1 ประมาณ 105 นาที · ส่วนที่ 2 ประมาณ 75 นาที)
+**เครื่องมือ (ฟรีทั้งหมด):** Arduino IDE + Supabase (Free Plan) + แดชบอร์ดบน Vercel (ลิงก์จากผู้สอน)  
+**เวลา:** 3 ชั่วโมง (ส่วนที่ 1 ประมาณ 100 นาที · ส่วนที่ 2 ประมาณ 80 นาที)
 
 > ใบงานนี้ใช้ทำตามลำดับขั้นและบันทึกผล ส่วนโค้ดฉบับเต็ม SQL และคำอธิบายอยู่ในแท็บ **Hands-on** (หัวข้อ 12.8 สำหรับส่วนที่ 1 และ 12.9 สำหรับส่วนที่ 2)
 
 ### วัตถุประสงค์ของใบงาน
 
-**ส่วนที่ 1: ติดตาม (Sensor → ESP32 → Dashboard)**
+**ส่วนที่ 1: ติดตาม (ESP32 → Supabase → Vercel)**
 - ต่อวงจร ESP32-S3 กับ AHT25 (I2C) ได้
 - สร้างตาราง `telemetry` บน Supabase พร้อมกำหนดสิทธิ์ด้วย Row Level Security ได้
 - ส่งข้อมูลเซนเซอร์ผ่าน HTTPS POST ไปยัง REST API ได้
-- เชื่อม Grafana Cloud ด้วย role อ่านอย่างเดียว สร้างแดชบอร์ดตามหลักการออกแบบที่ดี และตั้งการแจ้งเตือนอุณหภูมิสูงทางอีเมลได้
+- สร้างบัญชีผู้ใช้ด้วย Supabase Auth และเปิดดูข้อมูลบนเว็บแดชบอร์ดที่ Deploy บน Vercel ได้
 
-**ส่วนที่ 2: สั่งการ (Dashboard → ESP32)**
+**ส่วนที่ 2: สั่งการ (Vercel → Supabase → ESP32)**
 - ต่อปุ่มกด (Pull-up + Interrupt) และ LED เป็นเอาต์พุตได้
 - สร้างตาราง `controls` แบบ Desired State และ trigger ที่บันทึก `events` อัตโนมัติได้
 - เขียนโปรแกรมให้ ESP32 poll คำสั่งด้วย HTTPS GET และแจ้งการกดปุ่มหน้าตู้ด้วย PATCH ได้
-- สร้างฟอร์มสั่งการด้วย Business Forms ผ่าน role ที่แก้ได้เฉพาะตาราง `controls` ได้
+- สั่งเปิด/ปิดอุปกรณ์จากแดชบอร์ด โดยผู้ใช้ที่ login แก้ได้เฉพาะตาราง `controls` ได้
 
-**สถานการณ์:** ติดตั้งอุปกรณ์ในตู้ควบคุมมอเตอร์ปั๊ม (MCC) เพื่อวัดอุณหภูมิและความชื้นภายในตู้ (ส่วนที่ 1) และให้ช่างสั่งเปิด/ปิด **ไฟ** (`light`), **ปั๊ม** (`pump`) และ **พัดลม** (`fan`) ได้ทั้งจากแดชบอร์ดและจากปุ่มหน้าตู้ (ส่วนที่ 2) โดยทุกการสั่งจะถูกบันทึกพร้อมผู้สั่ง
+**สถานการณ์:** ติดตั้งอุปกรณ์ในตู้ควบคุมมอเตอร์ปั๊ม (MCC) เพื่อวัดอุณหภูมิและความชื้นภายในตู้ (ส่วนที่ 1) และให้ช่างสั่งเปิด/ปิด **ไฟ** (`light`), **ปั๊ม** (`pump`) และ **พัดลม** (`fan`) ได้ทั้งจากแดชบอร์ดบนมือถือและจากปุ่มหน้าตู้ (ส่วนที่ 2) โดยทุกการสั่งจะถูกบันทึกพร้อมผู้สั่ง
 
 ---
 
-## ส่วนที่ 1: ติดตาม (Sensor → ESP32 → Dashboard)
+## ส่วนที่ 1: ติดตาม (ESP32 → Supabase → Vercel)
 
 ### ขั้นที่ 1.1: ต่อวงจรและตั้งค่า Arduino IDE (15 นาที)
 
@@ -1570,7 +1498,7 @@ WHERE device_id = '$device' AND event = 'fan' AND state = true
 | ติดตั้ง ESP32 core และ Adafruit AHTX0 สำเร็จ | ________ |
 | ชื่อ Wi-Fi ที่ใช้ และย่านความถี่ | ________ |
 
-### ขั้นที่ 1.2: สร้างตาราง `telemetry` และ user `grafana_ro` บน Supabase (20 นาที)
+### ขั้นที่ 1.2: สร้างตาราง `telemetry` บน Supabase (20 นาที)
 
 #### ขั้นตอนปฏิบัติ
 
@@ -1578,8 +1506,7 @@ WHERE device_id = '$device' AND event = 'fan' AND state = true
 2. สร้างตาราง `telemetry` ตาม **หัวข้อ 12.8.3** (วิธีที่ 1 ผ่านหน้าเว็บ หรือวิธีที่ 2 ด้วย SQL) ซึ่งจะได้
    - ตาราง `telemetry` พร้อม index
    - policy ให้ `anon` (ESP32) **INSERT ได้อย่างเดียว** และตรวจช่วงค่า `temp` / `hum`
-3. สร้าง user `grafana_ro` ที่ **SELECT ได้อย่างเดียว** ตาม **หัวข้อ 12.8.4** (วิธีที่ 1 ผ่านหน้าเว็บ หรือวิธีที่ 2 ด้วย SQL) โดยตั้งรหัสผ่านเป็นของตนเอง
-4. **Integrations → Data API → Overview** → คัดลอก **Project URL** และ **Project Settings → API Keys** → คัดลอก **Publishable key** (`sb_publishable_...`)
+3. **Integrations → Data API → Overview** → คัดลอก **Project URL** และ **Project Settings → API Keys** → คัดลอก **Publishable key** (`sb_publishable_...`)
 
 #### ตารางบันทึกผล — ขั้นที่ 1.2
 
@@ -1587,7 +1514,7 @@ WHERE device_id = '$device' AND event = 'fan' AND state = true
 |:---|:---|
 | เห็นตาราง `telemetry` ใน Table Editor | ________ |
 | RLS ของตาราง `telemetry` แสดงสถานะ Enabled | ________ |
-| วิธีที่ใช้สร้าง `grafana_ro` (หน้าเว็บ / SQL) และผลคำสั่งตรวจสิทธิ์ | ________ |
+| วิธีที่ใช้สร้างตาราง (หน้าเว็บ / SQL) | ________ |
 | Project URL ของฉัน | ________ |
 
 ### ขั้นที่ 1.3: โปรแกรม ESP32-S3 ส่งค่าเซนเซอร์ (25 นาที)
@@ -1613,54 +1540,56 @@ WHERE device_id = '$device' AND event = 'fan' AND state = true
 | ใช้นิ้วจับ AHT25 นาน 30 วินาที | temp เปลี่ยนจาก ____ เป็น ____ °C | ________ |
 | แก้ key ผิด 1 ตัวอักษร แล้วอัปโหลดใหม่ | Status code: ________ | ________ |
 
-### ขั้นที่ 1.4: เชื่อม Grafana Cloud และสร้างแดชบอร์ด (30 นาที)
+### ขั้นที่ 1.4: สร้างบัญชีแดชบอร์ดและเปิดแดชบอร์ดบน Vercel (25 นาที)
+
+#### ความรู้เบื้องต้น
+
+- หน้าเว็บแดชบอร์ดโหลดจาก Vercel แต่ **เบราว์เซอร์ดึงข้อมูลจาก Supabase โดยตรง** ด้วย Publishable key ตัวเดียวกับ ESP32
+- ต้อง login ก่อนจึงจะได้ role `authenticated` ที่อ่านข้อมูลได้ จึงต้อง **ปิดการสมัครเอง** และให้ผู้ดูแลสร้างบัญชีให้เท่านั้น
 
 #### ขั้นตอนปฏิบัติ
 
-1. Supabase → **Connect** → แท็บ **Direct** → Connection Method **Session pooler** → จด `host`, `port` และ project ref จาก *Connection parameters*
-2. สมัคร [grafana.com](https://grafana.com) แผน **Free** → **Connections → Data sources → PostgreSQL** → ตั้งชื่อ `Supabase` → กรอกค่าตาม **หัวข้อ 12.8.6** (Username = `grafana_ro.<project_ref>`, TLS/SSL Mode = `require`) → **Save & test**
-3. สร้างแดชบอร์ดใหม่ → เพิ่มตัวแปร `device` → สร้าง panel ตาม query ใน **หัวข้อ 12.8.7** โดยจัด Layout ดังนี้ (เว้นที่ว่างสำหรับ panel ของส่วนที่ 2)
-
-| แถว | Panel |
-|:---|:---|
-| 1 | Gauge อุณหภูมิ · Gauge ความชื้น · Stat สถานะการเชื่อมต่อ |
-| 2 | Time series อุณหภูมิ + ความชื้น |
-
-4. ตั้ง Auto-refresh **10s** → **Save dashboard** ชื่อ `MCC Monitor`
+1. **Authentication → Sign In / Providers** → ปิด **Allow new users to sign up** → Save ตาม **หัวข้อ 12.8.4 ก.**
+2. **Authentication → Users → Add user → Create new user** → ใส่อีเมลและรหัสผ่านของตนเอง → เลือก **Auto confirm user?** → Create user ตาม **หัวข้อ 12.8.4 ข.**
+3. รัน SQL ให้สิทธิ์อ่าน `telemetry` แก่ `authenticated` ตาม **หัวข้อ 12.8.4 ค.**
+4. เปิดลิงก์แดชบอร์ดของรายวิชา → กรอก Project URL, Publishable key และ `DEVICE_ID` → บันทึก → login ตาม **หัวข้อ 12.8.6**
+5. ทดลองตาม **หัวข้อ 12.8.7** และ **12.8.8**
 
 #### ตารางบันทึกผล — ขั้นที่ 1.4
 
-| การทดลอง | ผลที่เห็นบน Dashboard |
+| การทดลอง | ผลที่เห็นบนแดชบอร์ด |
 |:---|:---|
-| Save & test ของ data source | ________ |
-| ใช้นิ้วจับ AHT25 นาน 1 นาที | Gauge อุณหภูมิเปลี่ยนสีหรือไม่: ________ |
-| ถอดสาย USB ของ ESP32-S3 แล้วรอ 40 วินาที | ค่าและสีของ Stat สถานะการเชื่อมต่อ: ________ |
-| เปลี่ยนช่วงเวลาจาก Last 15 minutes เป็น Last 24 hours | กราฟเปลี่ยนอย่างไร: ________ |
+| login ด้วยรหัสผ่านผิด 1 ครั้ง | ข้อความที่แสดง: ________ |
+| ค่า Gauge อุณหภูมิเทียบกับ Serial Monitor | แดชบอร์ด ____ °C / Serial ____ °C |
+| ใช้นิ้วจับ AHT25 นาน 1 นาที | สีของ Gauge อุณหภูมิ: ________ กราฟ: ________ |
+| ถอดสาย USB ของ ESP32-S3 แล้วรอ 40 วินาที | ค่าและสีของสถานะการเชื่อมต่อ: ________ แถบเตือน: ________ |
+| เปลี่ยนช่วงกราฟจาก 15 นาที เป็น 1 ชั่วโมง | กราฟเปลี่ยนอย่างไร: ________ |
+| ทำให้อุณหภูมิเกิน `TEMP.alarm` (35 °C) | แถบเตือนที่แสดง: ________ |
+| เปิดแดชบอร์ดบนมือถือ | ต้องกรอกค่าตั้งใหม่หรือไม่ เพราะเหตุใด: ________ |
 
-### ขั้นที่ 1.5: ตั้งการแจ้งเตือนอุณหภูมิสูง (15 นาที)
+### ขั้นที่ 1.5: ทดสอบความปลอดภัยของส่วนที่ 1 (15 นาที)
 
 #### ขั้นตอนปฏิบัติ
 
-1. **Alerting → Contact points** → เพิ่ม Email ของตนเอง → **Test**
-2. **Alerting → Alert rules → New alert rule** → ใช้ query ใน **หัวข้อ 12.8.8** (เปลี่ยน `'mcc01'` เป็น `DEVICE_ID` ของตนเอง)
-3. **Reduce** = `Last` → **Threshold** `IS ABOVE 35` → Evaluation ทุก `1m`, Pending period `2m` → **Save rule**
-4. ทดสอบ: เปลี่ยน Threshold เป็นค่าที่สูงกว่าอุณหภูมิห้องเล็กน้อย เช่น `32` แล้วใช้นิ้วจับหรือเป่าลมอุ่นใส่ AHT25 ต่อเนื่อง
+1. เปิดแดชบอร์ดในหน้าต่างไม่ระบุตัวตน (Incognito) → กรอกค่าตั้ง → **อย่า login** แล้วสังเกตว่าเข้าหน้าแดชบอร์ดได้หรือไม่
+2. ที่ **Authentication → Sign In / Providers** เปิด **Allow new users to sign up** ชั่วคราว แล้วอธิบายในแบบฝึกหัดข้อ 4 ว่าเปิดทิ้งไว้จะเกิดความเสี่ยงอะไร จากนั้น **ปิดกลับทันที**
+3. SQL Editor → รัน `select policyname, roles, cmd from pg_policies where tablename = 'telemetry';` แล้วจดผล
 
 #### ตารางบันทึกผล — ขั้นที่ 1.5
 
-| การทดลอง | สถานะ Alert (Normal / Pending / Firing) | ได้รับอีเมล? |
-|:---|:---|:---|
-| อุณหภูมิเกินเกณฑ์นาน 1 นาที | ________ | ________ |
-| อุณหภูมิเกินเกณฑ์นาน 4 นาที | ________ | ________ |
-| ปล่อยให้อุณหภูมิกลับสู่ปกติ | ________ | ________ |
+| การทดลอง | ผล |
+|:---|:---|
+| เปิดแดชบอร์ดโดยไม่ login | ________ |
+| policy ของ `telemetry` (ชื่อ · role · คำสั่ง) | ________ |
+| ปิด Allow new users to sign up กลับแล้ว | ________ |
 
 ---
 
-## ส่วนที่ 2: สั่งการ (Dashboard → ESP32)
+## ส่วนที่ 2: สั่งการ (Vercel → Supabase → ESP32)
 
 > เริ่มส่วนที่ 2 ได้เมื่อแดชบอร์ดของส่วนที่ 1 แสดงข้อมูลได้แล้วเท่านั้น
 
-### ขั้นที่ 2.1: ต่อ LED + ปุ่ม สร้างตาราง `controls` และ user `grafana_ctl` (25 นาที)
+### ขั้นที่ 2.1: ต่อ LED + ปุ่ม และสร้างตาราง `controls` (25 นาที)
 
 #### ความรู้เบื้องต้น
 
@@ -1678,7 +1607,7 @@ WHERE device_id = '$device' AND event = 'fan' AND state = true
 1. ต่อวงจรเพิ่มตามตาราง โดยไม่ต้องถอด AHT25
 2. **SQL Editor → New query** → วางชุดคำสั่ง SQL ส่วนที่ 2 จาก **หัวข้อ 12.9.2** → เปลี่ยน `'mcc01'` ในคำสั่ง `insert` เป็น `DEVICE_ID` ของตนเอง → **Run**
 3. ทดสอบ trigger ด้วยคำสั่ง `update` ในข้อ 3 ของหัวข้อ 12.9.2 แล้วตรวจตาราง `events`
-4. สร้าง user `grafana_ctl` และเพิ่มสิทธิ์อ่าน `events` ให้ `grafana_ro` ตาม **หัวข้อ 12.9.3** โดยตั้งรหัสผ่านเป็นของตนเอง
+4. ให้สิทธิ์สั่งการแก่ผู้ใช้แดชบอร์ดตาม **หัวข้อ 12.9.3** แล้วรันคำสั่งตรวจสิทธิ์
 
 #### ตารางบันทึกผล — ขั้นที่ 2.1
 
@@ -1715,32 +1644,24 @@ WHERE device_id = '$device' AND event = 'fan' AND state = true
 | สั่ง `pump = true` จาก SQL Editor | เวลาจนเห็น `CMD pump -> ON` ประมาณ ____ วินาที | ________ |
 | เปิด `fan` ไว้ แล้วกดปุ่ม EN (รีเซ็ต) บนบอร์ด | หลังบูต LED `fan` ติดหรือไม่: ________ | ________ |
 
-### ขั้นที่ 2.3: ฟอร์มสั่งการบน Grafana และ panel ประวัติการสั่ง (25 นาที)
+### ขั้นที่ 2.3: สั่งการจากแดชบอร์ดบน Vercel (30 นาที)
 
 #### ขั้นตอนปฏิบัติ
 
-1. ติดตั้ง plugin **Business Forms** และเพิ่ม data source `Supabase-Control` (Username = `grafana_ctl.<project_ref>`) ตาม **หัวข้อ 12.9.5 ก**
-2. สร้าง panel `สั่งการอุปกรณ์` ตาม **หัวข้อ 12.9.5 ข** (element 3 ตัว, Initial Action = Query, Update Action = Data Source, Confirmation Window = Enabled)
-3. สร้าง State timeline, Annotation และ Stat เปิดพัดลมวันนี้ ตาม **หัวข้อ 12.9.6** แล้วจัด Layout ให้ครบ
-
-| แถว | Panel |
-|:---|:---|
-| 1 | Gauge อุณหภูมิ · Gauge ความชื้น · Stat สถานะการเชื่อมต่อ · Stat เปิดพัดลมวันนี้ |
-| 2 | Time series อุณหภูมิ + ความชื้น พร้อม Annotation เปิด/ปิดพัดลม |
-| 3 | ฟอร์มสั่งการ · State timeline ไฟ · ปั๊ม · พัดลม |
-
-4. **Save dashboard**
+1. กด refresh แดชบอร์ด 1 ครั้ง → ตรวจว่าแถวที่ 3 แสดงกล่อง **สั่งการอุปกรณ์** และ **ประวัติการสั่ง** ตาม **หัวข้อ 12.9.5** และ **12.9.6**
+2. ทดลองตามตารางด้านล่าง โดยเปิด Serial Monitor ไว้ด้วย
 
 #### ตารางบันทึกผล — ขั้นที่ 2.3
 
 | การทดลอง | ผลที่เห็น |
 |:---|:---|
-| สั่ง `fan` = Enabled จากฟอร์ม แล้วจับเวลาจนถึง LED ติด (ทำ 5 ครั้ง) | ____ / ____ / ____ / ____ / ____ วินาที เฉลี่ย ____ (เทียบกับค่าประมาณในหัวข้อ 12.6.3) |
-| กดปุ่ม `pump` หน้าตู้ แล้วรอแดชบอร์ด refresh | ค่า `pump` บนฟอร์ม: ________ แถบ pump บน State timeline: ________ |
-| สั่ง `fan` เปิด-ปิดจากฟอร์ม 1 รอบ และจากปุ่ม 1 รอบ | ค่า Stat เปิดพัดลมวันนี้: ____ ข้อความบนเส้น Annotation: ________ |
+| กด **พัดลมระบายอากาศ** บนแดชบอร์ด → ยืนยัน แล้วจับเวลาจนถึง LED ติด (ทำ 5 ครั้ง) | ____ / ____ / ____ / ____ / ____ วินาที เฉลี่ย ____ (เทียบกับค่าประมาณในหัวข้อ 12.6.3) |
+| กดปุ่มบนแดชบอร์ดแล้วเลือก **ยกเลิก** ในหน้าต่างยืนยัน | LED และ `events` เปลี่ยนหรือไม่: ________ |
+| กดปุ่ม `pump` หน้าตู้ แล้วรอไม่เกิน 5 วินาที | ปุ่มปั๊มบนแดชบอร์ด: ________ ผู้สั่งในประวัติ: ________ |
+| สั่ง `fan` เปิด-ปิดจากแดชบอร์ด 1 รอบ และจากปุ่ม 1 รอบ | ค่า **เปิดพัดลมวันนี้**: ____ ข้อความบนเส้นหมายเหตุ: ________ |
 | เปิด `fan` แล้วใช้มือบังอากาศรอบ AHT25 เทียบกับตอนปิด | แนวโน้มอุณหภูมิบนกราฟ: ________ |
-| เปลี่ยน data source ของ Update Request เป็น `Supabase` (`grafana_ro`) ชั่วคราว แล้วกดส่ง | ข้อความ error: ________ (ทดสอบแล้วเปลี่ยนกลับ) |
-| ปิด Hotspot แล้วสั่ง `light` จากฟอร์ม จากนั้นเปิด Hotspot อีกครั้ง | LED `light` ทำงานเมื่อใด: ________ |
+| สั่งจากแดชบอร์ดบนมือถือ ขณะอยู่นอกเครือข่าย Wi-Fi เดียวกับ ESP32 (ใช้ 4G/5G) | LED ทำงานหรือไม่ เพราะเหตุใด: ________ |
+| ปิด Hotspot ของ ESP32 แล้วสั่ง `light` จากแดชบอร์ด จากนั้นเปิด Hotspot อีกครั้ง | LED `light` ทำงานเมื่อใด: ________ |
 
 ---
 
@@ -1758,11 +1679,11 @@ WHERE device_id = '$device' AND event = 'fan' AND state = true
 
    > คำตอบ: _______________________________________________________________
 
-4. **ความปลอดภัย:** ถ้ามีผู้ไม่หวังดีนำ Publishable key ออกจากเฟิร์มแวร์ของ ESP32-S3 ได้ เขาจะทำอะไรกับฐานข้อมูลได้บ้าง และทำอะไรไม่ได้บ้าง? อ้างอิง policy ที่สร้างในขั้นที่ 1.2 และ 2.1
+4. **ความปลอดภัย:** ESP32 และแดชบอร์ดใช้ Publishable key ตัวเดียวกัน (ก) ถ้ามีผู้ไม่หวังดีนำ key ออกจากเฟิร์มแวร์ได้ เขาจะทำอะไรกับฐานข้อมูลได้บ้าง และทำอะไรไม่ได้บ้าง (ข) ถ้าเปิด *Allow new users to sign up* ทิ้งไว้ ความเสี่ยงจะเพิ่มขึ้นอย่างไร อ้างอิง policy ที่สร้างในขั้นที่ 1.2, 1.4 และ 2.1
 
    > คำตอบ: _______________________________________________________________
 
-5. **ประยุกต์งานเครื่องกล:** ถ้าต้องการรู้ว่า "เปิดพัดลมระบายอากาศแล้ว อุณหภูมิเฉลี่ยในตู้ลดลงหรือไม่" จะใช้ panel ใดบนแดชบอร์ด และเขียน SQL เปรียบเทียบอุณหภูมิเฉลี่ย 10 นาทีก่อนและหลัง event `fan` ที่ `state = true` ล่าสุดอย่างไร
+5. **ประยุกต์งานเครื่องกล:** ถ้าต้องการรู้ว่า "เปิดพัดลมระบายอากาศแล้ว อุณหภูมิเฉลี่ยในตู้ลดลงหรือไม่" จะดูส่วนใดบนแดชบอร์ด และเขียน SQL ใน SQL Editor เปรียบเทียบอุณหภูมิเฉลี่ย 10 นาทีก่อนและหลัง event `fan` ที่ `state = true` ล่าสุดอย่างไร
 
    > คำตอบ: _______________________________________________________________
 
@@ -1776,21 +1697,19 @@ WHERE device_id = '$device' AND event = 'fan' AND state = true
 1. รูปถ่ายวงจรจริง ESP32-S3 + AHT25 + ปุ่ม 3 ปุ่ม + LED 3 ดวง
 2. Screenshot Serial Monitor ที่แสดง `POST telemetry ... -> 201`, `PATCH controls ... -> 204` และ `CMD ... -> ON`
 3. Screenshot Supabase Table Editor ของตาราง `telemetry` (อย่างน้อย 20 แถว), `controls` และ `events` (มีทั้ง `source` = `button` และ `dashboard`)
-4. Screenshot แดชบอร์ด `MCC Monitor` ที่มีครบ 3 แถวตาม Layout
-5. Screenshot Alert rule สถานะ Firing หรืออีเมลแจ้งเตือนที่ได้รับ
-6. คลิปวิดีโอสั้น (ไม่เกิน 30 วินาที) แสดงการสั่ง LED จากฟอร์มบน Grafana
+4. Screenshot หน้า **Authentication → Sign In / Providers** ที่ปิด *Allow new users to sign up* แล้ว และหน้า **Policies** ของทั้ง 3 ตาราง
+5. Screenshot แดชบอร์ด `MCC Monitor` ที่มีครบ 3 แถว (ภาพรวม · กราฟ · สั่งการและประวัติ)
+6. คลิปวิดีโอสั้น (ไม่เกิน 30 วินาที) แสดงการกดสั่งบนแดชบอร์ดแล้ว LED บนบอร์ดติด
 7. คำตอบแบบฝึกหัดท้ายใบงานครบทุกข้อ
 
 #### Checklist ก่อนส่ง
 
-- [ ] `DEVICE_ID` เป็นรูปแบบ `mcc-` ตามด้วยรหัสนักศึกษา 4 ตัวท้าย และตรงกับแถวใน `controls`
-- [ ] ESP32-S3 ใช้ Publishable key (`sb_publishable_...`) เท่านั้น ไม่ใช่ Secret key (`sb_secret_...`) หรือ `service_role` key
-- [ ] ทุกตาราง (`telemetry`, `controls`, `events`) เปิด RLS และมี policy ครบ
-- [ ] panel แสดงผลใช้ data source `Supabase` (`grafana_ro`) และมีเฉพาะฟอร์มสั่งการที่ใช้ `Supabase-Control` (`grafana_ctl`)
+- [ ] `DEVICE_ID` เป็นรูปแบบ `mcc-` ตามด้วยรหัสนักศึกษา 4 ตัวท้าย ตรงกันทั้งในโปรแกรม ESP32 แถวใน `controls` และหน้าตั้งค่าของแดชบอร์ด
+- [ ] ESP32-S3 และแดชบอร์ดใช้ Publishable key (`sb_publishable_...`) เท่านั้น ไม่ใช่ Secret key (`sb_secret_...`) หรือ `service_role` key
+- [ ] ทุกตาราง (`telemetry`, `controls`, `events`) เปิด RLS และมี policy ครบทั้งของ `anon` และ `authenticated`
+- [ ] ปิด **Allow new users to sign up** แล้ว และมีบัญชีแดชบอร์ดที่ผู้ดูแลสร้างเท่านั้น
 - [ ] กดปุ่ม 1 ครั้งได้ 1 การสั่งเสมอ
-- [ ] ฟอร์มสั่งการเปิด Confirmation Window
-- [ ] แดชบอร์ดมีตัวแปร `device` และตั้ง Auto-refresh 10s
-- [ ] Alert rule ทำงานและส่งอีเมลได้
+- [ ] การสั่งจากแดชบอร์ดมีหน้าต่างยืนยันทุกครั้ง
 - [ ] กรอกตารางบันทึกผลครบทุกขั้น
 - [ ] ระบุชื่อ-นามสกุล และรหัสนักศึกษาในฟอร์ม
 
@@ -1800,15 +1719,15 @@ WHERE device_id = '$device' AND event = 'fan' AND state = true
 
 ## 12.12 สรุปประจำบทที่ 12 (Summary)
 
-1. **ระบบ IoT แบบครบวงจร** ประกอบด้วย 4 ชั้น ได้แก่ เซนเซอร์ ปุ่ม และเอาต์พุต (AHT25, LED) อุปกรณ์เครือข่าย (ESP32-S3 + HTTPS) ฐานข้อมูลคลาวด์ (Supabase/PostgreSQL) และแอปพลิเคชันแสดงผลและสั่งการ (Grafana) โดยแบ่งเป็นเส้นทาง **ติดตาม** (ส่วนที่ 1) และเส้นทาง **สั่งการ** (ส่วนที่ 2)
+1. **ระบบ IoT แบบครบวงจร** ประกอบด้วย 4 ชั้น ได้แก่ เซนเซอร์ ปุ่ม และเอาต์พุต (AHT25, LED) อุปกรณ์เครือข่าย (ESP32-S3 + HTTPS) ฐานข้อมูลคลาวด์ (Supabase/PostgreSQL) และแอปพลิเคชันแสดงผลและสั่งการ (เว็บแดชบอร์ดบน Vercel) โดยแบ่งเป็นเส้นทาง **ติดตาม** (ส่วนที่ 1) และเส้นทาง **สั่งการ** (ส่วนที่ 2)
 2. **AHT25** สื่อสารผ่าน I2C ที่ address `0x38` ให้ค่าดิบ 20 บิต ซึ่งแปลงเป็นหน่วยจริงได้ด้วย $RH = S_{RH}/2^{20} \times 100$ และ $T = S_T/2^{20} \times 200 - 50$ ความละเอียดของค่าไม่ใช่ความแม่นยำ
 3. **ปุ่มกด** ต้องใช้ Pull-up และ Debounce และควรอ่านด้วย **Interrupt** เมื่อโปรแกรมมีงานที่บล็อกนาน เช่น การส่ง HTTPS ส่วน **เอาต์พุต** ต้องจำกัดกระแสด้วยตัวต้านทาน และใช้โมดูลรีเลย์เมื่อขับโหลดจริง
-4. **Telemetry, Command State และ Event** เป็นข้อมูลต่างประเภทกัน จึงควรแยกตาราง และเลือก panel ให้ตรงกับประเภทข้อมูล
-5. **Row Level Security และ Least Privilege** แยกสิทธิ์ของแต่ละผู้ใช้ (`anon` → `INSERT` telemetry และแก้ `controls` ในนาม `button`, `grafana_ro` → `SELECT`, `grafana_ctl` → แก้ `controls` ในนาม `dashboard`) ข้อมูลจึงยังปลอดภัยแม้ key ตัวใดตัวหนึ่งรั่ว
-6. **Grafana** ดึงข้อมูลด้วย SQL และ Macro (`$__timeFilter`, `$__timeGroupAlias`, `$__interval`) พร้อมทำ Downsampling ให้พอดีกับความกว้างของกราฟ
+4. **Telemetry, Command State และ Event** เป็นข้อมูลต่างประเภทกัน จึงควรแยกตาราง และเลือกรูปแบบการแสดงผลให้ตรงกับประเภทข้อมูล
+5. **Row Level Security และ Least Privilege** แยกสิทธิ์ตามการ login ด้วย Publishable key ตัวเดียวกัน (`anon` = ESP32 → `INSERT` telemetry และแก้ `controls` ในนาม `button` · `authenticated` = ช่างที่ login → อ่านข้อมูลและแก้ `controls` ในนาม `dashboard`) และต้องปิดการสมัครสมาชิกเอง
+6. **Vercel** ให้บริการเฉพาะไฟล์หน้าเว็บ เบราว์เซอร์คุยกับ Supabase REST API โดยตรงผ่าน `supabase-js` ซึ่งแปลงเป็นคำขอ REST และ SQL แบบเดียวกับที่ ESP32 ใช้ ความปลอดภัยจึงขึ้นกับ RLS ไม่ใช่การซ่อนโค้ด
 7. **การสั่งการผ่านคลาวด์** ใช้ฐานข้อมูลเป็นจุดพัก **Desired State** ที่ ESP32 poll เป็นรอบ ซึ่ง Idempotent และทนต่อการรีบูต แลกกับความหน่วงประมาณ $T_{poll}/2 + t_{HTTPS}$ และห้ามใช้แทนระบบหยุดฉุกเฉิน
 8. **Trigger** ของ PostgreSQL บันทึกประวัติการสั่งพร้อมผู้สั่งได้โดยอัตโนมัติ ทำให้มีแหล่งความจริงเดียว และผู้สั่งไม่ต้องมีสิทธิ์เขียนประวัติเอง
-9. **แดชบอร์ดที่ดี** ต้องเข้าใจได้ใน 3 วินาที วางภาพรวมไว้บน ใช้สีเพื่อบอกสถานะเท่านั้น ติดหน่วยทุก panel และส่วนสั่งการต้องยืนยันก่อนส่งและแสดงผลของคำสั่งให้เห็น
+9. **แดชบอร์ดที่ดี** ต้องเข้าใจได้ใน 3 วินาที วางภาพรวมไว้บน ใช้สีเพื่อบอกสถานะเท่านั้น ติดหน่วยทุกส่วน และส่วนสั่งการต้องยืนยันก่อนส่งและแสดงผลของคำสั่งให้เห็น
 
 ### ตารางอ้างอิงด่วน
 
@@ -1816,16 +1735,15 @@ WHERE device_id = '$device' AND event = 'fan' AND state = true
 |:---|:---|
 | I2C ของ AHT25 | address `0x38`, SDA = GPIO 8, SCL = GPIO 9 |
 | ปุ่ม / LED | ปุ่ม GPIO 4/5/6 (`INPUT_PULLUP`) · LED GPIO 10/11/12 ผ่าน 220 Ω |
-| ส่งค่าเซนเซอร์ | `POST https://<ref>.supabase.co/rest/v1/telemetry` → `201` |
-| ถามคำสั่ง | `GET .../rest/v1/controls?device_id=eq.<id>&select=light,pump,fan` → `200` |
-| แจ้งการกดปุ่ม | `PATCH .../rest/v1/controls?device_id=eq.<id>` body `{"fan":true,"updated_by":"button"}` → `204` |
-| Pooler สำหรับ Grafana | `aws-[INDEX]-[REGION].pooler.supabase.com:5432` (คัดลอกจาก Connect → Direct → Session pooler), user `grafana_ro.<ref>` / `grafana_ctl.<ref>`, SSL `require` |
-| กรองช่วงเวลา | `$__timeFilter(created_at)` |
-| Downsampling | `$__timeGroupAlias(created_at, $__interval)` + `avg()` + `GROUP BY 1` |
-| Update ของ Business Forms | `UPDATE controls SET fan = ${payload.fan}, updated_by = 'dashboard' WHERE device_id = '$device'` |
-| เริ่มต้นวันตามเวลาไทย | `date_trunc('day', now() AT TIME ZONE 'Asia/Bangkok') AT TIME ZONE 'Asia/Bangkok'` |
+| ส่งค่าเซนเซอร์ (ESP32) | `POST https://<ref>.supabase.co/rest/v1/telemetry` → `201` |
+| ถามคำสั่ง (ESP32) | `GET .../rest/v1/controls?device_id=eq.<id>&select=light,pump,fan` → `200` |
+| แจ้งการกดปุ่ม (ESP32) | `PATCH .../rest/v1/controls?device_id=eq.<id>` body `{"fan":true,"updated_by":"button"}` → `204` |
+| อ่านค่าล่าสุด (แดชบอร์ด) | `supabase.from('telemetry').select(...).eq('device_id', id).order('created_at', { ascending: false }).limit(1)` |
+| สั่งการ (แดชบอร์ด) | `supabase.from('controls').update({ fan: true, updated_by: 'dashboard' }).eq('device_id', id).select()` |
+| บัญชีแดชบอร์ด | Authentication → Users → Add user → Create new user (Auto confirm user?) · ปิด Allow new users to sign up |
+| โค้ดแดชบอร์ด | [`dashboard/`](https://github.com/alfaXphoori/TechEngineering/tree/main/dashboard) · เกณฑ์สีและรอบ refresh ใน `lib/config.js` |
 
-> ℹ️ **แผนฟรี:** Supabase Free Plan และ Grafana Cloud Free Tier มีโควตาจำกัด เช่น พื้นที่ฐานข้อมูล ปริมาณข้อมูลขาออก (Egress) จำนวนผู้ใช้ และการ pause โปรเจกต์ที่ไม่มีการใช้งาน เงื่อนไขเหล่านี้อาจเปลี่ยนได้ ควรตรวจสอบหน้าราคาของผู้ให้บริการก่อนเริ่มภาคการศึกษา
+> ℹ️ **แผนฟรี:** Supabase Free Plan และ Vercel Hobby Plan มีโควตาจำกัด เช่น พื้นที่ฐานข้อมูล ปริมาณข้อมูลขาออก (Egress) และการ pause โปรเจกต์ Supabase ที่ไม่มีการใช้งาน เงื่อนไขเหล่านี้อาจเปลี่ยนได้ ควรตรวจสอบหน้าราคาของผู้ให้บริการก่อนเริ่มภาคการศึกษา
 
 </div>
 
@@ -1837,11 +1755,11 @@ WHERE device_id = '$device' AND event = 'fan' AND state = true
 
 **ข้อ 2:** อธิบายว่าถ้าเปลี่ยนการอ่านปุ่มจาก Interrupt เป็น Polling ใน `loop()` จะเกิดปัญหาอะไรกับระบบในส่วนที่ 2 และปัญหานั้นเกี่ยวข้องกับการส่ง HTTPS อย่างไร
 
-**ข้อ 3:** ถ้าเปลี่ยนให้ Grafana ทุก panel เชื่อมต่อด้วย user `postgres` แทน `grafana_ro` และ `grafana_ctl` ระบบยังทำงานได้ แต่ความเสี่ยงเพิ่มขึ้นอย่างไร? ยกตัวอย่างเหตุการณ์ที่อาจเกิดขึ้นในโรงงาน
+**ข้อ 3:** ถ้าผู้พัฒนาใส่ **Secret key** ไว้ในหน้าเว็บแดชบอร์ดแทน Publishable key เพื่อ "ไม่ต้อง login" ระบบยังทำงานได้ แต่ความเสี่ยงเพิ่มขึ้นอย่างไร? (ใบ้: ใครก็เปิดดูโค้ด JavaScript ของหน้าเว็บได้) ยกตัวอย่างเหตุการณ์ที่อาจเกิดขึ้นในโรงงาน
 
-**ข้อ 4:** ถ้าเลือกช่วงเวลา Last 30 days บนกราฟกว้าง 1,200 พิกเซล จะมีข้อมูลดิบในตาราง `telemetry` กี่แถว และ `$__interval` ควรมีค่าประมาณเท่าใด? แสดงวิธีคำนวณ
+**ข้อ 4:** ถ้าต้องการให้แดชบอร์ดแสดงกราฟย้อนหลัง 30 วันบนกราฟกว้าง 1,200 พิกเซล จะมีข้อมูลดิบในตาราง `telemetry` กี่แถว และช่วงเวลาของ Downsampling ควรมีค่าประมาณเท่าใด? แสดงวิธีคำนวณ แล้วอธิบายว่าทำไมการใช้ `.limit(1000)` เพียงอย่างเดียวจึงไม่พอ
 
-**ข้อ 5:** ความชื้นในตู้ควบคุมจะเสี่ยงเกิดหยดน้ำเมื่ออุณหภูมิลดลงถึงจุดน้ำค้าง (Dew Point) จงเขียนคำสั่ง SQL สำหรับ Grafana ที่คำนวณ Dew Point จากคอลัมน์ `temp` และ `hum` ด้วยสมการ Magnus โดยประมาณ $T_d = \frac{b\,\gamma}{a - \gamma}$ เมื่อ $\gamma = \ln(RH/100) + \frac{a\,T}{b + T}$, $a = 17.62$, $b = 243.12\ ^\circ C$
+**ข้อ 5:** ความชื้นในตู้ควบคุมจะเสี่ยงเกิดหยดน้ำเมื่ออุณหภูมิลดลงถึงจุดน้ำค้าง (Dew Point) จงเขียนคำสั่ง SQL ที่คำนวณ Dew Point จากคอลัมน์ `temp` และ `hum` ด้วยสมการ Magnus โดยประมาณ $T_d = \frac{b\,\gamma}{a - \gamma}$ เมื่อ $\gamma = \ln(RH/100) + \frac{a\,T}{b + T}$, $a = 17.62$, $b = 243.12\ ^\circ C$ แล้วเสนอวิธีนำค่านี้ไปแสดงบนแดชบอร์ด
 
 **ข้อ 6 (ความหน่วงของ Polling):** ถ้าลด `POLL_INTERVAL` จาก 2 วินาทีเป็น 0.5 วินาที และคำขอ HTTPS แต่ละครั้งใช้เวลา 0.8 วินาที
 - (ก) ความหน่วงเฉลี่ยตั้งแต่กดส่งคำสั่งจนถึง LED ติดเปลี่ยนจากเดิมเท่าใด
@@ -1850,10 +1768,12 @@ WHERE device_id = '$device' AND event = 'fan' AND state = true
 
 **ข้อ 7 (Fail-safe):** เมื่อ Wi-Fi ขาดหายนานเกิน 1 นาที ESP32 ควรทำอย่างไรกับไฟ ปั๊ม และพัดลม แต่ละตัว (คงสถานะเดิม หรือปิดเอง)? ให้เหตุผลทางวิศวกรรมของแต่ละอุปกรณ์ แล้วเสนอการแก้โค้ดใน `loop()`
 
-**ข้อ 8 (ออกแบบ):** โรงงานมีตู้ควบคุม 20 ตู้ แต่ละตู้มี ESP32-S3 หนึ่งตัว จงออกแบบ
+**ข้อ 8 (แจ้งเตือน 24 ชั่วโมง):** แถบเตือนบนแดชบอร์ดทำงานเฉพาะเมื่อเปิดหน้าเว็บไว้ จงออกแบบระบบแจ้งเตือนทางอีเมลเมื่ออุณหภูมิเกิน 35 °C ต่อเนื่อง 2 นาที โดยระบุว่าจะตรวจที่ใด (ESP32 / ฐานข้อมูล / Edge Function) เงื่อนไข "ต่อเนื่อง" คำนวณอย่างไร และป้องกันการส่งอีเมลซ้ำทุก 5 วินาทีอย่างไร
+
+**ข้อ 9 (ออกแบบ):** โรงงานมีตู้ควบคุม 20 ตู้ แต่ละตู้มี ESP32-S3 หนึ่งตัว จงออกแบบ
 - (ก) ค่า `device_id` ที่สื่อความหมาย
 - (ข) Layout แดชบอร์ดภาพรวมที่ให้หัวหน้าช่างเห็นได้ทันทีว่าตู้ใดผิดปกติ
 - (ค) คำนวณพื้นที่ฐานข้อมูลที่ใช้ต่อเดือน แล้วเสนอแนวทางลดขนาดข้อมูลเก่า
-- (ง) แนวทางป้องกันไม่ให้ ESP32 ของตู้หนึ่งสั่งอุปกรณ์ของตู้อื่นได้ ทั้งที่ทุกตัวใช้ Publishable key เดียวกัน (ใบ้: ให้แต่ละอุปกรณ์ login ด้วยบัญชีของตนเอง แล้วเขียน RLS policy ที่เทียบ `device_id` กับตัวตนของผู้ login)
+- (ง) แนวทางป้องกันไม่ให้ ESP32 ของตู้หนึ่งสั่งอุปกรณ์ของตู้อื่นได้ ทั้งที่ทุกตัวใช้ Publishable key เดียวกัน และให้ช่างแต่ละแผนกเห็นเฉพาะตู้ของแผนกตนเอง (ใบ้: ให้แต่ละอุปกรณ์และช่าง login ด้วยบัญชีของตนเอง แล้วเขียน RLS policy ที่เทียบ `device_id` กับตัวตนของผู้ login ผ่าน `auth.uid()`)
 
 </div>

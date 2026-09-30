@@ -14,15 +14,6 @@ description: เช็คชื่อเข้าเรียนรายวิ�
 .seg { padding: 9px 18px; border-radius: 9px; font-weight: 600; font-size: .95rem; color: #475569; text-decoration: none; }
 .seg:hover { color: var(--indigo, #4f46e5); text-decoration: none; }
 .seg.is-active { background: #fff; color: var(--indigo-dark, #3730a3); box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,.08)); }
-/* ปุ่ม/แถบ โหมดอาจารย์ */
-.ci-teacher { margin: 0 0 16px; }
-.teacher-cta { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 11px; font-weight: 700; font-size: 1rem; cursor: pointer; border: 2px solid var(--indigo, #4f46e5); background: #fff; color: var(--indigo-dark, #3730a3); transition: background .12s ease, color .12s ease; }
-.teacher-cta:hover { background: var(--indigo, #4f46e5); color: #fff; }
-.teacher-on { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 13px 18px; border-radius: 12px; background: #ecfdf5; border: 1px solid #a7f3d0; }
-.teacher-on .lbl { font-weight: 800; color: #065f46; font-size: 1.02rem; }
-.teacher-on .sub { color: #047857; font-size: .85rem; }
-.teacher-out { margin-left: auto; padding: 8px 16px; border-radius: 9px; border: 1px solid #fca5a5; background: #fff; color: #dc2626; font-weight: 700; font-size: .9rem; cursor: pointer; }
-.teacher-out:hover { background: #fef2f2; }
 .ci-search { width: 100%; padding: 11px 14px; border: 1px solid var(--line); border-radius: 10px; font-size: 1rem; box-sizing: border-box; margin-bottom: 12px; }
 .ci-search:focus { outline: none; border-color: var(--indigo, #4f46e5); box-shadow: 0 0 0 3px rgba(79,70,229,.15); }
 .ci-msg { min-height: 1.2em; margin: 6px 0 12px; font-size: .92rem; }
@@ -51,11 +42,9 @@ description: เช็คชื่อเข้าเรียนรายวิ�
 <div class="seg-menu">
   <a class="seg is-active" href="{{ '/check-in.html' | relative_url }}">✅ เช็คชื่อ</a>
   <a class="seg" href="{{ '/attendance-summary.html' | relative_url }}">📊 สรุปการมาเรียน</a>
+  <a class="seg" href="{{ '/submission-check.html' | relative_url }}">📤 ตรวจการส่งงาน</a>
+  <a class="seg" href="{{ '/scores.html' | relative_url }}">📝 คะแนนและเกรด</a>
 </div>
-
-> **นักศึกษา:** ดูสถานะการเช็คชื่อทั้งห้องได้ที่นี่ &nbsp;·&nbsp; **อาจารย์:** กดปุ่มด้านล่างเพื่อเรียกชื่อและบันทึกการมาเรียน
-
-<div class="ci-teacher" id="ci-teacher"></div>
 
 <div class="ci-bar">
   <span>📅 วันที่: <span class="ci-date" id="ci-date">—</span></span>
@@ -79,20 +68,27 @@ description: เช็คชื่อเข้าเรียนรายวิ�
   var KEY_STORE = 'ci_teacher_key';
   var POLL_MS = 20000;
 
+  function getTeacherKey() {
+    if (window.TeacherAuth) return window.TeacherAuth.getKey();
+    try { return localStorage.getItem(KEY_STORE) || sessionStorage.getItem(KEY_STORE) || ''; } catch (e) { return ''; }
+  }
+
   var elDate = document.getElementById('ci-date');
   var elSearch = document.getElementById('ci-search');
   var elList = document.getElementById('ci-list');
   var elStat = document.getElementById('ci-stat');
   var elMsg = document.getElementById('ci-msg');
-  var elTeacher = document.getElementById('ci-teacher');
 
   var roster = [];
   var checked = {};
   var today = '';
-  var teacherKey = sessionStorage.getItem(KEY_STORE) || '';
+  var teacherKey = getTeacherKey();
   var pollTimer = null;
 
-  function isTeacher() { return !!teacherKey; }
+  function isTeacher() {
+    teacherKey = getTeacherKey();
+    return !!teacherKey;
+  }
 
   function setMsg(text, type) {
     elMsg.textContent = text || '';
@@ -107,40 +103,19 @@ description: เช็คชื่อเข้าเรียนรายวิ�
     }).then(function (r) { return r.json(); });
   }
 
-  // ---------- โหมดอาจารย์ / นักศึกษา ----------
-  function renderMode() {
-    elTeacher.innerHTML = '';
-    if (isTeacher()) {
-      var on = document.createElement('div');
-      on.className = 'teacher-on';
-      var txt = document.createElement('div');
-      var lbl = document.createElement('div');
-      lbl.className = 'lbl';
-      lbl.textContent = '👨‍🏫 โหมดอาจารย์ (กำลังเรียกชื่อ)';
-      var sub = document.createElement('div');
-      sub.className = 'sub';
-      sub.textContent = 'กดปุ่ม “เช็คชื่อ” หลังชื่อนักศึกษาเพื่อบันทึกการมาเรียน';
-      txt.appendChild(lbl);
-      txt.appendChild(sub);
-      var out = document.createElement('button');
-      out.className = 'teacher-out';
-      out.type = 'button';
-      out.textContent = 'ออกจากโหมดอาจารย์';
-      out.addEventListener('click', logoutTeacher);
-      on.appendChild(txt);
-      on.appendChild(out);
-      elTeacher.appendChild(on);
-    } else {
-      var cta = document.createElement('button');
-      cta.className = 'teacher-cta';
-      cta.type = 'button';
-      cta.textContent = '👨‍🏫 เข้าสู่โหมดอาจารย์';
-      cta.addEventListener('click', loginTeacher);
-      elTeacher.appendChild(cta);
-    }
-  }
-
   function loginTeacher() {
+    if (window.TeacherAuth) {
+      window.TeacherAuth.login().then(function (ok) {
+        if (ok) {
+          teacherKey = getTeacherKey();
+          setMsg('เข้าสู่โหมดอาจารย์แล้ว', 'success');
+          stopPoll();
+          render();
+        }
+      });
+      return;
+    }
+
     var key = window.prompt('ใส่รหัสผ่านอาจารย์:');
     if (key === null) return;
     key = key.trim();
@@ -150,10 +125,9 @@ description: เช็คชื่อเข้าเรียนรายวิ�
       .then(function (data) {
         if (data && data.ok) {
           teacherKey = key;
-          sessionStorage.setItem(KEY_STORE, key);
+          try { localStorage.setItem(KEY_STORE, key); sessionStorage.setItem(KEY_STORE, key); } catch (e) {}
           setMsg('เข้าสู่โหมดอาจารย์แล้ว', 'success');
           stopPoll();
-          renderMode();
           render();
         } else {
           setMsg('รหัสผ่านไม่ถูกต้อง', 'error');
@@ -163,10 +137,13 @@ description: เช็คชื่อเข้าเรียนรายวิ�
   }
 
   function logoutTeacher() {
+    if (window.TeacherAuth) {
+      window.TeacherAuth.setKey('');
+    } else {
+      try { localStorage.removeItem(KEY_STORE); sessionStorage.removeItem(KEY_STORE); } catch (e) {}
+    }
     teacherKey = '';
-    sessionStorage.removeItem(KEY_STORE);
     setMsg('ออกจากโหมดอาจารย์แล้ว');
-    renderMode();
     render();
     startPoll();
   }
@@ -289,6 +266,12 @@ description: เช็คชื่อเข้าเรียนรายวิ�
   function stopPoll() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
 
   // ---------- เริ่มทำงาน ----------
+  window.addEventListener('teacher-auth-changed', function () {
+    teacherKey = getTeacherKey();
+    if (teacherKey) stopPoll(); else startPoll();
+    render();
+  });
+
   if (!API_URL) {
     elStat.textContent = 'ยังไม่พร้อมใช้งาน';
     setMsg('⚠️ ผู้สอนยังไม่ได้ตั้งค่าระบบ (API_URL) — ดูวิธีตั้งค่าในไฟล์ attendance/README.md', 'warn');
@@ -296,7 +279,6 @@ description: เช็คชื่อเข้าเรียนรายวิ�
   }
 
   elSearch.addEventListener('input', render);
-  renderMode();
   load();
   startPoll();
 })();

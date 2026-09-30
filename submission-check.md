@@ -35,6 +35,8 @@ description: ตรวจสอบการส่งงานรายสัป�
 <div class="seg-menu">
   <a class="seg" href="{{ '/submit-work.html' | relative_url }}">📤 ส่งงาน</a>
   <a class="seg is-active" href="{{ '/submission-check.html' | relative_url }}">📊 ตรวจการส่ง</a>
+  <a class="seg" href="{{ '/check-in.html' | relative_url }}">✅ เช็คชื่อ</a>
+  <a class="seg" href="{{ '/scores.html' | relative_url }}">📝 คะแนนและเกรด</a>
 </div>
 
 <div class="sc-bar">

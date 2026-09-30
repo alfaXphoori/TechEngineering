@@ -70,6 +70,57 @@ a:hover { text-decoration: underline; }
   color: #fff; background: var(--indigo);
 }
 .nav__links a.cta:hover { background: var(--indigo-dark); color: #fff; }
+.nav__teacher-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted, #64748b);
+  cursor: pointer;
+  transition: all .15s ease;
+  position: relative;
+  flex-shrink: 0;
+}
+.nav__teacher-btn:hover {
+  color: var(--ink, #0f172a);
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+}
+.nav__teacher-btn .nav__teacher-svg {
+  display: block;
+  transition: stroke .15s ease, transform .15s ease;
+}
+.nav__teacher-btn:hover .nav__teacher-svg {
+  transform: scale(1.05);
+}
+.nav__teacher-btn.is-active {
+  color: #059669;
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+}
+.nav__teacher-btn.is-active::after {
+  content: "";
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #10b981;
+}
+.nav__teacher-btn.is-active:hover {
+  color: #dc2626;
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+.nav__teacher-btn.is-active:hover::after {
+  background: #ef4444;
+}
 .nav__toggle { display: none; }
 
 /* ---------- Hero ---------- */
@@ -349,6 +400,7 @@ table.schedule tbody tr:hover { background: #f8fafc; }
   .clo-grid { grid-template-columns: 1fr; }
   .nav__links { display: none; }
   .nav__links.open { display: flex; position: absolute; top: 64px; left: 0; right: 0; flex-direction: column; background: #fff; border-bottom: 1px solid var(--line); padding: 10px 20px; gap: 2px; }
+  .nav__teacher-btn { width: 36px; height: 36px; margin: 6px 0 2px 8px; align-self: flex-start; }
   .nav__toggle { display: inline-grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 10px; background: #fff; cursor: pointer; font-size: 1.2rem; }
   .assess { grid-template-columns: 1fr; gap: 24px; }
   .assess__chart { width: min(100%, 260px); }

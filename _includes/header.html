@@ -12,7 +12,122 @@
       <a href="{{ '/weekly-lesson-plan.html' | relative_url }}">แผนฉบับเต็ม</a>
       <a href="{{ '/submit-work.html' | relative_url }}">ส่งงาน</a>
       <a href="{{ '/check-in.html' | relative_url }}">เช็คชื่อ</a>
-      <a class="cta" href="https://github.com/{{ site.repository }}" target="_blank" rel="noopener">GitHub</a>
+      <a href="{{ '/scores.html' | relative_url }}">คะแนน</a>
+      <button type="button" class="nav__teacher-btn" id="nav-teacher-btn" onclick="TeacherAuth.toggle()" aria-label="โหมดผู้สอน" title="โหมดผู้สอน">
+        <svg class="nav__teacher-svg" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+          <path d="M6 12.5V16c2.5 2 9.5 2 12 0v-3.5"/>
+        </svg>
+      </button>
     </nav>
   </div>
 </header>
+
+<script>
+(function () {
+  var KEY = 'ci_teacher_key';
+  var API_URL = "https://script.google.com/macros/s/AKfycbyKHCGL8MctDIzgyLsLA1laISfPZT4PzhPN6h4VsoAHXspGcQJKXRe3qf17wQBhNXl6/exec";
+
+  var TeacherAuth = {
+    getKey: function () {
+      try {
+        return localStorage.getItem(KEY) || sessionStorage.getItem(KEY) || '';
+      } catch (e) {
+        return '';
+      }
+    },
+    isTeacher: function () {
+      return !!this.getKey();
+    },
+    setKey: function (key) {
+      try {
+        if (key) {
+          localStorage.setItem(KEY, key);
+          sessionStorage.setItem(KEY, key);
+        } else {
+          localStorage.removeItem(KEY);
+          sessionStorage.removeItem(KEY);
+        }
+      } catch (e) {}
+      this.updateNavbar();
+      window.dispatchEvent(new CustomEvent('teacher-auth-changed', { detail: { isTeacher: !!key, key: key } }));
+    },
+    login: function () {
+      var key = window.prompt('กรุณาใส่รหัสผ่านอาจารย์:');
+      if (key === null) return Promise.resolve(false);
+      key = key.trim();
+      if (!key) return Promise.resolve(false);
+
+      var btn = document.getElementById('nav-teacher-btn');
+      if (btn) btn.style.opacity = '0.4';
+
+      return fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'verify', key: key })
+      })
+      .then(function (r) { return r.json(); })
+      .then(data => {
+        if (btn) btn.style.opacity = '1';
+        if (data && data.ok) {
+          TeacherAuth.setKey(key);
+          alert('✓ เข้าสู่โหมดอาจารย์แล้ว สามารถจัดการเช็คชื่อและกรอกคะแนนได้ทุกหน้า');
+          return true;
+        } else {
+          TeacherAuth.updateNavbar();
+          alert('รหัสผ่านอาจารย์ไม่ถูกต้อง');
+          return false;
+        }
+      })
+      .catch(function (err) {
+        if (btn) btn.style.opacity = '1';
+        TeacherAuth.updateNavbar();
+        alert('เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + err.message);
+        return false;
+      });
+    },
+    logout: function () {
+      if (window.confirm('ต้องการออกจากโหมดอาจารย์หรือไม่?')) {
+        TeacherAuth.setKey('');
+        alert('ออกจากโหมดอาจารย์แล้ว');
+      }
+    },
+    toggle: function () {
+      if (this.isTeacher()) {
+        this.logout();
+      } else {
+        this.login();
+      }
+    },
+    updateNavbar: function () {
+      var btn = document.getElementById('nav-teacher-btn');
+      if (!btn) return;
+
+      if (this.isTeacher()) {
+        btn.classList.add('is-active');
+        btn.title = 'โหมดผู้สอนกำลังทำงาน (คลิกเพื่อออกจากระบบ)';
+        btn.setAttribute('aria-label', 'โหมดผู้สอนกำลังทำงาน (คลิกเพื่อออกจากระบบ)');
+      } else {
+        btn.classList.remove('is-active');
+        btn.title = 'เข้าสู่โหมดผู้สอน';
+        btn.setAttribute('aria-label', 'เข้าสู่โหมดผู้สอน');
+      }
+    }
+  };
+
+  window.TeacherAuth = TeacherAuth;
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () { TeacherAuth.updateNavbar(); });
+  } else {
+    TeacherAuth.updateNavbar();
+  }
+
+  window.addEventListener('storage', function (e) {
+    if (e.key === KEY) {
+      TeacherAuth.updateNavbar();
+      window.dispatchEvent(new CustomEvent('teacher-auth-changed', { detail: { isTeacher: TeacherAuth.isTeacher() } }));
+    }
+  });
+})();
+</script>

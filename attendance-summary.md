@@ -39,6 +39,8 @@ details.as-matrix summary { cursor: pointer; font-weight: 600; color: var(--indi
 <div class="seg-menu">
   <a class="seg" href="{{ '/check-in.html' | relative_url }}">✅ เช็คชื่อ</a>
   <a class="seg is-active" href="{{ '/attendance-summary.html' | relative_url }}">📊 สรุปการมาเรียน</a>
+  <a class="seg" href="{{ '/submission-check.html' | relative_url }}">📤 ตรวจการส่งงาน</a>
+  <a class="seg" href="{{ '/scores.html' | relative_url }}">📝 คะแนนและเกรด</a>
 </div>
 
 <div class="as-bar">

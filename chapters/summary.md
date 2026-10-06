@@ -35,7 +35,7 @@ permalink: /chapters/summary/
 | **6** | [บทที่ 6: การแสดงผลและเซนเซอร์]({{ '/chapters/ch06-display-sensors/' | relative_url }}) | I2C/SPI/UART, จอ OLED/LCD, BMP280/DHT22, ตรรกะ Hysteresis | **CLO3, CLO4** | LLO6.1, LLO6.2 |
 | **7** | [บทที่ 7: เครือข่ายและการสื่อสารไร้สาย]({{ '/chapters/ch07-wireless/' | relative_url }}) | คลื่นความถี่, มาตรฐาน Wi-Fi, โหมด STA/AP, และ ESP32 Web Server | **CLO2, CLO3, CLO4** | LLO7.1, LLO7.2 |
 | **8** | [บทที่ 7: เทคโนโลยีไร้สายเฉพาะทาง]({{ '/chapters/ch07-wireless/' | relative_url }}) | Bluetooth/BLE, Zigbee Mesh, LoRa/LoRaWAN, NB-IoT, Link Budget | **CLO2** | LLO8.1, LLO8.2 |
-| 🟧 | **สอบกลางภาค (Midterm Exam)** | ครอบคลุมเนื้อหาสัปดาห์ที่ 1–8 (สัดส่วนคะแนน 20%) | **CLO1, CLO2** | — |
+| 🟧 | **สอบกลางภาค (Midterm Exam)** | ครอบคลุมเนื้อหาสัปดาห์ที่ 1–8 | **CLO1, CLO2** | — |
 | **9** | [บทที่ 8: สถาปัตยกรรมเว็บ & HTTP]({{ '/chapters/ch08-http/' | relative_url }}) | Client/Server, HTTP Methods, Status Codes, REST API, JSON | **CLO2, CLO3, CLO4** | LLO9.1, LLO9.2 |
 | **10** | [บทที่ 9: โพรโทคอล MQTT]({{ '/chapters/ch09-mqtt/' | relative_url }}) | Publish/Subscribe, Broker, Topics, Wildcards, QoS 0/1/2, LWT | **CLO2, CLO3, CLO4** | LLO10.1, LLO10.2 |
 | **11** | [บทที่ 10: แพลตฟอร์มคลาวด์ IoT]({{ '/chapters/ch10-cloud/' | relative_url }}) | IaaS/PaaS/SaaS, ThingsBoard, Telemetry, Client/Server Attributes | **CLO2, CLO3, CLO4** | LLO11.1, LLO11.2 |
@@ -43,7 +43,7 @@ permalink: /chapters/summary/
 | **13** | [บทที่ 11: ฐานข้อมูล & Node-RED]({{ '/chapters/ch11-node-red/' | relative_url }}) | Edge Gateway, Node-RED Dashboard, Flow Programming, Chart UI | **CLO3, CLO4** | LLO13.1, LLO13.2 |
 | **14** | [บทที่ 12: ระบบ IoT สู่คลาวด์และแดชบอร์ด]({{ '/chapters/ch12-hmi-visualization/' | relative_url }}) | ESP32-S3 + AHT25, Arduino Cloud (Thing, Cloud Variables, MQTT), Dashboard & Remote Control | **CLO3, CLO4** | LLO14.1, LLO14.2 |
 | **15** | [บทที่ 13: การเรียนรู้ของเครื่องและ TinyML]({{ '/chapters/ch13-machine-learning/' | relative_url }}) | ML Pipeline, การสกัดฟีเจอร์การสั่นสะเทือน, TinyML บน ESP32 | **CLO1, CLO4** | LLO15.1, LLO15.2 |
-| 🟧 | **สอบปลายภาค (Final Exam)** | ครอบคลุมเนื้อหาสัปดาห์ที่ 9–15 (สัดส่วนคะแนน 25%) | **CLO2, CLO3, CLO4** | — |
+| 🟧 | **สอบปลายภาค (Final Exam)** | ครอบคลุมเนื้อหาสัปดาห์ที่ 9–15 (สัดส่วนคะแนน 30%) | **CLO2, CLO3, CLO4** | — |
 
 ---
 

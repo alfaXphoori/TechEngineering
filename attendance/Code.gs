@@ -494,7 +494,7 @@ function getScoresSheet_(ss) {
   if (!sheet) {
     sheet = ss.insertSheet(SCORES_SHEET_NAME);
     // คอลัมน์มาตรฐานตามเกณฑ์การวัดและประเมินผลในแผนการจัดการเรียนรู้ (สัดส่วน 100%)
-    var headers = ['studentId', 'Fullname', 'จิตพิสัย (10)', 'ใบงาน (45)', 'กลางภาค (20)', 'ปลายภาค (25)', 'รวม (100)', 'เกรด'];
+    var headers = ['studentId', 'Fullname', 'จิตพิสัย (10)', 'ใบงาน (40)', 'สอบปฏิบัติ (20)', 'ปลายภาค (30)', 'รวม (100)', 'เกรด'];
     sheet.appendRow(headers);
 
     var headRange = sheet.getRange(1, 1, 1, headers.length);

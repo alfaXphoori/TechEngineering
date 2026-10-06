@@ -17,7 +17,7 @@
 | **6** | **การแสดงผลข้อมูลผ่าน จอ** | การเขียนแสดงผลบนจอแสดงผล (Display), โพรโทคอล I2C/SPI/UART, อ่าน DHT22/BMP280, ตรรกะควบคุมตามเงื่อนไข | [Display & Sensors](chapters/ch06-display-sensors/) |
 | **7** | **เครือข่ายและการเชื่อมต่อไร้สายพื้นฐาน** | คลื่นความถี่และมาตรฐานไร้สาย, Wi-Fi, การต่อ ESP32 เข้าเครือข่ายและ Web Server | [Wireless](chapters/ch07-wireless/) |
 | **8** | **เทคโนโลยีไร้สายเฉพาะทางและขอบข่ายการใช้** | เปรียบเทียบ BLE/Zigbee/LoRa/NB-IoT, คำนวณความแรงสัญญาณ (Link Budget), การเลือกใช้งาน | [Wireless](chapters/ch07-wireless/) |
-| **—** | **🟧 สอบกลางภาค (Midterm Exam)** | **ครอบคลุมเนื้อหาสัปดาห์ที่ 1–8 \| สัดส่วน 20%** | - |
+| **—** | **🟧 สอบกลางภาค (Midterm Exam)** | **ครอบคลุมเนื้อหาสัปดาห์ที่ 1–8** | - |
 | **9** | **โปรโตคอลประยุกต์เว็บและการสื่อสาร API** | รูปแบบ Client/Server, HTTP Methods, REST API, รูปแบบข้อมูล JSON | [HTTP REST](chapters/ch08-http/) |
 | **10** | **โปรโตคอลการรับส่งข้อความแบบไลท์เวท** | รูปแบบ Publish/Subscribe, Broker, Topic, QoS, การส่งข้อมูลผ่าน MQTT | [MQTT](chapters/ch09-mqtt/) |
 | **11** | **แพลตฟอร์มคลาวด์และการจัดการข้อมูล** | บริการคลาวด์ (IaaS/PaaS/SaaS), แพลตฟอร์ม ThingsBoard, การส่งค่า Telemetry / Attributes | [Cloud](chapters/ch10-cloud/) |
@@ -25,7 +25,7 @@
 | **13** | **ระบบฐานข้อมูลและแดชบอร์ดแสดงผลท้องถิ่น** | การเขียนโฟลว์และโหนดเชื่อมโยงใน Node-RED, จัดเก็บข้อมูลลง SQLite และ InfluxDB | [Node-RED](chapters/ch11-node-red/) |
 | **14** | **การแสดงภาพข้อมูลและการออกแบบส่วนต่อประสานผู้ใช้** | ESP32-S3 + AHT25 + ปุ่มกด + LED เชื่อม Arduino Cloud (Thing, Cloud Variables, MQTT) แสดงผลและสั่งการผ่าน Dashboard บนเว็บและมือถือ | [Cloud Platform & Dashboard](chapters/ch12-hmi-visualization/) |
 | **15** | **การเรียนรู้ของเครื่องและการประมวลผลอัจฉริยะที่ปลายขอบ** | แนวคิด ML, ขั้นตอนพัฒนาโมเดลบน Edge Impulse, TinyML/Edge AI วิเคราะห์มอเตอร์สั่นสะเทือน | [Machine Learning](chapters/ch13-machine-learning/) |
-| **—** | **🟧 สอบปลายภาค (Final Exam)** | **ครอบคลุมเนื้อหาสัปดาห์ที่ 9–15 \| สัดส่วน 25%** | [summary.md](chapters/summary.md) |
+| **—** | **🟧 สอบปลายภาค (Final Exam)** | **ครอบคลุมเนื้อหาสัปดาห์ที่ 9–15 \| สัดส่วน 30%** | [summary.md](chapters/summary.md) |
 
 ---
 
@@ -34,9 +34,9 @@
 | รายการประเมิน | สัดส่วน (%) | CLO ที่สัมพันธ์ |
 |:---|:---:|:---|
 | จิตพิสัย การเข้าเรียนและการมีส่วนร่วมในชั้นเรียน | 10 | CLO4 |
-| ใบงานและแบบฝึกหัด | 45 | CLO1, CLO2, CLO3, CLO4 |
-| สอบกลางภาค | 20 | CLO1, CLO2 |
-| สอบปลายภาค | 25 | CLO2, CLO3 |
+| ใบงานและแบบฝึกหัด | 40 | CLO1, CLO2, CLO3, CLO4 |
+| สอบปฏิบัติ | 20 | CLO3, CLO4 |
+| สอบปลายภาค | 30 | CLO2, CLO3 |
 | **รวม** | **100** | |
 
 ### 🎯 เกณฑ์การตัดเกรด (Grading Scale)

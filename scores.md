@@ -186,17 +186,17 @@ details.criteria-box summary { cursor: pointer; font-weight: 700; color: var(--i
         </tr>
         <tr>
           <td>ใบงานและแบบฝึกหัด</td>
-          <td style="text-align:center;">45%</td>
+          <td style="text-align:center;">40%</td>
           <td>ใบงานภาคปฏิบัติ (Wokwi / ESP32 / IoT Platform) และแบบฝึกหัดรายสัปดาห์ W1–W15</td>
         </tr>
         <tr>
-          <td>สอบกลางภาค</td>
+          <td>สอบปฏิบัติ</td>
           <td style="text-align:center;">20%</td>
-          <td>วัดผลความรู้เนื้อหาสัปดาห์ที่ 1–8</td>
+          <td>สอบปฏิบัติรายบุคคล ESP32-S3 + VL53L0X + Relay ผ่าน Web Server (AP Mode)</td>
         </tr>
         <tr>
           <td>สอบปลายภาค</td>
-          <td style="text-align:center;">25%</td>
+          <td style="text-align:center;">30%</td>
           <td>วัดผลความรู้เนื้อหาสัปดาห์ที่ 9–15</td>
         </tr>
         <tr>
@@ -344,7 +344,7 @@ details.criteria-box summary { cursor: pointer; font-weight: 700; color: var(--i
       var btnSyncSub = document.createElement('button');
       btnSyncSub.type = 'button';
       btnSyncSub.className = 'tool-btn';
-      btnSyncSub.innerHTML = '⚡ ดึงใบงาน (45)';
+      btnSyncSub.innerHTML = '⚡ ดึงใบงาน (40)';
       btnSyncSub.title = 'คำนวณจากเปอร์เซ็นต์การส่งงานแท็บ W1, W2, … อัตโนมัติ';
       btnSyncSub.addEventListener('click', syncSubmissionScores);
 
@@ -824,7 +824,7 @@ details.criteria-box summary { cursor: pointer; font-weight: 700; color: var(--i
         var updated = 0;
         students.forEach(function (s) {
           var count = subMap[s.id] || 0;
-          var score = Math.round((count / weeks.length) * 45 * 10) / 10;
+          var score = Math.round((count / weeks.length) * 40 * 10) / 10;
           if (!s.scores) s.scores = {};
           s.scores[targetCol] = score;
           if (!dirtyState[s.id]) dirtyState[s.id] = {};
@@ -835,7 +835,7 @@ details.criteria-box summary { cursor: pointer; font-weight: 700; color: var(--i
         recalcAll();
         updateDirtyCounter();
         renderTable();
-        setMsg('⚡ คำนวณคะแนนใบงาน (เต็ม 45) จากการส่งงาน ' + weeks.length + ' สัปดาห์ เรียบร้อยแล้ว (อย่าลืมกดบันทึกคะแนนทั้งหมด)', 'success');
+        setMsg('⚡ คำนวณคะแนนใบงาน (เต็ม 40) จากการส่งงาน ' + weeks.length + ' สัปดาห์ เรียบร้อยแล้ว (อย่าลืมกดบันทึกคะแนนทั้งหมด)', 'success');
       })
       .catch(function (err) {
         setMsg('ดึงคะแนนใบงานไม่สำเร็จ: ' + err.message, 'error');
@@ -894,9 +894,9 @@ details.criteria-box summary { cursor: pointer; font-weight: 700; color: var(--i
         } else if (data.roster) {
           columns = [
             { key: 'จิตพิสัย (10)', title: 'จิตพิสัย (10)', max: 10 },
-            { key: 'ใบงาน (45)', title: 'ใบงาน (45)', max: 45 },
-            { key: 'กลางภาค (20)', title: 'กลางภาค (20)', max: 20 },
-            { key: 'ปลายภาค (25)', title: 'ปลายภาค (25)', max: 25 }
+            { key: 'ใบงาน (40)', title: 'ใบงาน (40)', max: 40 },
+            { key: 'สอบปฏิบัติ (20)', title: 'สอบปฏิบัติ (20)', max: 20 },
+            { key: 'ปลายภาค (30)', title: 'ปลายภาค (30)', max: 30 }
           ];
           students = data.roster.map(function (s) {
             return { id: s.id, name: s.name, scores: {}, total: null, grade: '', hasScore: false };
